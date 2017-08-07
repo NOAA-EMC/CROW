@@ -1,3 +1,14 @@
+"""!Converts YAML objects to internal representations.
+
+\note Advanced python concept in use.
+
+You will not understand this file unless you are fluent in the
+following python concept:
+
+* Lexical functions
+
+"""
+
 from collections import namedtuple, OrderedDict
 import yaml
 from yaml import YAMLObject
@@ -17,6 +28,9 @@ class TaskYAML(OrderedDict): pass
 class FamilyYAML(OrderedDict): pass
 class CycleYAML(OrderedDict): pass
 
+# Mapping from YAML representation class to a pair:
+# * internal representation class
+# * python core class for intermediate conversion
 TYPE_MAP={ PlatformYAML: [ Platform, dict ], 
            TemplateYAML: [ Template, dict ],
            ActionYAML:   [ Action,   dict ],
@@ -26,10 +40,16 @@ TYPE_MAP={ PlatformYAML: [ Platform, dict ],
          }
 
 def type_for(t):
+    """!Returns an empty, internal representation, class for the given
+    YAML type.  This is simply a wrapper around TYPE_MAP"""
     (internal_class,python_class)=TYPE_MAP[type(t)]
     return internal_class(python_class())
 
+########################################################################
+
 def add_yaml_string(key,cls):
+    """!Generates and registers representers and constructors for custom string
+    YAML types"""
     def representer(dumper,data):
         return dumper.represent_scalar(key,str(data))
     yaml.add_representer(cls,representer)
@@ -44,7 +64,9 @@ add_yaml_string(u'!Timespec',Timespec)
 
 ########################################################################
 
-def add_yaml_sequence(key,cls):
+def add_yaml_sequence(key,cls): 
+    """!Generates and registers representers and constructors for custom
+    YAML sequence types    """
     def representer(dumper,data):
         return dumper.represent_sequence(key,data)
     def constructor(loader,node):
@@ -60,6 +82,8 @@ add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
 ########################################################################
 
 def add_yaml_ordered_dict(key,cls):
+    """!Generates and registers representers and constructors for custom
+    YAML map types    """
     def representer(dumper,data):
         return dumper.represent_ordered_dict(key,data)
     def constructor(loader,node):
@@ -72,6 +96,7 @@ add_yaml_ordered_dict(u'!Task',TaskYAML)
 add_yaml_ordered_dict(u'!Family',FamilyYAML)
 
 def valid_name(varname):
+    """!Returns true if and only if the variable name is supported by this implementation."""
     return not varname.startswith('_')     and '-' not in varname and \
            not varname.endswith('_yaml')   and '.' not in varname and \
            not varname.startswith('yaml_')
@@ -93,11 +118,16 @@ class ConvertFromYAML(object):
         return self.result
 
     def to_eval(self,v,locals):
+        """!Converts the object v to an internal implementation class.  If the
+        conversion has already happened, returns the converted object
+        from self.memo        """
         if id(v) not in self.memo:
             self.memo[id(v)]=self.to_eval_impl(v,locals)
         return self.memo[id(v)]
 
     def to_eval_impl(self,v,locals):
+        """!Unconditionally converts the object v to an internal
+        implementation class, without checking self.memo."""
         top=self.result
         # Specialized containers:
         cls=type(v)
@@ -116,6 +146,9 @@ class ConvertFromYAML(object):
         return v
 
     def from_yaml(self,yobj):
+        """!Converts a YAMLObject instance yobj of a YAML, and its elements,
+        to internal implementation types.  Elements with unsupported
+        names are ignored.        """
         ret=type_for(yobj)
         for k in dir(yobj):
             if not valid_name(k): continue
@@ -124,6 +157,9 @@ class ConvertFromYAML(object):
         return ret
 
     def from_dict(self,tree):
+        """!Converts an object yobj of a YAML standard map type, and its
+        elements, to internal implementation types.  Elements with
+        unsupported names are ignored.        """
         top=self.result
         ret=dict_eval(tree)
         for k,v in tree.items():
@@ -132,11 +168,17 @@ class ConvertFromYAML(object):
         return ret
 
     def from_list(self,sequence,locals):
+        """!Converts an object yobj of a YAML standard sequence type, and its
+        elements, to internal implementation types.  Elements with
+        unsupported names are ignored.  This is also used to handle
+        other sequence-like types such as omap or set.        """
         return list_eval(
             [self.to_eval(s,locals) for s in sequence],
             locals)
 
-
+## @var CONDITIONALS
+# Used to handle custom yaml conditional types.  Maps from conditional type
+# to the function that performs the comparison.
 CONDITIONALS={ MaxKeyYAML:max_index,
                MinKeyYAML:min_index,
                FirstTrueYAML:first_true,

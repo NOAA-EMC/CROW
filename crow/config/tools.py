@@ -15,4 +15,3 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'islink':os.path.islink,
     'exists':os.path.exists,
 })
-assert('panasas_gb' in CONFIG_TOOLS)

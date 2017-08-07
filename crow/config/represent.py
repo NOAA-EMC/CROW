@@ -1,3 +1,16 @@
+"""!Internal representation classes for crow.config.  These handle the
+embedded yaml calculations, as well as internal representations of all
+custom data types in the yaml files.  
+
+\note Advanced python concepts in use.
+
+To develop or understand this file, you must be fluent in the
+following Python concepts:
+
+ * operator overloading
+ * custom dict/list types (eg. MutableMapping and MutableSequence)
+ * python built-in eval() function    """
+
 from collections import namedtuple, OrderedDict
 from collections.abc import MutableMapping, MutableSequence
 from copy import copy,deepcopy
@@ -10,9 +23,16 @@ __all__=[ 'MISSING', 'dict_eval', 'list_eval', 'strcalc', 'Action',
           'calc','Trigger','Depend','Timespec', 'max_index',
           'min_index', 'last_true', 'first_true' ]
 
+## @var MISSING
+# A special constant that indicates an argument was not specified.
 MISSING=object()
 
 class multidict(MutableMapping):
+    """!This is a dict-like object that makes multiple dicts act as one.
+    Its methods look over the dicts in order, returning the result
+    from the first dict that has a matching key.  This class is
+    intended to be used in favor of a new dict, when the underlying
+    dicts have special behaviors that are lost upon copy to a standard dict."""
     def __init__(self,*args):
         self.__dicts=list(args)
         self.__keys=frozenset().union(*args)
@@ -21,7 +41,9 @@ class multidict(MutableMapping):
     def __copy__(self):           return multidict(self.__dicts)
     def __setitem__(self,k,v):    raise NotImplementedError('immutable')
     def __delitem__(self,k):      raise NotImplementedError('immutable')
-    def _globals(self):           return self.dicts[0]._globals()
+    def _globals(self):
+        """!Returns the global values used in eval() functions"""
+        return self.dicts[0]._globals()
     def __contains__(self,key):
         for d in self.__dicts:
             if key in d:
@@ -35,6 +57,7 @@ class multidict(MutableMapping):
                 return d[key]
         raise KeyError(key)
     def _raw(self,key):
+        """!Returns the raw value of the given key without calling eval()"""
         for d in self.__dicts:
             if key in d:
                 return d._raw(key)
@@ -47,14 +70,29 @@ class multidict(MutableMapping):
 ########################################################################
 
 class dict_eval(MutableMapping):
+    """!This is a dict-like object that knows how to eval() its contents,
+    passing this dict as the local arguments.  This allows one to
+    store actions like the following:
+
+    * \c a = b + c
+
+    where a, b, and c are elements of dict_eval.  The result of
+    __getitem__(a) is then the result of:
+
+    * __getitem__(b) + __getitem__(c)    """
+
     def __init__(self,child):
         self.__child=copy(child)
         self.__cache=copy(child)
         self.__globals={}
     def __len__(self):          return len(self.__child)
-    def _raw(self,key):         return self.__child[key]
+    def _raw(self,key):
+        """!Returns the value for the given key, without calling eval() on it"""
+        return self.__child[key]
     def __contains__(self,k):   return k in self.__child
-    def _globals(self):         return self.__globals
+    def _globals(self):
+        """!Returns the global values used in eval() functions"""
+        return self.__globals
     def __copy__(self):
         return dict_eval(self.__child)
     def __deepcopy__(self,memo):
@@ -69,7 +107,7 @@ class dict_eval(MutableMapping):
     def __iter__(self):
         for k in self.__child.keys(): yield k
     def _validate(self):
-        assert(self.__globals)
+        """!Validates this dict_eval using its embedded Template object, if present """
         if 'Template' in self:
             self.Template._check_scope(self)
     def __getitem__(self,key):
@@ -81,10 +119,12 @@ class dict_eval(MutableMapping):
     def __getattr__(self,name):
         return self[name]
     def _to_py(self,recurse=True):
+        """!Converts to a python core object; does not work for cyclic object trees"""
         cls=type(self.__child)
         return cls([(k, to_py(v)) for k,v in self.items()])
     def _child(self): return self.__child
     def _recursively_set_globals(self,globals):
+        """Recurses through the object tree setting the globals for eval() calls"""
         assert('tools' in globals)
         if self.__globals is globals: return
         self.__globals=globals
@@ -97,13 +137,30 @@ class dict_eval(MutableMapping):
 ########################################################################
 
 class list_eval(MutableSequence):
+    """!This is a dict-like object that knows how to eval() its contents,
+    passing a containing dict as the local arguments.  The parent
+    dict-like object is passed as the locals argument of the
+    constructor.  This class allows one to store actions like the
+    following:
+
+    * \c a = [ b+c, b-c ]
+
+    where a, b, and c are elements of the parent dict.  The result of
+    __getitem__(a) is then the result of:
+
+    \code
+    [ self.__locals.__getitem__(b) + self.__locals.__getitem__(c),
+      self.__locals.__getitem__(b) - self.__locals.__getitem__(c) ]
+    \endcode    """
     def __init__(self,child,locals):
         self.__child=list(child)
         self.__cache=list(child)
         self.__locals=locals
         self.__globals={}
     def __len__(self):          return len(self.__child)
-    def _raw(self,i):           return self.__child[i]
+    def _raw(self,i):           
+        """!Returns the value at index i without calling eval() on it"""
+        return self.__child[i]
     def __copy__(self):
         return list_eval(self.__child,self.__locals)
     def __deepcopy__(self,memo):
@@ -126,6 +183,7 @@ class list_eval(MutableSequence):
             self.__cache[index]=val
         return val
     def _to_py(self,recurse=True):
+        """!Converts to a python core object; does not work for cyclic object trees"""
         return [ to_py(v) for v in self ]
     def _recursively_set_globals(self,globals):
         if self.__globals is globals: return
@@ -139,14 +197,14 @@ class list_eval(MutableSequence):
 ########################################################################
 
 class strcalc(str):
+    """Represents a string that should be run through eval()"""
     def __repr__(self):
         return '%s(%s)'%(type(self).__name__,
                          super().__repr__())
 
 def from_config(key,val,globals,locals):
-    assert('tools' in globals)
-    assert('tools' not in locals)
-    assert(globals['tools'] is not None)
+    """!Converts s strcalc cor Conditional to another data type via eval().
+    Other types are returned unmodified."""
     try:
         if isinstance(val,strcalc):
             return eval(val,globals,locals)
@@ -163,12 +221,16 @@ def from_config(key,val,globals,locals):
 
 
 def as_state(obj):
+    """!Converts the containing object to a State.  Action objects are
+    compared to the "complete" state."""
     if isinstance(obj,Action):       return State(other,'complete',True)
     elif isinstance(obj,State):      return obj
     elif isinstance(obj,ComboState): return obj
     else:                            return NotImplemented
 
 class Action(dict_eval):
+    """!Represents an action that a workflow should take, such as running
+    a batch job."""
     def __and__(self,other):
         other=as_state(other)
         if other is NotImplemented: return other
@@ -188,6 +250,8 @@ class TaskStateNot(namedtuple('TaskStateNot',['task'])): pass
 class TaskStateIs(namedtuple('TaskStateIs',['task','state'])): pass
 
 def as_task_state(obj,state='COMPLETED'):
+    """!Converts obj to a task state comparison.  If obj is not a task
+    state, then it is compared to the specified state."""
     if type(obj) in [ TaskStateAnd, TaskStateOr, TaskStateNot, TaskStateIs ]:
         return obj
     if isinstance(obj,Taskable):
@@ -195,6 +259,7 @@ def as_task_state(obj,state='COMPLETED'):
     return NotImplemented
 
 class Taskable(object):
+    """!Represents any noun in a dependency specification."""
     def __init__(self,info):
         self.info=info
     def __and__(self,other):
@@ -268,13 +333,23 @@ class Timespec(strcalc): pass
 
 # Validation
 class Template(dict_eval):
+    """!Internal implementation of the YAML Template type.  Validates a
+    dict_eval, inserting defaults and reporting errors via the
+    TemplateErrors exception.    """
     def _check_scope(self,scope):
         checked=set()
         errors=list()
         template=dict(self)
         did_something=True
+
+        # Main validation loop.  Iteratively validate, adding new
+        # Templates as they become available via is_present.
         while did_something:
             did_something=False
+
+            # Inner validation loop.  Validate based on all Templates
+            # found thus far.  Add new templates if found via
+            # is_present.
             for var in set(scope)-checked:
                 if var not in template: continue
                 try:
@@ -292,6 +367,8 @@ class Template(dict_eval):
                 except ConfigError as ce:
                     errors.append(ce)
                     raise
+
+        # Insert default values for all templates found thus far:
         for var in template:
             if var not in scope:
                 tmpl=template[var]
@@ -305,12 +382,16 @@ class Template(dict_eval):
         if errors: raise TemplateErrors(errors)
 
 class TemplateValidationFailed(object):
+    """!Used for constants that represent validation failure cases"""
     def __bool__(self):         return False
+
 NOT_ALLOWED=TemplateValidationFailed()
 TYPE_MISMATCH=TemplateValidationFailed()
 UNKNOWN_TYPE=TemplateValidationFailed()
 
 def validate_scalar(types,val,allowed,tname):
+    """!Validates val against the type tname, and allowed values.  Forbids
+    recursion (scalars cannot contain subobjects."""
     if allowed and val not in allowed:    return NOT_ALLOWED
     if len(types):                        return TYPE_MISMATCH
     for cls in TYPES[tname]:
@@ -318,6 +399,8 @@ def validate_scalar(types,val,allowed,tname):
     return TYPE_MISMATCH
 
 def validate_list(types,val,allowed,tname):
+    """!Valdiates that val is a list that contains the specified allowed
+    values.  Recurses into subobjects, which must be of type types[-1] """
     if not len(types):                     return TYPE_MISMATCH
     if str(type(val)) not in TYPES(tname): return UNKNOWN_TYPE
     for v in val:
@@ -326,6 +409,8 @@ def validate_list(types,val,allowed,tname):
     return True
 
 def validate_dict(types,val,allowed,typ):
+    """!Valdiates that val is a map that contains the specified allowed
+    values.  Recurses into subobjects, which must be of type types[-1] """
     if not len(types):                    return TYPE_MISMATCH
     if str(type(val)) not in typ['list']: return UNKNOWN_TYPE
     for k,v in val.items():
@@ -333,10 +418,14 @@ def validate_dict(types,val,allowed,typ):
         if not result: return result
     return True
 
+## @var TYPES
+# Mapping from YAML type to valid python types.
 TYPES={ 'int':[int], 'bool':[bool], 'string':[str,bytes],
         'float':[float], 'list':[set,list,tuple,list_eval],
         'dict':[dict,dict_eval] }
 
+## @var VALIDATORS
+# Mapping from YAML type to validation function.
 VALIDATORS={ 'map':validate_dict,     
              'seq':validate_list,
              'set':validate_list,
@@ -346,6 +435,9 @@ VALIDATORS={ 'map':validate_dict,
              'float':validate_scalar }
 
 def validate_type(var,typ,val,allowed):
+    """!Top-level validation function.  Checks that the value val of the
+    variable var is of the given type typ and has values in the list
+    of those allowed.    """
     types=typ.split()
     for t in types:
         if t not in VALIDATORS:
@@ -363,6 +455,9 @@ def validate_type(var,typ,val,allowed):
             str(var),repr(val),', '.join([repr(s) for s in allowed])))
 
 def validate_var(scheme,var,val):
+    """!Main entry point to recursive validation system.  Validates
+    variable var with value val against the YAML Template list item in
+    scheme.    """
     if 'type' not in scheme:
         raise InvalidConfigTemplate(var+'.type: missing')
     typ=scheme.type

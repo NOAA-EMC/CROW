@@ -1,8 +1,13 @@
 #! /usr/bin/env python3.6
 
+## Simple test program for crow.config module
+
 import crow.config
 
 config=crow.config.from_file('test.yml')
+
+print()
+print("test = expected value = actual value")
 print()
 print("gfsfcst.a = 10 = "+repr(config.gfsfcst.a))
 print("gfsfcst.d = 9200 = "+repr(config.gfsfcst.d))
