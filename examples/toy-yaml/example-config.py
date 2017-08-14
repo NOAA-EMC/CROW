@@ -24,3 +24,6 @@ print()
 print("config.gfsfcst.cow = blue = "+repr(config.gfsfcst.cow))
 print("config.gfsfcst.dog = brown = "+repr(config.gfsfcst.dog))
 print("config.gfsfcst.lencow = 4 = "+repr(config.gfsfcst.lencow))
+print()
+print("test_things.expandme = abc, def, ghi = "+
+      repr(config.test_things.expandme))

@@ -22,7 +22,7 @@ __all__=[ 'MISSING', 'dict_eval', 'list_eval', 'strcalc', 'Action',
           'TaskStateNot', 'TaskStateIs', 'Taskable', 'Task',
           'Family','CycleAt','CycleTime','Cycle','Conditional',
           'calc','Trigger','Depend','Timespec', 'max_index',
-          'min_index', 'last_true', 'first_true' ]
+          'min_index', 'last_true', 'first_true', 'Expand' ]
 
 logger=logging.getLogger('crow.represent')
 
@@ -122,7 +122,7 @@ class dict_eval(MutableMapping):
             self.Template._check_scope(self)
     def __getitem__(self,key):
         val=self.__cache[key]
-        if isinstance(val,strcalc) or isinstance(val,Conditional):
+        if hasattr(val,'_result'):
             val=from_config(key,val,self.__globals,self)
             self.__cache[key]=val
         return val
@@ -216,6 +216,13 @@ class strcalc(str):
                          super().__repr__())
     def _result(self,globals,locals):
         return eval(self,globals,locals)
+
+class Expand(dict_eval):
+    def _result(self,globals,locals):
+        if 'result' not in self:
+            raise ExpandMissingCalc('"!Expand" block lacks a "result: !calc"')
+        return self.result
+
 def from_config(key,val,globals,locals):
     """!Converts s strcalc cor Conditional to another data type via eval().
     Other types are returned unmodified."""

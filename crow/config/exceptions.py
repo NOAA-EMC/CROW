@@ -4,6 +4,7 @@
 class ConfigError(Exception): pass
 class ConditionalMissingDoWhen(ConfigError): pass
 class CalcRecursionTooDeep(ConfigError): pass
+class ExpandMissingResult(ConfigError): pass
 class CalcKeyError(ConfigError): pass
 class TemplateError(ConfigError): pass
 class InvalidConfigTemplate(TemplateError): pass

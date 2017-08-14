@@ -19,6 +19,13 @@ test_things: &test_things
   badxv: !MaxKey []
   badnv: !MinKey []
 
+  expandme: !Expand
+    result: !calc "', '.join(lst)"
+    lst:
+      - abc
+      - def
+      - ghi
+
 theia: &theia !Platform
   <<: *test_things
   machine: THEIA

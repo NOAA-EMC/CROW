@@ -20,6 +20,7 @@ __all__=['ConvertFromYAML']
 class PlatformYAML(YAMLObject):   yaml_tag=u'!Platform'
 class ActionYAML(YAMLObject):     yaml_tag=u'!Action'
 class TemplateYAML(YAMLObject):   yaml_tag=u'!Template'
+class ExpandYAML(dict): pass
 class MaxKeyYAML(list): pass
 class MinKeyYAML(list): pass
 class FirstTrueYAML(list): pass
@@ -91,6 +92,7 @@ def add_yaml_ordered_dict(key,cls):
     yaml.add_representer(cls,representer)
     yaml.add_constructor(key,constructor)
 
+add_yaml_ordered_dict(u'!Expand',ExpandYAML)
 add_yaml_ordered_dict(u'!Cycle',CycleYAML)
 add_yaml_ordered_dict(u'!Task',TaskYAML)
 add_yaml_ordered_dict(u'!Family',FamilyYAML)
@@ -134,6 +136,8 @@ class ConvertFromYAML(object):
         if cls in CONDITIONALS:
             return Conditional(CONDITIONALS[cls],
                                self.from_list(v,locals),locals)
+        elif cls is ExpandYAML:
+            return Expand(self.from_dict(v))
 
         # Generic containers:
         elif isinstance(v,YAMLObject): return self.from_yaml(v)
