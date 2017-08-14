@@ -21,8 +21,8 @@ class PlatformYAML(YAMLObject):   yaml_tag=u'!Platform'
 class ActionYAML(YAMLObject):     yaml_tag=u'!Action'
 class TemplateYAML(YAMLObject):   yaml_tag=u'!Template'
 class ExpandYAML(dict): pass
-class MaxKeyYAML(list): pass
-class MinKeyYAML(list): pass
+class FirstMaxYAML(list): pass
+class FirstMinYAML(list): pass
 class FirstTrueYAML(list): pass
 class LastTrueYAML(list): pass
 class TaskYAML(OrderedDict): pass
@@ -75,8 +75,8 @@ def add_yaml_sequence(key,cls):
     yaml.add_representer(cls,representer)
     yaml.add_constructor(key,constructor)
 
-add_yaml_sequence(u'!MaxKey',MaxKeyYAML)
-add_yaml_sequence(u'!MinKey',MinKeyYAML)
+add_yaml_sequence(u'!FirstMax',FirstMaxYAML)
+add_yaml_sequence(u'!FirstMin',FirstMinYAML)
 add_yaml_sequence(u'!LastTrue',LastTrueYAML)
 add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
 
@@ -183,7 +183,7 @@ class ConvertFromYAML(object):
 ## @var CONDITIONALS
 # Used to handle custom yaml conditional types.  Maps from conditional type
 # to the function that performs the comparison.
-CONDITIONALS={ MaxKeyYAML:max_index,
-               MinKeyYAML:min_index,
+CONDITIONALS={ FirstMaxYAML:max_index,
+               FirstMinYAML:min_index,
                FirstTrueYAML:first_true,
                LastTrueYAML:last_true }
