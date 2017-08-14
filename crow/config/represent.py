@@ -11,6 +11,7 @@ following Python concepts:
  * custom dict/list types (eg. MutableMapping and MutableSequence)
  * python built-in eval() function    """
 
+import logging
 from collections import namedtuple, OrderedDict
 from collections.abc import MutableMapping, MutableSequence
 from copy import copy,deepcopy
@@ -22,6 +23,8 @@ __all__=[ 'MISSING', 'dict_eval', 'list_eval', 'strcalc', 'Action',
           'Family','CycleAt','CycleTime','Cycle','Conditional',
           'calc','Trigger','Depend','Timespec', 'max_index',
           'min_index', 'last_true', 'first_true' ]
+
+logger=logging.getLogger('crow.represent')
 
 ## @var MISSING
 # A special constant that indicates an argument was not specified.
@@ -62,6 +65,11 @@ class multidict(MutableMapping):
             if key in d:
                 return d._raw(key)
         raise KeyError(key)
+    def _has_raw(self,key):
+        try:
+            self._raw(key)
+            return True
+        except KeyError: return False
     def __repr__(self):
         return '%s(%s)'%(
             type(self).__name__,
@@ -89,6 +97,8 @@ class dict_eval(MutableMapping):
     def _raw(self,key):
         """!Returns the value for the given key, without calling eval() on it"""
         return self.__child[key]
+    def _has_raw(self,key):
+        return key in self.__child
     def __contains__(self,k):   return k in self.__child
     def _globals(self):
         """!Returns the global values used in eval() functions"""
@@ -117,7 +127,8 @@ class dict_eval(MutableMapping):
             self.__cache[key]=val
         return val
     def __getattr__(self,name):
-        return self[name]
+        if name in self: return self[name]
+        raise AttributeError(name)
     def _to_py(self,recurse=True):
         """!Converts to a python core object; does not work for cyclic object trees"""
         cls=type(self.__child)
@@ -161,6 +172,8 @@ class list_eval(MutableSequence):
     def _raw(self,i):           
         """!Returns the value at index i without calling eval() on it"""
         return self.__child[i]
+    def _has_raw(self,i):
+        return i>=0 and len(self.__child)>i
     def __copy__(self):
         return list_eval(self.__child,self.__locals)
     def __deepcopy__(self,memo):
@@ -201,24 +214,22 @@ class strcalc(str):
     def __repr__(self):
         return '%s(%s)'%(type(self).__name__,
                          super().__repr__())
-
+    def _result(self,globals,locals):
+        return eval(self,globals,locals)
 def from_config(key,val,globals,locals):
     """!Converts s strcalc cor Conditional to another data type via eval().
     Other types are returned unmodified."""
     try:
-        if isinstance(val,strcalc):
-            return eval(val,globals,locals)
-        elif isinstance(val,Conditional):
-            newval=val._result(globals,locals)
-            return from_config(key,newval,globals,locals)
+        if hasattr(val,'_result'):
+            return from_config(key,val._result(globals,locals),
+                               globals,locals)
+        return val
     except(KeyError,NameError,IndexError,AttributeError) as ke:
         raise CalcKeyError('%s: !%s %s -- %s %s'%(
             str(key),type(val).__name__,str(val),type(ke).__name__,str(ke)))
     except RecursionError as re:
         raise CalcRecursionTooDeep('%s: !%s %s'%(
             str(key),type(val).__name__,str(val)))
-    return val
-
 
 def as_state(obj):
     """!Converts the containing object to a State.  Action objects are
@@ -296,16 +307,21 @@ class Conditional(list_eval):
             keys=list()
             values=list()
             for vk in self:
-                value=vk._raw('value')
-                values.append(value)
-                keys.append(from_config('key',vk._raw('key'),globals,
-                    multidict(vk,locals)))
+                if vk._has_raw('when') and vk._has_raw('do'):
+                    values.append(vk._raw('do'))
+                    keys.append(from_config('when',vk._raw('when'),
+                        globals,multidict(vk,locals)))
+                else:
+                    raise ConditionalMissingDoWhen(
+                        'Conditional list entries must have "do" and "when" '
+                        'elements (saw keys: %s)'
+                        %(', '.join(list(vk.keys())), ))
             index=self.__index(keys)
             if index is None:
                 self.__cache=None
             else:
                 try:
-                    values=[ vk._raw('value') for vk in self ]
+                    values=[ vk._raw('do') for vk in self ]
                 except AttributeError:
                     values=[ vk.value for vk in self ]
                     scope[var]=tmpl['default']
