@@ -1,4 +1,7 @@
-# Note: all symbols are public by default (no __all__)
+__all__=['ConfigError', 'ConditionalMissingDoWhen', 'TemplateErrors',
+         'CalcRecursionTooDeep', 'ExpandMissingResult',
+         'CalcKeyError', 'TemplateError', 'InvalidConfigTemplate',
+         'InvalidConfigValue', 'InvalidConfigType' ]
 
 # module-specific exceptions:
 class ConfigError(Exception): pass

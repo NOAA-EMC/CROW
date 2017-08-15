@@ -25,8 +25,20 @@ print("config.gfsfcst.cow = blue = "+repr(config.gfsfcst.cow))
 print("config.gfsfcst.dog = brown = "+repr(config.gfsfcst.dog))
 print("config.gfsfcst.lencow = 4 = "+repr(config.gfsfcst.lencow))
 print()
-print("test_things.expandme = abc, def, ghi = "+
-      repr(config.test_things.expandme))
-print('fcst.hydro_mono = hydro_mono = '+
+print('config.test.dt = datetime.timedelta(0, 12000) = '+
+      repr(config.test.dt))
+print('config.test.fcsttime = datetime.datetime(2017, 9, 19, 21, 20) = '+
+      repr(config.test.fcsttime))
+print('config.test.fYMDH = 2017091921 = '+repr(config.test.fYMDH))
+print()
+print("config.test.expandme = abc, def, ghi = "+
+      repr(config.test.expandme))
+print('config.fcst.hydro_mono = hydro_mono = '+
       repr(config.fcst.hydro_mono))
-print('fcst.some_namelist: \n'+str(config.fcst.some_namelist))
+print('config.fcst.some_namelist: \n'+str(config.fcst.some_namelist))
+
+with open('namelist.nl','rt') as fd:
+    namelist_nl=fd.read()
+
+print('config.fcst.expand_text(...namelist.nl...): \n'+
+      crow.config.expand_text(namelist_nl,config.fcst))

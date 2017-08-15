@@ -16,6 +16,13 @@ __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
 def to_py(obj):
     return obj._to_py() if hasattr(obj,'_to_py') else obj
 
+def expand_text(text,scope):
+    if hasattr(scope,'_expand_text'):
+        return scope._expand_text(text)
+    raise TypeError('In expand_text, the "scope" parameter must be an '
+                    'object with the _expand_text argument.  You sent a '
+                    '%s.'%(type(scope).__name__))
+
 def from_string(s):
     c=ConvertFromYAML(yaml.load(s),CONFIG_TOOLS,ENV)
     result=c.convert()

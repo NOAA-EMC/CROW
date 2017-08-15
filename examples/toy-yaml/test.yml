@@ -1,4 +1,4 @@
-test_things: &test_things
+test: &test
   four: !calc 2*2
   B: !FirstTrue
     - { do: A, when: false }
@@ -12,6 +12,11 @@ test_things: &test_things
     - { do: X, when: false }
     - { do: Y, when: false }
     - { do: Z, when: false }
+
+  dt: !timedelta 03:20
+  anltime: 2017-09-19t18:00:00
+  fcsttime: !calc anltime+dt
+  fYMDH: !calc tools.YMDH(fcsttime)
 
   # Conditionals on an empty list always return null:
   badlt: !LastTrue []
@@ -27,7 +32,7 @@ test_things: &test_things
       - ghi
 
 theia: &theia !Platform
-  <<: *test_things
+  <<: *test
   machine: THEIA
   ACCOUNT: fv3-cpu
   QUEUE: batch
@@ -47,7 +52,7 @@ theia: &theia !Platform
       when: !calc tools.panasas_gb(do)
 
 wcoss_cray: &wcoss_cray !Platform
-  <<: *test_things
+  <<: *test
   machine: THEIA
   ACCOUNT: fv3-cpu
   QUEUE: batch
@@ -143,9 +148,9 @@ suite: !Cycle
      step: !calc 6*3600
    gfs: !Family
      fcst: !Task
-       Perform: [ *gfsfcst ]
+       Perform: *gfsfcst
        Trigger: !Depend doc.suite.at(hours=-6).gdas.anal
        Time: !Timespec doc.suite.clock(hours=+3)
      post: !Task
-       Perform: [ *gfspost ]
+       Perform: *gfspost
        Trigger: !Trigger fcst==RUNNING

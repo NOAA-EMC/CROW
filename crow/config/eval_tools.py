@@ -32,6 +32,7 @@ feature:
 
 from collections.abc import MutableMapping, MutableSequence
 from copy import copy,deepcopy
+from crow.config.exceptions import *
 
 __all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval',
           'list_eval', 'multidict', 'Eval' ]
@@ -104,6 +105,8 @@ class multidict(MutableMapping):
             self._raw(key)
             return True
         except KeyError: return False
+    def _expand_text(self,text):
+        eval('f'+repr(text),self._globals(),self)
     def __repr__(self):
         return '%s(%s)'%(
             type(self).__name__,
@@ -124,22 +127,23 @@ class dict_eval(MutableMapping):
     * __getitem__(b) + __getitem__(c)    """
 
     def __init__(self,child):
-        assert(not isinstance(child,dict_eval))
+        #assert(not isinstance(child,dict_eval))
         self.__child=copy(child)
         self.__cache=copy(child)
         self.__globals={}
+    def __contains__(self,k):   return k in self.__child
     def __len__(self):          return len(self.__child)
+    def __copy__(self):         return dict_eval(self.__child)
+    def _raw_child(self):       return self.__child
+    def _has_raw(self,key):     return key in self.__child
     def _raw(self,key):
         """!Returns the value for the given key, without calling eval() on it"""
         return self.__child[key]
-    def _has_raw(self,key):
-        return key in self.__child
-    def __contains__(self,k):   return k in self.__child
     def _globals(self):
         """!Returns the global values used in eval() functions"""
         return self.__globals
-    def __copy__(self):
-        return dict_eval(self.__child)
+    def _expand_text(self,text):
+        return eval('f'+repr(text),self.__globals,self)
     def __deepcopy__(self,memo):
         cls=type(self.__child)
         r=dict_eval(cls([ (k,deepcopy(v)) for k,v in self.__child]))

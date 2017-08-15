@@ -9,13 +9,18 @@ following python concept:
 
 """
 
+from datetime import timedelta
 from collections import namedtuple, OrderedDict
+import re
+
 import yaml
 from yaml import YAMLObject
+
 from crow.config.eval_tools import *
 from crow.config.represent import *
 from crow.config.tasks import *
 from crow.config.template import Template
+from crow.config.exceptions import *
 
 __all__=['ConvertFromYAML']
 
@@ -52,9 +57,58 @@ def type_for(t):
 
 ########################################################################
 
+DT_REGEX={
+    u'(\d+):(\d+)':(
+        lambda m: timedelta(hours=m[0],minutes=m[1]) ),
+    u'(\d+):(\d+):(\d+)':(
+        lambda m: timedelta(hours=m[0],minutes=m[1],seconds=m[2]) ),
+    u'(\d+)d(\d+)h':(
+        lambda m: timedelta(days=m[0],hours=m[1])),
+    u'(\d+)d(\d+):(\d+)':(
+        lambda m: timedelta(days=m[0],hours=m[1],minutes=m[2])),
+    u'(\d+)d(\d+):(\d+):(\d+)':(
+        lambda m: timedelta(days=m[0],hours=m[1],minutes=m[2],
+                            seconds=m[3]))
+    }
+
+def timedelta_constructor(loader,node):
+    s=loader.construct_scalar(node)
+    mult=1
+    if s[0]=='-':
+        s=s[1:]
+        mult=-1
+    for regex,fun in DT_REGEX.items():
+        m=re.match(regex,s)
+        if m:
+            ints=[ int(s,10) for s in m.groups() ]
+            return mult*fun(ints)
+    raise ValueError(s+': invalid timedelta specification (12:34, '
+                     '12:34:56, 9d12h, 9d12:34, 9d12:34:56)')
+
+ZERO_DT=timedelta()
+
+def timedelta_representer(dumper,dt):
+    pre=''
+    if dt<ZERO_DT:
+        dt=abs(dt)
+        pre='-'
+    hours=dt.seconds//3600
+    minutes=(dt.seconds-hours*3600)//60
+    seconds=dt.seconds-hours*3600-minute*60
+    rep=''
+    if dt.days: rep=f'{dt.days}d'
+    rep+=f'{hours:02d}:{minutes:02d}:{seconds:02d}'
+    if dt.microseconds: rep+=f'.{dt.microseconds:06d}'
+    return dumper.represent_scalar(rep)
+
+yaml.add_representer(timedelta,timedelta_representer)
+yaml.add_constructor('!timedelta',timedelta_constructor)
+
+########################################################################
+
 def add_yaml_string(key,cls):
-    """!Generates and registers representers and constructors for custom string
-    YAML types"""
+    """!Generates and registers representers and constructors for custom
+    string YAML types    """
     def representer(dumper,data):
         return dumper.represent_scalar(key,str(data))
     yaml.add_representer(cls,representer)
