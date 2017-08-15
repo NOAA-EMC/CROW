@@ -27,3 +27,6 @@ print("config.gfsfcst.lencow = 4 = "+repr(config.gfsfcst.lencow))
 print()
 print("test_things.expandme = abc, def, ghi = "+
       repr(config.test_things.expandme))
+print('fcst.hydro_mono = hydro_mono = '+
+      repr(config.fcst.hydro_mono))
+print('fcst.some_namelist: \n'+str(config.fcst.some_namelist))

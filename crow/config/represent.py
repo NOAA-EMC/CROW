@@ -21,8 +21,8 @@ __all__=[ 'MISSING', 'dict_eval', 'list_eval', 'strcalc', 'Action',
           'Platform', 'Template', 'TaskStateAnd', 'TaskStateOr',
           'TaskStateNot', 'TaskStateIs', 'Taskable', 'Task',
           'Family','CycleAt','CycleTime','Cycle','Conditional',
-          'calc','Trigger','Depend','Timespec', 'max_index',
-          'min_index', 'last_true', 'first_true', 'Expand' ]
+          'calc','Trigger','Depend','Timespec', 'max_index', 'expand',
+          'min_index', 'last_true', 'first_true', 'Eval' ]
 
 logger=logging.getLogger('crow.represent')
 
@@ -90,6 +90,7 @@ class dict_eval(MutableMapping):
     * __getitem__(b) + __getitem__(c)    """
 
     def __init__(self,child):
+        assert(not isinstance(child,dict_eval))
         self.__child=copy(child)
         self.__cache=copy(child)
         self.__globals={}
@@ -137,11 +138,13 @@ class dict_eval(MutableMapping):
     def _recursively_set_globals(self,globals):
         """Recurses through the object tree setting the globals for eval() calls"""
         assert('tools' in globals)
+        assert('doc' in globals)
         if self.__globals is globals: return
         self.__globals=globals
         for k,v in self.__child.items():
-            if isinstance(v,dict_eval) or isinstance(v,list_eval):
+            try:
                 v._recursively_set_globals(globals)
+            except AttributeError: pass
     def __repr__(self):
         return '%s(%s)'%(type(self).__name__,repr(self.__child),)
 
@@ -191,7 +194,7 @@ class list_eval(MutableSequence):
         self.__cache.insert(i,o)
     def __getitem__(self,index):
         val=self.__cache[index]
-        if isinstance(val,strcalc) or isinstance(val,Conditional):
+        if hasattr(val,'_result'):
             val=from_config(index,val,self.__globals,self.__locals)
             self.__cache[index]=val
         return val
@@ -209,6 +212,11 @@ class list_eval(MutableSequence):
 
 ########################################################################
 
+class expand(str):
+    """!Represents a literal format string."""
+    def _result(self,globals,locals):
+        return eval('f'+repr(self),globals,locals)
+
 class strcalc(str):
     """Represents a string that should be run through eval()"""
     def __repr__(self):
@@ -217,10 +225,10 @@ class strcalc(str):
     def _result(self,globals,locals):
         return eval(self,globals,locals)
 
-class Expand(dict_eval):
+class Eval(dict_eval):
     def _result(self,globals,locals):
         if 'result' not in self:
-            raise ExpandMissingCalc('"!Expand" block lacks a "result: !calc"')
+            raise EvalMissingCalc('"!Eval" block lacks a "result: !calc"')
         return self.result
 
 def from_config(key,val,globals,locals):
@@ -233,7 +241,7 @@ def from_config(key,val,globals,locals):
         return val
     except(KeyError,NameError,IndexError,AttributeError) as ke:
         raise CalcKeyError('%s: !%s %s -- %s %s'%(
-            str(key),type(val).__name__,str(val),type(ke).__name__,str(ke)))
+            str(key),type(val).__name__,repr(val),type(ke).__name__,str(ke)))
     except RecursionError as re:
         raise CalcRecursionTooDeep('%s: !%s %s'%(
             str(key),type(val).__name__,str(val)))
@@ -278,8 +286,6 @@ def as_task_state(obj,state='COMPLETED'):
 
 class Taskable(object):
     """!Represents any noun in a dependency specification."""
-    def __init__(self,info):
-        self.info=info
     def __and__(self,other):
         other=as_task_state(other)
         if other is NotImplemented: return other
@@ -291,13 +297,13 @@ class Taskable(object):
     def __not__(self): 
         return TaskStateNot(as_task_state(self))
 
-class Task(Taskable): pass
-class Family(Taskable): pass
+class Task(dict_eval): pass
+class Family(dict_eval): pass
 class CycleAt(namedtuple('CycleAt',['cycle','hours','days'])): pass
 class CycleTime(namedtuple('CycleTime',['cycle','hours','days'])): pass
-class Cycle(Taskable):
+class Cycle(dict_eval):
     def name(self,when):
-        return self.info.get('format','cyc_%Y%m%d_%H%M%S')
+        return self.get('format','cyc_%Y%m%d_%H%M%S')
     def at(self,hours=0,days=0):
         return CycleAt(self,hours,days)
     def clock(self,hours=0,days=0):
@@ -310,6 +316,7 @@ class Conditional(list_eval):
         self.__index=_index
     def _result(self,globals,locals):
         assert('tools' in globals)
+        assert('doc' in globals)
         if self.__cache is MISSING:
             keys=list()
             values=list()

@@ -1,5 +1,13 @@
 import crow.tools
 import os.path
+import os
+
+class Environment(dict):
+    def __getattr__(self,key):
+        if key in self: return self[key]
+        raise AttributeError(key)
+
+ENV=Environment(os.environ)
 
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.

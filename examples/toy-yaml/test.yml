@@ -19,7 +19,7 @@ test_things: &test_things
   badxv: !FirstMax []
   badnv: !FirstMin []
 
-  expandme: !Expand
+  expandme: !Eval
     result: !calc "', '.join(lst)"
     lst:
       - abc
@@ -108,6 +108,14 @@ fcst: &fcst !Action
   master_grid: "0p5deg"
   TYPE: hydro
   MONO: mono
+  hydro_mono: !expand '{TYPE}_{MONO}'
+  some_namelist: !expand |
+    &some_namelist
+      type = {TYPE}
+      mono = {MONO}
+      shal_cnv = .{shal_cnv}.
+      agrid_vel_rst: .{agrid_vel_rst}.
+    /
   a: !calc 5 + 5
   b: !calc a*2
   c: !calc fv_sg_adj+b
