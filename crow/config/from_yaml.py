@@ -12,7 +12,10 @@ following python concept:
 from collections import namedtuple, OrderedDict
 import yaml
 from yaml import YAMLObject
+from crow.config.eval_tools import *
 from crow.config.represent import *
+from crow.config.tasks import *
+from crow.config.template import Template
 
 __all__=['ConvertFromYAML']
 

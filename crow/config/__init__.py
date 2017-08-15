@@ -1,9 +1,11 @@
 import yaml
 import crow.tools
 from crow.config.from_yaml import ConvertFromYAML
-from crow.config.represent import Action, Platform, Template, \
-    TaskStateAnd, TaskStateOr, TaskStateNot, TaskStateIs, Taskable, \
-    Task, Family, CycleAt, CycleTime, Cycle, Trigger, Depend, Timespec
+from crow.config.template import Template
+from crow.config.represent import Action, Platform
+from crow.config.tasks import Task, Family, CycleAt, CycleTime, \
+    Cycle, Trigger, Depend, Timespec, TaskStateAnd, TaskStateOr, \
+    TaskStateNot, TaskStateIs, Taskable
 from crow.config.tools import CONFIG_TOOLS, ENV
 
 __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
