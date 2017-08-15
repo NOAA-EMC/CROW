@@ -9,13 +9,43 @@ following basic Python concepts:
 - inheritance
 """
 
-from collections import namedtuple
+from collections import namedtuple, UserDict
+from copy import copy
 from crow.config.exceptions import *
 from crow.config.eval_tools import dict_eval, strcalc
 
 __all__=[ 'TaskStateAnd', 'TaskStateOr', 'Trigger', 'Depend',
           'TaskStateNot', 'TaskStateIs', 'Taskable', 'Task',
           'Family', 'CycleAt', 'CycleTime', 'Cycle', 'Timespec'  ]
+
+class SuiteView(dict_eval):
+    def __init__(self,path,child):
+        super().__init__(child)
+        self.__path=path
+
+    @property
+    def path(self): return self.__path
+
+    def __getattr__(self,key):
+        if key in self: return self[key]
+        # Any key not "in self" is referring to an actual method or
+        # property of the child class.  Hence, we pass it through
+        # without __wrapping it.
+        return getattr(self._raw_child(),key)
+
+    def __wrap(self,obj):
+        if isinstance(val,Taskable):
+            # Add to path when we add a family
+            return SuiteView(self.__path+[key],val)
+        if isinstance(val,Cycle):
+            # Reset path when we see a cycle
+            return SuiteView(self.__path[:1],val)
+        if isinstance(obj,SuiteView):
+            return obj
+        return val
+
+    def __getitem__(self,key):
+        return self.__wrap(dict_eval.__getitem__(self,key))
 
 class Trigger(strcalc): pass
 class Depend(strcalc): pass
@@ -28,7 +58,6 @@ def as_state(obj):
     elif isinstance(obj,State):      return obj
     elif isinstance(obj,ComboState): return obj
     else:                            return NotImplemented
-
 
 class TaskStateAnd(namedtuple('TaskStateAnd',['task1','task2'])): pass
 class TaskStateOr(namedtuple('TaskStateOr',['task1','task2'])): pass
@@ -45,7 +74,10 @@ def as_task_state(obj,state='COMPLETED'):
     return NotImplemented
 
 class Taskable(object):
-    """!Represents any noun in a dependency specification."""
+    """!Abstract base class that adds logical operators for dependency
+    specification.  This is intended to be used as a mixin.  It must
+    be included last in an inheritance list to ensure non-abstract
+    class constructors are called.    """
     def __and__(self,other):
         other=as_task_state(other)
         if other is NotImplemented: return other
@@ -57,9 +89,9 @@ class Taskable(object):
     def __not__(self): 
         return TaskStateNot(as_task_state(self))
 
-class Task(dict_eval): pass
-class Family(dict_eval): pass
-class CycleAt(namedtuple('CycleAt',['cycle','hours','days'])): pass
+class Task(dict_eval,Taskable): pass
+class Family(dict_eval,Taskable): pass
+class CycleAt(dict_eval,Taskable): pass
 class CycleTime(namedtuple('CycleTime',['cycle','hours','days'])): pass
 class Cycle(dict_eval):
     def name(self,when):
