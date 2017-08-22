@@ -11,13 +11,16 @@ fcst: &fcst !Action
   TYPE: hydro
   MONO: mono
   hydro_mono: !expand '{TYPE}_{MONO}'
-  some_array: [ 1, 2, 3, 4, 5 ]
+  int_array: [ 1, 2, 3, 4, 5 ]
+  string_array: [ a, b, c, d, e ]
 
   some_namelist: !expand |
     &some_namelist
-      some_array = {tools.fort(some_array)}
-      type = {TYPE}
-      mono = {MONO}
+      int_array = {tools.fort(int_array)}
+      bool_array = {tools.fort(bool_array)}
+      string_array = {tools.fort(string_array)}
+      type = {tools.fort(TYPE)}
+      mono = {tools.fort(MONO)}
       shal_cnv = {tools.fort(shal_cnv)}
       agrid_vel_rst= {tools.fort(agrid_vel_rst)}
     /
@@ -36,34 +39,6 @@ fcst: &fcst !Action
     - mpi_ranks: 192
       threads: 4
 
-gfsprep: &gfsprep !Action
-  Template: *fcst_vars
-  anothervar: anothervalue
-  resources: 
-    - mpi_ranks: 2
-      OMP_NUM_THREADS: 4
-
-gfsanl: &gfsanl !Action
-  Template: *fcst_vars
-  anothervar: anothervalue
-  resources: 
-    - mpi_ranks: 64
-      OMP_NUM_THREADS: 4
-
-gdasenkf: &gdasenkf !Action
-  Template: *fcst_vars
-  somevar: somevalue
-  resources: 
-    - mpi_ranks: 12
-      OMP_NUM_THREADS: 1
-
-gfspost: &gfspost !Action
-  Template: *fcst_vars
-  somevar: somevalue
-  resources: 
-    - mpi_ranks: 12
-      OMP_NUM_THREADS: 1
-    
 gfsfcst: &gfsfcst !Action
     <<: *fcst
     stuff: [ !calc a+b , !calc 2*2 ]

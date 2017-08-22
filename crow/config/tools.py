@@ -22,9 +22,16 @@ def seq(start,end,step):
 def fort(value,scope='scope'):
     """!Convenience function to convert a python object to a syntax valid
     in fortran namelists.    """
-    if isinstance(value,Sequence):
+    if isinstance(value,str):
+        return repr(value)
+    elif isinstance(value,Sequence):
         # For sequences, convert to a namelist list.
-        return ", ".join([ str(s) for s in value])
+        result=[]
+        for item in value:
+            assert(item is not value)
+            fortitem=fort(item,scope)
+            result.append(fortitem)
+        return ", ".join(result)
     elif isinstance(value,Mapping):
         # For mappings, assume a derived type.
         subscope_keys=[ (f'{scope}%{key}',value) for key in value ]

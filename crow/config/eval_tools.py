@@ -111,6 +111,8 @@ class multidict(MutableMapping):
         return '%s(%s)'%(
             type(self).__name__,
             ','.join([repr(d) for d in self.__dicts]))
+    def __str__(self):
+        return '{'+', '.join([f'{k}:{v}' for k,v in self])+'}'
 
 ########################################################################
 
@@ -196,6 +198,8 @@ class dict_eval(MutableMapping):
             except AttributeError: pass
     def __repr__(self):
         return '%s(%s)'%(type(self).__name__,repr(self.__child),)
+    def __str__(self):
+        return '{'+', '.join([f'{k}:{v}' for k,v in self])+'}'
 
 ########################################################################
 
@@ -258,6 +262,7 @@ class list_eval(MutableSequence):
         if hasattr(val,'_result'):
             val=from_config(index,val,self.__globals,self.__locals)
             self.__cache[index]=val
+        assert(val is not self)
         return val
     def _to_py(self,recurse=True):
         """!Converts to a python core object; does not work for cyclic object trees"""
@@ -270,6 +275,8 @@ class list_eval(MutableSequence):
                 v._recursively_set_globals(globals)
     def __repr__(self):
         return '%s(%s)'%(type(self).__name__,repr(self.__child),)
+    def __str__(self):
+        return '['+', '.join([str(v) for v in self])+']'
 
 ########################################################################
 

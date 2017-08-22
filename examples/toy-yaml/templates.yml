@@ -8,8 +8,17 @@ more_vars: &more_vars !Template
     default: 'brown'
 
 fcst_vars: &fcst_vars !Template
+  int_array:
+    type: int list
+  string_array:
+    type: string list
+  bool_array:
+    type: bool list
+    default: [ true, false, true ]
   do_vort_damp:
     type: bool
+  master_grid:
+    type: string
   a:
     type: int
     allowed: [ 10, 20, 30 ]
