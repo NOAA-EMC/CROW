@@ -1,9 +1,10 @@
 import subprocess
 import os, re
+from datetime import timedelta
 from copy import deepcopy
 from collections.abc import Mapping
 
-__all__=['panasas_gb','gpfs_gb']
+__all__=['panasas_gb','gpfs_gb','to_timedelta']
 
 def panasas_gb(dir):
     rdir=os.path.realpath(dir)
@@ -54,3 +55,38 @@ class ImmutableMapping(Mapping):
             yield i
 
 
+
+########################################################################
+
+DT_REGEX={
+    u'(\d+):(\d+)':(
+        lambda m: timedelta(hours=m[0],minutes=m[1]) ),
+    u'(\d+):(\d+):(\d+)':(
+        lambda m: timedelta(hours=m[0],minutes=m[1],seconds=m[2]) ),
+    u'(\d+)d(\d+)h':(
+        lambda m: timedelta(days=m[0],hours=m[1])),
+    u'(\d+)d(\d+):(\d+)':(
+        lambda m: timedelta(days=m[0],hours=m[1],minutes=m[2])),
+    u'(\d+)d(\d+):(\d+):(\d+)':(
+        lambda m: timedelta(days=m[0],hours=m[1],minutes=m[2],
+                            seconds=m[3]))
+    }
+
+def to_timedelta(s):
+    if isinstance(s,timedelta): return s
+    if not isinstance(s,str):
+        raise TypeError('Argument to to_timedelta must be a str not a %s'%(
+            type(s).__name__,))
+    mult=1
+    if s[0]=='-':
+        s=s[1:]
+        mult=-1
+    elif s[0]=='+':
+        s=s[1:]
+    for regex,fun in DT_REGEX.items():
+        m=re.match(regex,s)
+        if m:
+            ints=[ int(s,10) for s in m.groups() ]
+            return mult*fun(ints)
+    raise ValueError(s+': invalid timedelta specification (12:34, '
+                     '12:34:56, 9d12h, 9d12:34, 9d12:34:56)')

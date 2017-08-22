@@ -1,8 +1,9 @@
 import sys
 from datetime import timedelta, datetime
-from io import StringIO as sio
+from io import StringIO
 from collections import namedtuple
 from collections.abc import Sequence, Mapping
+from crow.tools import to_timedelta
 import crow.sysenv
 from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           AndDependency, OrDependency, NotDependency, \
@@ -14,6 +15,8 @@ from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
 __all__=['ToRocoto','RocotoConfigError']
 
 KEY_WARNINGS={ 'cyclethrottle':'Did you mean cycle_throttle?' }
+
+MISSING=object()
 
 REQUIRED_KEYS={ 'workflow_install':'directory to receive Rocoto workflow',
                 'scheduler':'Scheduler class',
@@ -50,12 +53,17 @@ def to_rocoto_dep(dep,fd,indent):
         fd.write(f'{"  "*indent}</{tag}>\n')
     elif isinstance(dep,StateDependency):
         path='-'.join(dep.path[1:])
-        state=ROCOTO_STATE_MAP[dep.state]
         tag='taskdep' if dep.is_task() else 'metataskdep'
-        fd.write(f'{"  "*indent}<{tag} task="{path}" state="{state}"/>\n')
+        if dep.state is COMPLETED:
+            fd.write(f'{"  "*indent}<{tag} task="{path}"/>\n')
+        else:
+            state=ROCOTO_STATE_MAP[dep.state]
+            fd.write(f'{"  "*indent}<{tag} task="{path}" state="{state}"/>\n')
     elif isinstance(dep,CycleExistsDependency):
         dt=cycle_offset(dep.dt)
         fd.write(f'{"  "*indent}<cycleexistdep cycle_offset="{dt}"/>\n')
+    else:
+        raise TypeError(f'Unexpected {type(dep).__name__} in to_rocoto_dep')
 
 def to_rocoto_time_dep(dt,fd,indent):
     string_dt=cycle_offset(dt)
@@ -70,34 +78,18 @@ def xml_quote(s):
             .replace('<','&lt;')
 
 class ToRocoto(object):
-    def __init__(self,suite,fd):
-        self.fd=fd
-        if isinstance(suite,Cycle):
-            suite=Suite(suite)
-        elif not isinstance(suite,Suite):
-            raise TypeError('The suite argument must be a Suite, '
+    def __init__(self,suite):
+        if not isinstance(suite,Cycle):
+            raise TypeError('The suite argument must be a Cycle, '
                             'not a '+type(suite).__name__)
-        
-        # Get the Rocoto settings:
-        if 'Rocoto' not in suite or not isinstance(suite.Rocoto,Mapping):
-            raise RocotoConfigError(
-                'To run a suite in Rocoto, you must have a suite-level '
-                'Rocoto mapping that defines Rocoto-specific information.')
-        self.settings=suite.Rocoto
 
-        # Get the scheduler
-        if 'scheduler' not in self.settings:
-            raise RocotoConfigError(
-                'The Rocoto section of a suite must specify the scheduler '
-                'settings in the "scheduler" section.')
-
-        scheduler_settings=self.settings.scheduler
-        scheduler_name=self.settings.scheduler.name
-
+        scheduler_settings=suite.Rocoto.scheduler
+        scheduler_name=suite.Rocoto.scheduler.name
         sched=crow.sysenv.get_scheduler(scheduler_name,scheduler_settings)
 
-        self.suite=suite.make_empty_copy({'sched':sched})
+        self.suite=Suite(suite,{'sched':sched,'to_rocoto':self})
         self.settings=self.suite.Rocoto
+        self.sched=sched
         self.__completes=dict()
         self.__families=set()
         self.__spacing=suite.Rocoto.get('indent_text','  ')
@@ -105,6 +97,9 @@ class ToRocoto(object):
             raise TypeError("Suite's Rocoto.indent_text, if present, "
                             "must be a string.")
         self.__dummy_var_count=0
+
+    def expand_workflow_xml(self):
+        return self.settings.workflow_xml
 
     def validate_cycle(self):
         """!Perform sanity checks on top level of suite."""
@@ -117,7 +112,7 @@ class ToRocoto(object):
             if key in settings:
                 raise KeyError('%s: %s'%(key,what))
 
-    def convert_family(self,indent,view,trigger,complete,time):
+    def convert_family(self,fd,indent,view,trigger,complete,time):
         trigger=trigger & view.get_trigger_dep()
         complete=complete | view.get_complete_dep()
         time=max(time,view.get_time_dep())
@@ -128,7 +123,7 @@ class ToRocoto(object):
 
         path=xml_quote('-'.join(view.path[1:]))
         if not isinstance(view,Suite):
-            self.fd.write(f'''{space*indent}<metatask name="{path}">
+            fd.write(f'''{space*indent}<metatask name="{path}">
 {space*indent}  <var name="{dummy_var}">DUMMY_VALUE</var>
 ''')
         self.__families.add(SuitePath(view.path[1:-1]))
@@ -142,72 +137,87 @@ class ToRocoto(object):
                         'The "final" task must be a Task, not a Family.')
                 self.__final_task=child
             elif child.is_task():
-                self.convert_task(indent+1,child,trigger,complete,time)
+                self.convert_task(fd,indent+1,child,trigger,complete,time)
             else:
-                self.convert_family(indent+1,child,trigger,complete,time)
+                self.convert_family(fd,indent+1,child,trigger,complete,time)
 
         if not isinstance(view,Suite):
-            self.fd.write(f'{space*indent}</metatask>\n')
+            fd.write(f'{space*indent}</metatask>\n')
 
-    def convert_task(self,indent,view,trigger,complete,time):
+    def convert_task(self,fd,indent,view,trigger,complete,time):
         trigger=trigger & view.get_trigger_dep()
         complete=complete | view.get_complete_dep()
         time=max(time,view.get_time_dep())
-        space=self.__spacing
 
         if complete is not FALSE_DEPENDENCY:
-            self.__completes[view.path[1:]]=complete
+            self.__completes[view]=complete
 
         dep_count = int(trigger is not TRUE_DEPENDENCY) + \
                     int(time>timedelta.min)
+        self.write_task_text(fd,'',indent,view,dep_count,trigger,time)
+
+    def write_task_text(self,fd,attr,indent,view,dep_count,trigger,time):
+        path='-'.join(view.path[1:])
         indent1=indent+1
+        space=self.__spacing
+        fd.write(f'{space*indent}<task name="{path}"{attr}>\n')
 
-        path='/'.join(view.path[1:])
-        self.fd.write(f'{space*indent}<task name="{path}">\n')
+        if 'Rocoto' in view:
+            for line in view.Rocoto.splitlines():
+                fd.write(f'{space*indent1}{line}\n')
 
-        if 'RocotoResources' in view:
-            for line in view.RocotoResources.splitlines():
-                self.fd.write(f'{space*indent1}{line}\n')
-
-        if dep_count==2:
-            self.fd.write(space*indent1 + '<dependency> <and>\n')
-        elif dep_count==1:
-            self.fd.write(space*indent1 + '<dependency>\n')
+        if not dep_count:
+            fd.write(space*indent1 + '<!-- no dependencies -->\n')
+        if dep_count:
+            fd.write(space*indent1 + '<dependency>\n')
+        if dep_count>1:
+            fd.write(space*indent1 + '<and>\n')
 
         if trigger is not TRUE_DEPENDENCY:
-            to_rocoto_dep(trigger,self.fd,indent1+1)
+            to_rocoto_dep(trigger,fd,indent1+1)
         if time>timedelta.min:
-            to_rocoto_time_dep(time,self.fd,indent1+1)
+            to_rocoto_time_dep(time,fd,indent1+1)
 
-        if dep_count==2:
-            self.fd.write(space*indent1 + '</and> </dependency>\n')
-        elif dep_count==1:
-            self.fd.write(space*indent1 + '</dependency>\n')
-        self.fd.write(space*indent+'</task>\n')
+        if dep_count>1:
+            fd.write(space*indent1 + '</and>\n')
+        if dep_count:
+            fd.write(space*indent1 + '</dependency>\n')
+        fd.write(space*indent+'</task>\n')
 
-    def make_time_xml(self,indent=2):
-        start_time=self.Clock.start.strftime('%Y%m%d%H%M')
-        end_time=self.Clock.start.strftime('%Y%m%d%H%M')
-        step=to_timedelta(self.Clock.step) # convert to python timedelta
+    def make_time_xml(self,indent=1):
+        clock=self.suite.Clock
+        start_time=clock.start.strftime('%Y%m%d%H%M')
+        end_time=clock.start.strftime('%Y%m%d%H%M')
+        step=to_timedelta(clock.step) # convert to python timedelta
         step=cycle_offset(step) # convert to rocoto time delta
         space=self.__spacing
-        return f'{space*indent}<cycledef>{start_time} {end_time} {step}</cycledef>'
+        return f'{space*indent}<cycledef>{start_time} {end_time} {step}</cycledef>\n'
 
-    def make_task_xml(self,indent=2):
-        self.convert_family(indent,self.suite,TRUE_DEPENDENCY,FALSE_DEPENDENCY,
-                            timedelta.min)
-        self.handle_final_task(indent)
+    def make_task_xml(self,indent=1):
+        fd=StringIO()
+        self.convert_family(fd,max(0,indent-1),self.suite,TRUE_DEPENDENCY,
+                            FALSE_DEPENDENCY,timedelta.min)
+        self.handle_final_task(fd,indent)
+        result=fd.getvalue()
+        fd.close()
+        return result
 
-    def completes_for(self,item,with_completes):
+    def completes_for(self,fd,item,with_completes):
         path=SuitePath(item.path[1:])
 
         if item.is_task():
-            return item.is_complete() | self.__completes[item]
+            dep = item.is_completed()
+            if item in self.__completes:
+                dep = dep | self.__completes[item]
+            return dep
 
         # Initial completion dependency is the task or family
         # completion unless this item is the Suite.  Suites must be
         # handled differently.
-        dep = item.is_complete() if path else FALSE_DEPENDENCY
+        if path:
+            dep = item.is_completed() # Family SuiteView
+        else:
+            dep = FALSE_DEPENDENCY   # Suite
 
         if path and path not in with_completes:
             # Families with no "complete" dependency in their entire
@@ -216,11 +226,24 @@ class ToRocoto(object):
             # dependency.
             return dep
 
+        subdep=TRUE_DEPENDENCY
         for subitem in item.child_iter():
-            if not isinstance(subitem,Taskable): continue
-            dep=dep | self.completes_for(subitem,with_completes)
+            if not path and subitem.path[1:] == [ 'final' ]:
+                # Special case.  Do not include final task's
+                # dependency in the final task's dependency.
+                continue
+            if not isinstance(subitem,SuiteView):
+                continue
+            subdep=subdep & self.completes_for(fd,subitem,with_completes)
 
-    def handle_final_task(self,indent):
+        if dep is FALSE_DEPENDENCY:
+            dep=subdep
+        else:
+            dep=subdep | dep
+
+        return dep
+
+    def handle_final_task(self,fd,indent):
         # Find and validate the "final" task:
         final=None
         if 'final' in self.suite:
@@ -243,19 +266,20 @@ class ToRocoto(object):
         # Find all families that have tasks with completes:
         families_with_completes=set()
         for task in self.__completes:
-            families_with_completes.add(task.path[1:-1])
+            for i in range(1,len(task.path)):
+                families_with_completes.add(SuitePath(task.path[1:i]))
 
         # Generate dependency for the final task:
-        dep=self.completes_for(self.suite,families_with_completes)
+        dep=self.completes_for(fd,self.suite,families_with_completes)
 
-    
-def to_rocoto(suite,fd):
-    tr=ToRocoto(suite,fd)
-    tr.validate_cycle()
-    tr.make_task_xml()
+        self.write_task_text(fd,' final="true"',indent,final,1,dep,timedelta.min)
+        
+def to_rocoto(suite):
+    assert(isinstance(suite,Cycle))
+    tr=ToRocoto(suite)
+    return tr.expand_workflow_xml()
 
 def test():
-    from io import StringIO
     def to_string(action):
         sio=StringIO()
         action(sio)

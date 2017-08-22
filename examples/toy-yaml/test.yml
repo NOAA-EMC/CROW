@@ -173,25 +173,29 @@ my_fancy_workflow: !Cycle
        physical_cores_per_node: 24
        logical_cpus_per_core: 2
        hyperthreading_allowed: true
+
+     accounting:
+       queue: batch
+       account: fv3-cpu
+
      indent_text: "  "
      workflow_install: /tmp
      workflow_xml: !expand |
         <?xml version="1.0"?>
         <!DOCTYPE workflow [
-          <!ENTITY WORKFLOW_INSTALL "{options.workflow_install_dir}">
+          <!ENTITY WORKFLOW_INSTALL "{workflow_install}">
         ]>
 
         <workflow realtime="F"
            scheduler="{sched.rocoto_name}">
             <log verbosity=10><cyclestr>&WORKFLOW_INSTALL;/logs/@Y@m@d@H.log</cyclestr></log>
-            {make_time_xml(indent=2)}
-            {make_task_xml(indent=2)}
+
+        {to_rocoto.make_time_xml(indent=2)}
+        {to_rocoto.make_task_xml(indent=2)}
         </workflow>
 
-     accounting:
-       queue: batch
-       account: fv3-cpu
      mpi_task_template: &my_task_template !expand |
+       <command>/bin/true</command>
        <queue>{doc.platform.queue}</queue>
        {sched.rocoto_accounting(suite.Rocoto.accounting)}
        {sched.rocoto_resources(Perform.resources)}
@@ -200,22 +204,45 @@ my_fancy_workflow: !Cycle
      start: 2017-02-14t18:00:00
      end: 2017-02-19t12:00:00
      step: !timedelta 06:00
-   gfs: !Family
+   gdas: !Family
      prep: !Task
+       Complete: !Depend ~ suite.has_cycle('-6:00')
        Perform: *gfsprep
-       RocotoResources: *my_task_template
+       Rocoto: *my_task_template
      anal: !Task
        Perform: *gfsanl
        Trigger: !Depend  suite.has_cycle('-6:00') | ~ prep.at('-6:00')
-       RocotoResources: *my_task_template
+       Rocoto: *my_task_template
      fcst: !Task
        Perform: *gfsfcst
        Trigger: !Depend anal
        Time: !timedelta 3:15
-       RocotoResources: *my_task_template
+       Rocoto: *my_task_template
      post: !Task
        Perform: *gfspost
        Trigger: !Depend fcst.is_running()
-       RocotoResources: *my_task_template
+       Rocoto: *my_task_template
+   gfs: !Family
+     Trigger: !Depend gdas
+     prep: !Task
+       Perform: *gfsprep
+       Rocoto: *my_task_template
+     anal: !Task
+       Perform: *gfsanl
+       Trigger: !Depend  suite.has_cycle('-6:00') | ~ prep.at('-6:00')
+       Rocoto: *my_task_template
+     fcst: !Task
+       Perform: *gfsfcst
+       Trigger: !Depend anal
+       Time: !timedelta 3:15
+       Rocoto: *my_task_template
+     post: !Task
+       Perform: *gfspost
+       Trigger: !Depend fcst.is_running()
+       Rocoto: *my_task_template
    final: !Task
-     RocotoResources: *my_task_template
+     Rocoto: !expand |
+       <command>/bin/true</command>
+       <queue>{doc.platform.queue}</queue>
+       {sched.rocoto_accounting(suite.Rocoto.accounting)}
+       {sched.rocoto_resources( [{}] )}

@@ -7,44 +7,10 @@ from datetime import timedelta
 from copy import deepcopy
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc
+from crow.tools import to_timedelta
 
 __all__=[ 'Action','Platform', 'Conditional', 'calc','max_index',
-          'min_index', 'last_true', 'first_true', 'to_timedelta' ]
-
-########################################################################
-
-DT_REGEX={
-    u'(\d+):(\d+)':(
-        lambda m: timedelta(hours=m[0],minutes=m[1]) ),
-    u'(\d+):(\d+):(\d+)':(
-        lambda m: timedelta(hours=m[0],minutes=m[1],seconds=m[2]) ),
-    u'(\d+)d(\d+)h':(
-        lambda m: timedelta(days=m[0],hours=m[1])),
-    u'(\d+)d(\d+):(\d+)':(
-        lambda m: timedelta(days=m[0],hours=m[1],minutes=m[2])),
-    u'(\d+)d(\d+):(\d+):(\d+)':(
-        lambda m: timedelta(days=m[0],hours=m[1],minutes=m[2],
-                            seconds=m[3]))
-    }
-
-def to_timedelta(s):
-    if isinstance(s,timedelta): return s
-    if not isinstance(s,str):
-        raise TypeError('Argument to to_timedelta must be a str not a %s'%(
-            type(s).__name__,))
-    mult=1
-    if s[0]=='-':
-        s=s[1:]
-        mult=-1
-    elif s[0]=='+':
-        s=s[1:]
-    for regex,fun in DT_REGEX.items():
-        m=re.match(regex,s)
-        if m:
-            ints=[ int(s,10) for s in m.groups() ]
-            return mult*fun(ints)
-    raise ValueError(s+': invalid timedelta specification (12:34, '
-                     '12:34:56, 9d12h, 9d12:34, 9d12:34:56)')
+          'min_index', 'last_true', 'first_true' ]
 
 ########################################################################
 

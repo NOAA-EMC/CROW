@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from copy import copy, deepcopy
 from crow.config.exceptions import *
 from crow.config.eval_tools import dict_eval, strcalc, multidict
-from crow.config.represent import to_timedelta
+from crow.tools import to_timedelta
 
 __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'AndDependency', 'OrDependency', 'NotDependency',
@@ -38,17 +38,13 @@ VALID_STATES=[ 'RUNNING', 'FAILED', 'COMPLETED' ]
 ZERO_DT=timedelta()
 EMPTY_DICT={}
 
-class SuitePath(Sequence):
-    """!Simply a read-only list that can be hashed."""
-    def __init__(self,*args):
-        self.list=list(*args)
+class SuitePath(list):
+    """!Simply a list that can be hashed."""
     def __hash__(self):
         result=0
         for element in self:
             result=result^hash(element)
         return result
-    def __getitem__(self,i): return self.list[i]
-    def __len__(self):       return len(self.list)
 
 class SuiteView(Mapping):
     LOCALS=set(['suite','viewed','path','parent','__cache','__globals',
@@ -59,9 +55,15 @@ class SuiteView(Mapping):
         # assert(isinstance(parent,SuiteView))
         self.suite=suite
         self.viewed=viewed
-        self.path=path
+        self.path=SuitePath(path)
         self.parent=parent
         self.__cache={}
+
+    def __eq__(self,other):
+        return self.path==other.path and self.suite is other.suite
+
+    def __hash__(self):
+        return hash(self.path)
 
     def has_cycle(self,dt):
         return CycleExistsDependency(to_timedelta(dt))
@@ -198,10 +200,14 @@ def as_dependency(obj,path=MISSING,state=COMPLETED):
 
 class LogicalDependency(object):
     def __and__(self,other):
+        if other is FALSE_DEPENDENCY: return other
+        if other is TRUE_DEPENDENCY: return self
         dep=as_dependency(other)
         if dep is NotImplemented: raise TypeError(other)
         return AndDependency(self,dep)
     def __or__(self,other):
+        if other is TRUE_DEPENDENCY: return other
+        if other is FALSE_DEPENDENCY: return self
         dep=as_dependency(other)
         if dep is NotImplemented: raise TypeError(other)
         return OrDependency(self,dep)
@@ -210,13 +216,16 @@ class LogicalDependency(object):
 
 class AndDependency(LogicalDependency):
     def __init__(self,*args):
-        self.depends=SuitePath(args)
+        self.depends=list(args)
+        assert(self.depends)
     def __and__(self,other):
+        if other is TRUE_DEPENDENCY: return self
+        if other is FALSE_DEPENDENCY: return other
         if isinstance(other,AndDependency):
-            return AndDependency(self.depends+other.depends)
+            return AndDependency(*(self.depends+other.depends))
         dep=as_dependency(other)
         if dep is NotImplemented: return dep
-        return AndDependency(self.depends+[dep])
+        return AndDependency(*(self.depends+[dep]))
     def __iter__(self):
         for dep in self.depends:
             yield dep
@@ -225,13 +234,16 @@ class AndDependency(LogicalDependency):
 
 class OrDependency(LogicalDependency):
     def __init__(self,*args):
-        self.depends=SuitePath(args)
+        self.depends=list(args)
+        assert(self.depends)
     def __or__(self,other):
+        if other is FALSE_DEPENDENCY: return self
+        if other is TRUE_DEPENDENCY: return other
         if isinstance(other,OrDependency):
-            return OrDependency(self.depends+other.depends)
+            return OrDependency(*(self.depends+other.depends))
         dep=as_dependency(other)
         if dep is NotImplemented: return dep
-        return OrDependency(self.depends+[dep])
+        return OrDependency(*(self.depends+[dep]))
     def __iter__(self):
         for dep in self.depends:
             yield dep

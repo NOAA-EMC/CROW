@@ -53,5 +53,5 @@ with open('namelist.nl','rt') as fd:
 print('config.fcst.expand_text(...namelist.nl...): \n'+
       crow.config.expand_text(namelist_nl,config.fcst))
 print()
-crow.metascheduler.to_rocoto(config.my_fancy_workflow,sys.stdout)
+print(crow.metascheduler.to_rocoto(config.my_fancy_workflow))
 

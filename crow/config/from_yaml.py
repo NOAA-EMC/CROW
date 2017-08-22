@@ -21,6 +21,7 @@ from crow.config.represent import *
 from crow.config.tasks import *
 from crow.config.template import Template
 from crow.config.exceptions import *
+from crow.tools import to_timedelta
 
 __all__=['ConvertFromYAML']
 
