@@ -5,31 +5,26 @@
 import sys
 from datetime import timedelta
 import crow.config
-import crow.metascheduler
 
-config=crow.config.from_file('test.yml')
+config=crow.config.from_file('test.yml','platform.yml','templates.yml',
+                             'actions.yml')
 
-print()
-# suite=crow.config.Suite(config.my_fancy_workflow)
-# for task in suite.walk_task_tree():
-#     print(f"Task {task.path}")
-#     for var in [ 'Trigger', 'Complete', 'Time' ]:
-#         if var in task:
-#             print(f'  + {var} = {task[var]}')
 print()
 print("test = expected value = actual value")
 print()
 print("gfsfcst.a = 10 = "+repr(config.gfsfcst.a))
 print("gfsfcst.d = 9200 = "+repr(config.gfsfcst.d))
 print("gfsfcst.stuff[0] = 30 = "+repr(config.gfsfcst.stuff[0]))
+print("test.B = 'B' = "+repr(config.test.B))
+print("test.C = 'C' = "+repr(config.test.C))
+print("test.none = None = "+repr(config.test.none))
+print()
+print('Find least utilized scrub area...')
 print("least utilized scrub area = "+repr(config.platform.scrub))
-print("config.platform.B = 'B' = "+repr(config.platform.B))
-print("config.platform.C = 'C' = "+repr(config.platform.C))
-print("config.platform.none = None = "+repr(config.platform.none))
 print()
 for bad in ['lt','ft','xv','nv']:
-    print( "config.platform['bad%s'] = None = %s"%(
-        bad,config.platform['bad'+bad]))
+    print( "config.test['bad%s'] = None = %s"%(
+        bad,config.test['bad'+bad]))
 print()
 print("config.gfsfcst.cow = blue = "+repr(config.gfsfcst.cow))
 print("config.gfsfcst.dog = brown = "+repr(config.gfsfcst.dog))
@@ -52,6 +47,4 @@ with open('namelist.nl','rt') as fd:
 
 print('config.fcst.expand_text(...namelist.nl...): \n'+
       crow.config.expand_text(namelist_nl,config.fcst))
-print()
-print(crow.metascheduler.to_rocoto(config.my_fancy_workflow))
 

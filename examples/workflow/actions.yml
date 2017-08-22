@@ -1,0 +1,73 @@
+
+fcst: &fcst !Action
+  Template: *fcst_vars
+  do_vort_damp: true
+  consv_te: 0.
+  fv_sg_adj: 900
+  dspheat: false
+  shal_cnv: true
+  agrid_vel_rst: true
+  master_grid: "0p5deg"
+  TYPE: hydro
+  MONO: mono
+  hydro_mono: !expand '{TYPE}_{MONO}'
+  some_array: [ 1, 2, 3, 4, 5 ]
+
+  some_namelist: !expand |
+    &some_namelist
+      some_array = {tools.fort(some_array)}
+      type = {TYPE}
+      mono = {MONO}
+      shal_cnv = {tools.fort(shal_cnv)}
+      agrid_vel_rst= {tools.fort(agrid_vel_rst)}
+    /
+
+  a: !calc 5 + 5
+  b: !calc a*2
+  c: !calc fv_sg_adj+b
+  d: !FirstMax
+    - when: a
+      do: !calc 10*a
+    - when: b
+      do: !calc 10*b
+    - when: c
+      do: !calc 10*c
+  resources: 
+    - mpi_ranks: 192
+      threads: 4
+
+gfsprep: &gfsprep !Action
+  Template: *fcst_vars
+  anothervar: anothervalue
+  resources: 
+    - mpi_ranks: 2
+      OMP_NUM_THREADS: 4
+
+gfsanl: &gfsanl !Action
+  Template: *fcst_vars
+  anothervar: anothervalue
+  resources: 
+    - mpi_ranks: 64
+      OMP_NUM_THREADS: 4
+
+gdasenkf: &gdasenkf !Action
+  Template: *fcst_vars
+  somevar: somevalue
+  resources: 
+    - mpi_ranks: 12
+      OMP_NUM_THREADS: 1
+
+gfspost: &gfspost !Action
+  Template: *fcst_vars
+  somevar: somevalue
+  resources: 
+    - mpi_ranks: 12
+      OMP_NUM_THREADS: 1
+    
+gfsfcst: &gfsfcst !Action
+    <<: *fcst
+    stuff: [ !calc a+b , !calc 2*2 ]
+    DIAG_TABLE: !calc doc.platform.BASE_GFS + "/parm/parm_fv3diag/diag_table"
+    resources: 
+      - mpi_ranks: 192
+        OMP_NUM_THREADS: 4

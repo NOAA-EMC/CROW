@@ -85,7 +85,7 @@ def validate_list(types,val,allowed,tname):
     """!Valdiates that val is a list that contains the specified allowed
     values.  Recurses into subobjects, which must be of type types[-1] """
     if not len(types):                     return TYPE_MISMATCH
-    if str(type(val)) not in TYPES(tname): return UNKNOWN_TYPE
+    if type(val) not in TYPES[tname]: raise Exception('unknown type')
     for v in val:
         result=VALIDATORS[types[-1]](types[:-1],v,allowed,types[-1])
         if not result: return result
@@ -95,7 +95,7 @@ def validate_dict(types,val,allowed,typ):
     """!Valdiates that val is a map that contains the specified allowed
     values.  Recurses into subobjects, which must be of type types[-1] """
     if not len(types):                    return TYPE_MISMATCH
-    if str(type(val)) not in typ['list']: return UNKNOWN_TYPE
+    if str(type(val)) not in typ['list']: raise(Exception('unknown type'))
     for k,v in val.items():
         result=VALIDATORS[types[-1]](types[:-1],v,allowed,types[-1])
         if not result: return result
@@ -105,12 +105,13 @@ def validate_dict(types,val,allowed,typ):
 # Mapping from YAML type to valid python types.
 TYPES={ 'int':[int], 'bool':[bool], 'string':[str,bytes],
         'float':[float], 'list':[set,list,tuple,list_eval],
-        'dict':[dict,dict_eval] }
+        'dict':[dict,dict_eval], 'seq':[set,list,tuple,list_eval] }
 
 ## @var VALIDATORS
 # Mapping from YAML type to validation function.
 VALIDATORS={ 'map':validate_dict,     
              'seq':validate_list,
+             'list':validate_list,
              'set':validate_list,
              'int':validate_scalar,
              'bool':validate_scalar,

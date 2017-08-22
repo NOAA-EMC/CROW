@@ -301,3 +301,43 @@ class Taskable(Dependable): pass
 class Task(Taskable): pass
 class Family(Taskable): pass
 class Cycle(dict_eval): pass
+
+class TaskArray(Taskable):
+    def __init__(self,*args,**kwargs):
+        super().init(*args,**kwargs)
+        Index=self['Index']
+        varname=Index[0]
+        if not isinstance(varname,str):
+            raise TypeError('Index first argument should be a string variable '
+                            'name not a %s'%(type(varname.__name__),))
+        values=Index[1]
+        if not isinstance(values,Sequence):
+            raise TypeError('Index second argument should be a sequence '
+                            'name not a %s'%(type(values.__name__),))
+        self.__instances=[MISSING]*len(values)
+    @property
+    def index_name(self):
+        return self['Index'][0]
+    @property
+    def index_count(self):
+        return len(self['Index'][1])
+    def index_keys(self):
+        keys=self['Index'][1]
+        for k in keys: yield k
+    def index_items(self):
+        varname=self.index_name
+        keys=self['Index'][1]
+        for i in len(keys):
+            yield keys[i],self.__for_index(i,varname,key)
+    def for_index(self,i):
+        if self.__instances[i] is not MISSING:
+            return self.__instances[i]
+        varname=self.index_name
+        keys=self['Index'][1]
+        return self.__for_index(i,varname,key)
+    def __for_index(self,i,varname,key):
+        the_copy=Family(self._raw_child())
+        the_copy[varname]=key
+
+
+

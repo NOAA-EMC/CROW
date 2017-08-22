@@ -2,6 +2,7 @@ import crow.tools
 import os.path
 import os
 import datetime
+from collections import Sequence, Mapping
 from crow.config.exceptions import *
 
 class Environment(dict):
@@ -15,9 +16,31 @@ def strftime(d,fmt): return d.strftime(fmt)
 def YMDH(d): return d.strftime('%Y%m%d%H')
 def YMD(d): return d.strftime('%Y%m%d')
 
+def seq(start,end,step):
+    return [ r for r in range(start,end+1,step) ]
+
+def fort(value,scope='scope'):
+    """!Convenience function to convert a python object to a syntax valid
+    in fortran namelists.    """
+    if isinstance(value,Sequence):
+        # For sequences, convert to a namelist list.
+        return ", ".join([ str(s) for s in value])
+    elif isinstance(value,Mapping):
+        # For mappings, assume a derived type.
+        subscope_keys=[ (f'{scope}%{key}',value) for key in value ]
+        return ', '.join([f'{k}={fort(v,k)}' for (k,v) in subscope_keys])
+    elif isinstance(value,bool):
+        # Booleans get a "." around them:
+        return '.'+str(bool(value))+'.'
+    else:
+        # Anything else is converted to a string.
+        return str(value)
+
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
 CONFIG_TOOLS=crow.tools.ImmutableMapping({
+    'fort':fort,
+    'seq':seq,
     'panasas_gb':crow.tools.panasas_gb,
     'gpfs_gb':crow.tools.gpfs_gb,
     'basename':os.path.basename,
