@@ -1,6 +1,7 @@
 import subprocess
 import os, re
-from collections.abc import MutableMapping
+from copy import deepcopy
+from collections.abc import Mapping
 
 __all__=['panasas_gb','gpfs_gb']
 
@@ -36,9 +37,14 @@ def gpfs_gb(dir,fileset,device):
         return 1024*(int(m.group('TBlimit')) - int(m.group('TBused')))
     return 0
     
-class ImmutableMapping(MutableMapping):
+class ImmutableMapping(Mapping):
     """Immutable dictionary"""
 
+    def __deepcopy__(self,memo):
+        im=ImmutableMapping()
+        im.__dict=dict([ (deepcopy(k),deepcopy(v)) \
+                         for k,v in self.__dict.items() ])
+        return im
     def __init__(self,*args,**kwargs): self.__dict=dict(*args,**kwargs)
     def __len__(self):                 return len(self.__dict)
     def __getitem__(self,k):           return self.__dict[k]
@@ -46,7 +52,5 @@ class ImmutableMapping(MutableMapping):
     def __iter__(self):
         for i in self.__dict:
             yield i
-    def __setitem__(self,k,v): raise Exception('Immutable object')
-    def __delitem__(self,k):   raise Exception('Immutable object')
 
 

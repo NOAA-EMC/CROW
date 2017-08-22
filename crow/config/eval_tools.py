@@ -136,6 +136,7 @@ class dict_eval(MutableMapping):
     def __copy__(self):         return dict_eval(self.__child)
     def _raw_child(self):       return self.__child
     def _has_raw(self,key):     return key in self.__child
+    def _set_globals(self,g):   self.__globals=g
     def _raw(self,key):
         """!Returns the value for the given key, without calling eval() on it"""
         return self.__child[key]
@@ -144,10 +145,20 @@ class dict_eval(MutableMapping):
         return self.__globals
     def _expand_text(self,text):
         return eval('f'+repr(text),self.__globals,self)
-    def __deepcopy__(self,memo):
+    def _deepcopy_child(self,memo):
         cls=type(self.__child)
-        r=dict_eval(cls([ (k,deepcopy(v)) for k,v in self.__child]))
+        return deepcopy(self.__child,memo)
+    def _deepcopy_privates_from(self,memo,other):
+        self.__globals=dict([ ( deepcopy(k,memo),deepcopy(v,memo) )
+                              for k,v in other.__globals.items() ])
+        #self.__globals=deepcopy(other.__globals,memo)
+    def __deepcopy__(self,memo):
+        cls=type(self)
+        r=cls({})
         memo[id(self)]=r
+        r.__child=self._deepcopy_child(memo)
+        r.__cache=copy(r.__child)
+        r._deepcopy_privates_from(memo,self)
         return r
     def __setitem__(self,k,v):  
         self.__child[k]=v
@@ -210,6 +221,7 @@ class list_eval(MutableSequence):
         self.__locals=locals
         self.__globals={}
     def __len__(self):          return len(self.__child)
+    def _set_globals(self,g):   self.__globals=g
     def _raw(self,i):           
         """!Returns the value at index i without calling eval() on it"""
         return self.__child[i]
@@ -217,11 +229,22 @@ class list_eval(MutableSequence):
         return i>=0 and len(self.__child)>i
     def __copy__(self):
         return list_eval(self.__child,self.__locals)
+    def _deepcopy_child_and_locals(self,memo):
+        return ( deepcopy(self.__child,memo),
+                 deepcopy(self.__locals,memo) )
     def __deepcopy__(self,memo):
-        r=list_eval([ deepcopy(v) for v in self.__child ],
-                    deepcopy(self.__locals))
+        if id(self) in memo: return memo[id(self)]
+        cls=type(self)
+        r=cls([],{})
+        child,locals = self._deepcopy_child_and_locals(memo)
+        r.__child=child
+        r.__locals=locals
+        r.__cache=copy(child)
         memo[id(self)]=r
+        r._deepcopy_privates_from(memo,self)
         return r
+    def _deepcopy_privates_from(self,memo,other):
+        self.__globals=deepcopy(other.__globals,memo)
     def __setitem__(self,k,v):
         self.__child[k]=v
         self.__cache[k]=v

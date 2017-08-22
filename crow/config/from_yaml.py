@@ -57,33 +57,9 @@ def type_for(t):
 
 ########################################################################
 
-DT_REGEX={
-    u'(\d+):(\d+)':(
-        lambda m: timedelta(hours=m[0],minutes=m[1]) ),
-    u'(\d+):(\d+):(\d+)':(
-        lambda m: timedelta(hours=m[0],minutes=m[1],seconds=m[2]) ),
-    u'(\d+)d(\d+)h':(
-        lambda m: timedelta(days=m[0],hours=m[1])),
-    u'(\d+)d(\d+):(\d+)':(
-        lambda m: timedelta(days=m[0],hours=m[1],minutes=m[2])),
-    u'(\d+)d(\d+):(\d+):(\d+)':(
-        lambda m: timedelta(days=m[0],hours=m[1],minutes=m[2],
-                            seconds=m[3]))
-    }
-
 def timedelta_constructor(loader,node):
     s=loader.construct_scalar(node)
-    mult=1
-    if s[0]=='-':
-        s=s[1:]
-        mult=-1
-    for regex,fun in DT_REGEX.items():
-        m=re.match(regex,s)
-        if m:
-            ints=[ int(s,10) for s in m.groups() ]
-            return mult*fun(ints)
-    raise ValueError(s+': invalid timedelta specification (12:34, '
-                     '12:34:56, 9d12h, 9d12:34, 9d12:34:56)')
+    return to_timedelta(s)
 
 ZERO_DT=timedelta()
 
@@ -118,9 +94,7 @@ def add_yaml_string(key,cls):
 
 add_yaml_string(u'!expand',expand)
 add_yaml_string(u'!calc',calc)
-add_yaml_string(u'!Trigger',Trigger)
 add_yaml_string(u'!Depend',Depend)
-add_yaml_string(u'!Timespec',Timespec)
 
 ########################################################################
 

@@ -2,10 +2,20 @@
 
 ## Simple test program for crow.config module
 
+import sys
+from datetime import timedelta
 import crow.config
+import crow.metascheduler
 
 config=crow.config.from_file('test.yml')
 
+print()
+# suite=crow.config.Suite(config.my_fancy_workflow)
+# for task in suite.walk_task_tree():
+#     print(f"Task {task.path}")
+#     for var in [ 'Trigger', 'Complete', 'Time' ]:
+#         if var in task:
+#             print(f'  + {var} = {task[var]}')
 print()
 print("test = expected value = actual value")
 print()
@@ -42,3 +52,6 @@ with open('namelist.nl','rt') as fd:
 
 print('config.fcst.expand_text(...namelist.nl...): \n'+
       crow.config.expand_text(namelist_nl,config.fcst))
+print()
+crow.metascheduler.to_rocoto(config.my_fancy_workflow,sys.stdout)
+

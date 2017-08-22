@@ -124,7 +124,7 @@ def validate_type(var,typ,val,allowed):
     types=typ.split()
     for t in types:
         if t not in VALIDATORS:
-            raise InvalidConfigType('%=%s: unknown type in %s'%(
+            raise InvalidConfigType('%s=%s: unknown type in %s'%(
                 str(var),repr(t),repr(typ)))
     result=VALIDATORS[types[-1]](types[:-1],val,allowed,types[-1])
     if result is UNKNOWN_TYPE:

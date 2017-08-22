@@ -33,6 +33,7 @@ test: &test
 
 theia: &theia !Platform
   <<: *test
+  queue: batch
   machine: THEIA
   ACCOUNT: fv3-cpu
   QUEUE: batch
@@ -53,6 +54,7 @@ theia: &theia !Platform
 
 wcoss_cray: &wcoss_cray !Platform
   <<: *test
+  queue: dev
   machine: THEIA
   ACCOUNT: fv3-cpu
   QUEUE: batch
@@ -131,26 +133,89 @@ fcst: &fcst !Action
       do: !calc 10*b
     - when: c
       do: !calc 10*c
+  resources: 
+    - mpi_ranks: 192
+      threads: 4
+
+gfsprep: &gfsprep !Action
+  Template: *fcst_vars
+  anothervar: anothervalue
+  resources: 
+    - mpi_ranks: 2
+      OMP_NUM_THREADS: 4
+
+gfsanl: &gfsanl !Action
+  Template: *fcst_vars
+  anothervar: anothervalue
+  resources: 
+    - mpi_ranks: 64
+      OMP_NUM_THREADS: 4
 
 gfspost: &gfspost !Action
   Template: *fcst_vars
   somevar: somevalue
+  resources: 
+    - mpi_ranks: 12
+      OMP_NUM_THREADS: 1
     
 gfsfcst: &gfsfcst !Action
     <<: *fcst
     stuff: [ !calc a+b , !calc 2*2 ]
     DIAG_TABLE: !calc doc.platform.BASE_GFS + "/parm/parm_fv3diag/diag_table"
+    resources: 
+      - mpi_ranks: 192
+        OMP_NUM_THREADS: 4
+ 
+my_fancy_workflow: !Cycle
+   Rocoto:
+     scheduler:
+       name: MoabTorque
+       physical_cores_per_node: 24
+       logical_cpus_per_core: 2
+       hyperthreading_allowed: true
+     indent_text: "  "
+     workflow_install: /tmp
+     workflow_xml: !expand |
+        <?xml version="1.0"?>
+        <!DOCTYPE workflow [
+          <!ENTITY WORKFLOW_INSTALL "{options.workflow_install_dir}">
+        ]>
 
-suite: !Cycle
+        <workflow realtime="F"
+           scheduler="{sched.rocoto_name}">
+            <log verbosity=10><cyclestr>&WORKFLOW_INSTALL;/logs/@Y@m@d@H.log</cyclestr></log>
+            {make_time_xml(indent=2)}
+            {make_task_xml(indent=2)}
+        </workflow>
+
+     accounting:
+       queue: batch
+       account: fv3-cpu
+     mpi_task_template: &my_task_template !expand |
+       <queue>{doc.platform.queue}</queue>
+       {sched.rocoto_accounting(suite.Rocoto.accounting)}
+       {sched.rocoto_resources(Perform.resources)}
+
    Clock:
      start: 2017-02-14t18:00:00
      end: 2017-02-19t12:00:00
-     step: !calc 6*3600
+     step: !timedelta 06:00
    gfs: !Family
+     prep: !Task
+       Perform: *gfsprep
+       RocotoResources: *my_task_template
+     anal: !Task
+       Perform: *gfsanl
+       Trigger: !Depend  suite.has_cycle('-6:00') | ~ prep.at('-6:00')
+       RocotoResources: *my_task_template
      fcst: !Task
        Perform: *gfsfcst
-       Trigger: !Depend doc.suite.at(hours=-6).gdas.anal
-       Time: !Timespec doc.suite.clock(hours=+3)
+       Trigger: !Depend anal
+       Time: !timedelta 3:15
+       RocotoResources: *my_task_template
      post: !Task
        Perform: *gfspost
-       Trigger: !Trigger fcst==RUNNING
+       Trigger: !Depend fcst.is_running()
+       RocotoResources: *my_task_template
+   final: !Task
+     RocotoResources: *my_task_template

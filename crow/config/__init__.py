@@ -3,15 +3,18 @@ import crow.tools
 from crow.config.from_yaml import ConvertFromYAML
 from crow.config.template import Template
 from crow.config.represent import Action, Platform
-from crow.config.tasks import Task, Family, CycleAt, CycleTime, \
-    Cycle, Trigger, Depend, Timespec, TaskStateAnd, TaskStateOr, \
-    TaskStateNot, TaskStateIs, Taskable
 from crow.config.tools import CONFIG_TOOLS, ENV
+from crow.config.tasks import Suite, Depend, AndDependency, SuitePath, \
+    OrDependency, NotDependency, StateDependency, Dependable, \
+    Taskable, Task, Family, Cycle, LogicalDependency, SuiteView, \
+    RUNNING, COMPLETED, FAILED, TRUE_DEPENDENCY, FALSE_DEPENDENCY, \
+    CycleExistsDependency
 
 __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
          'TaskStateAnd', 'TaskStateOr', 'TaskStateNot', 'TaskStateIs',
          'Taskable', 'Task', 'Family', 'CycleAt', 'CycleTime', 'Cycle',
-         'Trigger', 'Depend', 'Timespec']
+         'Trigger', 'Depend', 'Timespec', 'SuitePath', 
+         'CycleExistsDependency']
 
 def to_py(obj):
     return obj._to_py() if hasattr(obj,'_to_py') else obj
