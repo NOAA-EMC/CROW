@@ -1,3 +1,7 @@
+# The YAML built-in !!omap type is mapping that remembers the order of
+# keys.  It acts exactly like a normal mapping ({a=b, c=d, ...}) in
+# all other respects.
+
 ordered_dict: !!omap
   - one: 1
   - two: 2
@@ -5,17 +9,25 @@ ordered_dict: !!omap
   - four: 4
   - five: 5
 
+# The YAML built-in !!set is for specifying sets.  Sets must all be
+# "hashable types," so a set cannot include sets, omaps, maps,
+# sequences, or other compound datatypes.  However, they CAN include
+# calculations.
+
 set: !!set
   ? !calc 1+1
   ? a
   ? 2017-08-15
 
 test_base: &test_base
-  four: !calc 2*2
+  # !FirstTrue returns the first "do" value where the "when" value is true:
   B: !FirstTrue
     - { do: A, when: false }
     - { do: B, when: true }
     - { do: C, when: true }
+
+  # !LastTrue is like !FirstTrue in reverse.  The last "do" with a true
+  # "when" is returned:
   C: !LastTrue
     - { do: A, when: false }
     - { do: B, when: true }
@@ -25,16 +37,29 @@ test_base: &test_base
     - { do: Y, when: false }
     - { do: Z, when: false }
 
-  dt: !timedelta 03:20
-  anltime: 2017-09-19t18:00:00
-  fcsttime: !calc anltime+dt
-  fYMDH: !calc tools.YMDH(fcsttime)
-
   # Conditionals on an empty list always return null:
   badlt: !LastTrue []
   badft: !FirstTrue []
   badxv: !FirstMax []
   badnv: !FirstMin []
+
+  # The !timedelta is a time difference.  See crow.tools.to_timedelta
+  # for details on syntax.
+  dt: !timedelta 03:20
+
+  anltime: 2017-09-19t18:00:00
+
+  # !calc inserts the result of a calculation.  This uses lazy
+  # evaluation; that is, the calculation is not performed until the
+  # value is needed.
+  four: !calc 2*2
+
+  # The !calc expressions can refer to other variables:
+  fcsttime: !calc anltime+dt
+
+  # They can also refer to the results of other !calc expressions.  
+  # Infinite recursion is automatically detected by Python.
+  fYMDH: !calc tools.YMDH(fcsttime)
 
   expandme: !Eval
     result: !calc "', '.join(lst)"

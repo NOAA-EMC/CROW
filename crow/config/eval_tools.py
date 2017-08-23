@@ -139,6 +139,7 @@ class dict_eval(MutableMapping):
     def _raw_child(self):       return self.__child
     def _has_raw(self,key):     return key in self.__child
     def _set_globals(self,g):   self.__globals=g
+    def _raw_cache(self):       return self.__cache
     def _raw(self,key):
         """!Returns the value for the given key, without calling eval() on it"""
         return self.__child[key]
@@ -224,6 +225,7 @@ class list_eval(MutableSequence):
         self.__cache=list(child)
         self.__locals=locals
         self.__globals={}
+    def _raw_cache(self):       return self.__cache
     def __len__(self):          return len(self.__child)
     def _set_globals(self,g):   self.__globals=g
     def _raw(self,i):           

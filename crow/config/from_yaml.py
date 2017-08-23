@@ -29,10 +29,11 @@ __all__=['ConvertFromYAML']
 class PlatformYAML(YAMLObject):   yaml_tag=u'!Platform'
 class ActionYAML(YAMLObject):     yaml_tag=u'!Action'
 class TemplateYAML(YAMLObject):   yaml_tag=u'!Template'
-class FirstMaxYAML(list): pass
-class FirstMinYAML(list): pass
-class FirstTrueYAML(list): pass
-class LastTrueYAML(list): pass
+
+class FirstMaxYAML(list):         yaml_tag=u'!FirstMax'
+class FirstMinYAML(list):         yaml_tag=u'!FirstMin'
+class FirstTrueYAML(list):        yaml_tag=u'!FirstTrue'
+class LastTrueYAML(list):         yaml_tag=u'!LastTrue'
 
 class EvalYAML(dict): pass
 class TaskYAML(OrderedDict): pass
@@ -76,7 +77,7 @@ def timedelta_representer(dumper,dt):
     if dt.days: rep=f'{dt.days}d'
     rep+=f'{hours:02d}:{minutes:02d}:{seconds:02d}'
     if dt.microseconds: rep+=f'.{dt.microseconds:06d}'
-    return dumper.represent_scalar(rep)
+    return dumper.represent_scalar('!timedelta',rep)
 
 yaml.add_representer(timedelta,timedelta_representer)
 yaml.add_constructor('!timedelta',timedelta_constructor)
