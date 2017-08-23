@@ -1,0 +1,198 @@
+TO DO LIST:
+
+------------------------------------------------------------------------
+SET LAZY EVALUATION (set_eval)
+
+Lists, dicts, and most other types use lazy evaluation for embedded
+calculations.  Sets calculate at parse time, which is bad for a number
+of reasons.  This needs to be fixed.  The fix is to add a set_eval
+class in eval_tools that stores the pre-calculation data in an
+internal list (in self.__child) and generates the actual set (in
+self.__cache) only when it is needed.  The set_eval would need to be
+immutable, unless it invalidates the cache after any change to the
+set.
+
+
+
+------------------------------------------------------------------------
+DELAYED VALIDATION
+
+when a mapping (dict_eval) validates itself via a !Template, any
+calculation referred to by the !Template is done during validation.
+That means, for example, if you want a date calculation to be done
+inside the batch job, that calculation would need to be ommitted
+entirely from the YAML that is sent to the setup_expt script.  In
+order to avoid that, we need to add a way to delay the validation of
+such variables until runtime.  There are two ways I can think of to
+handle that:
+
+1. Have a two-stage validation process.  The first stage, run just
+after parsing, does not validate anything that requires a calculation.
+The second stage can be requested by explicitly running some function,
+like crow.config.validate(dict_eval)
+
+2. Allow the YAML to customize the validation for each mapping
+somehow.  For example, you could update the validation code so that a
+"null" value for a key in the template means the variable should not
+be validated.  This would be more error-prone, but it is trivial to
+implement.
+
+  fcst:
+    fix_path: !calc ENV["FIX_PATH"]
+    crtm_fix_path: !expand {fix_path}/crtm-{crtm_version}
+    Template:
+      <<: *fcst_vars
+      # Do not validate crtm_fix_path
+      crtm_fix_path: null
+
+
+
+------------------------------------------------------------------------
+NAMELIST GENERATION
+
+Presently, you can easily do string expansion via !expand:
+
+  block:
+    a: 5
+    b: 6
+    my_text: !expand |
+      a is {a}
+      b is {b}
+
+That will produce:
+
+a is 5
+b is 6
+
+but it is not so easy to generate namelists because the default string
+representation of everything is the Python representation.  I added a
+tools.fort() function to generate a fortran namelist syntax, but it
+makes the text long:
+
+  block:
+    list1: [ 5, 6, 7 ]
+    list2: [ a, b, c ]
+    my_namelist: !expand|
+      &my_namelist
+        list1: {tools.fort(list1)}
+        list2: {tools.fort(list2)}
+      /
+
+That will produce:
+
+&my_namelist
+  list1: 5, 6, 7
+  list2: 'a', 'b', 'c'
+
+I see a few ways of resolving this:
+
+Option 1:
+
+Generate from YAML code.  This is the easiest way, and
+is reasonably powerful.  If the user needs something more
+sophisticated, they can use !expand or !calc to generate a fancy
+namelist.
+
+  block:
+    my_namelist: !Namelist
+      list1: [ 5, 6, 7 ]
+      list2: [ a, b, c ]
+
+Note that we cannot refer to list1 and list2 at the block level from
+within my_namelist because my_namelist is in a different scope.  This
+reduces the power of the feature.  
+
+Option 2:
+
+The issue in Option 1 can be resolved by using an omap and having the
+!Namelist evaluate all expressions in the context of the parent scope.
+This would be non-trivial to implement, but feasible.
+
+  block:
+    list1: [ 5, 6, 7 ]
+    list2: [ a, b, c ]
+    my_namelist: !Namelist
+      # Note: the calculations refer to the parent scope; the 
+      # block-level list1 and list2.
+      - list1: !calc list1
+      - list2: !calc list2
+
+However, that means that the namelist will be evaluated in the scope
+in which it was originally declared.  That is not a terminal problem
+because the YAML can always copy the namelist instead of pointing to
+it, if it is needed more than once.  
+
+Option 3:
+
+Implicitly add tools.fort() around everything in a {}
+
+  block:
+    list1: [ 5, 6, 7 ]
+    list2: [ a, b, c ]
+    my_namelist: !to_namelist |
+      list1 = {list1}
+      list2 = {list2}
+
+There are a few problems with that:
+
+1. This is very hard to implement.  It will require complicated
+manipulation of the text within the my_namelist.  The {} contents are
+Python expressions.  Python expressions cannot be parsed with a single
+regular expression (re) because they contain balanced, nested,
+parenthesis.  (It is provably impossible to parse nested parentheses
+with a regular expression.)  Alternatively, you could write a custom
+parser of the string, which would be easier to implement but less
+powerful.
+
+2. There is no standard fortran way of expressing datetimes or
+timedeltas.  Hence, they will be impossible to express directly in a
+!to_namelist block.
+
+3. The user cannot specify numeric or date formatting information
+because the result of tools.fort() is already converted to a string.
+
+
+
+
+------------------------------------------------------------------------
+
+TASK ARRAYS (TaskArray)
+
+Add the capability of having an array of nearly-identical tasks in a
+suite.
+
+      enkf: !TaskArray
+        Index: imem
+        Values: !calc tools.seq(1,80) ]
+        Name: !expand mem{imem:03d}
+        emem: !Task
+          Perform: *gdasenkf
+          Rocoto: *my_enkf_template
+          Trigger: !anal
+
+That would expand out to 80 "emem" tasks with imem set to a number
+from 1 to 80 for each one.  
+
+One way to implement this is:
+
+1. TaskArrayYAML in from_yaml.py, TaskArray in tasks.py and
+to_yaml.py, associated reading/converting logic.
+
+2. When a SuiteView sees a TaskArray, it needs to automatically
+replace it with a Family with one Family for each imem.
+
+3. During the replacement process (#2), the Task, Family, and
+TaskArray objects underneath must be duplicated, with "imem" set in
+each one.  This must be a shallow copy, so we don't duplicate the
+vast YAML object tree.
+
+4. As in #3, all direct children of a Task, Family, and TaskArray must
+be copied (shallow) and imem set in each copy.
+
+That is computationally expensive and will use up lots of memory if
+there is a large number of tasks.
+
+There may be some more clever way to implement this while avoiding
+duplicating anything.  I suspect a TaskArrayView subclass of SuiteView
+may be able to do it, if it is implemented in a clever way.  I don't
+know what that clever way is though.
