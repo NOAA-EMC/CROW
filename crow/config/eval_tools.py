@@ -30,7 +30,7 @@ feature:
 """
 
 
-from collections.abc import MutableMapping, MutableSequence
+from collections.abc import MutableMapping, MutableSequence, Sequence
 from copy import copy,deepcopy
 from crow.config.exceptions import *
 
@@ -228,6 +228,7 @@ class list_eval(MutableSequence):
     def _raw_cache(self):       return self.__cache
     def __len__(self):          return len(self.__child)
     def _set_globals(self,g):   self.__globals=g
+    def _raw_child(self):       return self.__child
     def _raw(self,i):           
         """!Returns the value at index i without calling eval() on it"""
         return self.__child[i]
@@ -235,20 +236,15 @@ class list_eval(MutableSequence):
         return i>=0 and len(self.__child)>i
     def __copy__(self):
         return list_eval(self.__child,self.__locals)
-    def _deepcopy_child_and_locals(self,memo):
-        return ( deepcopy(self.__child,memo),
-                 deepcopy(self.__locals,memo) )
     def __deepcopy__(self,memo):
-        if id(self) in memo: return memo[id(self)]
         cls=type(self)
         r=cls([],{})
-        child,locals = self._deepcopy_child_and_locals(memo)
-        r.__child=child
-        r.__locals=locals
         memo[id(self)]=r
         r._deepcopy_privates_from(memo,self)
         return r
     def _deepcopy_privates_from(self,memo,other):
+        self.__child=deepcopy(other.__child,memo)
+        self.__cache=deepcopy(other.__cache,memo)
         self.__globals=deepcopy(other.__globals,memo)
         self.__cache=deepcopy(other.__cache,memo)
     def __setitem__(self,k,v):
@@ -279,6 +275,13 @@ class list_eval(MutableSequence):
         return '%s(%s)'%(type(self).__name__,repr(self.__child),)
     def __str__(self):
         return '['+', '.join([str(v) for v in self])+']'
+    def __eq__(self,other):
+        if not isinstance(other,Sequence): return False
+        my_len=len(self)
+        if my_len != len(other): return False
+        for i in range(my_len):
+            if self[i] != other[i]: return False
+        return True
 
 ########################################################################
 

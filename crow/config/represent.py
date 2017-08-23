@@ -2,15 +2,15 @@
 embedded yaml calculations, as well as internal representations of all
 custom data types in the yaml files."""
 
-import re
+import re, abc
 from datetime import timedelta
 from copy import deepcopy
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc
 from crow.tools import to_timedelta
 
-__all__=[ 'Action','Platform', 'Conditional', 'calc','max_index',
-          'min_index', 'last_true', 'first_true', 'GenericList',
+__all__=[ 'Action','Platform', 'Conditional', 'calc','FirstMin',
+          'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
           'GenericDict', 'GenericOrderedDict' ]
 
 ########################################################################
@@ -26,14 +26,13 @@ class Platform(dict_eval): pass
 
 class Conditional(list_eval):
     MISSING=object()
-    def __init__(self,_index,*args,**kwargs):
-        super().__init__(*args,**kwargs)
-        self.__cache=Conditional.MISSING
-        self.__index=_index
+    def __init__(self,*args):
+        super().__init__(*args)
+        self.__result=Conditional.MISSING
     def _result(self,globals,locals):
         assert('tools' in globals)
         assert('doc' in globals)
-        if self.__cache is Conditional.MISSING:
+        if self.__result is Conditional.MISSING:
             keys=list()
             values=list()
             for vk in self:
@@ -46,35 +45,45 @@ class Conditional(list_eval):
                         'Conditional list entries must have "do" and "when" '
                         'elements (saw keys: %s)'
                         %(', '.join(list(vk.keys())), ))
-            index=self.__index(keys)
+            index=self._index(keys)
             if index is None:
-                self.__cache=None
+                self.__result=None
             else:
                 try:
                     values=[ vk._raw('do') for vk in self ]
                 except AttributeError:
                     values=[ vk.value for vk in self ]
                     scope[var]=tmpl['default']
-                self.__cache=values[index]
-        return self.__cache
-    def __deepcopy__(self,memo):
-        cls=type(self)
-        index=deepcopy(self.__index)
-        child,locals=self._deepcopy_child_and_locals(memo)
-        r=cls(index,child,locals)
-        r._deepcopy_privates_from(memo,self)
-        return r
+                self.__result=values[index]
+        return self.__result
+    def _deepcopy_privates_from(self,memo,other):
+        super()._deepcopy_privates_from(memo,other)
+        if other.__result is Conditional.MISSING:
+            self.__result=Conditional.MISSING
+        else:
+            self.__result=deepcopy(other.__result,memo)
 
-def max_index(lst): return lst.index(max(lst)) if lst else None
-def min_index(lst): return lst.index(min(lst)) if lst else None
+    @abc.abstractmethod
+    def _index(lst): pass
 
-def last_true(lst):
-    for i in range(len(lst)-1,-1,-1):
-        if lst[i]: return i
-    return None
-def first_true(lst):
-    for i in range(len(lst)):
-        if lst[i]: return i
-    return None
+class FirstMax(Conditional):
+    def _index(self,lst):
+        return lst.index(max(lst)) if lst else None
+
+class FirstMin(Conditional):
+    def _index(self,lst):
+        return lst.index(min(lst)) if lst else None
+
+class LastTrue(Conditional):
+    def _index(self,lst):
+        for i in range(len(lst)-1,-1,-1):
+            if lst[i]: return i
+        return None
+
+class FirstTrue(Conditional):
+    def _index(self,lst):
+        for i in range(len(lst)):
+            if lst[i]: return i
+        return None
 
 class calc(strcalc): pass

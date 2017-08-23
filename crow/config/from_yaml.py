@@ -72,7 +72,7 @@ def timedelta_representer(dumper,dt):
         pre='-'
     hours=dt.seconds//3600
     minutes=(dt.seconds-hours*3600)//60
-    seconds=dt.seconds-hours*3600-minute*60
+    seconds=dt.seconds-hours*3600-minutes*60
     rep=''
     if dt.days: rep=f'{dt.days}d'
     rep+=f'{hours:02d}:{minutes:02d}:{seconds:02d}'
@@ -118,10 +118,10 @@ add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
 ## @var CONDITIONALS
 # Used to handle custom yaml conditional types.  Maps from conditional type
 # to the function that performs the comparison.
-CONDITIONALS={ FirstMaxYAML:max_index,
-               FirstMinYAML:min_index,
-               FirstTrueYAML:first_true,
-               LastTrueYAML:last_true }
+CONDITIONALS={ FirstMaxYAML:FirstMax,
+               FirstMinYAML:FirstMin,
+               FirstTrueYAML:LastTrue,
+               LastTrueYAML:LastTrue }
 
 ########################################################################
 
@@ -132,7 +132,7 @@ def add_yaml_ordered_dict(key,cls):
         return dumper.represent_ordered_dict(key,data)
     def constructor(loader,node):
         return cls(loader.construct_pairs(node))
-    yaml.add_representer(cls,representer)
+    #yaml.add_representer(cls,representer)
     yaml.add_constructor(key,constructor)
 
 add_yaml_ordered_dict(u'!Eval',EvalYAML)
@@ -185,8 +185,7 @@ class ConvertFromYAML(object):
         # Specialized containers:
         cls=type(v)
         if cls in CONDITIONALS:
-            return Conditional(CONDITIONALS[cls],
-                               self.from_list(v,locals),locals)
+            return self.from_list(v,locals,CONDITIONALS[cls])
         elif cls in SUITE:
             return self.from_dict(v,SUITE[cls])
         elif cls is EvalYAML:
