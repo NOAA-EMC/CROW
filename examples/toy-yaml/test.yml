@@ -1,3 +1,10 @@
+ordered_dict: !!omap
+  - one: 1
+  - two: 2
+  - three: 3
+  - four: 4
+  - five: 5
+
 test_base: &test_base
   four: !calc 2*2
   B: !FirstTrue

@@ -191,6 +191,9 @@ class ConvertFromYAML(object):
         elif cls is EvalYAML:
             return Eval(self.from_dict(v))
 
+        elif isinstance(v,list) and v and isinstance(v[0],tuple) \
+             or isinstance(v,OrderedDict):
+            return self.from_ordered_dict(v,GenericOrderedDict)
         # Generic containers:
         elif isinstance(v,YAMLObject): return self.from_yaml(v)
         elif isinstance(v,dict):     return self.from_dict(v)
@@ -212,7 +215,16 @@ class ConvertFromYAML(object):
         self.validatable[id(ret)]=ret
         return ret
 
-    def from_dict(self,tree,cls=dict_eval):
+    def from_ordered_dict(self,tree,cls=GenericOrderedDict):
+        top=self.result
+        ret=cls(OrderedDict())
+        for k,v in tree:
+            if not valid_name(k): continue
+            ret[k]=self.to_eval(v,ret)
+        self.validatable[id(ret)]=ret
+        return ret
+
+    def from_dict(self,tree,cls=GenericDict):
         """!Converts an object yobj of a YAML standard map type, and its
         elements, to internal implementation types.  Elements with
         unsupported names are ignored.        """
@@ -223,11 +235,11 @@ class ConvertFromYAML(object):
             ret[k]=self.to_eval(v,ret)
         return ret
 
-    def from_list(self,sequence,locals):
+    def from_list(self,sequence,locals,cls=GenericList):
         """!Converts an object yobj of a YAML standard sequence type, and its
         elements, to internal implementation types.  Elements with
         unsupported names are ignored.  This is also used to handle
         other sequence-like types such as omap or set.        """
-        return list_eval(
+        return cls(
             [self.to_eval(s,locals) for s in sequence],
             locals)

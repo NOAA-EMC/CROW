@@ -10,7 +10,8 @@ from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config,
 from crow.tools import to_timedelta
 
 __all__=[ 'Action','Platform', 'Conditional', 'calc','max_index',
-          'min_index', 'last_true', 'first_true' ]
+          'min_index', 'last_true', 'first_true', 'GenericList',
+          'GenericDict', 'GenericOrderedDict' ]
 
 ########################################################################
 
@@ -18,6 +19,9 @@ class Action(dict_eval):
     """!Represents an action that a workflow should take, such as running
     a batch job."""
 
+class GenericDict(dict_eval): pass
+class GenericOrderedDict(dict_eval): pass
+class GenericList(list_eval): pass
 class Platform(dict_eval): pass
 
 class Conditional(list_eval):

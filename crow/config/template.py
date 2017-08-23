@@ -13,7 +13,7 @@ following intermediate Python concepts:
 
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config
-
+from crow.config.represent import GenericList, GenericDict, GenericOrderedDict
 
 class Template(dict_eval):
     """!Internal implementation of the YAML Template type.  Validates a
@@ -104,8 +104,9 @@ def validate_dict(types,val,allowed,typ):
 ## @var TYPES
 # Mapping from YAML type to valid python types.
 TYPES={ 'int':[int], 'bool':[bool], 'string':[str,bytes],
-        'float':[float], 'list':[set,list,tuple,list_eval],
-        'dict':[dict,dict_eval], 'seq':[set,list,tuple,list_eval] }
+        'float':[float], 'list':[set,list,tuple,list_eval,GenericList],
+        'dict':[dict,dict_eval,GenericDict,GenericOrderedDict],
+        'seq':[set,list,tuple,list_eval,GenericList] }
 
 ## @var VALIDATORS
 # Mapping from YAML type to validation function.
