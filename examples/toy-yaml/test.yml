@@ -5,6 +5,11 @@ ordered_dict: !!omap
   - four: 4
   - five: 5
 
+set: !!set
+  ? !calc 1+1
+  ? a
+  ? 2017-08-15
+
 test_base: &test_base
   four: !calc 2*2
   B: !FirstTrue

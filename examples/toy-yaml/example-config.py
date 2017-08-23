@@ -13,6 +13,8 @@ print()
 print("test = expected value = actual value")
 print()
 print('ordered_dict = {one=1, two=2, three=3, four=4, five=5} = '+str(config.ordered_dict))
+print("config.set = {2, datetime.date(2017, 8, 15), 'a'} = "+str(config.set)+
+      ' (order does not matter)')
 print()
 print('fcst.bool_array = [True, False, True] = '+str(config.fcst.bool_array))
 print('fcst.int_array = [1, 2, 3, 4, 5] = '+str(config.fcst.int_array))
