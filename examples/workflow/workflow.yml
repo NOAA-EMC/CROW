@@ -49,6 +49,7 @@ my_fancy_workflow: !Cycle
        Complete: !Depend ~ suite.has_cycle('-6:00')
        Perform: *gfsprep
        Rocoto: *my_task_template
+     # Note: TaskArray does not exist yet, so do not use it.
      # enkf: !TaskArray
      #   Index: imem
      #   Values: !calc tools.seq(1,80) ]
