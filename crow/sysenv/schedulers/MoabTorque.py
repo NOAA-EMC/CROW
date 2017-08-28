@@ -1,12 +1,17 @@
 import itertools
+from io import StringIO
+
 from crow.sysenv.exceptions import *
 from crow.sysenv.util import ranks_to_nodes_ppn
-from crow.sysenv.spec import JobResourceSpec
+from crow.sysenv.spec import JobResourceSpec, node_ppn_pairs_for_mpi_spec
+
+from crow.sysenv.schedulers.base import Scheduler as BaseScheduler
+
 from collections import Sequence
 
 __all__=['Scheduler']
 
-class Scheduler(object):
+class Scheduler(BaseScheduler):
 
     def __init__(self,settings):
         self.settings=dict(settings)
@@ -15,81 +20,69 @@ class Scheduler(object):
         self.hyperthreading_allowed=bool(
             settings.get('hyperthreading_allowed',False))
         self.rocoto_name='MoabTorque'
+        self.indent_text=str(settings.get('indent_text','  '))
 
-    def rocoto_accounting(self,spec,indent=''):
-        return ''
+    ####################################################################
 
-    def rocoto_resources(self,spec,indent=''):
+    # Public methods
+
+    def rocoto_accounting(self,spec,indent=0):
+        space=self.indent_text
+        sio=StringIO()
+        if 'queue' in spec:
+            sio.write(f'{indent*space}<queue>{spec.queue!s}</queue>\n')
+        if 'partition' in spec:
+            sio.write(f'{indent*space}<native>-l partition='
+                      f'{spec.partition!s}</native>\n')
+        if 'account' in spec:
+            sio.write(f'{indent*space}<account>{spec.account!s}</account>\n')
+        ret=sio.getvalue()
+        sio.close()
+        return ret
+
+    def rocoto_resources(self,spec,indent=0):
+        space=self.indent_text
         if not isinstance(spec,JobResourceSpec):
             spec=JobResourceSpec(spec)
 
         if spec.is_pure_serial():
             if spec[0].is_exclusive() in [True,None]:
-                return indent+'<nodes>1:ppn=2</nodes>\n'
+                return indent*space+'<nodes>1:ppn=2</nodes>\n'
             else:
-                return indent+'<cores>1</cores>\n'
+                return indent*space+'<cores>1</cores>\n'
         elif spec.is_pure_openmp():
             # Pure threaded.  Treat as exclusive serial.
-            return indent+'<nodes>1:ppn=2</nodes>\n'
+            return indent*space+'<nodes>1:ppn=2</nodes>\n'
 
         # MPI program.  Split into (nodes,ranks_per_node) pairs.
-        nodes_ranks=self.node_ppn_pairs_for_mpi_spec(spec)
+        nodes_ranks=node_ppn_pairs_for_mpi_spec(
+            spec,self.max_ranks_per_node,self.can_merge_ranks)
 
-        return '<nodes>' \
+        return indent*space+'<nodes>' \
             + '+'.join([f'{n}:ppn={p}' for n,p in nodes_ranks ]) \
             + '</nodes>\n'
 
-    def node_ppn_pairs_for_mpi_spec(self,spec):
-        """!Given a JobResourceSpec that represents an MPI program, express 
-        it in (nodes,ranks_per_node) pairs."""
-
-        def remove_exe(rank):
-            if 'exe' in rank: del rank['exe']
-
-        # Merge ranks with same specifications:
-        collapsed=spec.simplify(self.merge_similar_ranks,remove_exe)
-
-        # Get the (nodes,ppn) pairs for all ranks:
-        nodes_ranks=list()
+    def max_ranks_per_node(rank_spec):
         can_hyper=self.hyperthreading_allowed
-        for block in collapsed:
-            max_per_node=self.cores_per_node
-            if can_hyper and block.get('hyperthreading',False):
-                max_per_node*=self.cpus_per_core
-            threads_per_node=max_per_node
-            max_per_node //= max(1,block.get('OMP_NUM_THREADS',1))
-            if max_per_node<1:
-                raise MachineTooSmallError(f'Specification too large for node: max {threads_per_node} for {block!r}')
-            ranks=block['mpi_ranks']
-            kj=ranks_to_nodes_ppn(max_per_node,ranks)
-            nodes_ranks.extend(kj)
-        assert(nodes_ranks)
-        return nodes_ranks
+        max_per_node=self.cores_per_node
+        if can_hyper and rank_spec.get('hyperthreading',False):
+            max_per_node*=self.cpus_per_core
+        threads_per_node=max_per_node
+        max_per_node //= max(1,rank_spec.get('OMP_NUM_THREADS',1))
+        if max_per_node<1:
+            raise MachineTooSmallError(f'Specification too large for node: max {threads_per_node} for {rank_spec!r}')
+        return max_per_node
 
-    def merge_similar_ranks(self,ranks):
-        if not isinstance(ranks,Sequence):
-            raise TypeError('ranks argument must be a Sequence not a %s'%(
-                type(ranks).__name__,))
-        is_threaded=any([bool(rank.is_openmp()) for rank in ranks])
-        i=0
-        while i<len(ranks)-1:
-            if ranks[i]['separate_node']:
-                i=i+1
-                continue
+    def can_merge_ranks(rank_set_1,rank_set_2):
+        R1, R2 = rank_set_1, rank_set_2
+        if R1['separate_node'] or R2['separate_node']: return False
 
-            same = ranks[i]['OMP_NUM_THREADS']==ranks[i+1]['OMP_NUM_THREADS'] and \
-                   ranks[i].get('max_ppn',0)==ranks[i+1].get('max_ppn',0)
-
-            if self.hyperthreading_allowed:
-                same = same and ranks[i].get('hyperthreads',1) == \
-                              ranks[i+1].get('hyperthreads',1)
-
-            if same:
-                ranks[i]=ranks[i].new_with(
-                    mpi_ranks=ranks[i]['mpi_ranks']+ranks[i+1]['mpi_ranks'])
-                del ranks[i+1]
-            else:
-                i=i+1
+        can = R1['OMP_NUM_THREADS']==R2['OMP_NUM_THREADS'] and \
+              R1.get('max_ppn',0)==R2.get('max_ppn',0)
+        if self.hyperthreading_allowed:
+            same = same and R1.get('hyperthreads',1) == \
+                            R2.get('hyperthreads',1)
+        return same
 
 def test():
     settings={ 'physical_cores_per_node':24,

@@ -1,4 +1,8 @@
- 
+# NOTE: Inside of a Suite (config.tasks.Suite), there are two new global
+# variables defined:
+#    suite - the SuiteView of the !Cycle (my_fancy_workflow) 
+#    sched - the scheduler.  In this case, crow.metascheduler.MoabTorque.Scheduler
+
 my_fancy_workflow: !Cycle
    Rocoto:
      scheduler:
@@ -6,10 +10,19 @@ my_fancy_workflow: !Cycle
        physical_cores_per_node: 24
        logical_cpus_per_core: 2
        hyperthreading_allowed: true
+       indent_text: "  "
 
      accounting:
-       queue: batch
        account: fv3-cpu
+       queue: batch
+
+       # NOTE: Partition should not be specified on Theia.
+       # This is just to test "partition" generation:
+       partition: delete-me
+
+     serial_accounting:
+       account: fv3-cpu
+       queue: service
 
      indent_text: "  "
      workflow_install: /tmp
@@ -29,14 +42,12 @@ my_fancy_workflow: !Cycle
 
      mpi_task_template: &my_task_template !expand |
        <command>/bin/true</command>
-       <queue>{doc.platform.queue}</queue>
        {sched.rocoto_accounting(suite.Rocoto.accounting)}
        {sched.rocoto_resources(Perform.resources)}
 
      mpi_enkf_template: &my_enkf_template !expand |
        <command>echo member {imem}</command>
-       <queue>{doc.platform.queue}</queue>
-       {sched.rocoto_accounting(suite.Rocoto.accounting)}
+       {sched.rocoto_accounting(suite.Rocoto.enkf_accounting)}
        {sched.rocoto_resources(Perform.resources)}
 
    Clock:
@@ -93,6 +104,5 @@ my_fancy_workflow: !Cycle
    final: !Task
      Rocoto: !expand |
        <command>/bin/true</command>
-       <queue>{doc.platform.queue}</queue>
-       {sched.rocoto_accounting(suite.Rocoto.accounting)}
+       {sched.rocoto_accounting(suite.Rocoto.serial_accounting)}
        {sched.rocoto_resources( [{}] )}

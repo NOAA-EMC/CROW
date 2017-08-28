@@ -92,6 +92,42 @@ class JobResourceSpec(Sequence):
         typ=type(self).__name__
         return f'{typ}[{", ".join([repr(r) for r in self])}]'
 
+########################################################################
+ 
+def node_ppn_pairs_for_mpi_spec(self,spec,max_per_node_function,
+                                rank_comparison_function):
+    """!Given a JobResourceSpec that represents an MPI program, express 
+    it in (nodes,ranks_per_node) pairs."""
+    def remove_exe(rank):
+        if 'exe' in rank: del rank['exe']
+     # Merge ranks with same specifications:
+    collapsed=spec.simplify(self._merge_similar_ranks,remove_exe)
+     # Get the (nodes,ppn) pairs for all ranks:
+    nodes_ranks=list()
+    for block in collapsed:
+        max_per_node=max_per_node_function(block)
+        ranks=block['mpi_ranks']
+        kj=ranks_to_nodes_ppn(max_per_node,ranks)
+        nodes_ranks.extend(kj)
+    return nodes_ranks
+
+def merge_similar_ranks(self,ranks,can_merge_ranks_function):
+    """!Given an array of JobRankSpec, merge any contiguous sequence of
+    JobRankSpec objects where can_merge_ranks_function(rank1,rank2)
+    returns true.      """
+    if not isinstance(ranks,Sequence):
+        raise TypeError('ranks argument must be a Sequence not a %s'%(
+            type(ranks).__name__,))
+    is_threaded=any([bool(rank.is_openmp()) for rank in ranks])
+    i=0
+    while i<len(ranks)-1:
+        if can_merge_ranks_function(ranks[i],ranks[i+1]):
+            ranks[i]=ranks[i].new_with(
+                mpi_ranks=ranks[i]['mpi_ranks']+ranks[i+1]['mpi_ranks'])
+            del ranks[i+1]
+        else:
+            i=i+1
+
 def test():
     # MPI + OpenMP program test
     input1=[
