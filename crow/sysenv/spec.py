@@ -1,4 +1,5 @@
 from collections import UserList, Mapping, Sequence
+from crow.sysenv.util import ranks_to_nodes_ppn
 
 __all__=['JobRankSpec','JobResourceSpec']
 
@@ -94,14 +95,16 @@ class JobResourceSpec(Sequence):
 
 ########################################################################
  
-def node_ppn_pairs_for_mpi_spec(self,spec,max_per_node_function,
+def node_ppn_pairs_for_mpi_spec(spec,max_per_node_function,
                                 rank_comparison_function):
     """!Given a JobResourceSpec that represents an MPI program, express 
     it in (nodes,ranks_per_node) pairs."""
     def remove_exe(rank):
         if 'exe' in rank: del rank['exe']
+    def local_merge_similar_ranks(ranks):
+        merge_similar_ranks(ranks,rank_comparison_function)
      # Merge ranks with same specifications:
-    collapsed=spec.simplify(self._merge_similar_ranks,remove_exe)
+    collapsed=spec.simplify(local_merge_similar_ranks,remove_exe)
      # Get the (nodes,ppn) pairs for all ranks:
     nodes_ranks=list()
     for block in collapsed:
@@ -111,7 +114,7 @@ def node_ppn_pairs_for_mpi_spec(self,spec,max_per_node_function,
         nodes_ranks.extend(kj)
     return nodes_ranks
 
-def merge_similar_ranks(self,ranks,can_merge_ranks_function):
+def merge_similar_ranks(ranks,can_merge_ranks_function):
     """!Given an array of JobRankSpec, merge any contiguous sequence of
     JobRankSpec objects where can_merge_ranks_function(rank1,rank2)
     returns true.      """

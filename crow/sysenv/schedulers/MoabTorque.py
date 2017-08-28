@@ -62,7 +62,7 @@ class Scheduler(BaseScheduler):
             + '+'.join([f'{n}:ppn={p}' for n,p in nodes_ranks ]) \
             + '</nodes>\n'
 
-    def max_ranks_per_node(rank_spec):
+    def max_ranks_per_node(self,rank_spec):
         can_hyper=self.hyperthreading_allowed
         max_per_node=self.cores_per_node
         if can_hyper and rank_spec.get('hyperthreading',False):
@@ -73,7 +73,7 @@ class Scheduler(BaseScheduler):
             raise MachineTooSmallError(f'Specification too large for node: max {threads_per_node} for {rank_spec!r}')
         return max_per_node
 
-    def can_merge_ranks(rank_set_1,rank_set_2):
+    def can_merge_ranks(self,rank_set_1,rank_set_2):
         R1, R2 = rank_set_1, rank_set_2
         if R1['separate_node'] or R2['separate_node']: return False
 
