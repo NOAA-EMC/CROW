@@ -1,10 +1,11 @@
+from crow.exceptions import CROWException
 __all__=['ConfigError', 'ConditionalMissingDoWhen', 'TemplateErrors',
          'CalcRecursionTooDeep', 'ExpandMissingResult',
          'CalcKeyError', 'TemplateError', 'InvalidConfigTemplate',
          'InvalidConfigValue', 'InvalidConfigType' ]
 
 # module-specific exceptions:
-class ConfigError(Exception): pass
+class ConfigError(CROWException): pass
 class ConditionalMissingDoWhen(ConfigError): pass
 class CalcRecursionTooDeep(ConfigError): pass
 class ExpandMissingResult(ConfigError): pass
