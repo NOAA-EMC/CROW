@@ -90,3 +90,35 @@ def to_timedelta(s):
             return mult*fun(ints)
     raise ValueError(s+': invalid timedelta specification (12:34, '
                      '12:34:56, 9d12h, 9d12:34, 9d12:34:56)')
+
+########################################################################
+
+def to_printf_octal(match):
+    """!Intended to be sent to re.sub to replace a single byte match with
+    a printf-style octal representation of that byte"""
+    i=int.from_bytes(match[1],'big',signed=False)
+    return b'\\%03o'%i
+
+def str_to_posix_sh(s,encoding='ascii'):
+    """!Convert a string to a POSIX sh represesntation of that string.
+    Will produce undefined results if the string is not a valid ASCII
+    string.    """
+
+    # Convert from unicode to ASCII:
+    if not isinstance(s,bytes):
+        s=bytes(s,'ascii')
+
+    # For strins with no special characterrs, return unmodified
+    if re.match(br'(?ms)[a-zA-Z0-9_+:/.,-]+$',s):
+        return s
+
+    # For characters that have a special meaning in sh "" strings,
+    # prepend a backslash (\):
+    s=re.sub(br'(?ms)(["\\])',br'\\\1',s)
+
+    if re.search(br'(?ms)[^ -~]',s):
+        # String contains special characters.  Use printf.
+        s=re.sub(b'(?ms)([^ -~])',to_printf_octal,s)
+        return b'"$( printf \'' + s + b'\' )"'
+
+    return b'"'+s+b'"'

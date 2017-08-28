@@ -1,0 +1,25 @@
+abc: [ d, e, f ]
+one: 1
+
+vars:
+  DOG: Roscoe
+  CAT: Apollo
+  BIRD: Girdy-Girl
+  MOUSE: null
+
+array:
+  - item: one
+    texture: blobby
+  - item: two
+    texture: rough
+  - item: three
+    texture: fluffy
+
+logical:
+  TRUE_TEST: true
+  FALSE_TEST: false
+
+float:
+  short_pi: 3.14159
+  too_long: 3.141592653589793
+  not_float: 3
