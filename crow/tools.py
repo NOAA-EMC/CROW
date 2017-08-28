@@ -106,6 +106,9 @@ def str_to_posix_sh(s,encoding='ascii'):
 
     # Convert from unicode to ASCII:
     if not isinstance(s,bytes):
+        if not isinstance(s,str):
+            raise TypeError('str_to_posix_sh: argument must be a str '
+                            f'or bytes, not a {type(s).__name__}')
         s=bytes(s,'ascii')
 
     # For strins with no special characterrs, return unmodified

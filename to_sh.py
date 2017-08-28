@@ -34,6 +34,8 @@ class ProcessArgs(object):
         self.files=list()
         self.fail=False
         self.export_vars=False
+        self.have_expanded=False
+        self.have_handled_vars=False
 
     def set_bool_format(self,value):
         yes_no = value.split(',')
@@ -91,6 +93,7 @@ class ProcessArgs(object):
             return self.float_format%obj
         elif isinstance(obj,int):
             return self.int_format%obj
+        return NotImplemented
 
     def read_files(self):
         config=crow.config.from_file(*self.files)
@@ -120,16 +123,29 @@ class ProcessArgs(object):
             raise EpicFail()
         return results
 
+    def expand_file(self,filename):
+        with open(filename,'rt') as fd:
+            contents=fd.read()
+        as_expr='f'+repr(contents)
+        print(self.eval_expr('f'+repr(contents)))
+
     def process_arg(self,arg):
         m=re.match('([a-zA-Z]+):(.*)',arg)
         if m:
             if not self.done_with_files: self.read_files()
             command, value = m.groups()
-            if command=='bool':    self.set_bool_format(value)
-            elif command=='int':   self.set_int_format(value)
-            elif command=='float': self.set_float_format(value)
-            elif command=='scope': self.set_scope(value)
-            elif command=='null':  self.set_null_string(value)
+            if command=='bool':     self.set_bool_format(value)
+            elif command=='int':    self.set_int_format(value)
+            elif command=='float':  self.set_float_format(value)
+            elif command=='scope':  self.set_scope(value)
+            elif command=='null':   self.set_null_string(value)
+            elif command=='expand':
+                if self.have_handled_vars:
+                    raise Exception(f'{arg}: cannot expand files and set '
+                                    'variables in the same call.')
+                self.expand_file(value)
+                self.have_expanded=True
+                return None,None
             else:
                 raise ValueError(f'{command}: not a valid command '
                                  '(bool, int, float, scope, null)')
@@ -137,10 +153,18 @@ class ProcessArgs(object):
 
         m=re.match('([A-Za-z_][a-zA-Z0-9_]*)=(.*)',arg)
         if m:
+            if self.have_expanded:
+                raise Exception(f'{arg}: cannot expand files and set variables'
+                                'in the same call.')
+            self.have_handled_vars=True
             if not self.done_with_files: self.read_files()
             var,expr = m.groups()
             result=self.eval_expr(expr)
             formatted=self.format_object(result)
+            if formatted is NotImplemented:
+                raise TypeError(
+                    f'cannot convert a {type(result).__name__} '
+                    'to a shell expression.')
             if formatted is UNSET_VARIABLE:
                 return 'unset '+var
             return var, formatted

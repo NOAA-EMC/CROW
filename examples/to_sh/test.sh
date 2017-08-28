@@ -55,3 +55,5 @@ echo "    default format: $ROUNDOFF_PI"
 echo "    %.20f   format: $LONG_PI"
 echo "  NOT_FLOAT = 3 = $NOT_FLOAT"
 unset SHORT_PI LONG_PI
+
+TO_SH test.yaml expand:./test.nml

@@ -36,9 +36,11 @@ def fort(value,scope='scope'):
         # For mappings, assume a derived type.
         subscope_keys=[ (f'{scope}%{key}',value) for key in value ]
         return ', '.join([f'{k}={fort(v,k)}' for (k,v) in subscope_keys])
-    elif isinstance(value,bool):
+    elif value is True or value is False:
         # Booleans get a "." around them:
         return '.'+str(bool(value))+'.'
+    elif isinstance(value,float):
+        return '%.12g'%value
     else:
         # Anything else is converted to a string.
         return str(value)
