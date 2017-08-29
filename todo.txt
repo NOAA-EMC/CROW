@@ -3,6 +3,21 @@ TO DO LIST
 For python scripting and python configuration.
 
 ------------------------------------------------------------------------
+CONNECT SHELL EXGLOBAL FORECAST SCRIPT TO CROW
+
+* Move all configurable variables to YAML level
+* Generate namelists via to_sh.py expand:...
+* Get all configurable variables from to_sh.py VAR=expr
+* Execute NEMS.x via to_sh.py
+
+Prerequisites:
+  REPLACE FV3GFS WORKFLOW
+  GENERATION OF MPI/OPENMP LAUNCHERS (can rewrite other parts of
+      script while waiting for this)
+  WORKFLOW ON CRAY (can work on Theia while waiting for this)
+  NAMELIST GENERATION (or suitable workaround via tools.fort(...))
+
+------------------------------------------------------------------------
 ACTUAL WORKFLOW IN YAML
 
 Modify examples/workflow to generate the actual Rocoto XML for the gfs
