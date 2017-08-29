@@ -18,6 +18,20 @@ Prerequisites:
   NAMELIST GENERATION (or suitable workaround via tools.fort(...))
 
 ------------------------------------------------------------------------
+REPLACE SHELL FORECAST SCRIPT WITH PYTHON
+
+After the "CONNECT SHELL EXGLOBAL FORECAST SCRIPT TO CROW" is done,
+the script should be very short.  Mostly, it will be a few file
+creations/modifications, executing a few programs, and calling
+to_sh.py a bunch of times.  Such actions can be expressed concisely
+in Python.  
+
+There may be more complicated problems, like a big grep/sed/awk
+pipeline, which will require special care.
+
+Prerequisite: CONNECT SHELL EXGLOBAL FORECAST SCRIPT TO CROW
+
+------------------------------------------------------------------------
 ACTUAL WORKFLOW IN YAML
 
 Modify examples/workflow to generate the actual Rocoto XML for the gfs
