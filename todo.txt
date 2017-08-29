@@ -1,4 +1,104 @@
-TO DO LIST:
+TO DO LIST
+
+For python scripting and python configuration.
+
+------------------------------------------------------------------------
+ACTUAL WORKFLOW IN YAML
+
+Modify examples/workflow to generate the actual Rocoto XML for the gfs
+workflow, rather than a fake system.
+
+1. The dependencies need to be updated.
+2. The resource requirements need to be updated.
+3. The shell commands need to be replaced with the actual job script names.
+
+------------------------------------------------------------------------
+REPLACE FV3GFS WORKFLOW
+
+- Replace the config.* files with wrappers around the YAML system.
+
+- Update the jobs to use the to_sh.py to get the relevant variables.
+
+- Replace fv3gfs/ush/setup*py with new scripts that are wrapped around
+  YAML files.
+
+- Find a way to embed the CROW repository within the fv3gfs repository
+  OR create a modulefile and install tags of CROW in a standard area.
+
+Prerequisites:
+  ACTUAL WORKFLOW IN YAML
+  WORKFLOW ON CRAY
+  DELAYED VALIDATION (or suitable workaround in setup*py scripts)
+
+------------------------------------------------------------------------
+EVANT/DATA DEPENDENCIES IN WORKFLOW SUITE
+
+The GFS workflow has two types of event dependencies:
+
+1. The post job for hour X must wait to start until the forecast data
+is available for hour X.  
+
+2. The prep must wait for observations.  These observations come from
+outside the workflow.
+
+In Rocoto, such problems are dealt with via data dependencies.  This
+would require placing disk location awareness at the workflow suite
+level.  The ecFlow approach is to use events.  This allows a clean
+separation between the workflow and dataflow.  In Rocoto, events can
+be implemented via flag files.  Either way, we need a dataflow system
+or a temporary kludge to replace one.
+
+A solution must be implemented soon (~1 week) to support real-time
+parallels and running the post in parallel with the forecast.
+
+------------------------------------------------------------------------
+GENERATION OF MPI/OPENMP LAUNCHERS
+
+This is ~50% done.  Sam can probably finish the Theia implementation
+in a day or so.
+
+The scripts need to be able to generate mpirun/srun/whatever commands.
+For most MPI implementations, this is not as simple as generating one
+command.  You will also need files to be generated first, such as
+command files or task geometry specifications.  Also, you frequently
+need some environment variables.  To accomplish this, we need a type
+that passes around the list of files to create (command files, etc.)
+the environment, and the command to run.  The YAML needs to have a way
+to manually specify that.  Something like this:
+
+launch_me: !ShellCommand
+  env:
+    LSB_PJL_TASK_GEOMETRY: "{(1,2,3,4)(5,6,7,8)}"
+    ANOTHER_VAR: another_value
+  files:
+    CMD_FILE: 'contents of the command file'
+  command: 'mpirun.lsf ... some arguments ...'
+
+From within Python, you need:
+
+1. A ShellCommand object in the config module along with the logic to
+read and write it.
+
+2. The scheduler and metascheduler packages need to know how to
+generate a ShellCommand.
+
+3. The sysenv package needs to know how to run one.  (This is the
+easiest part - probably <10 lines.)
+
+3. There needs to be a shell-side wrapper (like to_sh.py) that knows
+how to run the shell command.  It would use the config package ot get
+the shell command and the sysenv package to run the command.  This is
+easy to implement, and would probably be best done within to_sh.py to
+avoid duplicating code.  If it is done that way, it will probably be
+<10 lines of added code.
+
+------------------------------------------------------------------------
+WORKFLOW ON CRAY
+
+Extend the mpi/openmp launcher work to the WCOSS Cray.  Extend the
+Rocoto generation to WCOSS Cray.
+
+Prerequisite: GENERATION OF MPI/OPENMP LAUNCHERS
 
 ------------------------------------------------------------------------
 SET LAZY EVALUATION (set_eval)
