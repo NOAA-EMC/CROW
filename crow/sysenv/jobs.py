@@ -1,5 +1,6 @@
-from collections import UserList, Mapping, Sequence
-from crow.sysenv.util import ranks_to_nodes_ppn
+from abc import abstractmethod
+from collections import UserList, Mapping, Sequence, OrderedDict
+from subprocess import Popen, PIPE, CompletedProcess
 
 __all__=['JobRankSpec','JobResourceSpec']
 
@@ -10,17 +11,24 @@ JOB_RANK_SPEC_TEMPLATE={
 
 MISSING=object() # special constant for missing arguments
 
+########################################################################
+
 class JobRankSpec(Mapping):
     def __init__(self,*,OMP_NUM_THREADS=0,mpi_ranks=0,
                  exe=MISSING,args=MISSING,exclusive=True,
-                 separate_node=False):
+                 separate_node=False,hyperthreads=1,**kwargs):
         self.__spec={
             'mpi_ranks':max(0,int(mpi_ranks)),
             'exclusive':bool(exclusive),
             'separate_node':separate_node,
+            'hyperthreads':int(hyperthreads),
             'OMP_NUM_THREADS':max(0,int(OMP_NUM_THREADS)),
             'exe':( None if exe is MISSING else exe ),
             'args':( [] if args is MISSING else list(args) ) }
+        for key,value in kwargs.items():
+            if not key.endswith('_extra'):
+                raise TypeError(f'Unknown argument {key}')
+            self.__spec[key]=value
         if not isinstance(exe,str) and exe is not MISSING and \
            exe is not None:
             raise TypeError('exe must be a string, not a %s'%(
@@ -63,6 +71,8 @@ class JobRankSpec(Mapping):
             ','.join([f'{repr(k)}:{repr(v)}' for k,v in self.items()]) + \
             '}'
 
+########################################################################
+
 class JobResourceSpec(Sequence):
     def __init__(self,specs):
         self.__specs=[ JobRankSpec(**spec) for spec in specs ]
@@ -95,41 +105,6 @@ class JobResourceSpec(Sequence):
 
 ########################################################################
  
-def node_ppn_pairs_for_mpi_spec(spec,max_per_node_function,
-                                rank_comparison_function):
-    """!Given a JobResourceSpec that represents an MPI program, express 
-    it in (nodes,ranks_per_node) pairs."""
-    def remove_exe(rank):
-        if 'exe' in rank: del rank['exe']
-    def local_merge_similar_ranks(ranks):
-        merge_similar_ranks(ranks,rank_comparison_function)
-     # Merge ranks with same specifications:
-    collapsed=spec.simplify(local_merge_similar_ranks,remove_exe)
-     # Get the (nodes,ppn) pairs for all ranks:
-    nodes_ranks=list()
-    for block in collapsed:
-        max_per_node=max_per_node_function(block)
-        ranks=block['mpi_ranks']
-        kj=ranks_to_nodes_ppn(max_per_node,ranks)
-        nodes_ranks.extend(kj)
-    return nodes_ranks
-
-def merge_similar_ranks(ranks,can_merge_ranks_function):
-    """!Given an array of JobRankSpec, merge any contiguous sequence of
-    JobRankSpec objects where can_merge_ranks_function(rank1,rank2)
-    returns true.      """
-    if not isinstance(ranks,Sequence):
-        raise TypeError('ranks argument must be a Sequence not a %s'%(
-            type(ranks).__name__,))
-    is_threaded=any([bool(rank.is_openmp()) for rank in ranks])
-    i=0
-    while i<len(ranks)-1:
-        if can_merge_ranks_function(ranks[i],ranks[i+1]):
-            ranks[i]=ranks[i].new_with(
-                mpi_ranks=ranks[i]['mpi_ranks']+ranks[i+1]['mpi_ranks'])
-            del ranks[i+1]
-        else:
-            i=i+1
 
 def test():
     # MPI + OpenMP program test

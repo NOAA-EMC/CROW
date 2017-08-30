@@ -3,7 +3,9 @@ from io import StringIO
 
 from crow.sysenv.exceptions import *
 from crow.sysenv.util import ranks_to_nodes_ppn
-from crow.sysenv.spec import JobResourceSpec
+from crow.sysenv.jobs import JobResourceSpec
+from crow.sysenv.shell import ShellCommand
+from crow.sysenv.nodes import GenericNodeSpec
 
 #from crow.sysenv.parallelisms.base import Parallelism as BaseParallelism
 
@@ -14,13 +16,51 @@ __all__=['Parallelism']
 class Parallelism(object):  # (BaseParallelism):
     def __init__(self,settings):
         self.settings=dict(settings)
-        self.cores_per_node=int(settings['physical_cores_per_node'])
-        self.cpus_per_core=int(settings.get('logical_cpus_per_core',1))
-        self.hyperthreading_allowed=bool(
-            settings.get('hyperthreading_allowed',False))
+        self.nodes=GenericNodeSpec(settings)
         self.parallelism='HydraIMPI'
-        self.indent_text=str(settings.get('indent_text','  '))
+        self.mpirun=str(settings['mpirun'])
+        self.rank_sep=str(settings.get('rank_sep',':'))
 
-    def make_sh_command_to_launch(self,spec):
-        pass
+    def make_shell_command_to_launch(self,spec):
+        if spec.is_pure_serial():
+            return ShellCommand(spec['exe'])
+        elif spec.is_pure_openmp():
+            return ShellCommand(spec[0]['exe'],env={
+                'OMP_NUM_THREADS':int(spec[0]['OMP_NUM_THREADS']) })
+
+        # Merge any adjacent ranks that can be merged.  Ignore
+        # differing executables between ranks while merging them
+        # (rename_exe):
+        merged=self.nodes.with_similar_ranks_merged(
+            spec,can_merge_ranks=self.nodes.same_except_exe)
+
+        cmd=[ self.mpirun ]
+
+        first=True
+        for rank in merged:
+            if not first and self.rank_sep:
+                cmd.append(self.rank_sep)
+            exe=rank['exe']
+
+            # Add extra arguments specific to this MPI.  Note:
+            # "extras" go first so that the first block of ranks can
+            # specify the hydra global options.
+            extra=rank.get('HydraIMPI_extra',None)
+            if extra is not None:
+                if isinstance(extra,str): extra=[extra]
+                cmd.extend(extra)
+
+            cmd.extend(['-np','%d'%max(1,int(rank.get('mpi_ranks',1)))])
+            if rank.is_openmp():
+                cmd.extend([ '/usr/bin/env', 'OMP_NUM_THREADS='+
+                             '%d'%int(rank['OMP_NUM_THREADS']) ])
+            if isinstance(exe,str):
+                cmd.append(exe)
+            else:
+                cmd.extend(exe)
+            first=False
+
+        return ShellCommand(cmd)
+        
+                
     

@@ -3,7 +3,8 @@ from io import StringIO
 
 from crow.sysenv.exceptions import *
 from crow.sysenv.util import ranks_to_nodes_ppn
-from crow.sysenv.spec import JobResourceSpec, node_ppn_pairs_for_mpi_spec
+from crow.sysenv.jobs import JobResourceSpec
+from crow.sysenv.nodes import GenericNodeSpec
 
 from crow.sysenv.schedulers.base import Scheduler as BaseScheduler
 
@@ -15,10 +16,7 @@ class Scheduler(BaseScheduler):
 
     def __init__(self,settings):
         self.settings=dict(settings)
-        self.cores_per_node=int(settings['physical_cores_per_node'])
-        self.cpus_per_core=int(settings.get('logical_cpus_per_core',1))
-        self.hyperthreading_allowed=bool(
-            settings.get('hyperthreading_allowed',False))
+        self.nodes=GenericNodeSpec(settings)
         self.rocoto_name='MoabTorque'
         self.indent_text=str(settings.get('indent_text','  '))
 
@@ -54,35 +52,16 @@ class Scheduler(BaseScheduler):
             # Pure threaded.  Treat as exclusive serial.
             return indent*space+'<nodes>1:ppn=2</nodes>\n'
 
-        # MPI program.  Split into (nodes,ranks_per_node) pairs.
-        nodes_ranks=node_ppn_pairs_for_mpi_spec(
-            spec,self.max_ranks_per_node,self.can_merge_ranks)
+        # This is an MPI program.
+
+        # Split into (nodes,ranks_per_node) pairs.  Ignore differeing
+        # executables between ranks while merging them (del_exe):
+        nodes_ranks=self.nodes.to_nodes_ppn(
+            spec,can_merge_ranks=self.nodes.same_except_exe)
 
         return indent*space+'<nodes>' \
             + '+'.join([f'{n}:ppn={p}' for n,p in nodes_ranks ]) \
             + '</nodes>\n'
-
-    def max_ranks_per_node(self,rank_spec):
-        can_hyper=self.hyperthreading_allowed
-        max_per_node=self.cores_per_node
-        if can_hyper and rank_spec.get('hyperthreading',False):
-            max_per_node*=self.cpus_per_core
-        threads_per_node=max_per_node
-        max_per_node //= max(1,rank_spec.get('OMP_NUM_THREADS',1))
-        if max_per_node<1:
-            raise MachineTooSmallError(f'Specification too large for node: max {threads_per_node} for {rank_spec!r}')
-        return max_per_node
-
-    def can_merge_ranks(self,rank_set_1,rank_set_2):
-        R1, R2 = rank_set_1, rank_set_2
-        if R1['separate_node'] or R2['separate_node']: return False
-
-        can = R1['OMP_NUM_THREADS']==R2['OMP_NUM_THREADS'] and \
-              R1.get('max_ppn',0)==R2.get('max_ppn',0)
-        if self.hyperthreading_allowed:
-            same = same and R1.get('hyperthreads',1) == \
-                            R2.get('hyperthreads',1)
-        return same
 
 def test():
     settings={ 'physical_cores_per_node':24,
