@@ -81,53 +81,16 @@ A solution must be implemented soon (~1 week) to support real-time
 parallels and running the post in parallel with the forecast.
 
 ------------------------------------------------------------------------
-GENERATION OF MPI/OPENMP LAUNCHERS
-
-This is ~50% done.  Sam can probably finish the Theia implementation
-in a day or so.
-
-The scripts need to be able to generate mpirun/srun/whatever commands.
-For most MPI implementations, this is not as simple as generating one
-command.  You will also need files to be generated first, such as
-command files or task geometry specifications.  Also, you frequently
-need some environment variables.  To accomplish this, we need a type
-that passes around the list of files to create (command files, etc.)
-the environment, and the command to run.  The YAML needs to have a way
-to manually specify that.  Something like this:
-
-launch_me: !ShellCommand
-  env:
-    LSB_PJL_TASK_GEOMETRY: "{(1,2,3,4)(5,6,7,8)}"
-    ANOTHER_VAR: another_value
-  files:
-    CMD_FILE: 'contents of the command file'
-  command: 'mpirun.lsf ... some arguments ...'
-
-From within Python, you need:
-
-1. A ShellCommand object in the config module along with the logic to
-read and write it.
-
-2. The scheduler and metascheduler packages need to know how to
-generate a ShellCommand.
-
-3. The sysenv package needs to know how to run one.  (This is the
-easiest part - probably <10 lines.)
-
-3. There needs to be a shell-side wrapper (like to_sh.py) that knows
-how to run the shell command.  It would use the config package ot get
-the shell command and the sysenv package to run the command.  This is
-easy to implement, and would probably be best done within to_sh.py to
-avoid duplicating code.  If it is done that way, it will probably be
-<10 lines of added code.
-
-------------------------------------------------------------------------
 WORKFLOW ON CRAY
 
 Extend the mpi/openmp launcher work to the WCOSS Cray.  Extend the
 Rocoto generation to WCOSS Cray.
 
-Prerequisite: GENERATION OF MPI/OPENMP LAUNCHERS
+------------------------------------------------------------------------
+SUPPORT FOR THEIA MPICH
+
+Add something in crow.sysenv.parallelize to support MPICH on Theia.
+Only IMPI is supported right now.
 
 ------------------------------------------------------------------------
 SET LAZY EVALUATION (set_eval)
