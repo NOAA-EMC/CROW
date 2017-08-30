@@ -1,5 +1,6 @@
 #! /usr/bin/env python3.6
 
+import subprocess
 import getopt
 import sys
 import re
@@ -7,7 +8,7 @@ import os
 import logging
 
 import crow.config
-
+import crow.sysenv
 from crow.exceptions import CROWException
 from crow.tools import str_to_posix_sh
 from collections import Mapping
@@ -32,7 +33,6 @@ class ProcessArgs(object):
         self.null_string=UNSET_VARIABLE
         self.done_with_files=False
         self.files=list()
-        self.fail=False
         self.export_vars=False
         self.have_expanded=False
         self.have_handled_vars=False
@@ -44,6 +44,12 @@ class ProcessArgs(object):
                              'comma-separated values ("YES,NO")')
         self.true_string=yes_no[0]
         self.false_string=yes_no[1]
+
+    def run_expr(self,expr,check=False):
+        cmd=self.eval_expr(expr)
+        sh=crow.sysenv.ShellCommand.from_object(cmd)
+        print(sh)
+        sh.run(check=check)
 
     def eval_expr(self,expr):
         globals={}
@@ -104,6 +110,7 @@ class ProcessArgs(object):
     def process_args(self):
         results=list()
         export='export ' if self.export_vars else ''
+        fail=False
         for arg in self.args:
             try:
                 var, value = self.process_arg(arg)
@@ -115,11 +122,12 @@ class ProcessArgs(object):
                 else:
                     results.append(f'{export}{var}={value}')
             except ( NameError, AttributeError, LookupError, NameError,
-                     ReferenceError, ValueError, TypeError, CROWException ) \
+                     ReferenceError, ValueError, TypeError, CROWException,
+                     subprocess.CalledProcessError ) \
                         as ERR:
                 fail=True
                 logger.error(f'{arg}: {ERR!s}',exc_info=not self.quiet)
-        if self.fail:
+        if fail:
             raise EpicFail()
         return results
 
@@ -130,15 +138,17 @@ class ProcessArgs(object):
         print(self.eval_expr('f'+repr(contents)))
 
     def process_arg(self,arg):
-        m=re.match('([a-zA-Z]+):(.*)',arg)
+        m=re.match('([a-zA-Z][a-zA-Z0-9_]*):(.*)',arg)
         if m:
             if not self.done_with_files: self.read_files()
             command, value = m.groups()
-            if command=='bool':     self.set_bool_format(value)
-            elif command=='int':    self.set_int_format(value)
-            elif command=='float':  self.set_float_format(value)
-            elif command=='scope':  self.set_scope(value)
-            elif command=='null':   self.set_null_string(value)
+            if command=='bool':         self.set_bool_format(value)
+            elif command=='int':        self.set_int_format(value)
+            elif command=='float':      self.set_float_format(value)
+            elif command=='scope':      self.set_scope(value)
+            elif command=='null':       self.set_null_string(value)
+            elif command=='run_ignore': self.run_expr(value,False)
+            elif command=='run':        self.run_expr(value,True)
             elif command=='expand':
                 if self.have_handled_vars:
                     raise Exception(f'{arg}: cannot expand files and set '
@@ -189,5 +199,6 @@ if __name__ == '__main__':
         writeme=' '.join(pa.process_args())
         sys.stdout.write(writeme)
     except EpicFail:
-        sys.stderr.write('Failure; see prior errors.')
+        sys.stderr.write('Failure; see prior errors.\n')
+        exit(1)
 

@@ -18,11 +18,7 @@ class ShellCommand(object):
             raise TypeError('command must be a string or list, not a '+
                             type(s).__name__)
 
-        self.command=command
-        self.env=None
-        if env:
-            self.env=dict(os.environ)
-            self.env.update(env)
+        self.env=dict(env) if env else None
         self.files=OrderedDict()
         self.cwd=cwd or None
 
@@ -30,6 +26,19 @@ class ShellCommand(object):
 
         for f in files:
             self.files[f['name']]=f
+
+    @staticmethod
+    def from_object(obj):
+        if isinstance(obj,str):
+            return ShellCommand(obj)
+        elif isinstance(obj,ShellCommand):
+            return obj
+        elif isinstance(obj,Mapping):
+            return ShellCommand(**obj)
+        elif isinstance(obj,Sequence):
+            return ShellCommand(list(obj))
+        raise TypeError(f'Cannot convert a {type(obj).__name__} to a '
+                        'ShellCommand')
             
     def __str__(self):
         return f'{type(self).__name__}(command={self.command}, ' + \
@@ -47,10 +56,15 @@ class ShellCommand(object):
             with open(f['name'],mode) as fd:
                 fd.write(str(f['content']))
 
+        env=None
+        if self.env:
+            env=dict(os.environ)
+            env.update(self.env)
+
         logger.info(f'Popen {repr(self.command)}')
         pipe=Popen(args=self.command,stdin=stdin,stdout=stdout,
                    stderr=stderr,encoding=encoding,
-                   cwd=self.cwd,env=self.env)
+                   cwd=self.cwd,env=env)
         (stdout, stderr) = pipe.communicate(input=input,timeout=timeout)
         cp=CompletedProcess(self.command,pipe.returncode,stdout,stderr)
         if check:

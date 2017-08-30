@@ -11,7 +11,7 @@ from crow.tools import to_timedelta
 
 __all__=[ 'Action','Platform', 'Conditional', 'calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
-          'GenericDict', 'GenericOrderedDict' ]
+          'GenericDict', 'GenericOrderedDict', 'ShellCommand' ]
 
 ########################################################################
 
@@ -23,7 +23,7 @@ class GenericDict(dict_eval): pass
 class GenericOrderedDict(dict_eval): pass
 class GenericList(list_eval): pass
 class Platform(dict_eval): pass
-
+class ShellCommand(dict_eval): pass
 class Conditional(list_eval):
     MISSING=object()
     def __init__(self,*args):

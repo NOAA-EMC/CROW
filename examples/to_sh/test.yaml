@@ -23,3 +23,17 @@ float:
   short_pi: 3.14159
   too_long: 3.141592653589793
   not_float: 3
+
+success_test: !ShellCommand
+  command: 'python < "$INPUT_PY" ; rm -f "$INPUT_PY"'
+  files:
+    - name: input.py
+      content: |
+        x=1+1
+        print('success_test: x = '+str(x))
+        exit(0 if x==0 else 1)
+  env: { INPUT_PY: input.py }
+
+failure_test: !ShellCommand
+  command: [ '/bin/false' ]
+

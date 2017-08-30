@@ -36,6 +36,7 @@ class FirstTrueYAML(list):        yaml_tag=u'!FirstTrue'
 class LastTrueYAML(list):         yaml_tag=u'!LastTrue'
 
 class EvalYAML(dict): pass
+class ShellCommandYAML(dict): pass
 class TaskYAML(OrderedDict): pass
 class FamilyYAML(OrderedDict): pass
 class CycleYAML(OrderedDict): pass
@@ -43,12 +44,13 @@ class CycleYAML(OrderedDict): pass
 # Mapping from YAML representation class to a pair:
 # * internal representation class
 # * python core class for intermediate conversion
-TYPE_MAP={ PlatformYAML: [ Platform, dict ], 
-           TemplateYAML: [ Template, dict ],
-           ActionYAML:   [ Action,   dict ],
-           TaskYAML:     [ Task,     OrderedDict ],
-           CycleYAML:    [ Cycle,    OrderedDict ],
-           FamilyYAML:   [ Family,   OrderedDict ]
+TYPE_MAP={ PlatformYAML:     [ Platform,     dict ], 
+           TemplateYAML:     [ Template,     dict ],
+           ActionYAML:       [ Action,       dict ],
+           ShellCommandYAML: [ ShellCommand, OrderedDict ],
+           TaskYAML:         [ Task,         OrderedDict ],
+           CycleYAML:        [ Cycle,        OrderedDict ],
+           FamilyYAML:       [ Family,       OrderedDict ]
          }
 
 def type_for(t):
@@ -97,6 +99,20 @@ def add_yaml_string(key,cls):
 add_yaml_string(u'!expand',expand)
 add_yaml_string(u'!calc',calc)
 add_yaml_string(u'!Depend',Depend)
+
+########################################################################
+
+def add_yaml_mapping(key,cls): 
+    """!Generates and registers representers and constructors for custom
+    YAML sequence types    """
+    def representer(dumper,data):
+        return dumper.represent_mapping(key,data)
+    def constructor(loader,node):
+        return cls(loader.construct_mapping(node))
+    yaml.add_representer(cls,representer)
+    yaml.add_constructor(key,constructor)
+
+add_yaml_mapping(u'!ShellCommand',ShellCommandYAML)
 
 ########################################################################
 

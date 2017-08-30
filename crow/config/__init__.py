@@ -2,7 +2,7 @@ import yaml
 import crow.tools
 from crow.config.from_yaml import ConvertFromYAML
 from crow.config.template import Template
-from crow.config.represent import Action, Platform
+from crow.config.represent import Action, Platform, ShellCommand
 from crow.config.tools import CONFIG_TOOLS, ENV
 from crow.config.tasks import Suite, Depend, AndDependency, SuitePath, \
     OrDependency, NotDependency, StateDependency, Dependable, \

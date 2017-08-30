@@ -11,13 +11,17 @@ test -x $TO_SH
 if [[ "${1:-missing}" == -v ]] ; then
     set -x
     TO_SH() {
-        "$TO_SH" -v "$@"
+        if ( ! "$TO_SH" -v "$@" ) ; then
+            echo "Non-zero exit." 1>&2
+        fi
     }
 else
     TO_SH() {
         echo 1>&2
         echo "> $TO_SH" "$@" 1>&2
-        "$TO_SH" "$@"
+        if ( ! "$TO_SH" "$@" ) ; then
+            echo "Non-zero exit." 1>&2
+        fi
     }
 fi
 
@@ -57,3 +61,9 @@ echo "  NOT_FLOAT = 3 = $NOT_FLOAT"
 unset SHORT_PI LONG_PI
 
 TO_SH test.yaml expand:./test.nml
+
+TO_SH test.yaml run:success_test
+
+TO_SH test.yaml run_ignore:failure_test
+
+TO_SH test.yaml run:failure_test
