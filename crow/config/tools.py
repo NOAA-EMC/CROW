@@ -61,6 +61,7 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'islink':os.path.islink,
     'exists':os.path.exists,
     'strftime':strftime,
+    'to_timedelta':crow.tools.to_timedelta
     'YMDH':YMDH,
     'YMD':YMD,
 })
