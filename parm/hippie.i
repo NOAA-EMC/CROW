@@ -142,10 +142,10 @@ This is an automatically-generated 1960s hippie-themed email about A STATUS RECH
 This is an automatically-generated 1960s hippie-themed status email from (ME) on %3 for configuration %0 running %1.
 
 -- I AM AN CROW THAT RECHECKED STUFF
-(Rechecked)!!%_[ (Wow!)%_] (I am CROW running hwrf.) (It is) (working correctly)[ now](.!)[ (Wow!)%_]
-(Rechecked)!!%_ (I am CROW running hwrf.) 
-(I am CROW running hwrf.) (Dude), I have (soooo) (rechecked) these (simulations)(.!)%_ Nothing (broken) yet...%_
-(I am CROW running hwrf.) I have (rechecked) your (simulations), (dude).%_ Nothing (broken) yet...%_
+(Rechecked)!!%_[ (Wow!)%_] (I am CROW running fv3.) (It is) (working correctly)[ now](.!)[ (Wow!)%_]
+(Rechecked)!!%_ (I am CROW running fv3.) 
+(I am CROW running fv3.) (Dude), I have (soooo) (rechecked) these (simulations)(.!)%_ Nothing (broken) yet...%_
+(I am CROW running fv3.) I have (rechecked) your (simulations), (dude).%_ Nothing (broken) yet...%_
 
 -- OKAY BUT I WARNED YOU
 (Y'know) (dude), (I'll do it), but (I did warn you)...
@@ -208,7 +208,7 @@ configured incorrectly
 misconfigured
 
 -- HELLO! I AM CROW
-[(Dude babbling.) ](I am CROW running hwrf.)
+[(Dude babbling.) ](I am CROW running fv3.)
 
 -- I AM A SAD CROW
 (I am badly running) %0(, okay?)
@@ -555,18 +555,21 @@ the pigs'
 the heat's
 the police's
 heat's
+fuzz's
 
 -- the government's
 the gov'ment's
 the gov'ment's
 the gov'ment's
 the government's
+Uncle Sam's
 
 -- the government
 the gov'ment
 the gov'ment
 the gov'ment
 the government
+Uncle Sam
 
 -- I am still in trouble from
 (I am) still in trouble from
@@ -645,6 +648,12 @@ Oracle Grid Engine
 Sun Grid Engine
 
 -- specific scapegoat
+Moorthi
+Moorthi
+Moorthi
+Moorthi
+Moorthi
+Moorthi
 Vijay
 Terry
 Rich
@@ -759,6 +768,7 @@ cops
 pigs
 heat
 police
+fuzz
 
 -- to fix this
 to fix this
@@ -770,6 +780,14 @@ to bag this
 (It was probably) (Person's) fault.%_
 (other person) made me do it.%_
 I wanted it to work but (Sam made me break it).%_
+I wanted it to work but (Sam made it too complicated).%_
+
+-- Sam made it too complicated
+(specific scapegoat) made it too complicated
+(specific scapegoat) made it so hard all I could do was cry
+(specific scapegoat) didn't document it at all
+(specific scapegoat) only documented it in Klingon
+(specific scapegoat) never answers emails
 
 -- Sam made me break it
 (specific scapegoat) made me break it
@@ -779,7 +797,7 @@ I wanted it to work but (Sam made me break it).%_
 -- It was probably
 Probabaly was
 M' sure it was
-It was
+It was 
 
 -- would not
 would not
@@ -918,7 +936,7 @@ runs
 forecasts
 cycles
 
--- I am CROW running hwrf.
+-- I am CROW running fv3.
 (I am, like,) (ME)(, and stuff.)(I am running) %0(, okay?)
 (I am, like,) (ME)(, okay?)(I am running) %0(, and stuff.)
 (I am, like,) (ME), (running) %0(, okay?)
