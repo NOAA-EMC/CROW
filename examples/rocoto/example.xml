@@ -190,7 +190,7 @@
   <task name="post">
     <!-- This is the task that would run the post in parallel with the
          forecast.  For this example, we just make a text file. -->
-    <command>set -xue ; echo would run post job > <cyclestr>$COM_DIR/post.out</cyclestr></command>
+    <command>set -xue ; echo would run post job > <cyclestr>$COM_DIR/post.out</cyclestr> ; sleep 180 ; echo done</command>
     <join><cyclestr>&LOG_DIR;/@Y@m@d@H/</cyclestr>post.log</join>
     <jobname>post</jobname>
     <account>&ACCOUNT;</account>
