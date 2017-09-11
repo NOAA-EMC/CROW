@@ -58,7 +58,7 @@ def from_config(key,val,globals,locals):
             return from_config(key,val._result(globals,locals),
                                globals,locals)
         return val
-    except(KeyError,NameError,IndexError,AttributeError) as ke:
+    except(TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
         raise CalcKeyError('%s: !%s %s -- %s %s'%(
             str(key),type(val).__name__,repr(val),type(ke).__name__,str(ke)))
     except RecursionError as re:
@@ -135,7 +135,15 @@ class dict_eval(MutableMapping):
         self.__globals={}
     def __contains__(self,k):   return k in self.__child
     def __len__(self):          return len(self.__child)
-    def __copy__(self):         return dict_eval(self.__child)
+    def __copy__(self):
+        d=dict_eval(copy(self.__child))
+        d.__globals=self.__globals
+        return d
+    def _invalidate_cache(self,key=None):
+        if key is None:
+            self.__cache=copy(self.__child)
+        else:
+            self.__cache[key]=self.__child[key]
     def _raw_child(self):       return self.__child
     def _has_raw(self,key):     return key in self.__child
     def _set_globals(self,g):   self.__globals=g
@@ -182,6 +190,13 @@ class dict_eval(MutableMapping):
     def __getattr__(self,name):
         if name in self: return self[name]
         raise AttributeError(name)
+    def __setattr__(self,name,value):
+        if name.startswith('_'):
+            object.__setattr__(self,name,value)
+        else:
+            self[name]=value
+    def __delattr__(self,name):
+        del self[name]
     def _to_py(self,recurse=True):
         """!Converts to a python core object; does not work for cyclic object trees"""
         cls=type(self.__child)
@@ -235,7 +250,9 @@ class list_eval(MutableSequence):
     def _has_raw(self,i):
         return i>=0 and len(self.__child)>i
     def __copy__(self):
-        return list_eval(self.__child,self.__locals)
+        L=list_eval(copy(self.__child),self.__locals)
+        L.__globals=self.__globals
+        return L
     def __deepcopy__(self,memo):
         cls=type(self)
         r=cls([],{})
@@ -247,6 +264,11 @@ class list_eval(MutableSequence):
         self.__cache=deepcopy(other.__cache,memo)
         self.__globals=deepcopy(other.__globals,memo)
         self.__cache=deepcopy(other.__cache,memo)
+    def _invalidate_cache(self,index=None):
+        if index is None:
+            self.__cache=copy(self.__child)
+        else:
+            self.__cache[key]=self.__child[key]
     def __setitem__(self,k,v):
         self.__child[k]=v
         self.__cache[k]=v
@@ -290,3 +312,8 @@ class Eval(dict_eval):
         if 'result' not in self:
             raise EvalMissingCalc('"!Eval" block lacks a "result: !calc"')
         return self.result
+
+
+def invalidate_cache(obj,key=None):
+    if hasattr(obj,'_invalidate_cache'):
+        obj._invalidate_cache(key)
