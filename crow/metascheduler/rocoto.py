@@ -194,7 +194,7 @@ class ToRocoto(object):
     def make_time_xml(self,indent=1):
         clock=self.suite.Clock
         start_time=clock.start.strftime('%Y%m%d%H%M')
-        end_time=clock.start.strftime('%Y%m%d%H%M')
+        end_time=clock.end.strftime('%Y%m%d%H%M')
         step=to_timedelta(clock.step) # convert to python timedelta
         step=cycle_offset(step) # convert to rocoto time delta
         space=self.__spacing
