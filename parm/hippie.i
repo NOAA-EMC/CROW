@@ -133,13 +133,13 @@ CROW's Bird-Sitter
 (APOLOGETIC PEACE OUT, MAN)%n%_-(ME) for %0%n%n(DON'T SUE ME: RECHECK)
 
 -- DON'T SUE ME: FAILURES
-This is an automatically-generated 1960s hippie-themed email about ERRORS from (ME) on %3 for configuration %0 running %1.
+This is an automatically-generated 1960s hippie-themed email about ERRORS from (ME) on %3 for configuration "%0" running "%1."
 
 -- DON'T SUE ME: RECHECK
-This is an automatically-generated 1960s hippie-themed email about A STATUS RECHECK from (ME) on %3 for configuration %0 running %1.
+This is an automatically-generated 1960s hippie-themed email about A STATUS RECHECK from (ME) on %3 for configuration "%0" running "%1."
 
 -- DON'T SUE ME: NO FAILURES
-This is an automatically-generated 1960s hippie-themed status email from (ME) on %3 for configuration %0 running %1.
+This is an automatically-generated 1960s hippie-themed status email from (ME) on %3 for configuration "%0" running "%1."
 
 -- I AM AN CROW THAT RECHECKED STUFF
 (Rechecked)!!%_[ (Wow!)%_] (I am CROW running fv3.) (It is) (working correctly)[ now](.!)[ (Wow!)%_]
@@ -161,9 +161,20 @@ I warned you
 don't blame me when this breaks (something)
 
 -- BYE
+(ASCII ART)
 (Peace out)[, man](.!)%_
 (Peace out)[, chick](.!)%_
 Later, (dude)(.!)%_
+
+-- ASCII ART
+%<-:
+8-P
+0-:
+:-%>
+%<^_^%>
+%<o_o%>
+%<x_x%>
+%<o_O%>
 
 -- RECHECK INSTEAD
 (Dude), (something probably broke).%_ (You should really run recheck-cycles.bash instead).%_  (Are you sure you want to) mark this FAILURE_OKAY %<y/N%>?%_ 
@@ -222,8 +233,11 @@ ERRORS!!%_
 Please help!!%_
 You are SO going to kill me!!%_
 OHNO!!%_
+Wipe out!%_
+Zilch, man.%_
 
 -- I AM REALLY SORRY, BUT A SIMULATION FAILED
+I was (trying to beat) (competitor model) but I (broke) (your simulations),%_
 I (flaked out) and (broke) (your simulations).%_
 I (broke) (your simulations).%_
 (I know I said I would not) (flake out), (but I did.)%_ I (broke) (your simulations).%_
@@ -257,6 +271,7 @@ ESRL
 NOAA HQ
 EMC
 the NCEP Director
+Security
 
 -- an authority
 (the cops)
@@ -281,6 +296,7 @@ Dear (dude)(,,:)
 (Peace out)[, chick](.!)%_
 Later, (dude)(.!)%_
 (Wow!)
+(ASCII ART)
 
 -- Peace out
 Peace out
@@ -289,6 +305,11 @@ Fight the power
 Keep fightin' the power
 Peace
 Peace
+Down with the establishment
+Fight The Man
+Flower power
+Deuce
+Be (good)
 
 -- APOLOGETIC PEACE OUT, MAN
 (Peace out)[, man](.!)%_
@@ -321,6 +342,24 @@ This is probably (scapegoat)'s fault somehow, not mine:
 (Okay), (right)(.!)%_ You want (this stuff):
 (Okay), (right)(.!)%_ (You want the dig, I got the dig):
 (Bizarre nonsense...)
+
+-- competitor model
+ECMWF
+ECMWF
+ECMWF
+the official forecast
+HWRF
+climatology
+
+-- trying to beat
+trying to beat
+trying to beat
+racing them
+bookin' to
+burnin' rubber like
+peelin' out to
+toolin' to
+truckin' to
 
 -- here it is
 here it is
@@ -388,17 +427,36 @@ at the pad
 righteous
 a real gone cat
 
-
 -- You want the dig, I got the dig
 You want the dig, I got the dig
 You want the good stuff, I got the good stuff
 You want the church key, I got the church key
 You want the real stuff, I got the real stuff
 You want the brew, I got the brew
+Here's your midnight auto supply
+Here's your five-finger discount
+Peel out to this
+Kings X
 
 -- Bizarre nonsense...
 (Jinx)!%_ You owe me (a coke)!%_ (Just kidding.) Anyway...
 Meanwhile, back at the ranch...
+(Dibs) on (the property).
+Chickabiddy.
+
+-- Dibs
+Dibs
+
+-- the property
+the cobs
+the brody knob
+the brew
+the scratch
+the shades
+the threads
+the peggers
+the pawdiddle
+the pad
 
 -- the real stuff
 the good stuff
@@ -407,6 +465,7 @@ the blitz
 the real brew
 the church key
 the crash
+the cherry stuff
 
 -- and I got that
 and I got that
@@ -430,6 +489,7 @@ kinda
 sorta
 sort of
 kind of
+kinda-sorta,
 
 -- your simulations
 your (simulations)
@@ -539,6 +599,7 @@ I'm gonna lay rubber now...
 someone else's
 Sam's
 Sam's
+Sam's
 Terry's
 Kate's
 Jian's
@@ -618,6 +679,7 @@ HPSS
 MSS
 the filesystems
 ptmp
+glade
 hps2
 hps3
 hps
@@ -648,9 +710,10 @@ Oracle Grid Engine
 Sun Grid Engine
 
 -- specific scapegoat
-Moorthi
-Moorthi
-Moorthi
+Sam
+Sam
+Sam
+Sam
 Moorthi
 Moorthi
 Moorthi
@@ -661,7 +724,6 @@ Kate
 Jian
 Bin
 Lin
-Sam
 Rahul
 Fanglin
 
@@ -695,8 +757,15 @@ wait a minute
 hey
 hay
 
+-- climb it, Tarzan
+climb it, Tarzan!
+climb it, Tarzan!
+have a gas with a bass!
+bench race yourself!
+brody to a pot hole!
+
 -- fix it yourself!
-[ you can] climb it, Tarzan!%_ Fix it yourself:
+[ you can] [climb it, Tarzan!]%_ Fix it yourself:
 fix it yourself[, jerk]!
 maybe I won't email you any more!
 
@@ -704,13 +773,15 @@ maybe I won't email you any more!
 (other person)'s
 
 -- other person
+Sam
+Sam
+Sam
 Kate
 Rich
 Terry
 Lin
 Bin
 Vijay
-Sam
 Fanglin
 Rahul
 Moorthi
@@ -782,11 +853,25 @@ to bag this
 I wanted it to work but (Sam made me break it).%_
 I wanted it to work but (Sam made it too complicated).%_
 
+-- Klingon
+Klingon
+Klingon
+Klingon
+Goa'uld
+Goa'uld
+Poliespo
+Sindarin
+Newspeak
+Newspeak
+Furbish
+Bidjara
+Sanskrit
+
 -- Sam made it too complicated
 (specific scapegoat) made it too complicated
 (specific scapegoat) made it so hard all I could do was cry
 (specific scapegoat) didn't document it at all
-(specific scapegoat) only documented it in Klingon
+(specific scapegoat) only documented it in (Klingon) 
 (specific scapegoat) never answers emails
 
 -- Sam made me break it
@@ -838,6 +923,7 @@ dork
 drag
 spaz[z]
 square
+hodad
 chrome dome
 dip stick
 
@@ -869,6 +955,13 @@ chickening out
 being a drag
 wigging out
 wiping out
+all show and no go
+bench racing
+catching some rays
+deucing with a goose
+racing for pinks
+peeling outta my pad
+at the submarine races
 
 -- flake out
 beat feet
@@ -880,6 +973,12 @@ chicken out
 be a drag
 wig out
 wipe out
+bench race
+catch some rays
+deuce with a goose
+race for pinks
+peel outta my pad
+be at the submarine races
 
 -- flaked out
 beat feet
@@ -934,6 +1033,7 @@ sim'lations
 FV3s
 runs
 forecasts
+`casts
 cycles
 
 -- I am CROW running fv3.
@@ -1011,6 +1111,35 @@ Just joking.%_
 Kidding!%_ Kidding!%_
 
 -- Wow!
+(Nonsensical exclamation!)
+(Nonsensical exclamation!)
+(Nonsensical exclamation!)
+(Good!)
+(Good!)
+(Good!)
+What (a party)[!]!%_
+What (a party)[!]!%_
+What (a party)[!]!%_
+What (a party)[!]!%_
+
+-- Good!
+Deuce![!]%_
+Fab![!]%_
+Far out![!]%_
+Twitchin'%_
+Kings X![!]%_
+Boss![!]!%_
+Way out![!]%_
+
+-- good
+deuce
+fab
+far out
+twitchin'
+boss
+way out
+
+-- Nonsensical exclamation!
 Pawdiddle![!]%_
 Pawdunkle![!]%_
 Wow![!]%_
@@ -1019,6 +1148,12 @@ Wooooooo![!!]%_
 Wooooooo![!!]%_
 Yeaaah!![!!!]%_
 Yeaaah!![!!!]%_
+
+-- a party
+a gas
+a blast
+a jam
+a party
 
 -- high and/or distracted
 having a good time
@@ -1034,6 +1169,7 @@ funky
 , (y'know)?%_
 , okay?%_
 , `kay?%_
+, chickabiddy?%_
 
 -- amazing
 (complimented)
@@ -1150,6 +1286,12 @@ Gone
 Smokin'
 Stacked
 Wicked
+Twitchin'
+Unreal
+Fab
+Far out
+Boss
+Glasspacked
 
 -- complimented
 cool
@@ -1159,6 +1301,12 @@ gnarly
 gone
 smokin'
 stacked
+twitchin'
+unreal
+fab
+far out
+boss
+glasspacked
 
 -- dude
 dude
