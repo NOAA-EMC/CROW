@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from collections import UserList, Mapping, Sequence, OrderedDict
 from subprocess import Popen, PIPE, CompletedProcess
+from crow.sysenv.exceptions import InvalidJobResourceSpec
 
 __all__=['JobRankSpec','JobResourceSpec']
 
@@ -75,7 +76,11 @@ class JobRankSpec(Mapping):
 
 class JobResourceSpec(Sequence):
     def __init__(self,specs):
-        self.__specs=[ JobRankSpec(**spec) for spec in specs ]
+        try:
+            self.__specs=[ JobRankSpec(**spec) for spec in specs ]
+        except(ValueError,TypeError,IndexError) as e:
+            raise InvalidJobResourceSpec("Invalid resource specification:"+
+                                      repr(specs))
 
     # Implement Sequence abstract methods:
     def __getitem__(self,index): return self.__specs[index]

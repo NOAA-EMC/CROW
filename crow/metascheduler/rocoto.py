@@ -83,11 +83,18 @@ class ToRocoto(object):
             raise TypeError('The suite argument must be a Cycle, '
                             'not a '+type(suite).__name__)
 
-        scheduler_settings=suite.Rocoto.scheduler
-        scheduler_name=suite.Rocoto.scheduler.name
-        sched=crow.sysenv.get_scheduler(scheduler_name,scheduler_settings)
+        try:
+            settings=suite.Rocoto.scheduler
+            scheduler_name=suite.Rocoto.scheduler.name
+            parallelism_name=suite.Rocoto.parallelism.name
+            sched=crow.sysenv.get_scheduler(scheduler_name,settings)
+            runner=crow.sysenv.get_parallelism(parallelism_name,settings)
+        except(AttributeError,IndexError,TypeError,ValueError) as e:
+            raise ValueError('A Suite must define a Rocoto section containing '
+                             'the "parallelism" and "scheduler" settings.')
 
-        self.suite=Suite(suite,{'sched':sched,'to_rocoto':self})
+        self.suite=Suite(suite,{'sched':sched,'to_rocoto':self,
+                                'runner':runner})
         self.settings=self.suite.Rocoto
         self.sched=sched
         self.__completes=dict()

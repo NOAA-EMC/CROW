@@ -9,7 +9,7 @@ import crow.sysenv
 
 logging.basicConfig(stream=sys.stderr,level=logging.INFO)
 
-settings={ 'mpirun':'mpiexec',
+settings={ 'mpi_runner':'mpiexec',
            'physical_cores_per_node':24,
            'logical_cpus_per_core':2,
            'hyperthreading_allowed':True }
@@ -26,7 +26,7 @@ ranks=[
 
 jr=crow.sysenv.JobResourceSpec(ranks)
 
-cmd=par.make_shell_command_to_launch(jr)
+cmd=par.make_ShellCommand(jr)
 
 print(str(cmd))
 

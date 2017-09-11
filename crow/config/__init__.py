@@ -10,6 +10,7 @@ from crow.config.tasks import Suite, Depend, AndDependency, SuitePath, \
     RUNNING, COMPLETED, FAILED, TRUE_DEPENDENCY, FALSE_DEPENDENCY, \
     CycleExistsDependency
 from crow.config.to_yaml import to_yaml
+from crow.config.eval_tools import invalidate_cache
 
 __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
          'TaskStateAnd', 'TaskStateOr', 'TaskStateNot', 'TaskStateIs',

@@ -18,10 +18,10 @@ class Parallelism(object):  # (BaseParallelism):
         self.settings=dict(settings)
         self.nodes=GenericNodeSpec(settings)
         self.parallelism='HydraIMPI'
-        self.mpirun=str(settings['mpirun'])
+        self.mpi_runner=str(settings.get('mpi_runner','mpirun'))
         self.rank_sep=str(settings.get('rank_sep',':'))
 
-    def make_shell_command_to_launch(self,spec):
+    def make_ShellCommand(self,spec):
         if spec.is_pure_serial():
             return ShellCommand(spec['exe'])
         elif spec.is_pure_openmp():
@@ -34,7 +34,7 @@ class Parallelism(object):  # (BaseParallelism):
         merged=self.nodes.with_similar_ranks_merged(
             spec,can_merge_ranks=self.nodes.same_except_exe)
 
-        cmd=[ self.mpirun ]
+        cmd=[ self.mpi_runner ]
 
         first=True
         for rank in merged:

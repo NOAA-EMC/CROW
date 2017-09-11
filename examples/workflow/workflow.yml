@@ -1,3 +1,4 @@
+
 # NOTE: Inside of a Suite (config.tasks.Suite), there are two new global
 # variables defined:
 #    suite - the SuiteView of the !Cycle (my_fancy_workflow) 
@@ -5,12 +6,16 @@
 
 my_fancy_workflow: !Cycle
    Rocoto:
-     scheduler:
+     scheduler: &sched
        name: MoabTorque
        physical_cores_per_node: 24
        logical_cpus_per_core: 2
        hyperthreading_allowed: true
        indent_text: "  "
+
+     parallelism:
+       <<: *sched
+       name: HydraIMPI
 
      accounting:
        account: fv3-cpu

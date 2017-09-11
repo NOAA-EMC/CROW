@@ -21,7 +21,7 @@ from crow.config.represent import *
 from crow.config.tasks import *
 from crow.config.template import Template
 from crow.config.exceptions import *
-from crow.tools import to_timedelta
+from crow.tools import to_timedelta, Clock
 
 __all__=['ConvertFromYAML']
 
@@ -113,6 +113,23 @@ def add_yaml_mapping(key,cls):
     yaml.add_constructor(key,constructor)
 
 add_yaml_mapping(u'!ShellCommand',ShellCommandYAML)
+
+########################################################################
+
+def construct_Clock(loader,node):
+    mapping=loader.construct_mapping(node)
+    clock=Clock(mapping['start'],to_timedelta(mapping['step']),
+                mapping.get('end',None))
+    if 'now' in mapping:
+        clock.now=mapping['now']
+    return clock
+yaml.add_constructor('!Clock',construct_Clock)
+
+def represent_Clock(dumper,data):
+    mapping={ 'start':data.start, 'step':data.step }
+    if data.end is not None:   mapping['end']=data.end
+    if data.now!=data.start:   mapping['now']=data.now
+yaml.add_representer(Clock,represent_Clock)
 
 ########################################################################
 

@@ -45,6 +45,11 @@ def fort(value,scope='scope'):
         # Anything else is converted to a string.
         return str(value)
 
+def seconds(dt):
+    if not isinstance(dt,datetime.timedelta):
+        raise TypeError(f'dt must be a timedelta not a {type(dt).__name__}')
+    return dt.total_seconds()
+
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
 CONFIG_TOOLS=crow.tools.ImmutableMapping({
@@ -61,7 +66,8 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'islink':os.path.islink,
     'exists':os.path.exists,
     'strftime':strftime,
-    'to_timedelta':crow.tools.to_timedelta
+    'as_seconds':seconds,
+    'to_timedelta':crow.tools.to_timedelta,
     'YMDH':YMDH,
     'YMD':YMD,
 })

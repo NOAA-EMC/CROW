@@ -1,5 +1,6 @@
 import subprocess
 import os, re
+import datetime
 from datetime import timedelta
 from copy import deepcopy
 from collections.abc import Mapping
@@ -125,3 +126,55 @@ def str_to_posix_sh(s,encoding='ascii'):
         return b'"$( printf \'' + s + b'\' )"'
 
     return b'"'+s+b'"'
+
+def typecheck(name,obj,type):
+    if not isinstance(obj,type):
+        raise TypeError(
+            f'{name} must be a {type.__name__} not a {type(obj).__name__}')
+
+########################################################################
+
+ZERO_DT=timedelta()
+
+class Clock(object):
+    def __init__(self,start,step,end=None):
+        typecheck('start',start,datetime.datetime)
+        typecheck('step',step,datetime.timedelta)
+        if end is not None:
+            typecheck('end',end,datetime.datetime)
+        self.start=start
+        self.end=end
+        self.step=step
+        self.__now=start
+        if self.step<=ZERO_DT:
+            raise ValueError('Time step must be positive and non-zero.')
+        if self.end<self.start:
+            raise ValueError('End time must be at or after start time.')
+
+    def __iter__(self):
+        time=self.start
+        while time<=self.end:
+            yield time
+            time+=self.step
+
+    def setnow(self,time):
+        typecheck('time',time,datetime.datetime)
+        if (time-self.start) % self.step:
+            raise ValueError(
+                f'{time} must be an integer multiple of {self.step} '
+                f'after {self.start}')
+        if self.end is not None and time>self.end:
+            raise ValueError(
+                f'{time} is after clock end time {self.end}')
+        if time<self.start:
+            raise ValueError(f'{time} is before clock start time {self.start}')
+        self.__now=time
+    def getnow(self):
+        return self.__now
+    now=property(getnow,setnow,None,'Current time on this clock.')
+
+    def next(self,mul=1):
+        return self.__now+self.step*mul
+
+    def prior(self,mul=1):
+        return self.__now+self.step*-mul
