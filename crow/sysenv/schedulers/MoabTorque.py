@@ -29,6 +29,10 @@ class Scheduler(BaseScheduler):
         sio=StringIO()
         if 'queue' in spec:
             sio.write(f'{indent*space}<queue>{spec.queue!s}</queue>\n')
+        if 'account' in spec:
+            sio.write(f'{indent*space}<account>{spec.account!s}</account>\n')
+        if 'project' in spec:
+            sio.write(f'{indent*space}<account>{spec.project!s}</account>\n')
         if 'partition' in spec:
             sio.write(f'{indent*space}<native>-l partition='
                       f'{spec.partition!s}</native>\n')
