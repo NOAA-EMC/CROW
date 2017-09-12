@@ -1,0 +1,76 @@
+resource_defaults: &resource_defaults
+  default_fcst_ranks: 96
+  default_init_ranks: 24
+  default_ens_ranks: 24
+  default_post_ranks: 2
+
+theia: &theia !Platform
+  <<: *resource_defaults
+  detect: !calc tools.isdir('/scratch4') and tools.isdir('/scratch3')
+  default_cpu_project: fv3-cpu
+  # Path to pan_df, the program used to get Panasas disk usage information:
+  pan_df: pan_df
+  serial_accounting:
+    queue: batch
+    project: !calc doc.options.cpu_project
+  transfer_accounting:
+    queue: service
+    project: !calc doc.options.cpu_project
+  parallel_accounting:
+    queue: batch
+    project: !calc doc.options.cpu_project
+  scheduler: &theia_scheduler
+    name: MoabTorque
+    physical_cores_per_node: 24
+    logical_cpus_per_core: 2
+    hyperthreading_allowed: true
+    indent_text: "  "
+  parallelism:
+    <<: *theia_scheduler
+    name: HydraIMPI
+  least_used_scrub: !FirstMax
+    - do: /scratch3/NCEPDEV/stmp1
+      when: !calc tools.panasas_gb(do)
+    - do: /scratch3/NCEPDEV/stmp2
+      when: !calc tools.panasas_gb(do)
+    - do: /scratch4/NCEPDEV/stmp3
+      when: !calc tools.panasas_gb(do)
+    - do: /scratch4/NCEPDEV/stmp4
+      when: !calc tools.panasas_gb(do)
+
+wcoss_cray: &wcoss_cray !Platform
+  <<: *resource_defaults
+  detect: !calc tools.isdir('/scratch4') and tools.isdir('/scratch3')
+  default_cpu_project: GFS-T2O
+  # Path to mmlsquota, the program used to get GPFS disk usage information:
+  mmlsquota: '/usr/lpp/mmfs/bin/mmlsquota'
+  serial_accounting:
+    queue: dev
+    project: !calc doc.options.cpu_project
+  transfer_accounting:
+    queue: transfer
+    project: !calc doc.options.cpu_project
+  parallel_accounting:
+    queue: dev
+    project: !calc doc.options.cpu_project
+  scheduler: &wcoss_cray_scheduler
+    name: LSFAlps
+    physical_cores_per_node: 24
+    logical_cpus_per_core: 2
+    hyperthreading_allowed: true
+    indent_text: "  "
+  parallelism: 
+    <<: *wcoss_cray_scheduler
+    name: LSFAlps
+  least_used_scrub: !FirstMax
+    - do: /gpfs/hps2/ptmp
+      when: !calc tools.gpfs_gb(do,'hps2-ptmp','hps2',mmlsquota)
+    - do: /gpfs/hps3/ptmp
+      when: !calc tools.gpfs_gb(do,'hps3-ptmp','hps3',mmlsquota)
+  detect: !calc tools.isdir('/gpfs/hps') and tools.isfile('/etc/SuSE-release')
+
+platform: !FirstTrue
+  - do: *wcoss_cray
+    when: !calc do.detect
+  - do: *theia
+    when: !calc do.detect

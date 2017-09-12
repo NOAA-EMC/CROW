@@ -7,9 +7,9 @@ from collections.abc import Mapping
 
 __all__=['panasas_gb','gpfs_gb','to_timedelta']
 
-def panasas_gb(dir):
+def panasas_gb(dir,pan_df='pan_df'):
     rdir=os.path.realpath(dir)
-    stdout=subprocess.check_output(['pan_df','-B','1G','-P',rdir])
+    stdout=subprocess.check_output([pan_df,'-B','1G','-P',rdir])
     for line in stdout.splitlines():
         if rdir in str(line):
             return int(line.split()[3],10)
@@ -18,9 +18,9 @@ def panasas_gb(dir):
 #Filesystem         1073741824-blocks      Used Available Capacity Mounted on
 #panfs://10.181.12.11/     94530     76432     18098      81% /scratch4/NCEPDEV/stmp3/
 
-def gpfs_gb(dir,fileset,device):
+def gpfs_gb(dir,fileset,device,mmlsquota='mmlsquota'):
     mmlsquota=subprocess.check_output([
-        'mmlsquota', '--block-size', '1T'])
+        mmlsquota, '--block-size', '1T'])
     for m in re.finditer(b'''(?isx)
                (?:
                    \S+ \s+ FILESET

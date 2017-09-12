@@ -28,9 +28,9 @@ def to_yaml(yml):
 def add_yaml_list_eval(key,cls): 
     def representer(dumper,data):
         if key is None:
-            return dumper.represent_data(data._raw_cache())
+            return dumper.represent_data(data._raw_child())
         else:
-            return dumper.represent_sequence(key,data._raw_cache())
+            return dumper.represent_sequence(key,data._raw_child())
     yaml.add_representer(cls,representer)
 
 add_yaml_list_eval(u'!FirstMax',FirstMax)
@@ -45,13 +45,10 @@ def add_yaml_dict_eval(key,cls):
     """!Generates and registers a representer for a custom YAML mapping
     type    """
     def representer(dumper,data):
-        simple=data._raw_cache()
-        if not isinstance(simple,dict):
-            simple=dict([ (k,v) for k,v in simple.items() ])
         if key is None:
-            return dumper.represent_data(simple)
+            return dumper.represent_data(data._raw_child())
         else:
-            return dumper.represent_mapping(key,simple)
+            return dumper.represent_mapping(key,data._raw_child())
     yaml.add_representer(cls,representer)
 
 add_yaml_dict_eval(None,GenericDict)

@@ -52,11 +52,12 @@ class SuiteView(Mapping):
     def __init__(self,suite,viewed,path,parent):
         # assert(isinstance(suite,Suite))
         # assert(isinstance(viewed,dict_eval))
-        # assert(isinstance(parent,SuiteView))
+        assert(isinstance(parent,SuiteView))
         self.suite=suite
         self.viewed=copy(viewed)
         self.viewed.task_path_list=path[1:]
         self.viewed.task_path_str='/'+'/'.join(path[1:])
+        self.viewed.up=parent
         self.path=SuitePath(path)
         self.parent=parent
         self.__cache={}
@@ -89,6 +90,7 @@ class SuiteView(Mapping):
         """!Iterates over all tasks and families that are direct 
         children of this family, yielding a SuiteView of each."""
         for var,val in self.items():
+            if var=='up': continue
             if isinstance(val,SuiteView):
                 yield val
 
@@ -96,6 +98,7 @@ class SuiteView(Mapping):
         """!Iterates over the entire tree of descendants below this SuiteView,
         yielding a SuiteView of each."""
         for var,val in self.items():
+            if var=='up': continue
             if isinstance(val,SuiteView):
                 yield val
                 for t in val.walk_task_tree():
@@ -121,10 +124,11 @@ class SuiteView(Mapping):
         assert(isinstance(key,str))
         if key in self.__cache: return self.__cache[key]
         if key not in self.viewed: raise KeyError(key)
-        if key == 'up': return parent
         val=self.viewed[key]
 
-        if isinstance(val,Task) or isinstance(val,Family):
+        if isinstance(val,SuiteView):
+            return val
+        elif isinstance(val,Task) or isinstance(val,Family):
             val=self.__wrap(key,val)
         elif hasattr(val,'_as_dependency'):
             val=self.__wrap(key,val._as_dependency(

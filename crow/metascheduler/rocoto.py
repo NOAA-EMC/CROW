@@ -85,8 +85,10 @@ class ToRocoto(object):
 
         try:
             settings=suite.Rocoto.scheduler
+            print(list(suite.Rocoto.keys()))
             scheduler_name=suite.Rocoto.scheduler.name
-            parallelism_name=suite.Rocoto.parallelism.name
+            parallelism=suite.Rocoto.parallelism
+            parallelism_name=parallelism.name
             sched=crow.sysenv.get_scheduler(scheduler_name,settings)
             runner=crow.sysenv.get_parallelism(parallelism_name,settings)
         except(AttributeError,IndexError,TypeError,ValueError) as e:
@@ -136,6 +138,7 @@ class ToRocoto(object):
         self.__families.add(SuitePath(view.path[1:-1]))
 
         for key,child in view.items():
+            if key=='up': continue
             if not isinstance(child,SuiteView):
                 continue
             if child.path[1:] == ['final']:
@@ -259,12 +262,12 @@ class ToRocoto(object):
             if not final.is_task():
                 raise RocotoConfigError(
                     'For a workflow suite to be expressed in Rocoto, it '
-                    'must have a "final" task with no dependencies')
-            for elem in [ 'Trigger', 'Complete', 'Time', 'Perform' ]:
+                    'must have a "final" task')
+            for elem in [ 'Trigger', 'Complete', 'Time' ]:
                 if elem in final:
                     raise RocotoConfigError(
                       f'{elem}: In a Rocoto workflow, the "final" task '
-                      'must have no dependencies and no performed actions.')
+                      'must have no dependencies.')
 
         if self.__completes and final is None:
             raise RocotoConfigError(

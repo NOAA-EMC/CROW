@@ -1,4 +1,5 @@
 import yaml
+from collections import Sequence, Mapping
 import crow.tools
 from crow.config.from_yaml import ConvertFromYAML
 from crow.config.template import Template
@@ -40,3 +41,18 @@ def from_file(*args):
         with open(file,'rt') as fopen:
             data.append(fopen.read())
     return from_string(u'\n\n\n'.join(data))
+
+def evaluate(obj,memo=None):
+    if memo is None: memo=set()
+    if id(obj) in memo: return
+    memo.add(id(obj))
+    if isinstance(obj,str) or isinstance(obj,bytes):
+        return
+    elif isinstance(obj,Sequence):
+        for i in range(len(obj)):
+            obj[i]=obj[i]
+            evaluate(obj[i],memo)
+    elif isinstance(obj,Mapping):
+        for k in list(obj.keys()):
+            obj[k]=obj[k]
+            evaluate(obj[k],memo)

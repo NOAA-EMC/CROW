@@ -1,7 +1,7 @@
 workflow: !Cycle
   Rocoto:
     scheduler: !calc doc.platform.scheduler
-    accounting: !calc doc.platform.accounting
+    parallelism: !calc doc.platform.parallelism
 
     run_dir: doc.options.run_dir
     workflow_xml: !expand |
@@ -45,11 +45,11 @@ workflow: !Cycle
       </envar>
       <envar>
         <name>TASK_PATH</name>
-        <value>{task_path}</value>
+        <value>{task_path_str}</value>
       </envar>
       <envar>
         <name>CONFIG_YAML_TEMPLATE</name>
-        <value>{run_dir}/config.yaml</name>
+        <value>{doc.options.run_dir}/config.yaml</name>
       </envar>
       <envar>
         <name>CONFIG_YAML</name>
@@ -64,7 +64,7 @@ workflow: !Cycle
         <value>{doc.options.HOMEtest}</value>
       </envar>
 
-    ens_task_template: !expand
+    ens_task_template: !expand |
       {suite.Rocoto.task_template}
       <envar>
         <name>ENS_START_MEMBER</name>
@@ -81,11 +81,11 @@ workflow: !Cycle
     step: !timedelta 06:00
 
   start_cycle: !Task
-    Perform: *start_cycle
+    Perform: *start_cycle_action
     Rocoto: *task_template
   
   clim_init: !Task
-    Perform: *clim_init
+    Perform: *clim_init_action
     Rocoto: *task_template
     Complete: !Depend suite.has_cycle('-6:00:00')
     Trigger: !Depend start_cycle
@@ -140,19 +140,23 @@ workflow: !Cycle
   fcst: !Family
     # Special case for first cycle: forecast off of climatology:
     clim_fcst: !Task
-      Perform: *clim_fcst
+      Perform: *clim_fcst_action
       Rocoto: *task_template
       Complete: !Depend suite.has_cycle('-6:00:00')
       Trigger: !Depend up.clim_init
 
     # All other cycles use the cycled initialization as input:
     fcst: !Task
-      Perform: *fcst
+      Perform: *fcst_action
       Rocoto: *task_template
       Complete: !Depend ~ suite.has_cycle('-6:00:00')
-      Trigger: !Depend up.init
+      Trigger: !Depend up.cycled_init
 
   post: !Task
     Perform: *post_action
     Rocoto: *task_template
     Trigger: !Depend fcst.is_running()
+
+  final: !Task
+    Perform: *final_action
+    Rocoto: *task_template

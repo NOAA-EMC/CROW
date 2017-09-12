@@ -51,9 +51,18 @@ def seconds(dt):
     return dt.total_seconds()
 
 def crow_install_dir(rel=None):
-    path=os.path.join(__file__,'..')
-    path=os.path.join(path,rel)
+    path=os.path.dirname(__file__)
+    path=os.path.join(path,'..')
+    if rel:
+        path=os.path.join(path,rel)
     return os.path.abspath(path)
+
+MISSING=object()
+def env(var,default=MISSING):
+    if default is MISSING:
+        return os.environ[var]
+    else:
+        return os.environ.get(var,default)
 
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
@@ -69,6 +78,7 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'realpath':os.path.realpath,
     'isdir':os.path.isdir,
     'isfile':os.path.isfile,
+    'env':env,
     'islink':os.path.islink,
     'exists':os.path.exists,
     'strftime':strftime,

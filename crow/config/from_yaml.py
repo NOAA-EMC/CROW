@@ -129,6 +129,7 @@ def represent_Clock(dumper,data):
     mapping={ 'start':data.start, 'step':data.step }
     if data.end is not None:   mapping['end']=data.end
     if data.now!=data.start:   mapping['now']=data.now
+    return dumper.represent_mapping('!Clock',mapping)
 yaml.add_representer(Clock,represent_Clock)
 
 ########################################################################
