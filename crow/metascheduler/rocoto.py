@@ -54,11 +54,12 @@ def to_rocoto_dep(dep,fd,indent):
     elif isinstance(dep,StateDependency):
         path='-'.join(dep.path[1:])
         tag='taskdep' if dep.is_task() else 'metataskdep'
+        attr='task' if dep.is_task() else 'metatask'
         if dep.state is COMPLETED:
-            fd.write(f'{"  "*indent}<{tag} task="{path}"/>\n')
+            fd.write(f'{"  "*indent}<{tag} {attr}="{path}"/>\n')
         else:
             state=ROCOTO_STATE_MAP[dep.state]
-            fd.write(f'{"  "*indent}<{tag} task="{path}" state="{state}"/>\n')
+            fd.write(f'{"  "*indent}<{tag} {attr}="{path}" state="{state}"/>\n')
     elif isinstance(dep,CycleExistsDependency):
         dt=cycle_offset(dep.dt)
         fd.write(f'{"  "*indent}<cycleexistdep cycle_offset="{dt}"/>\n')

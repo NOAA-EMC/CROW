@@ -156,7 +156,7 @@ workflow: !Cycle
   post: !Task
     Perform: *post_action
     Rocoto: *task_template
-    Trigger: !Depend fcst.is_running()
+    Trigger: !Depend fcst.clim_fcst.is_running() | fcst.fcst.is_running()
 
   final: !Task
     Perform: *final_action
