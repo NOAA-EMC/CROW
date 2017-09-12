@@ -54,7 +54,9 @@ class SuiteView(Mapping):
         # assert(isinstance(viewed,dict_eval))
         # assert(isinstance(parent,SuiteView))
         self.suite=suite
-        self.viewed=viewed
+        self.viewed=copy(viewed)
+        self.viewed.task_path_list=path[1:]
+        self.viewed.task_path_str='/'+'/'.join(path[1:])
         self.path=SuitePath(path)
         self.parent=parent
         self.__cache={}
@@ -119,6 +121,7 @@ class SuiteView(Mapping):
         assert(isinstance(key,str))
         if key in self.__cache: return self.__cache[key]
         if key not in self.viewed: raise KeyError(key)
+        if key == 'up': return parent
         val=self.viewed[key]
 
         if isinstance(val,Task) or isinstance(val,Family):

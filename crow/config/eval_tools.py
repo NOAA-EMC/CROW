@@ -136,7 +136,8 @@ class dict_eval(MutableMapping):
     def __contains__(self,k):   return k in self.__child
     def __len__(self):          return len(self.__child)
     def __copy__(self):
-        d=dict_eval(copy(self.__child))
+        cls=type(self)
+        d=cls(copy(self.__child))
         d.__globals=self.__globals
         return d
     def _invalidate_cache(self,key=None):
@@ -250,7 +251,8 @@ class list_eval(MutableSequence):
     def _has_raw(self,i):
         return i>=0 and len(self.__child)>i
     def __copy__(self):
-        L=list_eval(copy(self.__child),self.__locals)
+        cls=type(self)
+        L=cls(copy(self.__child),self.__locals)
         L.__globals=self.__globals
         return L
     def __deepcopy__(self,memo):

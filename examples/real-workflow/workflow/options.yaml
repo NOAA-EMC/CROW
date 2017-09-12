@@ -1,0 +1,42 @@
+options:
+  # Grid size:
+  nx: 400
+  ny: 400
+
+  # Random number seed:
+  seed: 381
+
+  # Hours between cycles:
+  cycle_len: !timedelta 6:00
+
+  # Number of hours to forecast:
+  fcst_len: !timedelta 24:00
+
+  # Time between writes of output files
+  dt_write_fcst: !timedelta 3:00
+
+  # Number of random number generator iterations for forecast &
+  # ensemble forecast, respectively:
+  dt_rand_fcst: 500
+  dt_rand_ens_fcst: 100
+
+  # Resource requirements for various jobs.  Keep as
+  # platform.varname to use platform-specific defaults from
+  # platforms.yaml.
+  fcst_ranks: !calc platform.fcst_ranks
+  init_ranks: !calc platform.init_ranks
+  post_ranks: !calc platform.post_ranks
+  ens_ranks: !calc platform.ens_ranks
+
+  # Locations of CROW and this test suite.
+  HOMEcrow: !calc tools.crow_install_dir()
+  HOMEtest: !calc tools.crow_install_dir('examples/real-workflow/workflow')
+
+# Executable locations.  Defaults are the exec/ directory within the
+# real-workflow example.
+executables:
+  TEST_EXEC: !expand {doc.options.HOMEtest}/exec
+  fcst: !expand {TEST_EXEC}/mpi/forecast
+  analysis: !expand {TEST_EXEC}/mpi/assimilate
+  post: !expand {TEST_EXEC}/mpi/post
+  climatology_init: !expand {TEST_EXEC}/mpi/climatology_init

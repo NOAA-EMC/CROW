@@ -59,6 +59,14 @@ class ProcessArgs(object):
             globals=self.config._globals()
         return eval(expr,globals,self.scope)
 
+    def exec_str(self,expr):
+        globals={}
+        if hasattr(self.scope,'_globals'):
+            globals=self.scope._globals()
+        elif hasattr(self.config,'_globals'):
+            globals=self.config._globals()
+        exec(expr,globals,self.scope)
+
     def set_int_format(self,value):
         test=value%3
         self.int_format=value
@@ -149,6 +157,7 @@ class ProcessArgs(object):
             elif command=='null':       self.set_null_string(value)
             elif command=='run_ignore': self.run_expr(value,False)
             elif command=='run':        self.run_expr(value,True)
+            elif command=='apply':      self.exec_str(value)
             elif command=='expand':
                 if self.have_handled_vars:
                     raise Exception(f'{arg}: cannot expand files and set '

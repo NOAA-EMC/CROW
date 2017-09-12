@@ -141,7 +141,8 @@ class ToRocoto(object):
             if child.path[1:] == ['final']:
                 if not child.is_task():
                     raise RocotoConfigError(
-                        'The "final" task must be a Task, not a Family.')
+                        'The "final" task must be a Task, not a '
+                        +type(child.viewed).__name__)
                 self.__final_task=child
             elif child.is_task():
                 self.convert_task(fd,indent+1,child,trigger,complete,time)

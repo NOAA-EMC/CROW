@@ -50,11 +50,17 @@ def seconds(dt):
         raise TypeError(f'dt must be a timedelta not a {type(dt).__name__}')
     return dt.total_seconds()
 
+def crow_install_dir(rel=None):
+    path=os.path.join(__file__,'..')
+    path=os.path.join(path,rel)
+    return os.path.abspath(path)
+
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
 CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'fort':fort,
     'seq':seq,
+    'crow_install_dir':crow_install_dir,
     'panasas_gb':crow.tools.panasas_gb,
     'gpfs_gb':crow.tools.gpfs_gb,
     'basename':os.path.basename,
