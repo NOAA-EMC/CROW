@@ -17,7 +17,7 @@ workflow: !Cycle
       ]>
       <workflow realtime="F"
                 cyclethrottle="&CYCLE_THROTTLE;"
-                scheduler="{sched.rocoto_name}"
+                scheduler="{sched.rocoto_name.lower()}"
                 taskthrottle="&TASK_THROTTLE;" >
 
         <log><cyclestr>&LOG_DIR;/rocoto_@Y@m@d@H.log</cyclestr></log>
@@ -28,9 +28,8 @@ workflow: !Cycle
 
     task_template: &task_template !expand |
       <command>$HOMEtest/workflow/job_wrapper.sh {Perform.J_JOB}</command>
+      <walltime>{Perform.walltime}</walltime>
       <memory>{Perform.rocoto_memory}</memory>
-      {sched.rocoto_accounting(Perform.accounting)}
-      {sched.rocoto_resources(Perform.resources)}
       <envar>
         <name>COM_DIR</name>
         <value><cyclestr>&COM_DIR;/@Y@m@d@H</cyclestr></value>
@@ -49,7 +48,7 @@ workflow: !Cycle
       </envar>
       <envar>
         <name>CONFIG_YAML_TEMPLATE</name>
-        <value>{doc.options.run_dir}/config.yaml</name>
+        <value>{doc.options.run_dir}/config.yaml</value>
       </envar>
       <envar>
         <name>CONFIG_YAML</name>
@@ -63,6 +62,8 @@ workflow: !Cycle
         <name>HOMEtest</name>
         <value>{doc.options.HOMEtest}</value>
       </envar>
+      {sched.rocoto_accounting(Perform.accounting)}
+      {sched.rocoto_resources(Perform.resources)}
 
     ens_task_template: !expand |
       {suite.Rocoto.task_template}

@@ -10,12 +10,14 @@ shared_serial_action: &shared_serial_action
   accounting: !calc doc.platform.serial_accounting
   resources: [ { exe: placeholder } ]
   command: !calc runner.make_ShellCommand(resources)
+  walltime: !timedelta 00:10:00
 
 parallel_unlimited_memory_action: &parallel_unlimited_memory_action
   <<: [ *runtime, *options ]
   rocoto_memory: ''
   command: !calc runner.make_ShellCommand(resources)
   accounting: !calc doc.platform.parallel_accounting
+  walltime: !timedelta 00:10:00
 
 generic_fcst: &generic_fcst_action
   <<: *parallel_unlimited_memory_action
