@@ -30,13 +30,15 @@ workflow: !Cycle
       <command>$HOMEtest/workflow/job_wrapper.sh {Perform.J_JOB}</command>
       <walltime>{Perform.walltime}</walltime>
       <memory>{Perform.rocoto_memory}</memory>
+      {sched.rocoto_accounting(Perform.accounting)}
+      {sched.rocoto_resources(Perform.resources)}
       <envar>
         <name>COM_DIR</name>
         <value><cyclestr>&COM_DIR;/@Y@m@d@H</cyclestr></value>
       </envar>
       <envar>
         <name>OLD_COM_DIR</name>
-        <value><cyclestr cycle_offset="{doc.options.cycle_len}">&COM_DIR;/@Y@m@d@H</cyclestr></value>
+        <value><cyclestr offset="{doc.options.cycle_len}">&COM_DIR;/@Y@m@d@H</cyclestr></value>
       </envar>
       <envar>
         <name>SCRUB_DIR</name>
@@ -62,8 +64,6 @@ workflow: !Cycle
         <name>HOMEtest</name>
         <value>{doc.options.HOMEtest}</value>
       </envar>
-      {sched.rocoto_accounting(Perform.accounting)}
-      {sched.rocoto_resources(Perform.resources)}
 
     ens_task_template: !expand |
       {suite.Rocoto.task_template}
