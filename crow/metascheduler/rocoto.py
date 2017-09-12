@@ -85,7 +85,6 @@ class ToRocoto(object):
 
         try:
             settings=suite.Rocoto.scheduler
-            print(list(suite.Rocoto.keys()))
             scheduler_name=suite.Rocoto.scheduler.name
             parallelism=suite.Rocoto.parallelism
             parallelism_name=parallelism.name
