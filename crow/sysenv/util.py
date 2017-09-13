@@ -13,15 +13,23 @@ def ranks_to_nodes_ppn(max_per_node,ranks):
         return [ ( 1, ranks ) ]
 
     nodes=(ranks+max_per_node-1)//max_per_node
-    extra_ranks=nodes*max_per_node-ranks
+    min_ranks_per_node=ranks//nodes
+    extra_ranks=ranks-min_ranks_per_node*nodes
 
     if extra_ranks:
-        return [ ( nodes-extra_ranks, max_per_node ),
-                 ( extra_ranks, max_per_node-1 ) ]
+        return [ ( extra_ranks, min_ranks_per_node+1 ),
+                 ( nodes-extra_ranks, min_ranks_per_node ) ]
     else :
-        return [ ( nodes, max_per_node ) ]
+        return [ ( nodes, min_ranks_per_node ) ]
 
 def test():
+    print(ranks_to_nodes_ppn(10,109))
     assert([(10, 10), (1, 9)] == ranks_to_nodes_ppn(10,109))
+    print(ranks_to_nodes_ppn(3,10))
     assert([(2,3),(2,2)] == ranks_to_nodes_ppn(3,10))
-    assert([(3,1)] == ranks_to_nodes_ppn(10,3))
+    print(ranks_to_nodes_ppn(10,3))
+    assert([(1,3)] == ranks_to_nodes_ppn(10,3))
+    print(ranks_to_nodes_ppn(24,31))
+    assert([(1, 16), (1, 15)]==ranks_to_nodes_ppn(24,31))
+    print(ranks_to_nodes_ppn(24,62))
+    assert([(2, 21), (1, 20)]==ranks_to_nodes_ppn(24,62))
