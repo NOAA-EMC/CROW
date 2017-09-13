@@ -185,8 +185,11 @@ class dict_eval(MutableMapping):
     def __getitem__(self,key):
         val=self.__cache[key]
         if hasattr(val,'_result'):
+            immediate=hasattr(val,'_is_immediate')
             val=from_config(key,val,self.__globals,self)
             self.__cache[key]=val
+            if immediate:
+                self.__child[key]=val
         return val
     def __getattr__(self,name):
         if name in self: return self[name]
@@ -282,8 +285,11 @@ class list_eval(MutableSequence):
     def __getitem__(self,index):
         val=self.__cache[index]
         if hasattr(val,'_result'):
+            immediate=hasattr(val,'_is_immediate')
             val=from_config(index,val,self.__globals,self.__locals)
             self.__cache[index]=val
+            if immediate:
+                self.__child[index]=val
         assert(val is not self)
         return val
     def _to_py(self,recurse=True):
@@ -319,3 +325,36 @@ class Eval(dict_eval):
 def invalidate_cache(obj,key=None):
     if hasattr(obj,'_invalidate_cache'):
         obj._invalidate_cache(key)
+
+
+def evaluate_one(obj,key,val,memo):
+    if hasattr(val,'_is_immediate'):
+        if memo is not None:
+            evaluate_immediates_impl(obj[key],memo)
+        else:
+            _ = obj[key]
+    elif not hasattr(val,'_result') and memo is not None:
+        evaluate_immediates_impl(obj[key],memo)
+
+def evaluate_immediates_impl(obj,memo=None):
+    if memo is not None:
+        if id(obj) in memo: return
+        memo.add(id(obj))
+
+    if hasattr(obj,'_raw_child'):
+        child=obj._raw_child()
+    else:
+        child=obj
+
+    if hasattr(child,'items'):       # Assume mapping.
+        for k,v in child.items():
+            evaluate_one(obj,k,v,memo)
+    elif hasattr(child,'index'):     # Assume sequence.
+        for i in range(len(child)):
+            evaluate_one(obj,i,child[i],memo)
+
+def evaluate_immediates(obj,recurse=False):
+    if hasattr(obj,'_result'):
+        return
+    memo=set() if recurse else None
+    evaluate_immediates_impl(obj,memo)

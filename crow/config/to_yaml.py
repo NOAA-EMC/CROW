@@ -37,6 +37,7 @@ add_yaml_list_eval(u'!FirstMax',FirstMax)
 add_yaml_list_eval(u'!FirstMin',FirstMin)
 add_yaml_list_eval(u'!LastTrue',LastTrue)
 add_yaml_list_eval(u'!FirstTrue',FirstTrue)
+add_yaml_list_eval(u'!Immediate',Immediate)
 add_yaml_list_eval(None,GenericList)
 
 ########################################################################

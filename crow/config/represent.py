@@ -11,19 +11,25 @@ from crow.tools import to_timedelta
 
 __all__=[ 'Action','Platform', 'Conditional', 'calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
-          'GenericDict', 'GenericOrderedDict', 'ShellCommand' ]
+          'GenericDict', 'GenericOrderedDict', 'ShellCommand',
+          'Immediate' ]
 
 ########################################################################
 
 class Action(dict_eval):
     """!Represents an action that a workflow should take, such as running
     a batch job."""
-
 class GenericDict(dict_eval): pass
 class GenericOrderedDict(dict_eval): pass
 class GenericList(list_eval): pass
 class Platform(dict_eval): pass
 class ShellCommand(dict_eval): pass
+
+class Immediate(list_eval): 
+    def _result(self,globals,locals):
+        return self[0]
+    def _is_immediate(self): pass
+
 class Conditional(list_eval):
     MISSING=object()
     def __init__(self,*args):

@@ -2,6 +2,7 @@
 
 import os, sys, logging
 import crow.config
+from crow.config import Platform
 
 logging.basicConfig(stream=sys.stderr,level=logging.INFO,
    format='%(module)s:%(lineno)d: %(levelname)8s: %(message)s')
@@ -14,10 +15,13 @@ conf=crow.config.from_file(
 force = len(sys.argv)>1 and sys.argv[1] == '--force'
 
 # Store evaluated versions of options and platform instead of storing
-# the original !expand, !calc, !FirstTrue, etc.:
+# the original !expand, !calc, !FirstTrue, etc.  Skip all platforms
+# except the one enabled.
 logger.info('Evaluate options and platform.')
-crow.config.evaluate(conf.options)
-crow.config.evaluate(conf.platform)
+crow.config.evaluate_immediates(conf,recurse=False)
+for key,val in conf.items():
+    if isinstance(val,Platform) and key!='platform': continue
+    crow.config.evaluate_immediates(val,recurse=True)
 
 run_dir=conf.options.run_dir
 logger.info(f'Run directory: {run_dir}')

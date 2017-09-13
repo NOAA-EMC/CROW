@@ -28,15 +28,16 @@ theia: &theia !Platform
   parallelism:
     <<: *theia_scheduler
     name: HydraIMPI
-  least_used_scrub: !FirstMax
-    - do: /scratch3/NCEPDEV/stmp1
-      when: !calc tools.panasas_gb(do)
-    - do: /scratch3/NCEPDEV/stmp2
-      when: !calc tools.panasas_gb(do)
-    - do: /scratch4/NCEPDEV/stmp3
-      when: !calc tools.panasas_gb(do)
-    - do: /scratch4/NCEPDEV/stmp4
-      when: !calc tools.panasas_gb(do)
+  least_used_scrub: !Immediate 
+    - !FirstMax
+      - do: /scratch3/NCEPDEV/stmp1
+        when: !calc tools.panasas_gb(do)
+      - do: /scratch3/NCEPDEV/stmp2
+        when: !calc tools.panasas_gb(do)
+      - do: /scratch4/NCEPDEV/stmp3
+        when: !calc tools.panasas_gb(do)
+      - do: /scratch4/NCEPDEV/stmp4
+        when: !calc tools.panasas_gb(do)
 
 wcoss_cray: &wcoss_cray !Platform
   <<: *resource_defaults
@@ -62,15 +63,17 @@ wcoss_cray: &wcoss_cray !Platform
   parallelism: 
     <<: *wcoss_cray_scheduler
     name: LSFAlps
-  least_used_scrub: !FirstMax
-    - do: /gpfs/hps2/ptmp
-      when: !calc tools.gpfs_gb(do,'hps2-ptmp','hps2',mmlsquota)
-    - do: /gpfs/hps3/ptmp
-      when: !calc tools.gpfs_gb(do,'hps3-ptmp','hps3',mmlsquota)
+  least_used_scrub: !Immediate
+    - !FirstMax
+      - do: /gpfs/hps2/ptmp
+        when: !calc tools.gpfs_gb(do,'hps2-ptmp','hps2',mmlsquota)
+      - do: /gpfs/hps3/ptmp
+        when: !calc tools.gpfs_gb(do,'hps3-ptmp','hps3',mmlsquota)
   detect: !calc tools.isdir('/gpfs/hps') and tools.isfile('/etc/SuSE-release')
 
-platform: !FirstTrue
-  - do: *wcoss_cray
-    when: !calc do.detect
-  - do: *theia
-    when: !calc do.detect
+platform: !Immediate
+  - !FirstTrue
+    - do: *wcoss_cray
+      when: !calc do.detect
+    - do: *theia
+      when: !calc do.detect

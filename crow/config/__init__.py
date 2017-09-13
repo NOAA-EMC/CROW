@@ -11,7 +11,7 @@ from crow.config.tasks import Suite, Depend, AndDependency, SuitePath, \
     RUNNING, COMPLETED, FAILED, TRUE_DEPENDENCY, FALSE_DEPENDENCY, \
     CycleExistsDependency
 from crow.config.to_yaml import to_yaml
-from crow.config.eval_tools import invalidate_cache
+from crow.config.eval_tools import invalidate_cache, evaluate_immediates
 
 __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
          'TaskStateAnd', 'TaskStateOr', 'TaskStateNot', 'TaskStateIs',
@@ -41,18 +41,3 @@ def from_file(*args):
         with open(file,'rt') as fopen:
             data.append(fopen.read())
     return from_string(u'\n\n\n'.join(data))
-
-def evaluate(obj,memo=None):
-    if memo is None: memo=set()
-    if id(obj) in memo: return
-    memo.add(id(obj))
-    if isinstance(obj,str) or isinstance(obj,bytes):
-        return
-    elif isinstance(obj,Sequence):
-        for i in range(len(obj)):
-            obj[i]=obj[i]
-            evaluate(obj[i],memo)
-    elif isinstance(obj,Mapping):
-        for k in list(obj.keys()):
-            obj[k]=obj[k]
-            evaluate(obj[k],memo)

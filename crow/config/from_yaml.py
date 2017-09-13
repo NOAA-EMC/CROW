@@ -34,6 +34,7 @@ class FirstMaxYAML(list):         yaml_tag=u'!FirstMax'
 class FirstMinYAML(list):         yaml_tag=u'!FirstMin'
 class FirstTrueYAML(list):        yaml_tag=u'!FirstTrue'
 class LastTrueYAML(list):         yaml_tag=u'!LastTrue'
+class ImmediateYAML(list):        yaml_tag=u'!Immediate'
 
 class EvalYAML(dict): pass
 class ShellCommandYAML(dict): pass
@@ -148,6 +149,7 @@ add_yaml_sequence(u'!FirstMax',FirstMaxYAML)
 add_yaml_sequence(u'!FirstMin',FirstMinYAML)
 add_yaml_sequence(u'!LastTrue',LastTrueYAML)
 add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
+add_yaml_sequence(u'!Immediate',ImmediateYAML)
 
 ## @var CONDITIONALS
 # Used to handle custom yaml conditional types.  Maps from conditional type
@@ -224,6 +226,8 @@ class ConvertFromYAML(object):
             return self.from_dict(v,SUITE[cls])
         elif cls is EvalYAML:
             return Eval(self.from_dict(v))
+        elif cls is ImmediateYAML:
+            return self.from_list(v,locals,Immediate)
 
         elif isinstance(v,list) and v and isinstance(v[0],tuple) \
              or isinstance(v,OrderedDict):

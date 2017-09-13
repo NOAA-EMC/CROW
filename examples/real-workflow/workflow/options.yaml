@@ -8,7 +8,7 @@ options: &options
 
   # Scrub area.  Default: auto-detect least used scrub space.
   scrub_space: !calc doc.platform.least_used_scrub
-  run_dir: !expand "{scrub_space}/{tools.env('USER')}/{experiment_name}"
+  run_dir: !Immediate [ !expand "{scrub_space}/{tools.env('USER')}/{experiment_name}" ]
 
   # Project for CPU accounting.
   cpu_project: !calc doc.platform.default_cpu_project
