@@ -101,6 +101,9 @@ class GenericNodeSpec(NodeSpec):
         max_per_node //= max(1,rank_spec.get('OMP_NUM_THREADS',1))
         if max_per_node<1:
             raise MachineTooSmallError(f'Specification too large for node: max {threads_per_node} for {rank_spec!r}')
+        max_ppn=rank_spec.get('max_ppn',0)
+        if max_ppn:
+            max_per_node=min(max_ppn,max_per_node)
         return max_per_node
 
     def can_merge_ranks(self,R1,R2):

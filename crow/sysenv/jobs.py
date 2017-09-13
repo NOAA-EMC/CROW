@@ -17,7 +17,8 @@ MISSING=object() # special constant for missing arguments
 class JobRankSpec(Mapping):
     def __init__(self,*,OMP_NUM_THREADS=0,mpi_ranks=0,
                  exe=MISSING,args=MISSING,exclusive=True,
-                 separate_node=False,hyperthreads=1,**kwargs):
+                 separate_node=False,hyperthreads=1,max_ppn=MISSING,
+                 **kwargs):
         self.__spec={
             'mpi_ranks':max(0,int(mpi_ranks)),
             'exclusive':bool(exclusive),
@@ -26,6 +27,10 @@ class JobRankSpec(Mapping):
             'OMP_NUM_THREADS':max(0,int(OMP_NUM_THREADS)),
             'exe':( None if exe is MISSING else exe ),
             'args':( [] if args is MISSING else list(args) ) }
+
+        if max_ppn is not MISSING:
+            self.__spec['max_ppn']=int(max_ppn)
+
         for key,value in kwargs.items():
             if not key.endswith('_extra'):
                 raise TypeError(f'Unknown argument {key}')
