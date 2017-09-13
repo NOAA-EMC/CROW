@@ -6,6 +6,7 @@ resource_defaults: &resource_defaults
 
 theia: &theia !Platform
   <<: *resource_defaults
+  Evaluate: false
   detect: !calc tools.isdir('/scratch4') and tools.isdir('/scratch3')
   default_cpu_project: fv3-cpu
   # Path to pan_df, the program used to get Panasas disk usage information:
@@ -41,6 +42,7 @@ theia: &theia !Platform
 
 wcoss_cray: &wcoss_cray !Platform
   <<: *resource_defaults
+  Evaluate: false
   detect: !calc tools.isdir('/scratch4') and tools.isdir('/scratch3')
   default_cpu_project: GFS-T2O
   # Path to mmlsquota, the program used to get GPFS disk usage information:
@@ -73,7 +75,11 @@ wcoss_cray: &wcoss_cray !Platform
 
 platform: !Immediate
   - !FirstTrue
-    - do: *wcoss_cray
+    - do:
+        <<: *wcoss_cray
+        Evaluate: true
       when: !calc do.detect
-    - do: *theia
+    - do: 
+        <<: *theia
+        Evaluate: true
       when: !calc do.detect

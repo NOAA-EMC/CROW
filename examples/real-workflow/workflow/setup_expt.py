@@ -3,6 +3,7 @@
 import os, sys, logging
 import crow.config
 from crow.config import Platform
+import crow.metascheduler
 
 logging.basicConfig(stream=sys.stderr,level=logging.INFO,
    format='%(module)s:%(lineno)d: %(levelname)8s: %(message)s')
@@ -14,14 +15,10 @@ conf=crow.config.from_file(
 
 force = len(sys.argv)>1 and sys.argv[1] == '--force'
 
-# Store evaluated versions of options and platform instead of storing
-# the original !expand, !calc, !FirstTrue, etc.  Skip all platforms
-# except the one enabled.
-logger.info('Evaluate options and platform.')
-crow.config.evaluate_immediates(conf,recurse=False)
-for key,val in conf.items():
-    if isinstance(val,Platform) and key!='platform': continue
-    crow.config.evaluate_immediates(val,recurse=True)
+logger.info('Remove platforms from configuration.')
+for key in list(conf.keys()):
+    if isinstance(conf[key],Platform) and key!='platform':
+        del conf[key]
 
 run_dir=conf.options.run_dir
 logger.info(f'Run directory: {run_dir}')
@@ -42,4 +39,16 @@ except FileExistsError:
 with open(config_yaml,'wt') as fd:
     fd.write(yaml)
 
-logger.info(f'Experiment is set up.  Run setup_workflow.py {run_dir}')
+suite=conf.workflow
+
+expname=conf.options.experiment_name
+logger.info(f'Experiment name: {expname}')
+
+rocoto_xml=crow.metascheduler.to_rocoto(suite)
+rocoto_xml_file=os.path.join(run_dir,f'{expname}.xml')
+logger.info(f'Rocoto XML file: {rocoto_xml_file}')
+with open(rocoto_xml_file,'wt') as fd:
+    fd.write(rocoto_xml)
+logger.info('Workflow XML file is generated.')
+logger.info('Use Rocoto to execute this workflow.')
+

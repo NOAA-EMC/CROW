@@ -3,7 +3,7 @@ workflow: !Cycle
     scheduler: !calc doc.platform.scheduler
     parallelism: !calc doc.platform.parallelism
 
-    run_dir: doc.options.run_dir
+    run_dir: !calc doc.options.run_dir
     workflow_xml: !expand |
       <?xml version="1.0"?>
       <!DOCTYPE workflow [
@@ -28,6 +28,8 @@ workflow: !Cycle
 
     task_template: &task_template !expand |
       <command>$HOMEtest/workflow/job_wrapper.sh {Perform.J_JOB}</command>
+      <jobname>{task_path_str}@<cyclestr>@Y@m@d@H</cyclestr></jobname>
+      <join>&LOG_DIR;/<cyclestr>@Y@m@d@H</cyclestr>/{tools.join(task_path_list,"-")}</join>
       <walltime>{Perform.walltime}</walltime>
       <memory>{Perform.rocoto_memory}</memory>
       {sched.rocoto_accounting(Perform.accounting)}

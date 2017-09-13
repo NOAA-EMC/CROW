@@ -40,7 +40,7 @@ __all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval',
 class expand(str):
     """!Represents a literal format string."""
     def _result(self,globals,locals):
-        return eval('f'+repr(self),globals,locals)
+        return eval("f'''"+self+"'''",globals,locals)
 
 class strcalc(str):
     """Represents a string that should be run through eval()"""
@@ -58,7 +58,7 @@ def from_config(key,val,globals,locals):
             return from_config(key,val._result(globals,locals),
                                globals,locals)
         return val
-    except(TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
+    except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
         raise CalcKeyError('%s: !%s %s -- %s %s'%(
             str(key),type(val).__name__,repr(val),type(ke).__name__,str(ke)))
     except RecursionError as re:
@@ -106,7 +106,7 @@ class multidict(MutableMapping):
             return True
         except KeyError: return False
     def _expand_text(self,text):
-        eval('f'+repr(text),self._globals(),self)
+        eval("f'''"+text+"'''",self._globals(),self)
     def __repr__(self):
         return '%s(%s)'%(
             type(self).__name__,
@@ -347,6 +347,8 @@ def evaluate_immediates_impl(obj,memo=None):
         child=obj
 
     if hasattr(child,'items'):       # Assume mapping.
+        if 'Evaluate' in child and not child['Evaluate']:
+            return # Scope requested no evaluation.
         for k,v in child.items():
             evaluate_one(obj,k,v,memo)
     elif hasattr(child,'index'):     # Assume sequence.

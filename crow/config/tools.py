@@ -15,7 +15,7 @@ ENV=Environment(os.environ)
 def strftime(d,fmt): return d.strftime(fmt)
 def YMDH(d): return d.strftime('%Y%m%d%H')
 def YMD(d): return d.strftime('%Y%m%d')
-
+def join(L,J): return J.join(L)
 def seq(start,end,step):
     return [ r for r in range(start,end+1,step) ]
 
@@ -52,7 +52,7 @@ def seconds(dt):
 
 def crow_install_dir(rel=None):
     path=os.path.dirname(__file__)
-    path=os.path.join(path,'..')
+    path=os.path.join(path,'../..')
     if rel:
         path=os.path.join(path,rel)
     return os.path.abspath(path)
@@ -86,4 +86,5 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'as_seconds':seconds,
     'YMDH':YMDH,
     'YMD':YMD,
+    'join':join,
 })

@@ -43,7 +43,7 @@ options: &options
 
   # Locations of CROW and this test suite.
   HOMEcrow: !calc tools.crow_install_dir()
-  HOMEtest: !calc tools.crow_install_dir('examples/real-workflow/workflow')
+  HOMEtest: !calc tools.crow_install_dir('examples/real-workflow')
 
 # Executable locations.  Defaults are the exec/ directory within the
 # real-workflow example.
