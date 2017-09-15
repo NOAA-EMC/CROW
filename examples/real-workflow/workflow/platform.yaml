@@ -12,13 +12,13 @@ theia: &theia !Platform
   # Path to pan_df, the program used to get Panasas disk usage information:
   pan_df: pan_df
   serial_accounting:
-    queue: urgent
+    queue: batch
     project: !calc doc.options.cpu_project
   transfer_accounting:
     queue: service
     project: !calc doc.options.cpu_project
   parallel_accounting:
-    queue: urgent
+    queue: batch
     project: !calc doc.options.cpu_project
   scheduler: &theia_scheduler
     name: MoabTorque
