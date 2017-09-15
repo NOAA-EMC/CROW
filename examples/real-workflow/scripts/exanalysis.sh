@@ -4,7 +4,7 @@ set -xue
 
 cp -fp "$COMINtest"/member*grid .
 
-$CROW_TO_SH namelist:analysis.namelist > post.nl
-$CROW_TO_SH run:analysis.command
+$CROW_TO_SH expand:analysis.namelist > assimilate.nl
+$CROW_TO_SH run:analysis.resources
 
 cp -fp analysis.grid "$COMOUTtest/."

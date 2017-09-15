@@ -18,4 +18,8 @@ unset ulimit_s
 
 set -xue
 
+export PYTHONPATH="$HOMEcrow${PYTHONPATH:+:$PYTHONPATH}"
+
+python3.6 -c 'import crow ; print(f"CROW library version {crow.version}")'
+
 "$HOMEtest/jobs/$1"

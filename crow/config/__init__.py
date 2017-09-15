@@ -1,18 +1,18 @@
 import yaml
 from collections import Sequence, Mapping
 import crow.tools
-from crow.config.from_yaml import ConvertFromYAML
-from crow.config.template import Template
-from crow.config.represent import Action, Platform, ShellCommand
-from crow.config.tools import CONFIG_TOOLS, ENV
-from crow.config.tasks import Suite, Depend, AndDependency, SuitePath, \
+from .from_yaml import ConvertFromYAML
+from .template import Template
+from .represent import Action, Platform, ShellCommand
+from .tools import CONFIG_TOOLS, ENV
+from .tasks import Suite, Depend, AndDependency, SuitePath, \
     OrDependency, NotDependency, StateDependency, Dependable, \
     Taskable, Task, Family, Cycle, LogicalDependency, SuiteView, \
     RUNNING, COMPLETED, FAILED, TRUE_DEPENDENCY, FALSE_DEPENDENCY, \
     CycleExistsDependency
-from crow.config.to_yaml import to_yaml
-from crow.config.eval_tools import invalidate_cache
-from crow.config.eval_tools import evaluate_immediates as _evaluate_immediates
+from .to_yaml import to_yaml
+from .eval_tools import invalidate_cache
+from .eval_tools import evaluate_immediates as _evaluate_immediates
 
 __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
          'TaskStateAnd', 'TaskStateOr', 'TaskStateNot', 'TaskStateIs',

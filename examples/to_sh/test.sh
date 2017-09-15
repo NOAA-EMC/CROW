@@ -60,7 +60,12 @@ echo "    %.20f   format: $LONG_PI"
 echo "  NOT_FLOAT = 3 = $NOT_FLOAT"
 unset SHORT_PI LONG_PI
 
-TO_SH test.yaml expand:./test.nml
+eval $( TO_SH test.yaml scope:multi 'import:VAR[0-9]' )
+echo "VAR TEST:"
+echo "$VAR1 $VAR2 $VAR3 ${VARNOPE:-}"
+echo " = value1 value2 value3 "
+
+TO_SH test.yaml preprocess:./test.nml
 
 TO_SH test.yaml run:success_test
 

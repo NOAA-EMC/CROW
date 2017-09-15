@@ -4,7 +4,7 @@ set -xue
 export DATAtest="${DATAtest:-${SCRUB_DIR}}"
 export COMOUTtest="${COMOUTtest:-${COM_DIR}}"
 export COMINtest="${COMINtest:-${COM_DIR}}"
-export COMINtest="${COMOLDtest:-${OLD_COM_DIR}}"
+export COMOLDtest="${COMOLDtest:-${OLD_COM_DIR}}"
 export HOMEtest="${HOMEtest}"
 export EXtest="${EXtest:-$HOMEtest/scripts}"
 export USHtest="${USHtest:-$HOMEtest/ush}"

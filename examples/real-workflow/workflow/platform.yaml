@@ -1,8 +1,8 @@
 resource_defaults: &resource_defaults
-  default_fcst_ranks: 96
-  default_init_ranks: 24
-  default_ens_ranks: 24
-  default_post_ranks: 2
+  fcst_ranks: 96
+  init_ranks: 24
+  ens_ranks: 24
+  post_ranks: 2
 
 theia: &theia !Platform
   <<: *resource_defaults
@@ -12,13 +12,13 @@ theia: &theia !Platform
   # Path to pan_df, the program used to get Panasas disk usage information:
   pan_df: pan_df
   serial_accounting:
-    queue: batch
+    queue: urgent
     project: !calc doc.options.cpu_project
   transfer_accounting:
     queue: service
     project: !calc doc.options.cpu_project
   parallel_accounting:
-    queue: batch
+    queue: urgent
     project: !calc doc.options.cpu_project
   scheduler: &theia_scheduler
     name: MoabTorque

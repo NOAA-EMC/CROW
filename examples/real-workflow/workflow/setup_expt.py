@@ -11,7 +11,7 @@ logger=logging.getLogger('setup_expt')
 
 conf=crow.config.from_file(
     'platform.yaml','options.yaml','runtime.yaml',
-    'actions.yaml','workflow.yaml' )
+    'actions.yaml','workflow.yaml')
 
 force = len(sys.argv)>1 and sys.argv[1] == '--force'
 
@@ -23,8 +23,11 @@ for key in list(conf.keys()):
 run_dir=conf.options.run_dir
 logger.info(f'Run directory: {run_dir}')
 config_yaml=os.path.join(run_dir,'config.yaml')
-logger.info(f'Config file: {config_yaml}')
 yaml=crow.config.to_yaml(conf)
+
+assert('namelist' in conf.generic_fcst)
+assert('namelist' in conf.fcst)
+assert('namelist' in conf.ens_fcst)
 
 try:
     os.makedirs(run_dir)
@@ -36,6 +39,7 @@ except FileExistsError:
     logger.warning(f'--force given; will replace config.yaml without '
                    'deleting directory')
 
+logger.info(f'Write econfig file: {config_yaml}')
 with open(config_yaml,'wt') as fd:
     fd.write(yaml)
 

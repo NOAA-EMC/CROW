@@ -35,15 +35,15 @@ ROCOTO_DEP_TAG={ AndDependency:'and',
 ZERO_DT=timedelta()
 
 def cycle_offset(dt):
-    sign=1
+    sign=''
     if dt<ZERO_DT:
         dt=-dt
-        sign=-1
+        sign='-'
     total=round(dt.total_seconds())
     hours=int(total//3600)
     minutes=int((total-hours*3600)//60)
     seconds=int(total-hours*3600-minutes*60)
-    return f'{hours:02d}:{minutes:02d}:{seconds:02d}'
+    return f'{sign}{hours:02d}:{minutes:02d}:{seconds:02d}'
 
 def to_rocoto_dep(dep,fd,indent):
     if type(dep) in ROCOTO_DEP_TAG:
@@ -53,10 +53,13 @@ def to_rocoto_dep(dep,fd,indent):
         fd.write(f'{"  "*indent}</{tag}>\n')
     elif isinstance(dep,StateDependency):
         path='-'.join(dep.path[1:])
+        more=''
+        if dep.path[0]!=ZERO_DT:
+            more=f' cycle_offset="{cycle_offset(dep.path[0])}"'
         tag='taskdep' if dep.is_task() else 'metataskdep'
         attr='task' if dep.is_task() else 'metatask'
         if dep.state is COMPLETED:
-            fd.write(f'{"  "*indent}<{tag} {attr}="{path}"/>\n')
+            fd.write(f'{"  "*indent}<{tag} {attr}="{path}"{more}/>\n')
         else:
             state=ROCOTO_STATE_MAP[dep.state]
             fd.write(f'{"  "*indent}<{tag} {attr}="{path}" state="{state}"/>\n')
@@ -160,12 +163,14 @@ class ToRocoto(object):
         complete=complete | view.get_complete_dep()
         time=max(time,view.get_time_dep())
 
+        dep=trigger
         if complete is not FALSE_DEPENDENCY:
-            self.__completes[view]=complete
+            self.__completes[view.path]=[view, complete]
+            dep = dep & ~ complete
 
         dep_count = int(trigger is not TRUE_DEPENDENCY) + \
                     int(time>timedelta.min)
-        self.write_task_text(fd,'',indent,view,dep_count,trigger,time)
+        self.write_task_text(fd,'',indent,view,dep_count,dep,time)
 
     def write_task_text(self,fd,attr,indent,view,dep_count,trigger,time):
         path='-'.join(view.path[1:])
@@ -218,8 +223,8 @@ class ToRocoto(object):
 
         if item.is_task():
             dep = item.is_completed()
-            if item in self.__completes:
-                dep = dep | self.__completes[item]
+            if item.path in self.__completes:
+                dep = dep | self.__completes[item.path][1]
             return dep
 
         # Initial completion dependency is the task or family
@@ -250,7 +255,7 @@ class ToRocoto(object):
         if dep is FALSE_DEPENDENCY:
             dep=subdep
         else:
-            dep=subdep | dep
+            dep=dep | subdep
 
         return dep
 
@@ -276,9 +281,11 @@ class ToRocoto(object):
 
         # Find all families that have tasks with completes:
         families_with_completes=set()
-        for task in self.__completes:
-            for i in range(1,len(task.path)):
-                families_with_completes.add(SuitePath(task.path[1:i]))
+        for path,view_condition in self.__completes.items():
+            (view,condition) = view_condition
+            for i in range(1,len(path)):
+                family_path=SuitePath(path[1:i])
+                families_with_completes.add(family_path)
 
         # Generate dependency for the final task:
         dep=self.completes_for(fd,self.suite,families_with_completes)

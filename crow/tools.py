@@ -127,17 +127,16 @@ def str_to_posix_sh(s,encoding='ascii'):
 
     return b'"'+s+b'"'
 
-def typecheck(name,obj,type):
-    if not isinstance(obj,type):
-        raise TypeError(
-            f'{name} must be a {type.__name__} not a {type(obj).__name__}')
+def typecheck(name,obj,cls):
+    if not isinstance(obj,cls):
+        msg=f'{name!s} must be a {cls.__name__!s} not a {type(obj).__name__!s}'
+        raise TypeError(msg)
 
 ########################################################################
 
 ZERO_DT=timedelta()
-
 class Clock(object):
-    def __init__(self,start,step,end=None):
+    def __init__(self,start,step,end=None,now=None):
         typecheck('start',start,datetime.datetime)
         typecheck('step',step,datetime.timedelta)
         if end is not None:
@@ -150,6 +149,7 @@ class Clock(object):
             raise ValueError('Time step must be positive and non-zero.')
         if self.end<self.start:
             raise ValueError('End time must be at or after start time.')
+        self.now=now
 
     def __iter__(self):
         time=self.start
@@ -158,6 +158,9 @@ class Clock(object):
             time+=self.step
 
     def setnow(self,time):
+        if time is None:
+            self.__now=self.start
+            return
         typecheck('time',time,datetime.datetime)
         if (time-self.start) % self.step:
             raise ValueError(

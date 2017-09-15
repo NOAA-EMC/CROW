@@ -1,6 +1,6 @@
 from crow.exceptions import CROWException
 __all__=['ConfigError', 'ConditionalMissingDoWhen', 'TemplateErrors',
-         'CalcRecursionTooDeep', 'ExpandMissingResult',
+         'CalcRecursionTooDeep', 'ExpandMissingResult', 'DependError',
          'CalcKeyError', 'TemplateError', 'InvalidConfigTemplate',
          'InvalidConfigValue', 'InvalidConfigType' ]
 
@@ -18,3 +18,4 @@ class TemplateErrors(ConfigError):
     def __init__(self,errors):
         super().__init__(self,'\n'.join([ str(e) for e in errors ]))
         self.template_errors=list(errors)
+class DependError(ConfigError): pass

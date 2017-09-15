@@ -151,11 +151,11 @@ class SuiteView(Mapping):
     def __and__(self,other):
         dep=as_dependency(other)
         if dep is NotImplemented: return dep
-        return AndDependency(as_dependency(self.viewed),dep)
+        return AndDependency(as_dependency(self),dep)
     def __or__(self,other):
         dep=as_dependency(other)
         if dep is NotImplemented: return dep
-        return OrDependency(as_dependency(self.viewed),dep)
+        return OrDependency(as_dependency(self),dep)
     def __invert__(self):
         return NotDependency(StateDependency(self,COMPLETED))
     def is_running(self):
@@ -191,9 +191,12 @@ class Suite(SuiteView):
 
 class Depend(str):
     def _as_dependency(self,globals,locals,path):
-        result=eval(self,globals,locals)
-        result=as_dependency(result,path)
-        return result
+        try:
+            result=eval(self,globals,locals)
+            result=as_dependency(result,path)
+            return result
+        except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
+            raise DependError(f'!Depend {self}: {ke}')
 
 def as_dependency(obj,path=MISSING,state=COMPLETED):
     """!Converts the containing object to a State.  Action objects are
