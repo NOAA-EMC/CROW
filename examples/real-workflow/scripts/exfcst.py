@@ -27,7 +27,6 @@ def main():
     scope=conf[scope_name]
     
     def run_fcst(action):
-        print(list(action.keys()))
         namelist=action.namelist
         with open('forecast.nl','wt') as fd:
             fd.write(namelist)
@@ -39,14 +38,10 @@ def main():
         logger.info(f'Run ensemble members {start_member} to {stop_member}')
         member_id=start_member
         while member_id<=stop_member:
-            assert('ens_com_filename' in scope)
             fcst=copy(scope)
-            assert('ens_com_filename' in fcst)
             fcst.member_id=member_id
             logger.info(f'Member {fcst.member_id}')
-            print(list(fcst.keys()))
             run_fcst(fcst)
-            assert('ens_com_filename' in fcst)
             result=fcst.ens_output
             comfile=os.path.join(fcst.com,fcst.ens_com_filename)
             shutil.copy2(result,comfile)
