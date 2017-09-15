@@ -23,7 +23,7 @@ generic_fcst: &generic_fcst_action
   dt_write: !calc dt_write_fcst
   infile: !expand "{com}/analysis.grid"
   outfile_format: "fcst_######.grid"
-  start_time: !calc doc.clock.now-doc.clock.start
+  start_time: !timedelta 0:00
   namelist: !expand |
     &settings
       nx={nx}
@@ -89,7 +89,7 @@ ens_fcst: &ens_fcst_action !Action
   ens_output: !expand "output_{ens_output_num:06d}.grid"
   ens_com_filename: !expand "member_{member_id:06d}.grid"
   outfile_format: "output_######.grid"
-  end_time: !calc doc.clock.next(1)-doc.clock.start
+  end_time: !calc doc.clock.next(1)-doc.clock.now
 
 fcst: &fcst_action !Action
   <<: *generic_fcst_action
