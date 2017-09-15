@@ -52,7 +52,7 @@ def to_rocoto_dep(dep,fd,indent):
         for d in dep: to_rocoto_dep(d,fd,indent+1)
         fd.write(f'{"  "*indent}</{tag}>\n')
     elif isinstance(dep,StateDependency):
-        path='-'.join(dep.path[1:])
+        path='.'.join(dep.path[1:])
         more=''
         if dep.path[0]!=ZERO_DT:
             more=f' cycle_offset="{cycle_offset(dep.path[0])}"'
@@ -133,7 +133,7 @@ class ToRocoto(object):
         self.__dummy_var_count+=1
         dummy_var="dummy_var_"+str(self.__dummy_var_count)
 
-        path=xml_quote('-'.join(view.path[1:]))
+        path=xml_quote('.'.join(view.path[1:]))
         if not isinstance(view,Suite):
             fd.write(f'''{space*indent}<metatask name="{path}">
 {space*indent}  <var name="{dummy_var}">DUMMY_VALUE</var>
