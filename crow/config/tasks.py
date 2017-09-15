@@ -57,6 +57,7 @@ class SuiteView(Mapping):
         self.viewed=copy(viewed)
         self.viewed.task_path_list=path[1:]
         self.viewed.task_path_str='/'+'/'.join(path[1:])
+        self.viewed.task_path_var='.'.join(path[1:])
         self.viewed.up=parent
         self.path=SuitePath(path)
         self.parent=parent

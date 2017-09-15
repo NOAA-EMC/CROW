@@ -2,6 +2,7 @@ Rocoto: &Rocoto
   scheduler: !calc doc.platform.scheduler
   parallelism: !calc doc.platform.parallelism
   run_dir: !calc doc.options.run_dir
+  max_tries: 3
 
   workflow_xml: !expand |
     <?xml version="1.0"?>
@@ -18,15 +19,15 @@ Rocoto: &Rocoto
               cyclethrottle="&CYCLE_THROTTLE;"
               scheduler="{sched.rocoto_name.lower()}"
               taskthrottle="&TASK_THROTTLE;" >
-       <log><cyclestr>&LOG_DIR;/rocoto_@Y@m@d@H.log</cyclestr></log>
-       {to_rocoto.make_time_xml(indent=2)}
-      {to_rocoto.make_task_xml(indent=2)}
+      <log><cyclestr>&LOG_DIR;/rocoto_@Y@m@d@H.log</cyclestr></log>
+    {to_rocoto.make_time_xml(indent=1)}
+    {to_rocoto.make_task_xml(indent=1)}
     </workflow>
 
   task_template: &task_template !expand |
     <command>$HOMEtest/workflow/job_wrapper.sh {Perform.J_JOB}</command>
     <jobname>{task_path_str}@<cyclestr>@Y@m@d@H</cyclestr></jobname>
-    <join>&LOG_DIR;/<cyclestr>@Y@m@d@H</cyclestr>/{tools.join(task_path_list,"-")}.log</join>
+    <join>&LOG_DIR;/<cyclestr>@Y@m@d@H</cyclestr>/{task_path_var}.log</join>
     <walltime>{Perform.walltime}</walltime>
     <memory>{Perform.rocoto_memory}</memory>
     {sched.rocoto_accounting(Perform.accounting)}
@@ -86,6 +87,7 @@ workflow: !Cycle
   start_cycle: !Task
     Perform: *start_cycle_action
     Rocoto: *task_template
+    max_tries: 5
   
   clim_init: !Task
     Perform: *clim_init_action
@@ -151,6 +153,7 @@ workflow: !Cycle
 
   fcst: !Family
     # Special case for first cycle: forecast off of climatology:
+    max_tries: 2
     clim_fcst: !Task
       Perform: *clim_fcst_action
       Rocoto: *task_template

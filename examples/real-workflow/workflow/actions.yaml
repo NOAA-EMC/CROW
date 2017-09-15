@@ -127,6 +127,7 @@ post: &post_action !Action
   sleep_wait: 30
   max_wait: 300
 
+  FCST_FREQ_HRS: !calc round(tools.as_seconds(dt_write_fcst)//3600)
   FCST_LEN: !calc round(tools.as_seconds(fcst_len)//3600)
   DT_WRITE: !calc round(tools.as_seconds(dt_write_fcst)//3600)
   SLEEP_WAIT: !calc sleep_wait

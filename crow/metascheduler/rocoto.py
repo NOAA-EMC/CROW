@@ -170,10 +170,12 @@ class ToRocoto(object):
 
         dep_count = int(trigger is not TRUE_DEPENDENCY) + \
                     int(time>timedelta.min)
-        self.write_task_text(fd,'',indent,view,dep_count,dep,time)
+        maxtries=int(view.get('max_tries',self.suite.Rocoto.get('max_tries',0)))
+        attr = f' maxtries="{maxtries}"' if maxtries else ''
+        self.write_task_text(fd,attr,indent,view,dep_count,dep,time)
 
     def write_task_text(self,fd,attr,indent,view,dep_count,trigger,time):
-        path='-'.join(view.path[1:])
+        path='.'.join(view.path[1:])
         indent1=indent+1
         space=self.__spacing
         fd.write(f'{space*indent}<task name="{path}"{attr}>\n')
