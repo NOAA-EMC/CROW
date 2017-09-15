@@ -4,7 +4,7 @@ options: &options
   ny: 400
 
   # User-defined experiment name; should be a-z followed by alphanumeric:
-  experiment_name: test
+  experiment_name: expt
 
   # Scrub area.  Default: auto-detect least used scrub space.
   scrub_space: !calc doc.platform.least_used_scrub
