@@ -1,3 +1,4 @@
+SHELL=/bin/sh
 EXES=$(DIR)/forecast $(DIR)/climatology_init $(DIR)/assimilate \
      $(DIR)/post
 
@@ -8,6 +9,7 @@ default:
 	@echo make theia-impi
 
 theia-impi:
+	source /apps/lmod/lmod/init/sh ; \
 	module purge ; \
 	module load intel impi ; \
 	module list ; \

@@ -1,10 +1,12 @@
-This is an actual workflow driven by CROW.
+BThis is an actual workflow driven by CROW.
 
 Steps to run:
 
 you@theia> cd sorc
 you@thiea> make theia-impi
 you@theia> cd ../workflow
+you@theia> module use /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/python/modulefiles/                                                                                   
+you@theia> module load python/3.6.1-emc
 you@theia> /usr/bin/env PYTHONPATH=../../.. ./setup_expt.py
 setup_expt:18:     INFO: Remove platforms from configuration.
 setup_expt:24:     INFO: Run directory: /scratch4/NCEPDEV/stmp3/Samuel.Trahan/expt
