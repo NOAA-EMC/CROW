@@ -39,6 +39,7 @@ def simplify_no_de_morgan(tree):
 
 def de_morgan(tree):
     # Apply de morgan's law, choose least complex option.
+    return tree
     if not isinstance(tree,NotDependency): return tree
     dup=tree.copy_dependencies()
     if isinstance(dup.depend,AndDependency):
@@ -56,7 +57,7 @@ def de_morgan(tree):
 
 def and_merge_ors(ors):
     # (X + B1 + B2 + Y) + (X + C1 + C2 + Y) = X + (B1+B2)(C1+C2) + Y
-    original=OrDependency(*ors)
+    original=AndDependency(*ors)
     ors=original.copy_dependencies().depends
     assert(isinstance(ors,list))
     min_len=min([ len(orr) for orr in ors ])
@@ -104,7 +105,7 @@ def and_merge_ors(ors):
 
     if complexity(dep)<complexity(original):
         return dep
-    return original
+    return None
 
 def simplify_sequence(dep,no_merge=False):
     deplist=dep.depends
@@ -129,13 +130,15 @@ def simplify_sequence(dep,no_merge=False):
                 expanded=True
             elif isinstance(dep,AndDependency) \
                  and isinstance(deplist[i],OrDependency):
-                j=i+1
+                j=i
                 while j<len(deplist) and isinstance(deplist[j],OrDependency):
                     j=j+1
                 if j>i+1:
-                    deplist[i]=and_merge_ors(deplist[i:j])
-                    del deplist[i+1:j]
-                    expanded=True
+                    result=and_merge_ors(deplist[i:j])
+                    if result is not None:
+                        deplist[i]=result
+                        del deplist[i+1:j]
+                        expanded=True
                 i=i+1
             else:
                 i=i+1

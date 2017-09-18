@@ -267,7 +267,7 @@ class ToRocoto(object):
             maxtries=int(view.get(
                 'max_tries',self.suite.Rocoto.get('max_tries',0)))
             attr = f' maxtries="{maxtries}"' if maxtries else ''
-            self._write_task_text(fd,attr,indent,view,trigger,time)
+            self._write_task_text(fd,attr,indent,view,trigger&~complete,time)
             return
 
         self.__dummy_var_count+=1
@@ -294,12 +294,12 @@ class ToRocoto(object):
         if not isinstance(view,Suite):
             fd.write(f'{space*indent}</metatask>\n')
 
-    def _write_task_text(self,fd,attr,indent,view,trigger,time):
+    def _write_task_text(self,fd,attr,indent,view,dependency,time):
         path='.'.join(view.path[1:])
         space=self.__spacing
         fd.write(f'{space*indent}<task name="{path}"{attr}>\n')
 
-        dep=self._as_rocoto_dep(trigger,view.path)
+        dep=self._as_rocoto_dep(dependency,view.path)
 
         dep_count = ( dep != TRUE_DEPENDENCY ) + ( time>timedelta.min )
 
