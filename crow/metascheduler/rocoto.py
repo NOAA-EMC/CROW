@@ -11,6 +11,7 @@ from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           Family, Cycle, RUNNING, COMPLETED, FAILED, \
           TRUE_DEPENDENCY, FALSE_DEPENDENCY, SuitePath, \
           CycleExistsDependency
+from crow.metascheduler.simplify import simplify
 
 __all__=['ToRocoto','RocotoConfigError']
 
@@ -46,6 +47,7 @@ def cycle_offset(dt):
     return f'{sign}{hours:02d}:{minutes:02d}:{seconds:02d}'
 
 def to_rocoto_dep(dep,fd,indent):
+    dep=simplify(dep)
     if type(dep) in ROCOTO_DEP_TAG:
         tag=ROCOTO_DEP_TAG[type(dep)]
         fd.write(f'{"  "*indent}<{tag}>\n')
