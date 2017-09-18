@@ -314,6 +314,9 @@ class CycleExistsDependency(LogicalDependency):
 
 class StateDependency(LogicalDependency):
     def __init__(self,view,state):
+        if state not in [ COMPLETED, RUNNING, FAILED ]:
+            raise TypeError('Invalid state.  Must be one of the constants '
+                            'COMPLETED, RUNNING, or FAILED')
         self.view=view
         self.state=state
     @property

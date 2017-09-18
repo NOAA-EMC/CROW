@@ -46,12 +46,14 @@ def cycle_offset(dt):
     seconds=int(total-hours*3600-minutes*60)
     return f'{sign}{hours:02d}:{minutes:02d}:{seconds:02d}'
 
-def to_rocoto_dep(dep,fd,indent):
+
+def to_rocoto_dep_impl(dep,fd,indent):
     dep=simplify(dep)
+
     if type(dep) in ROCOTO_DEP_TAG:
         tag=ROCOTO_DEP_TAG[type(dep)]
         fd.write(f'{"  "*indent}<{tag}>\n')
-        for d in dep: to_rocoto_dep(d,fd,indent+1)
+        for d in dep: to_rocoto_dep_impl(d,fd,indent+1)
         fd.write(f'{"  "*indent}</{tag}>\n')
     elif isinstance(dep,StateDependency):
         path='.'.join(dep.path[1:])
@@ -111,6 +113,30 @@ class ToRocoto(object):
             raise TypeError("Suite's Rocoto.indent_text, if present, "
                             "must be a string.")
         self.__dummy_var_count=0
+
+    def replace_metatask_is_running_deps(self,dep):
+        if isinstance(dep,StateDependency) and not dep.view.is_task() and \
+           dep.state==RUNNING:
+            deplist=list()
+            for t in dep.view.walk_task_tree():
+                if t.is_task():
+                    deplist.append(t.is_running())
+            if not deplist: return FALSE_DEPENDENCY # no tasks
+            return OrDependency(*deplist)
+        elif isinstance(dep,NotDependency):
+            return NotDependency(self.replace_metatask_is_running_deps(
+                dep.depend))
+        elif isinstance(dep,OrDependency) or isinstance(dep,AndDependency):
+            cls=type(dep)
+            for i in range(len(dep.depends)):
+                dep.depends[i]=self.replace_metatask_is_running_deps(
+                    dep.depends[i])
+        return dep
+
+    def to_rocoto_dep(self,dep,fd,indent):
+        dep=dep.copy_dependencies()
+        dep=self.replace_metatask_is_running_deps(dep)
+        return to_rocoto_dep_impl(dep,fd,indent)
 
     def expand_workflow_xml(self):
         return self.settings.workflow_xml
@@ -194,7 +220,7 @@ class ToRocoto(object):
             fd.write(space*indent1 + '<and>\n')
 
         if trigger is not TRUE_DEPENDENCY:
-            to_rocoto_dep(trigger,fd,indent1+1)
+            self.to_rocoto_dep(trigger,fd,indent1+1)
         if time>timedelta.min:
             to_rocoto_time_dep(time,fd,indent1+1)
 

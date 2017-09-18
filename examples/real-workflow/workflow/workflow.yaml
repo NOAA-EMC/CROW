@@ -170,7 +170,7 @@ workflow: !Cycle
   post: !Task
     Perform: *post_action
     Rocoto: *task_template
-    Trigger: !Depend fcst.clim_fcst.is_running() | fcst.fcst.is_running() | fcst.clim_fcst | fcst.fcst
+    Trigger: !Depend fcst.is_running() | fcst
 
   final: !Task
     Perform: *final_action
