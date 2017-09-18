@@ -39,7 +39,6 @@ def simplify_no_de_morgan(tree):
 
 def de_morgan(tree):
     # Apply de morgan's law, choose least complex option.
-    return tree
     if not isinstance(tree,NotDependency): return tree
     dup=tree.copy_dependencies()
     if isinstance(dup.depend,AndDependency):
