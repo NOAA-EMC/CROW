@@ -39,7 +39,7 @@ except FileExistsError:
     logger.warning(f'--force given; will replace config.yaml without '
                    'deleting directory')
 
-logger.info(f'Write econfig file: {config_yaml}')
+logger.info(f'Write the config file: {config_yaml}')
 with open(config_yaml,'wt') as fd:
     fd.write(yaml)
 

@@ -5,6 +5,8 @@
 ulimit_s=$( ulimit -S -s )
 ulimit -S -s 10000
 
+source /apps/lmod/lmod/init/sh
+
 # FIXME: Remove hard-coded modules.
 module purge
 module use /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/python/modulefiles/
