@@ -54,7 +54,59 @@ def de_morgan(tree):
         return alternative
     return tree
 
-def simplify_sequence(dep):
+def and_merge_ors(ors):
+    # (X + B1 + B2 + Y) + (X + C1 + C2 + Y) = X + (B1+B2)(C1+C2) + Y
+    original=OrDependency(*ors)
+    ors=original.copy_dependencies().depends
+    assert(isinstance(ors,list))
+    min_len=min([ len(orr) for orr in ors ])
+    i=0
+    while i<min_len and all( [ ors[j].depends[i]==ors[0].depends[i] for j in range(len(ors)) ] ):
+        i=i+1
+
+    common_before=ors[0].depends[0:i]
+    for j in range(len(ors)):
+        ors[j].depends=ors[j].depends[i:]
+
+    i=-1
+    min_len=min([ len(orr) for orr in ors ])
+    neg_limit=-min_len-1
+    while i>neg_limit and all( [ ors[j].depends[i]==ors[0].depends[-1] for j in range(len(ors)) ] ):
+        i=i-1
+
+    common_after=ors[0].depends[i+1:]
+    if i<-1:
+        for j in range(len(ors)):
+            new=ors[j].depends[:i+1]
+            ors[j].depends=new
+
+    if len(common_before)>1:
+        dep=OrDependency(*common_before)
+    elif len(common_before)==1:
+        dep=common_before[0]
+    else:
+        dep=FALSE_DEPENDENCY
+
+    middle_dep=TRUE_DEPENDENCY
+    have_middle_dep=False
+    for orr in ors:
+        have_middle_dep=have_middle_dep or len(orr)
+        if len(orr)>1:
+            middle_dep=middle_dep&orr
+        elif len(orr):
+            middle_dep=middle_dep&orr.depends[0]
+    if have_middle_dep: dep = dep | middle_dep
+
+    if len(common_after)>1:
+        dep=dep | OrDependency(*common_after)
+    elif len(common_after)==1:
+        dep=dep | common_after[0]
+
+    if complexity(dep)<complexity(original):
+        return dep
+    return original
+
+def simplify_sequence(dep,no_merge=False):
     deplist=dep.depends
     cls=type(dep)
     is_or = isinstance(dep,OrDependency)
@@ -63,24 +115,28 @@ def simplify_sequence(dep):
     expanded=True
     while expanded:
         expanded=False
-        i=0
 
         # simplify each subexpression
         for i in range(len(deplist)):
             deplist[i]=simplify(deplist[i])
 
-        # A & (B & C) = A & B & C
-        # A | (B | C) = A | B | C
+        i=0
         while i<len(deplist):
             if type(deplist[i]) == type(dep):
+                # A & (B & C) = A & B & C
+                # A | (B | C) = A | B | C
                 deplist=deplist[0:i]+deplist[i].depends+deplist[i+1:]
                 expanded=True
-            elif ( isinstance(deplist[i],AndDependency) or \
-                   isinstance(deplist[i],OrDependency) ) and \
-                  i>0 and type(deplist[i])==type(deplist[i-1]):
-                deplist[i-1].depends+=deplist[i].depends
-                del deplist[i]
-                expanded=True
+            elif isinstance(dep,AndDependency) \
+                 and isinstance(deplist[i],OrDependency):
+                j=i+1
+                while j<len(deplist) and isinstance(deplist[j],OrDependency):
+                    j=j+1
+                if j>i+1:
+                    deplist[i]=and_merge_ors(deplist[i:j])
+                    del deplist[i+1:j]
+                    expanded=True
+                i=i+1
             else:
                 i=i+1
 
@@ -97,18 +153,32 @@ def simplify_sequence(dep):
             del deplist[i] # A|false = A
         else:
             j=i+1
-            remove_i=False
+            seen_other=False
+            del_i=False
             while j<len(deplist):
                 if deplist[i]==deplist[j]:
                     del deplist[j]
-                elif not is_or and isinstance(deplist[j],NotDependency) and \
-                     deplist[j].depend==deplist[i]:
-                    return FALSE_DEPENDENCY
-                else:
-                    j=j+1
+                    continue
+                elif ( isinstance(deplist[j],NotDependency) \
+                       and deplist[j].depend==deplist[i] ) or \
+                     ( isinstance(deplist[i],NotDependency) \
+                       and deplist[i].depend==deplist[j] ):
+                    if is_or and not seen_other:
+                        del_i=True
+                        del deplist[j]
+                        if len(deplist)==1:
+                            return TRUE_DEPENDENCY
+                        continue
+                    elif not is_or:
+                        return FALSE_DEPENDENCY
+                seen_other=True
+                j=j+1
             if len(deplist)==1:
                 return deplist[0]
-            i=i+1
+            if del_i:
+                del deplist[i]
+            else:
+                i=i+1
 
     return cls(*deplist)
 
@@ -117,6 +187,7 @@ def test():
     DEP1=crow.config.CycleExistsDependency(timedelta())
     DEP2=crow.config.CycleExistsDependency(timedelta(seconds=3600))
     DEP3=crow.config.CycleExistsDependency(timedelta(seconds=7200))
+    DEP4=crow.config.CycleExistsDependency(timedelta(seconds=10800))
 
     assert(abs(complexity(DEP1|DEP2)-2.4)<1e-3)
     assert(abs(complexity(DEP1&DEP2)-2.4)<1e-3)
@@ -126,3 +197,6 @@ def test():
     assert(simplify(~DEP1 & DEP1)==FALSE_DEPENDENCY)
     assert(simplify(~(~DEP1 | ~DEP2)) == DEP1&DEP2)
     assert(simplify(~DEP2 & ~(~DEP1 | ~DEP2)) == FALSE_DEPENDENCY)
+
+    assert(simplify( (DEP1 | DEP2 | DEP4) & (DEP1 | DEP3 | DEP4) ) == \
+           DEP1 | DEP2&DEP3 | DEP4)

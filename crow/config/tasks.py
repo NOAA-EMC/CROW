@@ -229,6 +229,8 @@ class LogicalDependency(object):
         return OrDependency(self,dep)
     @abstractmethod
     def copy_dependencies(self): pass
+    @abstractmethod
+    def add_time(self,dt): pass
 
 class AndDependency(LogicalDependency):
     def __init__(self,*args):
@@ -257,6 +259,9 @@ class AndDependency(LogicalDependency):
         return isinstance(other,AndDependency) and self.depends==other.depends
     def copy_dependencies(self):
         return AndDependency(*[ dep.copy_dependencies() for dep in self ])
+    def add_time(self,dt):
+        for dep in self:
+            dep.add_time(dt)
 
 class OrDependency(LogicalDependency):
     def __init__(self,*args):
@@ -285,6 +290,9 @@ class OrDependency(LogicalDependency):
         return isinstance(other,OrDependency) and self.depends==other.depends
     def copy_dependencies(self):
         return OrDependency(*[ dep.copy_dependencies() for dep in self ])
+    def add_time(self,dt):
+        for dep in self:
+            dep.add_time(dt)
 
 class NotDependency(LogicalDependency):
     def __init__(self,depend):
@@ -296,21 +304,20 @@ class NotDependency(LogicalDependency):
     def __iter__(self):          yield self.depend
     def __hash__(self):          return hash(self.depend)
     def __contains__(self,dep):  return self.depend==dep
+    def add_time(self,dt):       self.depend.add_time(dt)
     def __eq__(self,other):
         return isinstance(other,NotDependency) and self.depend==other.depend
     def copy_dependencies(self):
         return NotDependency(self.depend.copy_dependencies())
 
 class CycleExistsDependency(LogicalDependency):
-    def __init__(self,dt):
-        self.dt=dt
-    def __repr__(self):
-        return f'cycle_exists({self.dt})'
+    def __init__(self,dt):        self.dt=dt
+    def __repr__(self):           return f'cycle_exists({self.dt})'
+    def __hash__(self):           return hash(self.dt)
+    def add_time(self,dt):        self.dt+=dt
+    def copy_dependencies(self):  return CycleExistsDependency(self.dt)
     def __eq__(self,other):
         return isinstance(other,CycleExistsDependency) and self.dt==other.dt
-    def __hash__(self): return hash(self.dt)
-    def copy_dependencies(self):
-        return CycleExistsDependency(self.dt)
 
 class StateDependency(LogicalDependency):
     def __init__(self,view,state):
@@ -324,6 +331,9 @@ class StateDependency(LogicalDependency):
     def is_task(self):           return self.view.is_task()
     def __hash__(self):          return hash(self.view.path)^hash(self.state)
     def copy_dependencies(self): return StateDependency(self.view,self.state)
+    def add_time(self,dt):
+        self.view=copy(self.view)
+        self.view.path[0]+=dt
     def __repr__(self):
         return f'/{"/".join([str(s) for s in self.view.path])}'\
                f'= {self.state}'
@@ -333,36 +343,30 @@ class StateDependency(LogicalDependency):
             and other.view.path==self.view.path
 
 class TrueDependency(LogicalDependency):
-    def __and__(self,other):
-        return other
-    def __or__(self,other):
-        return self
-    def __invert__(self):
-        return FALSE_DEPENDENCY
-    def __eq__(self,other):
-        return isinstance(other,TrueDependency)
-    def __hash__(self): return 1
-    def __copy__(self): return TRUE_DEPENDENCY
-    def __deepcopy__(self): return TRUE_DEPENDENCY
+    def __and__(self,other):     return other
+    def __or__(self,other):      return self
+    def __invert__(self):        return FALSE_DEPENDENCY
+    def __eq__(self,other):      return isinstance(other,TrueDependency)
+    def __hash__(self):          return 1
+    def __copy__(self):          return TRUE_DEPENDENCY
+    def __deepcopy__(self):      return TRUE_DEPENDENCY
     def copy_dependencies(self): return TRUE_DEPENDENCY
-    def __repr__(self): return 'TRUE_DEPENDENCY'
-    def __str__(self): return 'TRUE'
+    def __repr__(self):          return 'TRUE_DEPENDENCY'
+    def __str__(self):           return 'TRUE'
+    def add_time(self,dt):       pass
 
 class FalseDependency(LogicalDependency):
-    def __and__(self,other):
-        return self
-    def __or__(self,other):
-        return other
-    def __invert__(self):
-        return TRUE_DEPENDENCY
-    def __eq__(self,other):
-        return isinstance(other,FalseDependency)
-    def __hash__(self): return 0
-    def __copy__(self): return FALSE_DEPENDENCY
-    def __deepcopy__(self): return FALSE_DEPENDENCY
+    def __and__(self,other):     return self
+    def __or__(self,other):      return other
+    def __invert__(self):        return TRUE_DEPENDENCY
+    def __eq__(self,other):      return isinstance(other,FalseDependency)
+    def __hash__(self):          return 0
+    def __copy__(self):          return FALSE_DEPENDENCY
+    def __deepcopy__(self):      return FALSE_DEPENDENCY
     def copy_dependencies(self): return FALSE_DEPENDENCY
-    def __repr__(self): return 'FALSE_DEPENDENCY'
-    def __str__(self): return 'FALSE'
+    def __repr__(self):          return 'FALSE_DEPENDENCY'
+    def __str__(self):           return 'FALSE'
+    def add_time(self,dt):       pass
 
 TRUE_DEPENDENCY=TrueDependency()
 FALSE_DEPENDENCY=FalseDependency()
