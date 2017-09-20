@@ -3,7 +3,7 @@ import yaml
 from yaml.nodes import MappingNode, ScalarNode, SequenceNode
 
 from collections import OrderedDict
-
+from crow.tools import Clock
 from crow.config.eval_tools import *
 from crow.config.represent import *
 from crow.config.tasks import *
@@ -37,6 +37,7 @@ add_yaml_list_eval(u'!FirstMax',FirstMax)
 add_yaml_list_eval(u'!FirstMin',FirstMin)
 add_yaml_list_eval(u'!LastTrue',LastTrue)
 add_yaml_list_eval(u'!FirstTrue',FirstTrue)
+add_yaml_list_eval(u'!Immediate',Immediate)
 add_yaml_list_eval(None,GenericList)
 
 ########################################################################
@@ -116,3 +117,16 @@ def represent_omap(dumper, mapping, flow_style=None):
     return node
 
 yaml.add_representer(GenericOrderedDict,represent_omap)
+
+########################################################################
+
+def represent_Clock(dumper,data):
+    mapping={ 'start':data.start, 'step':data.step }
+    if data.end is not None:   mapping['end']=data.end
+    if data.now!=data.start:   mapping['now']=data.now
+    return dumper.represent_mapping('!Clock',mapping)
+yaml.add_representer(Clock,represent_Clock)
+
+def represent_ClockMaker(dumper,data):
+    return dumper.represent_mapping('!Clock',data._raw_child())
+yaml.add_representer(ClockMaker,represent_ClockMaker)

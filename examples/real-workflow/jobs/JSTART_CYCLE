@@ -6,4 +6,4 @@ export COMOUTtest="${COMOUT:-${COM_DIR}}"
 export LOG_DIR="${LOG_DIR}"
 
 mkdir -p "$DATAtest" "$COMOUTtest" "$LOG_DIR"
-cp -fp "$CONFIG_YAML_TEMPLATE" "$CONFIG_YAML"
+#cp -fp "$CONFIG_YAML_TEMPLATE" "$CONFIG_YAML"

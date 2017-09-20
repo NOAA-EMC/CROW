@@ -7,13 +7,13 @@ from crow.sysenv.jobs import JobResourceSpec
 from crow.sysenv.shell import ShellCommand
 from crow.sysenv.nodes import GenericNodeSpec
 
-#from crow.sysenv.parallelisms.base import Parallelism as BaseParallelism
+from crow.sysenv.parallelism.base import Parallelism as BaseParallelism
 
 from collections import Sequence
 
 __all__=['Parallelism']
 
-class Parallelism(object):  # (BaseParallelism):
+class Parallelism(BaseParallelism):  # (BaseParallelism):
     def __init__(self,settings):
         self.settings=dict(settings)
         self.nodes=GenericNodeSpec(settings)

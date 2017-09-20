@@ -7,23 +7,35 @@ from datetime import timedelta
 from copy import deepcopy
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc
-from crow.tools import to_timedelta
+from crow.tools import to_timedelta, Clock
 
 __all__=[ 'Action','Platform', 'Conditional', 'calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
-          'GenericDict', 'GenericOrderedDict', 'ShellCommand' ]
+          'GenericDict', 'GenericOrderedDict', 'ShellCommand',
+          'Immediate', 'ClockMaker' ]
 
 ########################################################################
 
 class Action(dict_eval):
     """!Represents an action that a workflow should take, such as running
     a batch job."""
-
 class GenericDict(dict_eval): pass
 class GenericOrderedDict(dict_eval): pass
 class GenericList(list_eval): pass
 class Platform(dict_eval): pass
 class ShellCommand(dict_eval): pass
+
+class ClockMaker(dict_eval):
+    def _result(self,globals,locals):
+        return Clock(start=self.start,step=self.step,
+                     end=self.get('end',None),
+                     now=self.get('now',None))
+
+class Immediate(list_eval): 
+    def _result(self,globals,locals):
+        return self[0]
+    def _is_immediate(self): pass
+
 class Conditional(list_eval):
     MISSING=object()
     def __init__(self,*args):

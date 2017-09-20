@@ -13,9 +13,12 @@ class Environment(dict):
 ENV=Environment(os.environ)
 
 def strftime(d,fmt): return d.strftime(fmt)
-def YMDH(d): return d.strftime('%Y%m%d%H')
-def YMD(d): return d.strftime('%Y%m%d')
-
+def strptime(d,fmt): return datetime.datetime.strptime(d,fmt)
+def to_YMDH(d): return d.strftime('%Y%m%d%H')
+def to_YMD(d): return d.strftime('%Y%m%d')
+def from_YMDH(d): return datetime.datetime.strptime(d,'%Y%m%d%H')
+def from_YMD(d): return datetime.datetime.strptime(d,'%Y%m%d')
+def join(L,J): return J.join(L)
 def seq(start,end,step):
     return [ r for r in range(start,end+1,step) ]
 
@@ -52,7 +55,7 @@ def seconds(dt):
 
 def crow_install_dir(rel=None):
     path=os.path.dirname(__file__)
-    path=os.path.join(path,'..')
+    path=os.path.join(path,'../..')
     if rel:
         path=os.path.join(path,rel)
     return os.path.abspath(path)
@@ -61,8 +64,9 @@ MISSING=object()
 def env(var,default=MISSING):
     if default is MISSING:
         return os.environ[var]
-    else:
-        return os.environ.get(var,default)
+    return os.environ.get(var,default)
+
+def have_env(var): return var in os.environ
 
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
@@ -79,11 +83,14 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'isdir':os.path.isdir,
     'isfile':os.path.isfile,
     'env':env,
+    'have_env':have_env,
     'islink':os.path.islink,
     'exists':os.path.exists,
     'strftime':strftime,
+    'strptime':strptime,
     'to_timedelta':crow.tools.to_timedelta,
     'as_seconds':seconds,
-    'YMDH':YMDH,
-    'YMD':YMD,
+    'to_YMDH':to_YMDH, 'from_YMDH':from_YMDH,
+    'to_YMD':to_YMD, 'from_YMD':from_YMD,
+    'join':join,
 })

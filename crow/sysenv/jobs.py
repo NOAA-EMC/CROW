@@ -15,7 +15,7 @@ MISSING=object() # special constant for missing arguments
 ########################################################################
 
 class JobRankSpec(Mapping):
-    def __init__(self,*,OMP_NUM_THREADS=0,mpi_ranks=0,
+    def __init__(self,OMP_NUM_THREADS=0,mpi_ranks=0,
                  exe=MISSING,args=MISSING,exclusive=True,
                  separate_node=False,hyperthreads=1,max_ppn=MISSING,
                  **kwargs):

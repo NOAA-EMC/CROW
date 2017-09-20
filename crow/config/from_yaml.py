@@ -21,7 +21,7 @@ from crow.config.represent import *
 from crow.config.tasks import *
 from crow.config.template import Template
 from crow.config.exceptions import *
-from crow.tools import to_timedelta, Clock
+from crow.tools import to_timedelta
 
 __all__=['ConvertFromYAML']
 
@@ -34,7 +34,9 @@ class FirstMaxYAML(list):         yaml_tag=u'!FirstMax'
 class FirstMinYAML(list):         yaml_tag=u'!FirstMin'
 class FirstTrueYAML(list):        yaml_tag=u'!FirstTrue'
 class LastTrueYAML(list):         yaml_tag=u'!LastTrue'
+class ImmediateYAML(list):        yaml_tag=u'!Immediate'
 
+class ClockYAML(dict):            yaml_tag=u'!Clock'
 class EvalYAML(dict): pass
 class ShellCommandYAML(dict): pass
 class TaskYAML(OrderedDict): pass
@@ -44,20 +46,20 @@ class CycleYAML(OrderedDict): pass
 # Mapping from YAML representation class to a pair:
 # * internal representation class
 # * python core class for intermediate conversion
-TYPE_MAP={ PlatformYAML:     [ Platform,     dict ], 
-           TemplateYAML:     [ Template,     dict ],
-           ActionYAML:       [ Action,       dict ],
-           ShellCommandYAML: [ ShellCommand, OrderedDict ],
-           TaskYAML:         [ Task,         OrderedDict ],
-           CycleYAML:        [ Cycle,        OrderedDict ],
-           FamilyYAML:       [ Family,       OrderedDict ]
+TYPE_MAP={ PlatformYAML:     [ Platform,     dict,       None ], 
+           TemplateYAML:     [ Template,     dict,       None ],
+           ActionYAML:       [ Action,       dict,       None  ],
+           ShellCommandYAML: [ ShellCommand, OrderedDict, None ],
+           TaskYAML:         [ Task,         OrderedDict, None ],
+           CycleYAML:        [ Cycle,        OrderedDict, None ],
+           FamilyYAML:       [ Family,       OrderedDict, None ]
          }
 
 def type_for(t):
     """!Returns an empty, internal representation, class for the given
     YAML type.  This is simply a wrapper around TYPE_MAP"""
-    (internal_class,python_class)=TYPE_MAP[type(t)]
-    return internal_class(python_class())
+    (internal_class,python_class,convert_class)=TYPE_MAP[type(t)]
+    return ( internal_class(python_class()), convert_class )
 
 ########################################################################
 
@@ -116,24 +118,6 @@ add_yaml_mapping(u'!ShellCommand',ShellCommandYAML)
 
 ########################################################################
 
-def construct_Clock(loader,node):
-    mapping=loader.construct_mapping(node)
-    clock=Clock(mapping['start'],to_timedelta(mapping['step']),
-                mapping.get('end',None))
-    if 'now' in mapping:
-        clock.now=mapping['now']
-    return clock
-yaml.add_constructor('!Clock',construct_Clock)
-
-def represent_Clock(dumper,data):
-    mapping={ 'start':data.start, 'step':data.step }
-    if data.end is not None:   mapping['end']=data.end
-    if data.now!=data.start:   mapping['now']=data.now
-    return dumper.represent_mapping('!Clock',mapping)
-yaml.add_representer(Clock,represent_Clock)
-
-########################################################################
-
 def add_yaml_sequence(key,cls): 
     """!Generates and registers representers and constructors for custom
     YAML sequence types    """
@@ -148,6 +132,7 @@ add_yaml_sequence(u'!FirstMax',FirstMaxYAML)
 add_yaml_sequence(u'!FirstMin',FirstMinYAML)
 add_yaml_sequence(u'!LastTrue',LastTrueYAML)
 add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
+add_yaml_sequence(u'!Immediate',ImmediateYAML)
 
 ## @var CONDITIONALS
 # Used to handle custom yaml conditional types.  Maps from conditional type
@@ -155,7 +140,7 @@ add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
 CONDITIONALS={ FirstMaxYAML:FirstMax,
                FirstMinYAML:FirstMin,
                FirstTrueYAML:LastTrue,
-               LastTrueYAML:LastTrue }
+               LastTrueYAML:LastTrue}
 
 ########################################################################
 
@@ -170,6 +155,7 @@ def add_yaml_ordered_dict(key,cls):
     yaml.add_constructor(key,constructor)
 
 add_yaml_ordered_dict(u'!Eval',EvalYAML)
+add_yaml_ordered_dict(u'!Clock',ClockYAML)
 add_yaml_ordered_dict(u'!Cycle',CycleYAML)
 add_yaml_ordered_dict(u'!Task',TaskYAML)
 add_yaml_ordered_dict(u'!Family',FamilyYAML)
@@ -177,7 +163,8 @@ add_yaml_ordered_dict(u'!Family',FamilyYAML)
 SUITE={ EvalYAML: Eval,
         CycleYAML: Cycle,
         TaskYAML: Task,
-        FamilyYAML: Family }
+        FamilyYAML: Family,
+        ClockYAML:ClockMaker }
 
 ########################################################################
 
@@ -224,7 +211,10 @@ class ConvertFromYAML(object):
             return self.from_dict(v,SUITE[cls])
         elif cls is EvalYAML:
             return Eval(self.from_dict(v))
-
+        elif cls is ClockYAML:
+            return ClockMaker(self.from_dict(v))
+        elif cls is ImmediateYAML:
+            return self.from_list(v,locals,Immediate)
         elif isinstance(v,list) and v and isinstance(v[0],tuple) \
              or isinstance(v,OrderedDict):
             return self.from_ordered_dict(v,GenericOrderedDict)
@@ -242,10 +232,13 @@ class ConvertFromYAML(object):
         """!Converts a YAMLObject instance yobj of a YAML, and its elements,
         to internal implementation types.  Elements with unsupported
         names are ignored.        """
-        ret=type_for(yobj)
+        ret, cnv = type_for(yobj)
         for k in dir(yobj):
             if not valid_name(k): continue
             ret[k]=self.to_eval(getattr(yobj,k),ret)
+        if cnv:
+            kwargs=dict(ret)
+            return cnv(**kwargs)
         self.validatable[id(ret)]=ret
         return ret
 

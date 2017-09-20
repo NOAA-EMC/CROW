@@ -40,7 +40,7 @@ __all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval',
 class expand(str):
     """!Represents a literal format string."""
     def _result(self,globals,locals):
-        return eval('f'+repr(self),globals,locals)
+        return eval("f'''"+self+"'''",globals,locals)
 
 class strcalc(str):
     """Represents a string that should be run through eval()"""
@@ -58,7 +58,7 @@ def from_config(key,val,globals,locals):
             return from_config(key,val._result(globals,locals),
                                globals,locals)
         return val
-    except(TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
+    except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
         raise CalcKeyError('%s: !%s %s -- %s %s'%(
             str(key),type(val).__name__,repr(val),type(ke).__name__,str(ke)))
     except RecursionError as re:
@@ -106,7 +106,7 @@ class multidict(MutableMapping):
             return True
         except KeyError: return False
     def _expand_text(self,text):
-        eval('f'+repr(text),self._globals(),self)
+        eval("f'''"+text+"'''",self._globals(),self)
     def __repr__(self):
         return '%s(%s)'%(
             type(self).__name__,
@@ -185,8 +185,11 @@ class dict_eval(MutableMapping):
     def __getitem__(self,key):
         val=self.__cache[key]
         if hasattr(val,'_result'):
+            immediate=hasattr(val,'_is_immediate')
             val=from_config(key,val,self.__globals,self)
             self.__cache[key]=val
+            if immediate:
+                self.__child[key]=val
         return val
     def __getattr__(self,name):
         if name in self: return self[name]
@@ -282,8 +285,11 @@ class list_eval(MutableSequence):
     def __getitem__(self,index):
         val=self.__cache[index]
         if hasattr(val,'_result'):
+            immediate=hasattr(val,'_is_immediate')
             val=from_config(index,val,self.__globals,self.__locals)
             self.__cache[index]=val
+            if immediate:
+                self.__child[index]=val
         assert(val is not self)
         return val
     def _to_py(self,recurse=True):
@@ -319,3 +325,38 @@ class Eval(dict_eval):
 def invalidate_cache(obj,key=None):
     if hasattr(obj,'_invalidate_cache'):
         obj._invalidate_cache(key)
+
+
+def evaluate_one(obj,key,val,memo):
+    if hasattr(val,'_is_immediate'):
+        if memo is not None:
+            evaluate_immediates_impl(obj[key],memo)
+        else:
+            _ = obj[key]
+    elif not hasattr(val,'_result') and memo is not None:
+        evaluate_immediates_impl(obj[key],memo)
+
+def evaluate_immediates_impl(obj,memo=None):
+    if memo is not None:
+        if id(obj) in memo: return
+        memo.add(id(obj))
+
+    if hasattr(obj,'_raw_child'):
+        child=obj._raw_child()
+    else:
+        child=obj
+
+    if hasattr(child,'items'):       # Assume mapping.
+        if 'Evaluate' in child and not child['Evaluate']:
+            return # Scope requested no evaluation.
+        for k,v in child.items():
+            evaluate_one(obj,k,v,memo)
+    elif hasattr(child,'index'):     # Assume sequence.
+        for i in range(len(child)):
+            evaluate_one(obj,i,child[i],memo)
+
+def evaluate_immediates(obj,recurse=False):
+    if hasattr(obj,'_result'):
+        return
+    memo=set() if recurse else None
+    evaluate_immediates_impl(obj,memo)

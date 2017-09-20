@@ -17,6 +17,8 @@ logger=logging.getLogger('CROW')
 logging.basicConfig(level=logging.INFO,stream=sys.stderr)
 
 UNSET_VARIABLE=object()
+SUCCESS=object()
+FAILURE=object()
 
 class EpicFail(Exception): pass
 
@@ -36,6 +38,7 @@ class ProcessArgs(object):
         self.export_vars=False
         self.have_expanded=False
         self.have_handled_vars=False
+        self.runner=None
 
     def set_bool_format(self,value):
         yes_no = value.split(',')
@@ -45,11 +48,20 @@ class ProcessArgs(object):
         self.true_string=yes_no[0]
         self.false_string=yes_no[1]
 
+    def set_runner(self,expr='doc.platform.parallelism'):
+        settings=self.eval_expr(expr)
+        self.runner=crow.sysenv.get_parallelism(settings.name,settings)
+
     def run_expr(self,expr,check=False):
         cmd=self.eval_expr(expr)
-        sh=crow.sysenv.ShellCommand.from_object(cmd)
-        print(sh)
-        sh.run(check=check)
+        if hasattr(cmd,'index') and hasattr(cmd[0],'keys'):
+            # List of dicts, so it is an MPI command
+            if self.runner is None: self.set_runner()
+            self.runner.run(cmd,check=check)
+        else:
+            sh=crow.sysenv.ShellCommand.from_object(cmd)
+            print(sh)
+            sh.run(check=check)
 
     def eval_expr(self,expr):
         globals={}
@@ -115,26 +127,32 @@ class ProcessArgs(object):
         self.scope = config
         self.done_with_files=True
 
+    def to_shell(self,var,value):
+        export='export ' if self.export_vars else ''
+        try:
+            if var is None:
+                return SUCCESS
+            value=str(str_to_posix_sh(value),'ascii')
+            if value is UNSET_VARIABLE:
+                return f'unset {var}'
+            else:
+                return f'{export}{var}={value}'
+        except ( NameError, AttributeError, LookupError, NameError,
+                 ReferenceError, ValueError, TypeError, CROWException,
+                 subprocess.CalledProcessError ) as ERR:
+            logger.error(f'{arg}: {ERR!s}',exc_info=not self.quiet)
+            return FAILURE
+
     def process_args(self):
         results=list()
-        export='export ' if self.export_vars else ''
         fail=False
         for arg in self.args:
-            try:
-                var, value = self.process_arg(arg)
-                if var is None:
-                    continue # no variable to set
-                value=str(str_to_posix_sh(value),'ascii')
-                if value is UNSET_VARIABLE:
-                    results.append(f'unset {var}')
-                else:
-                    results.append(f'{export}{var}={value}')
-            except ( NameError, AttributeError, LookupError, NameError,
-                     ReferenceError, ValueError, TypeError, CROWException,
-                     subprocess.CalledProcessError ) \
-                        as ERR:
-                fail=True
-                logger.error(f'{arg}: {ERR!s}',exc_info=not self.quiet)
+            for var, value in self.process_arg(arg):
+                result=self.to_shell(var,value)
+                if result is FAILURE:
+                    fail=True
+                elif result is not SUCCESS:
+                    results.append(result)
         if fail:
             raise EpicFail()
         return results
@@ -155,39 +173,35 @@ class ProcessArgs(object):
             elif command=='float':      self.set_float_format(value)
             elif command=='scope':      self.set_scope(value)
             elif command=='null':       self.set_null_string(value)
+            elif command=='runner':     self.set_runner(value)
             elif command=='run_ignore': self.run_expr(value,False)
             elif command=='run':        self.run_expr(value,True)
             elif command=='apply':      self.exec_str(value)
-            elif command=='expand':
+            elif command=='import':
+                for k,v in self.import_all(value):
+                    yield k,v
+                return
+            elif command=='expand' or command=='preprocess':
                 if self.have_handled_vars:
                     raise Exception(f'{arg}: cannot expand files and set '
                                     'variables in the same call.')
-                self.expand_file(value)
                 self.have_expanded=True
-                return None,None
+                if command=='expand':
+                    print(self.eval_expr(value))
+                else:
+                    self.expand_file(value)
+                return
             else:
                 raise ValueError(f'{command}: not a valid command '
                                  '(bool, int, float, scope, null)')
-            return None,None
+            yield None,None
+            return
 
         m=re.match('([A-Za-z_][a-zA-Z0-9_]*)=(.*)',arg)
         if m:
-            if self.have_expanded:
-                raise Exception(f'{arg}: cannot expand files and set variables'
-                                'in the same call.')
-            self.have_handled_vars=True
-            if not self.done_with_files: self.read_files()
             var,expr = m.groups()
-            result=self.eval_expr(expr)
-            formatted=self.format_object(result)
-            if formatted is NotImplemented:
-                raise TypeError(
-                    f'cannot convert a {type(result).__name__} '
-                    'to a shell expression.')
-            if formatted is UNSET_VARIABLE:
-                return 'unset '+var
-            return var, formatted
-
+            yield self.express_var(var,expr)
+            return
         if self.done_with_files:
             raise ValueError('Do not understand arg: '+repr(arg))
 
@@ -197,7 +211,29 @@ class ProcessArgs(object):
             raise ValueError(f'{arg}: no such file')
         else:
             raise ValueError(f'{arg}: not a regular file')
-        return None,None
+        yield None,None
+
+    def import_all(self,regex):
+        for key in self.scope.keys():
+            if re.match(regex,key):
+                yield self.express_var(key,key)
+
+    def express_var(self,var,expr):
+        if self.have_expanded:
+            raise Exception(f'{arg}: cannot expand files and set variables'
+                            'in the same call.')
+        self.have_handled_vars=True
+        if not self.done_with_files: self.read_files()
+        result=self.eval_expr(expr)
+        formatted=self.format_object(result)
+        if formatted is NotImplemented:
+            raise TypeError(
+                f'cannot convert a {type(result).__name__} '
+                'to a shell expression.')
+        if formatted is UNSET_VARIABLE:
+            return 'unset '+var
+        return var, formatted
+
 
 ########################################################################
 

@@ -9,13 +9,16 @@ following basic Python concepts:
 - inheritance
 """
 
+from functools import reduce
+import operator
 from datetime import timedelta
+from abc import abstractmethod
 from collections import namedtuple, OrderedDict, Sequence
 from collections.abc import Mapping
 from copy import copy, deepcopy
 from crow.config.exceptions import *
 from crow.config.eval_tools import dict_eval, strcalc, multidict
-from crow.tools import to_timedelta
+from crow.tools import to_timedelta, typecheck
 
 __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'AndDependency', 'OrDependency', 'NotDependency',
@@ -57,6 +60,7 @@ class SuiteView(Mapping):
         self.viewed=copy(viewed)
         self.viewed.task_path_list=path[1:]
         self.viewed.task_path_str='/'+'/'.join(path[1:])
+        self.viewed.task_path_var='.'.join(path[1:])
         self.viewed.up=parent
         self.path=SuitePath(path)
         self.parent=parent
@@ -151,11 +155,11 @@ class SuiteView(Mapping):
     def __and__(self,other):
         dep=as_dependency(other)
         if dep is NotImplemented: return dep
-        return AndDependency(as_dependency(self.viewed),dep)
+        return AndDependency(as_dependency(self),dep)
     def __or__(self,other):
         dep=as_dependency(other)
         if dep is NotImplemented: return dep
-        return OrDependency(as_dependency(self.viewed),dep)
+        return OrDependency(as_dependency(self),dep)
     def __invert__(self):
         return NotDependency(StateDependency(self,COMPLETED))
     def is_running(self):
@@ -191,9 +195,12 @@ class Suite(SuiteView):
 
 class Depend(str):
     def _as_dependency(self,globals,locals,path):
-        result=eval(self,globals,locals)
-        result=as_dependency(result,path)
-        return result
+        try:
+            result=eval(self,globals,locals)
+            result=as_dependency(result,path)
+            return result
+        except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
+            raise DependError(f'!Depend {self}: {ke}')
 
 def as_dependency(obj,path=MISSING,state=COMPLETED):
     """!Converts the containing object to a State.  Action objects are
@@ -206,6 +213,8 @@ def as_dependency(obj,path=MISSING,state=COMPLETED):
     return NotImplemented
 
 class LogicalDependency(object):
+    def __invert__(self):          return NotDependency(self)
+    def __contains__(self,dep):    return False
     def __and__(self,other):
         if other is FALSE_DEPENDENCY: return other
         if other is TRUE_DEPENDENCY: return self
@@ -218,13 +227,23 @@ class LogicalDependency(object):
         dep=as_dependency(other)
         if dep is NotImplemented: raise TypeError(other)
         return OrDependency(self,dep)
-    def __invert__(self):
-        return NotDependency(self)
+    @abstractmethod
+    def copy_dependencies(self): pass
+    @abstractmethod
+    def add_time(self,dt): pass
 
 class AndDependency(LogicalDependency):
     def __init__(self,*args):
+        if not args: raise ValueError('Tried to create an empty AndDependency')
         self.depends=list(args)
-        assert(self.depends)
+        for dep in self.depends:
+            typecheck('Dependencies',dep,LogicalDependency)
+    def __len__(self):     return len(self.depends)
+    def __str__(self):     return '( '+' & '.join([str(r) for r in self])+' )'
+    def __repr__(self):    return f'AndDependency({repr(self.depends)})'
+    def __hash__(self):    return reduce(operator.xor,[hash(d) for d in self])
+    def __contains__(self,dep):
+        return dep in self.depends
     def __and__(self,other):
         if other is TRUE_DEPENDENCY: return self
         if other is FALSE_DEPENDENCY: return other
@@ -236,13 +255,26 @@ class AndDependency(LogicalDependency):
     def __iter__(self):
         for dep in self.depends:
             yield dep
-    def __repr__(self):
-        return f'and({repr(self.depends)})'
+    def __eq__(self,other):
+        return isinstance(other,AndDependency) and self.depends==other.depends
+    def copy_dependencies(self):
+        return AndDependency(*[ dep.copy_dependencies() for dep in self ])
+    def add_time(self,dt):
+        for dep in self:
+            dep.add_time(dt)
 
 class OrDependency(LogicalDependency):
     def __init__(self,*args):
+        if not args: raise ValueError('Tried to create an empty OrDependency')
         self.depends=list(args)
-        assert(self.depends)
+        for dep in self.depends:
+            typecheck('A dependency',dep,LogicalDependency)
+    def __str__(self):     return '( '+' | '.join([str(r) for r in self])+' )'
+    def __repr__(self):    return f'OrDependency({repr(self.depends)})'
+    def __len__(self):     return len(self.depends)
+    def __hash__(self):    return reduce(operator.xor,[hash(d) for d in self])
+    def __contains__(self,dep):
+        return dep in self.depends
     def __or__(self,other):
         if other is FALSE_DEPENDENCY: return self
         if other is TRUE_DEPENDENCY: return other
@@ -254,51 +286,87 @@ class OrDependency(LogicalDependency):
     def __iter__(self):
         for dep in self.depends:
             yield dep
-    def __repr__(self):
-        return f'or({repr(self.depends)})'
+    def __eq__(self,other):
+        return isinstance(other,OrDependency) and self.depends==other.depends
+    def copy_dependencies(self):
+        return OrDependency(*[ dep.copy_dependencies() for dep in self ])
+    def add_time(self,dt):
+        for dep in self:
+            dep.add_time(dt)
 
 class NotDependency(LogicalDependency):
     def __init__(self,depend):
+        typecheck('A dependency',depend,LogicalDependency)
         self.depend=depend
-    def __invert__(self):
-        return self.depend
-    def __repr__(self):
-        return f'not({repr(self.depend)})'
-    def __iter__(self): yield self.depend
+    def __invert__(self):        return self.depend
+    def __str__(self):           return f'~ {self.depend}'
+    def __repr__(self):          return f'NotDependency({repr(self.depend)})'
+    def __iter__(self):          yield self.depend
+    def __hash__(self):          return hash(self.depend)
+    def __contains__(self,dep):  return self.depend==dep
+    def add_time(self,dt):       self.depend.add_time(dt)
+    def __eq__(self,other):
+        return isinstance(other,NotDependency) and self.depend==other.depend
+    def copy_dependencies(self):
+        return NotDependency(self.depend.copy_dependencies())
 
 class CycleExistsDependency(LogicalDependency):
-    def __init__(self,dt):
-        self.dt=dt
-    def __repr__(self):
-        return f'cycle_exists({repr(self.dt)})'
+    def __init__(self,dt):        self.dt=dt
+    def __repr__(self):           return f'cycle_exists({self.dt})'
+    def __hash__(self):           return hash(self.dt)
+    def add_time(self,dt):        self.dt+=dt
+    def copy_dependencies(self):  return CycleExistsDependency(self.dt)
+    def __eq__(self,other):
+        return isinstance(other,CycleExistsDependency) and self.dt==other.dt
 
 class StateDependency(LogicalDependency):
     def __init__(self,view,state):
+        if state not in [ COMPLETED, RUNNING, FAILED ]:
+            raise TypeError('Invalid state.  Must be one of the constants '
+                            'COMPLETED, RUNNING, or FAILED')
         self.view=view
         self.state=state
-    def __repr__(self):
-        return f'state({self.state},{repr(self.view.path)})'
     @property
-    def path(self):
-        return self.view.path
-    def is_task(self):
-        return self.view.is_task()
+    def path(self):              return self.view.path
+    def is_task(self):           return self.view.is_task()
+    def __hash__(self):          return hash(self.view.path)^hash(self.state)
+    def copy_dependencies(self): return StateDependency(self.view,self.state)
+    def add_time(self,dt):
+        self.view=copy(self.view)
+        self.view.path[0]+=dt
+    def __repr__(self):
+        return f'/{"/".join([str(s) for s in self.view.path])}'\
+               f'= {self.state}'
+    def __eq__(self,other):
+        return isinstance(other,StateDependency) \
+            and other.state==self.state \
+            and other.view.path==self.view.path
 
 class TrueDependency(LogicalDependency):
-    def __and__(self,other):
-        return other
-    def __or__(self,other):
-        return self
-    def __invert__(self):
-        return FALSE_DEPENDENCY
+    def __and__(self,other):     return other
+    def __or__(self,other):      return self
+    def __invert__(self):        return FALSE_DEPENDENCY
+    def __eq__(self,other):      return isinstance(other,TrueDependency)
+    def __hash__(self):          return 1
+    def __copy__(self):          return TRUE_DEPENDENCY
+    def __deepcopy__(self):      return TRUE_DEPENDENCY
+    def copy_dependencies(self): return TRUE_DEPENDENCY
+    def __repr__(self):          return 'TRUE_DEPENDENCY'
+    def __str__(self):           return 'TRUE'
+    def add_time(self,dt):       pass
 
 class FalseDependency(LogicalDependency):
-    def __and__(self,other):
-        return self
-    def __or__(self,other):
-        return other
-    def __invert__(self):
-        return TRUE_DEPENDENCY
+    def __and__(self,other):     return self
+    def __or__(self,other):      return other
+    def __invert__(self):        return TRUE_DEPENDENCY
+    def __eq__(self,other):      return isinstance(other,FalseDependency)
+    def __hash__(self):          return 0
+    def __copy__(self):          return FALSE_DEPENDENCY
+    def __deepcopy__(self):      return FALSE_DEPENDENCY
+    def copy_dependencies(self): return FALSE_DEPENDENCY
+    def __repr__(self):          return 'FALSE_DEPENDENCY'
+    def __str__(self):           return 'FALSE'
+    def add_time(self,dt):       pass
 
 TRUE_DEPENDENCY=TrueDependency()
 FALSE_DEPENDENCY=FalseDependency()

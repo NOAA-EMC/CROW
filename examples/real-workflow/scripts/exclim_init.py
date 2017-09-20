@@ -1,18 +1,24 @@
 #! /usr/bin/env python3.6
 
-import os
-import crow.config
-import crow.trace
-
 def main():
+
+    import os, datetime, shutil
+    import crow.config
+    import crow.sysenv
+
     conf=crow.config.from_file(os.environ['CONFIG_YAML'])
+    conf.clock.now=datetime.datetime.strptime(os.environ['YMDH'],'%Y%m%d%H')
+    runner=crow.sysenv.get_parallelism(
+        conf.platform.parallelism.name,conf.platform.parallelism)
     namelist=conf.clim_init.namelist
     with open('climatology_init.nl','wt') as fd:
         fd.write(namelist)
-    conf.clim_init.command.run()
+    cmd=runner.run(conf.clim_init.resources,check=True)
+    shutil.copy2(conf.clim_init.outfile,conf.runtime.com)
 
 if __name__=='__main__':
-    import trace
+    import trace, sys
     tracer=trace.Trace(ignoredirs=[sys.prefix,sys.exec_prefix],
-                       ignoremods=crow.trace.trace_ignore,timing=1)
-    tracer.trace('main()')
+                       ignoremods=['yaml','eval_tools','from_yaml','to_yaml'],
+                       timing=1)
+    tracer.run('main()')

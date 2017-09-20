@@ -1,3 +1,4 @@
+SHELL=/bin/sh
 EXES=$(DIR)/forecast $(DIR)/climatology_init $(DIR)/assimilate \
      $(DIR)/post
 
@@ -8,6 +9,7 @@ default:
 	@echo make theia-impi
 
 theia-impi:
+	source /apps/lmod/lmod/init/sh ; \
 	module purge ; \
 	module load intel impi ; \
 	module list ; \
@@ -34,6 +36,8 @@ exes: $(EXES)
 ########################################################################
 
 build_serial: 
+	mkdir -p serial && \
+	mkdir -p ../exec/serial && \
 	cd serial && \
 	make -f ../Makefile \
 	   SM_CC="$(SM_CC)" DM_CC="$(SM_CC)" DM_FC="$(SM_FC)" \
@@ -43,6 +47,8 @@ build_serial:
 	  DIR=../../exec/serial exes
 
 build_openmp: 
+	mkdir -p openmp \
+	mkdir -p ../exec/openmp && \
 	cd openmp && \
 	make -f ../Makefile \
 	   SM_CC="$(SM_CC)" DM_CC="$(SM_CC)" DM_FC="$(SM_FC)" \
@@ -52,6 +58,8 @@ build_openmp:
 	  DIR=../../exec/openmp exes
 
 build_mpi: 
+	mkdir -p mpi && \
+	mkdir -p ../exec/mpi && \
 	cd mpi && \
 	make -f ../Makefile \
 	   SM_CC="$(SM_CC)" DM_CC="$(DM_CC)" DM_FC="$(DM_FC)" \
@@ -61,6 +69,8 @@ build_mpi:
 	  DIR=../../exec/mpi exes
 
 build_mpi_openmp: 
+	mkdir -p mpi-openmp \
+	mkdir -p ../exec/mpi-openmp && \
 	cd mpi-openmp && \
 	make -f ../Makefile \
 	  SM_CC="$(SM_CC)" DM_CC="$(DM_CC)" DM_FC="$(DM_FC)" \

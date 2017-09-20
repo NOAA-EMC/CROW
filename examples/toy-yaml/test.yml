@@ -59,7 +59,7 @@ test_base: &test_base
 
   # They can also refer to the results of other !calc expressions.  
   # Infinite recursion is automatically detected by Python.
-  fYMDH: !calc tools.YMDH(fcsttime)
+  fYMDH: !calc tools.to_YMDH(fcsttime)
 
   expandme: !Eval
     result: !calc "', '.join(lst)"
