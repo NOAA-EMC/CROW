@@ -9,6 +9,7 @@ places:
   HOMEtest: !calc tools.crow_install_dir('examples/real-workflow')
 
 options: &options
+  Template: *options_template
   # Grid size:
   nx: 400
   ny: 400
