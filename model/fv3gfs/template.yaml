@@ -1,0 +1,3 @@
+options_template: &options_template !Template
+  do_vort_damp:
+    type: bool

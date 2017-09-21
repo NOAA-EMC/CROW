@@ -1,0 +1,44 @@
+places:
+  HOMEDIR: "/scratch4/NCEPDEV/ocean/save/{tools.env('USER')}"
+  STMP: "{doc.platform.least_used_scrub}{tools.env('USER')}"
+  PTMP: "{doc.platform.least_used_scrub}{tools.env('USER')}"
+  NOSCRUB: "/scratch4/NCEPDEV/ocean/noscrub/{tools.env('USER')}"
+
+  # Locations of CROW and this test suite.
+  HOMEcrow: !calc tools.crow_install_dir()
+  HOMEtest: !calc tools.crow_install_dir('examples/real-workflow')
+
+options: &options
+  Template: *options_template
+  # Grid size:
+  nx: 400
+  ny: 400
+
+  # User-defined experiment name; should be a-z followed by alphanumeric:
+  experiment_name: expt
+
+  # Project for CPU accounting.
+  cpu_project: !calc doc.platform.default_cpu_project
+
+  # Project for storing HPSS data.
+  hpss_project: emc-ocean
+
+  # Random number seed:
+  seed: 381
+
+  # Hours between cycles:
+  cycle_len: !timedelta 6:00
+
+  # Number of hours to forecast:
+  fcst_len: !timedelta 24:00
+
+  # Time between writes of output files
+  dt_write_fcst: !timedelta 3:00
+
+  # Number of random number generator iterations for forecast &
+  # ensemble forecast, respectively:
+  dt_rand_fcst: 500
+  dt_rand_ens_fcst: 100
+
+  # Not configurable yet; do not change.  Number of ensemble members.
+  ens_members: 100
