@@ -19,7 +19,7 @@ options: &options
   ROTDIR: {PTMP}/{experiment_name}
   RUNDIR: {STMP}/RUNDIRS/{experiment_name}
   ARCDIR: {NOSCRUB}/archive/{experiment_name}
-  ATARDIR: /NCEPDEV/$HPSS_PROJECT/1year/{tools.env('USER')}/$machine/scratch/{experiment_name}
+  ATARDIR: /NCEPDEV/{hpss_project}/1year/{tools.env('USER')}/$machine/scratch/{experiment_name}
 
   # Experiment specific parameters
   REALTIME: NO
