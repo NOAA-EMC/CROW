@@ -1,8 +1,8 @@
 places:
-  HOMEDIR: "/scratch4/NCEPDEV/global/save/{tools.env('USER')}"
-  STMP: "{doc.platform.least_used_scrub}{tools.env('USER')}"
-  PTMP: "{doc.platform.least_used_scrub}{tools.env('USER')}"
-  NOSCRUB: "/scratch4/NCEPDEV/global/noscrub/{tools.env('USER')}"
+  HOMEDIR: !expand "/scratch4/NCEPDEV/global/save/{tools.env('USER')}"
+  STMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
+  PTMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
+  NOSCRUB: !expand "/scratch4/NCEPDEV/global/noscrub/{tools.env('USER')}"
 
   # Locations of CROW and this test suite.
   HOMEcrow: !calc tools.crow_install_dir()
@@ -15,11 +15,11 @@ options: &options
   experiment_name: expt #Formally known as PSLOT
 
   # User paths
-  EXPDIR: "{HOMEDIR}/{experiment_name}"
-  ROTDIR: "{PTMP}/{experiment_name}"
-  RUNDIR: "{STMP}/RUNDIRS/{experiment_name}"
-  ARCDIR: "{NOSCRUB}/archive/{experiment_name}"
-  ATARDIR: !export "/NCEPDEV/{hpss_project}/1year/{tools.env('USER')}/{machine}/scratch/{experiment_name}"
+  EXPDIR: !expand "{HOMEDIR}/{experiment_name}"
+  ROTDIR: !expand "{PTMP}/{experiment_name}"
+  RUNDIR: !expand "{STMP}/RUNDIRS/{experiment_name}"
+  ARCDIR: !expand "{NOSCRUB}/archive/{experiment_name}"
+  ATARDIR: !expand "/NCEPDEV/{hpss_project}/1year/{tools.env('USER')}/{machine}/scratch/{experiment_name}"
 
   # Experiment specific parameters
   REALTIME: NO
@@ -27,13 +27,13 @@ options: &options
   EDATE: 2016100112
 
   # Component paths
-  MYBASE_SVN: "{NOSCRUB}/{tools.env('USER')}/svn"
-  BASE_GSI: "{BASE_GSM}/sorc/gsi.fd"
-  BASE_NEMSfv3gfs: "{BASE_GSM}/sorc/fv3gfs.fd"
-  BASE_POST: "{BASE_SVN}/fv3gfs/tags/post4fv3"
-  BASE_PREP: "{BASE_SVN}/obsproc/releases/obsproc_prep_RB-4.0.0"
-  BASE_PREP_GLOBAL: "{BASE_SVN}/obsproc/releases/obsproc_global_RB-3.0.0"
-  BASE_VERIF: "{BASE_SVN}/verif/global/tags/vsdb"
+  MYBASE_SVN: !expand "{NOSCRUB}/{tools.env('USER')}/svn"
+  BASE_GSI: !expand "{BASE_GSM}/sorc/gsi.fd"
+  BASE_NEMSfv3gfs: !expand "{BASE_GSM}/sorc/fv3gfs.fd"
+  BASE_POST: !expand "{BASE_SVN}/fv3gfs/tags/post4fv3"
+  BASE_PREP: !expand "{BASE_SVN}/obsproc/releases/obsproc_prep_RB-4.0.0"
+  BASE_PREP_GLOBAL: !expand "{BASE_SVN}/obsproc/releases/obsproc_global_RB-3.0.0"
+  BASE_VERIF: !expand "{BASE_SVN}/verif/global/tags/vsdb"
 
   # Project for CPU accounting.
   cpu_project: !calc doc.platform.default_cpu_project #Formally known as ACCOUNT
