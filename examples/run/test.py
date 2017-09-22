@@ -37,6 +37,32 @@ assert(str(cmd)=="ShellCommand(command=['mpiexec', '-gdb', '-envall', '-np', '12
 assert(str(res)=='<nodes>2:ppn=6+2:ppn=24+2:ppn=23+7:ppn=22</nodes>\n')
 
 ########################################################################
+# Test 1.5: OMP_NUM_THREADS=MAX
+ranks=[
+    { 'mpi_ranks':12, 'OMP_NUM_THREADS':'max', 'exe':'exe1', 'max_ppn':4 }
+    ]
+jr=crow.sysenv.JobResourceSpec(ranks)
+cmd=par.make_ShellCommand(jr)
+res=sch.rocoto_resources(jr)
+print(str(ranks))
+print('becomes')
+print(str(cmd))
+print(str(res))
+
+########################################################################
+# Test 1.7: OMP_NUM_THREADS=MAX not MPI
+ranks=[
+    { 'OMP_NUM_THREADS':'max', 'exe':'exe1' }
+    ]
+jr=crow.sysenv.JobResourceSpec(ranks)
+cmd=par.make_ShellCommand(jr)
+res=sch.rocoto_resources(jr)
+print(str(ranks))
+print('becomes')
+print(str(cmd))
+print(str(res))
+
+########################################################################
 # Test 2: hard-coded max_ppn:
 
 ranks=[ { 'mpi_ranks':12, 'max_ppn':2, 'exe':'doit' },

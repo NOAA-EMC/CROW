@@ -19,6 +19,11 @@ class NodeSpec(object):
         """!Given a JobRankSpec, return the maximum number of these ranks that
         can fit on one compute node.        """
     @abstractmethod
+    def omp_threads_for(rank_spec):
+        """!Given a JobRankSpec, return the number of OpenMP threads it should
+        use.  This will perform the OMP_NUM_THREADS=max calculation if the
+        number of OpenMP threads is unspecified."""
+    @abstractmethod
     def can_merge_ranks(rank_spec_1,rank_spec_2):
         """!Given two JobRankSpec objects, determine whether they can be 
         merged into one."""
@@ -93,6 +98,30 @@ class GenericNodeSpec(NodeSpec):
         self.indent_text=str(settings.get('indent_text','  '))
 
     # Implement NodeSpec abstract methods:
+
+    def omp_threads_for(self,rank_spec):
+        omp_threads=max(1,rank_spec.get('OMP_NUM_THREADS',1))
+        if omp_threads != MAXIMUM_THREADS:
+            return omp_threads
+
+        can_hyper=self.hyperthreading_allowed
+        max_ranks_per_node=self.cores_per_node
+        if can_hyper and rank_spec.get('hyperthreading',False):
+            max_ranks_per_node*=self.cpus_per_core
+        if rank_spec.is_mpi():
+            ppn=max_ranks_per_node
+        else:
+            ppn=1
+
+        print(f'ppn={ppn} mrpn={max_ranks_per_node}')
+
+        max_ppn=rank_spec.get('max_ppn',0)
+        if max_ppn:
+            ppn=min(max_ppn,ppn)
+
+        print(f'ppn={ppn} mrpn={max_ranks_per_node}')
+
+        return max_ranks_per_node//ppn
 
     def max_ranks_per_node(self,rank_spec):
         can_hyper=self.hyperthreading_allowed

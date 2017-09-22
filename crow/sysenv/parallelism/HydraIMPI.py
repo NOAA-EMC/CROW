@@ -26,7 +26,7 @@ class Parallelism(BaseParallelism):  # (BaseParallelism):
             return ShellCommand(spec['exe'])
         elif spec.is_pure_openmp():
             return ShellCommand(spec[0]['exe'],env={
-                'OMP_NUM_THREADS':int(spec[0]['OMP_NUM_THREADS']) })
+                'OMP_NUM_THREADS':self.nodes.omp_threads_for(spec[0])})
 
         # Merge any adjacent ranks that can be merged.  Ignore
         # differing executables between ranks while merging them
@@ -53,7 +53,7 @@ class Parallelism(BaseParallelism):  # (BaseParallelism):
             cmd.extend(['-np','%d'%max(1,int(rank.get('mpi_ranks',1)))])
             if rank.is_openmp():
                 cmd.extend([ '/usr/bin/env', 'OMP_NUM_THREADS='+
-                             '%d'%int(rank['OMP_NUM_THREADS']) ])
+                             '%d'%self.nodes.omp_threads_for(rank) ])
             if isinstance(exe,str):
                 cmd.append(exe)
             else:
