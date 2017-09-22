@@ -24,17 +24,22 @@ ecen: &ecen_action
   CHGRESEXEC: !expand "{BASE_GSM}/exec/global_chgres_GSM"
   CHGRESVARS_ENKF: "use_ufo=.true.,nopdpvv=.true."
   CHGRESTHREAD: 12
+  J_JOB: ecen
+  accounting: !calc doc.platform.parallel_accounting
 
 epos: &epos_action
   <<: *action_template
+  J_JOB: epos
   walltime: !timedelta 00:15:00
   resources: !calc run_epos
   rocoto_memory: "3072M"
   ENKFPOSTSH: !expand "{BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_post_fv3gfs.sh.ecf"
   nth_epos: 2
+  accounting: !calc doc.platform.parallel_accounting
 
 eobs: &eobs_action
   <<: *action_template
+  J_JOB: eobs
   walltime: !timedelta 00:15:00
   resources: !calc run_eobs
   rocoto_memory: "3072M"
@@ -48,16 +53,20 @@ eobs: &eobs_action
   OBSINPUT_INVOBS: "dmesh(1)=225.0,dmesh(2)=225.0"
   OBSQC_INVOBS: "tcp_width=60.0,tcp_ermin=2.0,tcp_ermax=12.0"
   nth_eobs: 2
+  accounting: !calc doc.platform.parallel_accounting
 
 eomg: &eomg_action
   <<: *action_template
+  J_JOB: eomg
   walltime: !timedelta 00:15:00
   resources: !calc run_eomg
   rocoto_memory: "3072M"
   nth_eomg: 2
+  accounting: !calc doc.platform.parallel_accounting
 
 eupd: &eupd_action
   <<: *action_template
+  J_JOB: eupd
   walltime: !timedelta 00:15:00
   resources: !calc run_eupd
   rocoto_memory: "3072M"
@@ -66,14 +75,17 @@ eupd: &eupd_action
   npe_enkf: !expand "{npe_eupd}"
   nth_enkf: 4
   nth_eupd: 2
+  accounting: !calc doc.platform.parallel_accounting
 
 efcs: &efcs_action
   <<: *action_template
+  J_JOB: efcs
   walltime: !timedelta 00:15:00
   resources: !calc run_efcs
   rocoto_memory: "3072M"
   npe_fv3: !expand "{npe_efcs}"
   nth_fv3: 1
+  accounting: !calc doc.platform.parallel_accounting
 
   ENKFFCSTSH: !expand "{BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_fcst_fv3gfs.sh.ecf"
   NMEM_EFCSGRP: 10
@@ -102,20 +114,25 @@ efcs: &efcs_action
 
 earc: &earc_action
   <<: *action_template
+  J_JOB: earc
   walltime: !timedelta 00:15:00
   resources: !calc run_earc
   rocoto_memory: "3072M"
   NMEM_EARCGRP: 10
   nth_earc: 2
+  accounting: !calc doc.platform.transfer_accounting
 
 final: &final_action
   <<: *action_template
   walltime: !timedelta 00:03:00
   resources: !calc run_nothing
   rocoto_memory: "100M"
+  accounting: !calc doc.platform.serial_accounting
+  J_JOB: /bin/true
 
 prep: &prep_action
   <<: *action_template
+  J_JOB: prep
   walltime: !timedelta 00:10:00
   resources: !calc run_prep
   rocoto_memory: "3072M"
@@ -123,9 +140,11 @@ prep: &prep_action
   DO_MAKEPREPBUFR: "YES"   # if NO, will copy prepbufr from globaldump
   DRIVE_MAKEPREPBUFRSH: !expand "{BASE_GSM}/ush/drive_makeprepbufr.sh"
   nth_prep: 2
+  accounting: !calc doc.platform.parallel_accounting
 
 anal: &anal_action
   <<: *action_template
+  J_JOB: anal
   walltime: !timedelta 01:30:00
   resources: !calc run_anal
   rocoto_memory: "3072M"
@@ -134,9 +153,11 @@ anal: &anal_action
   npe_gsi: !expand "{npe_anal}"
   nth_gsi: 4
   nth_anal: 2
+  accounting: !calc doc.platform.parallel_accounting
 
 fcst: &fcst_action
   <<: *action_template
+  J_JOB: fcst
   walltime: !timedelta 00:10:00
   resources: !calc run_fcst
   rocoto_memory: "3072M"
@@ -153,6 +174,7 @@ fcst: &fcst_action
   dspheat: ".false."        # dissipative heating
   shal_cnv: ".true."        # shallow convection
   agrid_vel_rst: ".true."   # write velocity restarts on agrid?
+  accounting: !calc doc.platform.parallel_accounting
 
 # Disable the use of coupler.res; get model start time from model_configure
 # export USE_COUPLER_RES="NO"
@@ -180,6 +202,7 @@ fcst: &fcst_action
 
 post: &post_action
   <<: *action_template
+  J_JOB: post
   walltime: !timedelta 00:15:00
   resources: !calc run_post
   rocoto_memory: "3072M"
@@ -195,24 +218,25 @@ post: &post_action
   npe_dwn: !expand "{npe_post}"
   nth_dwn: 2
   nth_post: 2
+  accounting: !calc doc.platform.parallel_accounting
 
 arch: &arch_action
   <<: *action_template
+  J_JOB: arch
   walltime: !timedelta 06:00:00
   resources: !calc run_arch
   rocoto_memory: "3072M"
   nth_arch: 2
-
-a:
-  c:
-    e: f
+  accounting: !calc doc.platform.transfer_accounting
 
 vrfy: &vrfy_action
   <<: *action_template
+  J_JOB: vrfy
   Template: *vrfy_template
   walltime: !timedelta 01:00:00
   resources: !calc run_vrfy
   rocoto_memory: "3072M"
+  accounting: !calc doc.platform.parallel_accounting
   VDUMP: "gfs"       # verifying dump
   CDUMPFCST: "gdas"  # Fit-to-obs with GDAS/GFS prepbufr
   CDFNL: "gdas"      # Scores verification against GDAS/GFS analysis

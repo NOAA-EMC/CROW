@@ -1,19 +1,21 @@
-places:
-  HOMEDIR: !expand "/scratch4/NCEPDEV/global/save/{tools.env('USER')}"
+places: &places
+  PROJECT_DIR: /scratch4/NCEPDEV/nems
+  HOMEDIR: !expand "{PROJECT_DIR}/save/{tools.env('USER')}"
   STMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
   PTMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
-  NOSCRUB: !expand "/scratch4/NCEPDEV/global/noscrub/{tools.env('USER')}"
+  NOSCRUB: !expand "{PROJECT_DIR}/noscrub/{tools.env('USER')}"
 
   # Locations of CROW and this test suite.
   HOMEcrow: !calc tools.crow_install_dir()
   HOMEtest: !calc tools.crow_install_dir('examples/real-workflow')
 
 options: &options
+  <<: *places
   # Project for CPU accounting.
   cpu_project: !calc doc.platform.default_cpu_project #Formerly known as ACCOUNT
 
-  # Project for storing HPSS data.
-  hpss_project: emc-global
+  hpss_project: emc-global  # Project for storing HPSS data.
+  noscrub_project: nems  # Project for storing non-scrubbed data.
 
   # User-defined experiment name; should be a-z followed by alphanumeric:
   experiment_name: expt #Formerly known as PSLOT

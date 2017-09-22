@@ -1,15 +1,15 @@
 Rocoto: &Rocoto
   scheduler: !calc doc.platform.scheduler
   parallelism: !calc doc.platform.parallelism
-  run_dir: !calc doc.options.run_dir
+  EXPDIR: !calc doc.options.EXPDIR
   max_tries: 3
 
   workflow_xml: !expand |
     <?xml version="1.0"?>
     <!DOCTYPE workflow [
-      <!ENTITY LOG_DIR "{run_dir}/log">
-      <!ENTITY COM_DIR "{run_dir}/com">
-      <!ENTITY SCRUB_DIR "{run_dir}/scrub">
+      <!ENTITY LOG_DIR "{EXPDIR}/log">
+      <!ENTITY COM_DIR "{EXPDIR}/com">
+      <!ENTITY SCRUB_DIR "{EXPDIR}/scrub">
       <!ENTITY TASK_THROTTLE "30">
       <!ENTITY ENSEMBLE_TASK_THROTTLE "20">
       <!ENTITY CYCLE_THROTTLE "2">
@@ -26,7 +26,7 @@ Rocoto: &Rocoto
 
   task_template: &task_template !expand |
     <command>$HOMEtest/workflow/job_wrapper.sh {Perform.J_JOB}</command>
-    <jobname>{doc.options.expt_name}{task_path_str}@<cyclestr>@Y@m@d@H</cyclestr></jobname>
+    <jobname>{doc.options.experiment_name}{task_path_str}@<cyclestr>@Y@m@d@H</cyclestr></jobname>
     <join>&LOG_DIR;/<cyclestr>@Y@m@d@H</cyclestr>/{task_path_var}.log</join>
     <walltime>{Perform.walltime}</walltime>
     <memory>{Perform.rocoto_memory}</memory>
@@ -40,7 +40,7 @@ Rocoto: &Rocoto
     </envar>
     <envar>
       <name>OLD_COM_DIR</name>
-      <value><cyclestr offset="-{doc.options.cycle_len}">&COM_DIR;/@Y@m@d@H</cyclestr></value>
+      <value><cyclestr offset="-6:00:00">&COM_DIR;/@Y@m@d@H</cyclestr></value>
     </envar>
     <envar>
       <name>SCRUB_DIR</name>
@@ -52,7 +52,7 @@ Rocoto: &Rocoto
     </envar>
     <envar>
       <name>CONFIG_YAML</name>
-      <value>{doc.options.run_dir}/config.yaml</value>
+      <value>{doc.options.EXPDIR}/config.yaml</value>
     </envar>
     <envar>
       <name>HOMEfv3gfs</name>
@@ -63,16 +63,33 @@ Rocoto: &Rocoto
       <value>{doc.options.HOMEtest}</value>
     </envar>
 
-  ens_task_template: &ens_task_template !expand |
+  efcs_task_template: &efcs_task_template !expand |
     <envar>
-      <name>ENS_START_MEMBER</name>
-      <value>{Perform.start_mem}</value>
+      <name>NMEM_ENKF</name>
+      <value>{Perform.NMEM_ENKF}</value>
     </envar>
     <envar>
-      <name>ENS_STOP_MEMBER</name>
-      <value>{Perform.stop_mem}</value>
+      <name>NMEM_ENKF_GRP_EFMN</name>
+      <value>{Perform.NMEM_ENKF_GRP_EFMN}</value>
+    </envar>
+    <envar>
+      <name>GROUP_NUMBER</name>
+      <value>GROUP_NUMBER</value>
     </envar>
 
+  eomn_task_template: &eomn_task_template !expand |
+    <envar>
+      <name>NMEM_ENKF</name>
+      <value>{Perform.NMEM_ENKF}</value>
+    </envar>
+    <envar>
+      <name>NMEM_ENKF_GRP_EOMN</name>
+      <value>{Perform.NMEM_ENKF_GRP_EOMN}</value>
+    </envar>
+    <envar>
+      <name>GROUP_NUMBER</name>
+      <value>GROUP_NUMBER</value>
+    </envar>
 
 workflow: !Cycle
   Rocoto: *Rocoto
@@ -105,7 +122,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 1   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *eomn_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp2: !Task
@@ -115,7 +132,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 2   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *eomn_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp3: !Task
@@ -125,7 +142,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 3   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *eomn_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp4: !Task
@@ -135,7 +152,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 4   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *eomn_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp5: !Task
@@ -145,7 +162,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 5   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *eomn_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp6: !Task
@@ -155,7 +172,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 6   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *eomn_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp7: !Task
@@ -165,7 +182,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 7   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *eomn_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp8: !Task
@@ -175,7 +192,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 8   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *eomn_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
       eupd: !Task
@@ -220,7 +237,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 1   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *efcs_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp2: !Task
@@ -230,7 +247,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 2   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *efcs_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp3: !Task
@@ -240,7 +257,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 3   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *efcs_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp4: !Task
@@ -250,7 +267,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 4   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *efcs_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp5: !Task
@@ -260,7 +277,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 5   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *efcs_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp6: !Task
@@ -270,7 +287,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 6   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *efcs_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp7: !Task
@@ -280,7 +297,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 7   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *efcs_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
         grp8: !Task
@@ -290,7 +307,7 @@ workflow: !Cycle
             NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 8   # Convert to ENSGRP %02d
           task_template: *task_template
-          ens_more: *ens_task_template
+          ens_more: *efcs_task_template
           Rocoto: !expand "{task_template}{ens_more}"
 
       epos: !Task
@@ -389,7 +406,7 @@ workflow: !Cycle
           NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 1   # Convert to ENSGRP %02d
         task_template: *task_template
-        ens_more: *ens_task_template
+        ens_more: *eomn_task_template
         Rocoto: !expand "{task_template}{ens_more}"
       grp2: !Task
         Perform:
@@ -398,7 +415,7 @@ workflow: !Cycle
           NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 2   # Convert to ENSGRP %02d
         task_template: *task_template
-        ens_more: *ens_task_template
+        ens_more: *eomn_task_template
         Rocoto: !expand "{task_template}{ens_more}"
       grp3: !Task
         Perform:
@@ -407,7 +424,7 @@ workflow: !Cycle
           NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 3   # Convert to ENSGRP %02d
         task_template: *task_template
-        ens_more: *ens_task_template
+        ens_more: *eomn_task_template
         Rocoto: !expand "{task_template}{ens_more}"
       grp4: !Task
         Perform:
@@ -416,7 +433,7 @@ workflow: !Cycle
           NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 4   # Convert to ENSGRP %02d
         task_template: *task_template
-        ens_more: *ens_task_template
+        ens_more: *eomn_task_template
         Rocoto: !expand "{task_template}{ens_more}"
       grp5: !Task
         Perform:
@@ -425,7 +442,7 @@ workflow: !Cycle
           NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 5   # Convert to ENSGRP %02d
         task_template: *task_template
-        ens_more: *ens_task_template
+        ens_more: *eomn_task_template
         Rocoto: !expand "{task_template}{ens_more}"
       grp6: !Task
         Perform:
@@ -434,7 +451,7 @@ workflow: !Cycle
           NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 6   # Convert to ENSGRP %02d
         task_template: *task_template
-        ens_more: *ens_task_template
+        ens_more: *eomn_task_template
         Rocoto: !expand "{task_template}{ens_more}"
       grp7: !Task
         Perform:
@@ -443,7 +460,7 @@ workflow: !Cycle
           NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 7   # Convert to ENSGRP %02d
         task_template: *task_template
-        ens_more: *ens_task_template
+        ens_more: *eomn_task_template
         Rocoto: !expand "{task_template}{ens_more}"
       grp8: !Task
         Perform:
@@ -452,7 +469,7 @@ workflow: !Cycle
           NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 8   # Convert to ENSGRP %02d
         task_template: *task_template
-        ens_more: *ens_task_template
+        ens_more: *eomn_task_template
         Rocoto: !expand "{task_template}{ens_more}"
 
   final: !Task
