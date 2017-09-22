@@ -1,7 +1,7 @@
 action_template: &action_template
+  <<: *resource_defaults
   BASE_GSI: !calc doc.platform.places.BASE_GSI
   BASE_GSM: !calc doc.platform.places.BASE_GSM
-  ...
 
 ecen: &ecen_action
   <<: *action_template
@@ -108,6 +108,12 @@ earc: &earc_action
   NMEM_EARCGRP: 10
   nth_earc: 2
 
+final: &final_action
+  <<: *action_template
+  walltime: !timedelta 00:03:00
+  resources: !calc run_nothing
+  rocoto_memory: "100M"
+
 prep: &prep_action
   <<: *action_template
   walltime: !timedelta 00:10:00
@@ -154,13 +160,13 @@ fcst: &fcst_action
   USE_COUPLER_RES: "NO"
 
   restart_interval: !FirstTrue
-    when: !calc CDUMP=="gdas"
-    do: 6
+    - when: !calc CDUMP=="gdas"
+      do: 6
   DIAG_TABLE: !FirstTrue
-    when: !calc CDUMP=="gdas"
-    do: !expand "{BASE_GSM}/parm/parm_fv3diag/diag_table_da"
-    when: !calc CDUMP=="gfs"
-    do: !expand "{BASE_GSM}/parm/parm_fv3diag/diag_table"
+    - when: !calc CDUMP=="gdas"
+      do: !expand "{BASE_GSM}/parm/parm_fv3diag/diag_table_da"
+    - when: !calc CDUMP=="gfs"
+      do: !expand "{BASE_GSM}/parm/parm_fv3diag/diag_table"
 
   REGRID_NEMSIO_SH: !expand "{BASE_GSM}/ush/fv3gfs_regrid_nemsio.sh"
   REGRID_NEMSIO_TBL: !expand "{BASE_GSM}/parm/parm_fv3diag/variable_table_da.txt"
@@ -197,87 +203,13 @@ arch: &arch_action
   rocoto_memory: "3072M"
   nth_arch: 2
 
-vrfy_template: !Template
-  VDUMP:       # verifying dump
-    type: str
-    allowed: [ "gfs", "gdas" ]
-
-  CDUMPFCST: "gdas"  # Fit-to-obs with GDAS/GFS prepbufr
-    type: str
-    allowed: [ "gfs", "gdas" ]
-
-  CDFNL: "gdas"      # Scores verification against GDAS/GFS analysis
-    type: str
-    allowed: [ "gfs", "gdas" ]
-
-  VSDB_STEP1:      # populate VSDB database
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  VSDB_STEP2:
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  VRFYG2OBS:            # Grid to observations
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  VRFYFITS:        # Fit to observations
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  VRFYPRCP:        # Precip threat scores
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  VRFYMINMON:      # GSI minimization monitoring
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  VRFYRAD:         # Radiance data assimilation monitoring
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  VRFYOZN:         # Ozone data assimilation monitoring
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  VRFYTRAK:        # Hurricane track forecasts
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  VRFYGENESIS:     # Cyclone genesis
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  VRFYGMPK:        # Gempak verification
-    type: logic
-    allowed: [ "YES", "NO" ]
-
-  CYC_TRACK:
-    type: str
-    allowed: [ "YES", "NO" ]
-    if_present: !FirstTrue
-      - when: !calc VRFYTRAK=="YES"
-        do: *CYC_TRACK_VARS
-
-  MIN_RAD_OZN:
-    type: str
-    allowed: [ "YES", "NO" ]
-    if_present: !FirstTrue
-      - when: !calc ( VRFYRAD=="YES" or VRFYMINMON=="YES" or VRFYOZN=="YES" )
-        do: *MIN_RAD_OZN_VARS
-
-  VRFYMINSH:
-    type: str
-    override: !FirstTrue
-      - when: !calc ( not platform.name=="THEIA" and not platform.name=="WCOSS_C" )
-        do: NO
-        message: !expand "WARNING: Minimization monitoring is not enabled on {platform.name}!"
+a:
+  c:
+    e: f
 
 vrfy: &vrfy_action
   <<: *action_template
-  Template: vrfy_template
+  Template: *vrfy_template
   walltime: !timedelta 01:00:00
   resources: !calc run_vrfy
   rocoto_memory: "3072M"
@@ -337,180 +269,3 @@ vrfy: &vrfy_action
       do: "YES"
 
   nth_vrfy: 2
-
-CYC_TRACK_VARS: &CYC_TRACK_VARS !Template
-  TRACKERSH: 
-    type: str 
-    default: !expand "{BASE_GSM}/ush/global_tracker.sh"
-  PARATRKR: 
-    type: str
-    default: !expand "{BASE_GSM}/ush/global_extrkr.sh"
-  GETTRKEXEC:
-    type: str 
-    default: !expand "{BASE_GSM}/exec/gettrk"
-  GETTX: 
-    type: str
-    default: !expand "{GETTRKEXEC}"
-  SUPVX: 
-    type: str
-    default: !expand "{BASE_GSM}/exec/supvit"
-  HOMERELO: 
-    type: str
-    default: !expand "{BASE_GSM}"
-  homesyndir: 
-    type: str
-    default: !expand "{BASE_GSM}"
-  prep_step: 
-    type: str
-    default: !expand "{NWPROD}/prod_util.v1.0.15/ush/prep_step"
-  FHOUT: 
-    type: str
-    default: !FirstTrue
-      - when: !calc CDUMP=="gfs"
-        do: !expand "{FHOUT_GFS}"
-  FHMAX: 
-    type: str
-    default: !FirstTrue
-      - when: !calc CDUMP=="gfs"
-        do: !expand "{FHMAX_GFS}"
-  FHMAX2: 
-    type: str
-    default: !FirstTrue
-      - when: !calc CDUMP=="gfs"
-        do: !expand "{FHMAX2_GFS}"
-  COMROOTp1: 
-    type: str
-    default: !FirstTrue
-      - when: !calc machine=="THEIA"
-        do: "/scratch4/NCEPDEV/rstprod/com"
-  archsyndir:  
-    type: str
-    default: !FirstTrue
-      - when: !calc machine=="THEIA"
-        do: !expand "{COMROOTp1}/arch/prod/syndat"
-
-CYC_GEN_VARS: &CYC_GEN_VARS !Template
-  NWROOTGENESIS: 
-    type: str
-    default: !FirstTrue
-      - when: !calc machine=="WCOSS_C"
-        do: "/gpfs/hps3/emc/global/noscrub/emc.glopara/svn/gfs/q3fy17"
-      - when: !calc machine=="THEIA"
-        do: "/scratch4/NCEPDEV/global/save/glopara/svn/gfs/branches/gfs_q3fy17"
-  UTILROOT: 
-    type: str
-    default: !FirstTrue
-      - when: !calc machine=="THEIA"
-        do: "/scratch4/NCEPDEV/global/save/glopara/nwpara/prod_util.v1.0.15"
-  GETTX_GEN: 
-    type: str
-    default: !FirstTrue
-      - when: !calc machine=="THEIA"
-        do: !expand "{NWROOTGENESIS}/ens_tracker.v2.0.1/exec/gettrk_gen_g2_theia"
-  GENESISSH: 
-    type: str
-    default: !FirstTrue
-      - when: !calc ( machine=="WCOSS_C" | machine=="THEIA" )
-        do: !expand "{NWROOTGENESIS}/ens_tracker.v2.0.1/gfs_genesis_para_fv3gfs.sh"
-      - when: !calc ( machine~="WCOSS_C" & machine~="THEIA" )
-        do: ""
-
-MIN_VARS: &MIN_VARS !Template
-  HOMEgfs: 
-    type: str
-    default: !expand "{BASE_SVN}/fv3gfs/trunk/gfs.v15.0.0"
-  HOMEminmon: 
-    type: str
-    default: !expand "{BASE_GSM}"
-  MINMON_SUFFIX: 
-    type: str
-    default: !expand "{PSLOT}"
-  M_TANKverf: 
-    type: str
-    default: !expand "{NOSCRUB}/minmon"
-  VRFYMINSH: 
-    type: str
-    default: !FirstTrue
-      - when: !calc CDUMP=="gdas" & ( machine=="WCOSS_C" | machine=="THEIA" )
-        do: !expand "{HOMEgdas}/jobs/JGDAS_VMINMON"
-      - when: !calc CDUMP=="gfs" & ( machine=="WCOSS_C" | machine=="THEIA" )
-        do: !expand "{HOMEgfs}/jobs/JGDAS_VMINMON"
-      - when: !calc ( machine~="WCOSS_C" & machine~="THEIA" )
-        do: !expand "WARNING: Minimization monitoring is not enabled on $machine!"
-  VRFYMINMON: 
-    type: str
-    default: !FirstTrue
-      - when: !calc ( machine~="WCOSS_C" & machine~="THEIA" )
-        do: "NO"
-
-RAD_VARS: &RAD_VARS !Template
-  HOMEradmon: 
-    type: str
-    default: !expand "{BASE_GSM}"
-  RADMON_SUFFIX: 
-    type: str
-    default: !expand "{PSLOT}"
-  TANKverf: 
-    type: str
-    default: !expand "{NOSCRUB}/radmon"
-  VRFYRADSH: 
-    type: str
-    default: !FirstTrue
-      - when: !calc( machine=="WCOSS_C" | machine=="THEIA" )
-        do: !expand "{HOMEgdas}/jobs/JGDAS_VERFRAD"
-      - when: !calc (machine~="WCOSS_C" & machine~="THEIA" )
-        do: !expand "WARNING: Radiance monitoring is not enabled on $machine!"
-  VRFYRAD: 
-    type: str
-    default: !FirstTrue
-      - when: !calc ( machine~="WCOSS_C" & machine~="THEIA" )
-        do: "NO"
-
-OZN_VARS: &OZN_VARS !Template
-# echo "WARNING: Ozone Monitoring is just a stub for now!"
-  VRFYOZN: 
-    type: logic
-    default: "NO"
-  OZNDIR: 
-    type: str
-    default: !expand "{NOSCRUB}/$LOGNAME/ozone/stats/$PSLOT"
-  VRFYOZNSH:
-    type: str
-    default:  ""
-  BASEDIR_OZNMON: 
-    type: str
-    default: !expand "{BASE_OZNMON}/util/Ozone_Monitor"
-
-MIN_RAD_OZN_VARS: &MIN_RAD_OZN_VARS !Template
-  HOMEgdas: 
-    type: str
-    default: !expand "{BASE_GDAS}"
-  envir: 
-    type: str
-    default: "para"
-
-VRFY_CDUMP_GFS_VARS: &VRFY_CDUMP_GFS_VARS !Template
-  BACKDATEVSDB: 
-    type: int
-    default: 24
-  VBACKUP_PRCP: 
-    type: int
-    default: 24
-  vsdbsave: 
-    type: str
-    default: !expand "${NOSCRUB}/archive/vsdb_data"
-  vsdbhome: 
-    type: str
-    default: !expand "${BASE_VERIF}" 
-  VSDBSH=: 
-    type: str
-    default: !expand "${vsdbhome}/vsdbjob.sh"
-  vlength=: 
-    type: str
-    default: !expand "${FHMAX_GFS}"
-  vhr_rain: 
-    type: str
-    default: !expand"${FHMAX_GFS}"
-  ftyplist: 
-    type: str
-    default: "pgbq"

@@ -17,6 +17,9 @@ resource_defaults: &resource_defaults
       args:
         - placeholder
 
+  run_nothing: # Special placeholder for "do nothing"
+    - exe: nothing
+
   run_eobs:
     - exe: placeholder
       mpi_ranks: 24
