@@ -11,6 +11,12 @@ places:
 options: &options
   Template: *options_template
 
+  # Project for CPU accounting.
+  cpu_project: !calc doc.platform.default_cpu_project #Formally known as ACCOUNT
+
+  # Project for storing HPSS data.
+  hpss_project: emc-global
+
   # User-defined experiment name; should be a-z followed by alphanumeric:
   experiment_name: expt #Formally known as PSLOT
 
@@ -28,18 +34,14 @@ options: &options
 
   # Component paths
   MYBASE_SVN: !expand "{NOSCRUB}/{tools.env('USER')}/svn"
+  BASE_FV3GFS: !expand "{BASE_SVN}/fv3gfs"
+  BASE_GSM: !expand "{BASE_FV3GFS}/global_shared.v15.0.0"
   BASE_GSI: !expand "{BASE_GSM}/sorc/gsi.fd"
   BASE_NEMSfv3gfs: !expand "{BASE_GSM}/sorc/fv3gfs.fd"
   BASE_POST: !expand "{BASE_SVN}/fv3gfs/tags/post4fv3"
   BASE_PREP: !expand "{BASE_SVN}/obsproc/releases/obsproc_prep_RB-4.0.0"
   BASE_PREP_GLOBAL: !expand "{BASE_SVN}/obsproc/releases/obsproc_global_RB-3.0.0"
   BASE_VERIF: !expand "{BASE_SVN}/verif/global/tags/vsdb"
-
-  # Project for CPU accounting.
-  cpu_project: !calc doc.platform.default_cpu_project #Formally known as ACCOUNT
-
-  # Project for storing HPSS data.
-  hpss_project: emc-global
 
   # Experiment settings
   # Resolution
