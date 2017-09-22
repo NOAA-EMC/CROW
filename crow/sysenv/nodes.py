@@ -1,8 +1,10 @@
 from abc import abstractmethod
 from collections import UserList, Mapping, Sequence, OrderedDict
 from subprocess import Popen, PIPE, CompletedProcess
-
+from crow.sysenv.jobs import MAXIMUM_THREADS
 from crow.sysenv.util import ranks_to_nodes_ppn
+
+from crow.sysenv.exceptions import *
 
 def noop(*args,**kwargs): pass
 
@@ -98,12 +100,17 @@ class GenericNodeSpec(NodeSpec):
         if can_hyper and rank_spec.get('hyperthreading',False):
             max_per_node*=self.cpus_per_core
         threads_per_node=max_per_node
-        max_per_node //= max(1,rank_spec.get('OMP_NUM_THREADS',1))
-        if max_per_node<1:
-            raise MachineTooSmallError(f'Specification too large for node: max {threads_per_node} for {rank_spec!r}')
+        omp_threads=max(1,rank_spec.get('OMP_NUM_THREADS',1))
+
+        if omp_threads!=MAXIMUM_THREADS:
+            max_per_node //= omp_threads
+
         max_ppn=rank_spec.get('max_ppn',0)
         if max_ppn:
             max_per_node=min(max_ppn,max_per_node)
+
+        if max_per_node<1:
+            raise MachineTooSmallError(f'Specification too large for node: max {threads_per_node} for {rank_spec!r}')
         return max_per_node
 
     def can_merge_ranks(self,R1,R2):

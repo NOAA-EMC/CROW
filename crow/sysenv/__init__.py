@@ -1,4 +1,4 @@
-from .jobs import JobResourceSpec, JobRankSpec
+from .jobs import JobResourceSpec, JobRankSpec, MAXIMUM_THREADS
 from .nodes import NodeSpec, GenericNodeSpec
 from .shell import ShellCommand
 from .exceptions import UnknownSchedulerError

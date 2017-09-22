@@ -1,3 +1,4 @@
+import sys
 from abc import abstractmethod
 from collections import UserList, Mapping, Sequence, OrderedDict
 from subprocess import Popen, PIPE, CompletedProcess
@@ -12,6 +13,8 @@ JOB_RANK_SPEC_TEMPLATE={
 
 MISSING=object() # special constant for missing arguments
 
+MAXIMUM_THREADS=sys.maxsize
+
 ########################################################################
 
 class JobRankSpec(Mapping):
@@ -19,6 +22,8 @@ class JobRankSpec(Mapping):
                  exe=MISSING,args=MISSING,exclusive=True,
                  separate_node=False,hyperthreads=1,max_ppn=MISSING,
                  **kwargs):
+        if OMP_NUM_THREADS == 'max':
+            OMP_NUM_THREADS=MAXIMUM_THREADS
         self.__spec={
             'mpi_ranks':max(0,int(mpi_ranks)),
             'exclusive':bool(exclusive),
@@ -47,6 +52,8 @@ class JobRankSpec(Mapping):
 
     def is_pure_serial(self):
         return not self.is_mpi() and not self.is_openmp()
+    def want_max_threads(self):
+        return self['OMP_NUM_THREADS']==MAXIMUM_THREADS
     def is_openmp(self):
         return self['OMP_NUM_THREADS']>0
     def is_mpi(self):
