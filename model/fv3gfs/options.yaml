@@ -1,8 +1,8 @@
 places:
-  HOMEDIR: "/scratch4/NCEPDEV/ocean/save/{tools.env('USER')}"
+  HOMEDIR: "/scratch4/NCEPDEV/global/save/{tools.env('USER')}"
   STMP: "{doc.platform.least_used_scrub}{tools.env('USER')}"
   PTMP: "{doc.platform.least_used_scrub}{tools.env('USER')}"
-  NOSCRUB: "/scratch4/NCEPDEV/ocean/noscrub/{tools.env('USER')}"
+  NOSCRUB: "/scratch4/NCEPDEV/global/noscrub/{tools.env('USER')}"
 
   # Locations of CROW and this test suite.
   HOMEcrow: !calc tools.crow_install_dir()
@@ -10,18 +10,67 @@ places:
 
 options: &options
   Template: *options_template
+
+  # User-defined experiment name; should be a-z followed by alphanumeric:
+  experiment_name: expt #Formally known as PSLOT
+
+  # User paths
+  EXPDIR: {HOMEDIR}/{experiment_name}
+  ROTDIR: {PTMP}/{experiment_name}
+  RUNDIR: {STMP}/RUNDIRS/{experiment_name}
+  ARCDIR: {NOSCRUB}/archive/{experiment_name}
+  ATARDIR: /NCEPDEV/$HPSS_PROJECT/1year/{tools.env('USER')}/$machine/scratch/{experiment_name}
+
+  # Experiment specific parameters
+  REALTIME: NO
+  SDATE: 2016100100
+  EDATE: 2016100112
+
+  # Component paths
+  MYBASE_SVN: {NOSCRUB}/{tools.env('USER')}/svn
+  BASE_GSI: $BASE_GSM/sorc/gsi.fd
+  BASE_NEMSfv3gfs: $BASE_GSM/sorc/fv3gfs.fd
+  BASE_POST: $BASE_SVN/fv3gfs/tags/post4fv3
+  BASE_PREP: $BASE_SVN/obsproc/releases/obsproc_prep_RB-4.0.0
+  BASE_PREP_GLOBAL: $BASE_SVN/obsproc/releases/obsproc_global_RB-3.0.0
+  BASE_VERIF: $BASE_SVN/verif/global/tags/vsdb
+
+  # Project for CPU accounting.
+  cpu_project: !calc doc.platform.default_cpu_project #Formally known as ACCOUNT
+
+  # Project for storing HPSS data.
+  hpss_project: emc-global
+
+  # Experiment settings
+  # Resolution
+  LEVS: 65
+  CASE: C384
+  CASE_ENKF: C192
+
+  # Surface cycle update frequency
+  FHCYC: 24
+
+  # GDAS cycle info
+  FHMIN: 0 # GDAS forecast initial hour
+  FHMAX: 9 # GDAS forecast length in hours
+  FHOUT: 3 # GDAS forecast output frequency in hours
+
+  # GFS cycle info
+  gfs_cyc: 4                # 0: no GFS cycle, 1: 00Z only, 2: 00Z and 12Z only, 4: all 4 cycles
+  FHMIN_GFS: 0              # GFS forecast initial hour
+  FHMAX_GFS: !timedelta 120 # GFS forecast length in hours
+  FHOUT_GFS: !timedelta 6   # GFS forecast output frequency in hours
+
+  # Shared parameters/switches
+  DOHYBVAR: YES
+  NMEM_ENKF: 80
+  RECENTER_ENKF: YES
+  l4densvar: .false.
+  lwrite4danl: .false.
+
   # Grid size:
   nx: 400
   ny: 400
-
-  # User-defined experiment name; should be a-z followed by alphanumeric:
-  experiment_name: expt
-
-  # Project for CPU accounting.
-  cpu_project: !calc doc.platform.default_cpu_project
-
-  # Project for storing HPSS data.
-  hpss_project: emc-ocean
 
   # Random number seed:
   seed: 381
