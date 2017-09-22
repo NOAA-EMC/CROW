@@ -73,6 +73,9 @@ Rocoto: &Rocoto
       <value>{Perform.stop_mem}</value>
     </envar>
 
+  action_template: &action_template !expand |
+# too be added
+
 workflow: !Cycle
   Rocoto: *Rocoto
 

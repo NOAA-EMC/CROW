@@ -17,20 +17,112 @@ resource_defaults: &resource_defaults
       args:
         - placeholder
 
+  run_eobs:
+    - exe: placeholder
+      mpi_ranks: 24
+      max_ppn: 6
+      OMP_NUM_THREADS: max
+
+  run_eomg:
+    - exe: placeholder
+      mpi_ranks: 24
+      max_ppn: 6
+      OMP_NUM_THREADS: max
+
+  run_eupd:
+    - exe: placeholder
+      mpi_ranks: 10
+      max_ppn: 12
+      OMP_NUM_THREADS: max
+
+  run_efcs:
+    - exe: placeholder
+      mpi_ranks: 8
+      max_ppn: 24
+      OMP_NUM_THREADS: max
+
+  run_epos:
+    - exe: placeholder
+      mpi_ranks: 7
+      max_ppn: 12
+      OMP_NUM_THREADS: max
+
+  run_prep:
+    - exe: placeholder
+      mpi_ranks: 1
+      max_ppn: 12
+      OMP_NUM_THREADS: max
+
+  run_anal:
+    - exe: placeholder
+      mpi_ranks: 24
+      max_ppn: 6
+      OMP_NUM_THREADS: max
+
+  run_fcst:
+    - exe: placeholder
+      mpi_ranks: 16
+      max_ppn: 12
+      OMP_NUM_THREADS: max
+
+  run_post:
+    - exe: placeholder
+      mpi_ranks: 6
+      max_ppn: 12
+      OMP_NUM_THREADS: max
+
+  run_vrfy:
+    - exe: placeholder
+      mpi_ranks: 1
+      max_ppn: 1
+      OMP_NUM_THREADS: max
+
+  run_arch:
+    - exe: placeholder
+      mpi_ranks: 1
+      max_ppn: 1
+      OMP_NUM_THREADS: max
+
+  run_earc:
+    - exe: placeholder
+      mpi_ranks: 1
+      max_ppn: 1
+      OMP_NUM_THREADS: max
+
 theia: &theia !Platform
   <<: *resource_defaults
   Evaluate: false
+  name: THEIA
   detect: !calc tools.isdir('/scratch4') and tools.isdir('/scratch3')
+
+  # here or options.yaml?
+  # queues and accounts
   ACCOUNT: marine-cpu
   QUEUE: batch
   QUEUE_ARCH: service
+  HPSS_PROJECT: emc-ocean
+  BASE_FV3GFS: BASE_FV3GFS@     # need user input
 
+# Directories relative to installation areas:
+  BASE_WORKFLOW: "$BASE_FV3GFS/gfs_workflow.v15.0.0"
+  BASE_GSM: "$BASE_FV3GFS/global_shared.v15.0.0"
+  BASE_MODULES: "$BASE_FV3GFS/global_shared.v15.0.0/modulefiles"
+
+  # GLOBAL static environment parameters
+  NWPROD: "/scratch4/NCEPDEV/global/save/glopara/nwpara"
+  DMPDIR: "/scratch4/NCEPDEV/global/noscrub/dump"
+  RTMFIX: "/scratch4/NCEPDEV/da/save/Michael.Lueken/nwprod/lib/crtm/2.2.3/fix_update"
+
+  # svn, keep it or not?
   # Base directories for various builds
   BASE_SVN: "/scratch4/NCEPDEV/global/save/glopara/svn"
   MYBASE_SVN: "/scratch4/NCEPDEV/global/save/{tools.env('USER')}/svn"
   BASE_GFS: "/scratch4/NCEPDEV/global/save/glopara/svn/gfs/branches/gfs_q3fy17/global_shared.v14.1.0"
+
+  # Post requires grib2 table
   POSTGRB2TBL: "/scratch3/NCEPDEV/nwprod/lib/sorc/g2tmpl/params_grib2_tbl_new"
 
+  # Utilities needed in the scripts (mostly post)
   exes: 
     NEMSIOGET: "$NWPROD/util/exec/nemsio_get"
     NDATE: "$NWPROD/util/exec/ndate"
@@ -83,6 +175,7 @@ wcoss_cray: &wcoss_cray !Platform
   default_cpu_project: GFS-T2O
   # Path to mmlsquota, the program used to get GPFS disk usage information:
   mmlsquota: '/usr/lpp/mmfs/bin/mmlsquota'
+  POSTGRB2TBL: "/gpfs/hps/nco/ops/nwprod/lib/g2tmpl/v1.3.0/src/params_grib2_tbl_new"
   serial_accounting:
     queue: dev
     project: !calc doc.options.cpu_project
