@@ -12,13 +12,18 @@ options: &options
   Template: *options_template
 
   # Project for CPU accounting.
-  cpu_project: !calc doc.platform.default_cpu_project #Formally known as ACCOUNT
+  cpu_project: !calc doc.platform.default_cpu_project #Formerly known as ACCOUNT
 
   # Project for storing HPSS data.
   hpss_project: emc-global
 
   # User-defined experiment name; should be a-z followed by alphanumeric:
-  experiment_name: expt #Formally known as PSLOT
+  experiment_name: expt #Formerly known as PSLOT
+
+  # Experiment specific parameters
+  REALTIME: NO
+  SDATE: 2016100100
+  EDATE: 2016100112
 
   # User paths
   EXPDIR: !expand "{HOMEDIR}/{experiment_name}"
@@ -26,11 +31,6 @@ options: &options
   RUNDIR: !expand "{STMP}/RUNDIRS/{experiment_name}"
   ARCDIR: !expand "{NOSCRUB}/archive/{experiment_name}"
   ATARDIR: !expand "/NCEPDEV/{hpss_project}/1year/{tools.env('USER')}/{machine}/scratch/{experiment_name}"
-
-  # Experiment specific parameters
-  REALTIME: NO
-  SDATE: 2016100100
-  EDATE: 2016100112
 
   # Component paths
   MYBASE_SVN: !expand "{NOSCRUB}/{tools.env('USER')}/svn"
