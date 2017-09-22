@@ -68,26 +68,4 @@ options: &options
   l4densvar: .false.
   lwrite4danl: .false.
 
-  # Grid size:
-  nx: 400
-  ny: 400
-
-  # Random number seed:
-  seed: 381
-
-  # Hours between cycles:
-  cycle_len: !timedelta 6:00
-
-  # Number of hours to forecast:
-  fcst_len: !timedelta 24:00
-
-  # Time between writes of output files
-  dt_write_fcst: !timedelta 3:00
-
-  # Number of random number generator iterations for forecast &
-  # ensemble forecast, respectively:
-  dt_rand_fcst: 500
-  dt_rand_ens_fcst: 100
-
-  # Not configurable yet; do not change.  Number of ensemble members.
-  ens_members: 100
+#-END OF FILE-#
