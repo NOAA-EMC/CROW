@@ -34,7 +34,7 @@ anal: &anal_action !Action
   resources: !calc run_anal
   rocoto_memory: "3072M"
   ANALYSISSH: !expand "{BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
-  GSIEXEC: !expand "${BASE_GSI}/exec/global_gsi"
+  GSIEXEC: !expand "{BASE_GSI}/exec/global_gsi"
   npe_gsi: !expand "{npe_anal}"
   nth_gsi: 4
   nth_anal: 2
