@@ -73,7 +73,7 @@ CYC_GEN_VARS: &CYC_GEN_VARS !Template
     default: !FirstTrue
       - when: !calc ( machine=="WCOSS_C" or machine=="THEIA" )
         do: !expand "{NWROOTGENESIS}/ens_tracker.v2.0.1/gfs_genesis_para_fv3gfs.sh"
-      - when: !calc ( machine!="WCOSS_C" and machine!="THEIA" )
+      - when: !calc ( not machine=="WCOSS_C" and not machine=="THEIA" )
         do: ""
 
 MIN_VARS: &MIN_VARS !Template
@@ -92,16 +92,16 @@ MIN_VARS: &MIN_VARS !Template
   VRFYMINSH: 
     type: string
     default: !FirstTrue
-      - when: !calc CDUMP=="gdas" and ( machine=="WCOSS_C" or machine=="THEIA" )
+      - when: !calc ( CDUMP=="gdas" and ( machine=="WCOSS_C" or machine=="THEIA" ) )
         do: !expand "{HOMEgdas}/jobs/JGDAS_VMINMON"
-      - when: !calc CDUMP=="gfs" and ( machine=="WCOSS_C" or machine=="THEIA" )
+      - when: !calc ( CDUMP=="gfs" and ( machine=="WCOSS_C" or machine=="THEIA" ) )
         do: !expand "{HOMEgfs}/jobs/JGDAS_VMINMON"
-      - when: !calc ( machine!="WCOSS_C" and machine!="THEIA" )
+      - when: !calc ( not machine=="WCOSS_C" and not machine=="THEIA" )
         do: !expand "WARNING: Minimization monitoring is not enabled on $machine!"
   VRFYMINMON: 
     type: string
     default: !FirstTrue
-      - when: !calc ( machine!="WCOSS_C" and machine!="THEIA" )
+      - when: !calc ( not machine=="WCOSS_C" and not machine=="THEIA" )
         do: "NO"
 
 RAD_VARS: &RAD_VARS !Template
@@ -119,12 +119,12 @@ RAD_VARS: &RAD_VARS !Template
     default: !FirstTrue
       - when: !calc ( machine=="WCOSS_C" or machine=="THEIA" )
         do: !expand "{HOMEgdas}/jobs/JGDAS_VERFRAD"
-      - when: !calc (machine!="WCOSS_C" and machine!="THEIA" )
+      - when: !calc ( not machine=="WCOSS_C" and not machine=="THEIA" )
         do: !expand "WARNING: Radiance monitoring is not enabled on $machine!"
   VRFYRAD: 
     type: string
     default: !FirstTrue
-      - when: !calc ( machine!="WCOSS_C" and machine!="THEIA" )
+      - when: !calc ( not machine=="WCOSS_C" and not machine=="THEIA" )
         do: "NO"
 
 OZN_VARS: &OZN_VARS !Template
@@ -133,7 +133,7 @@ OZN_VARS: &OZN_VARS !Template
     type: string
     default: "NO"
   OZNDIR: 
-    type: stringing
+    type: string
     default: !expand "{NOSCRUB}/$LOGNAME/ozone/stats/$PSLOT"
   VRFYOZNSH:
     type: string
@@ -237,11 +237,11 @@ vrfy_template: &vrfy_template !Template
     allowed: [ "YES", "NO" ]
 
   VRFYMINSH:
-    type: str
+    type: string
     allowed: [ "YES", "NO" ]
     override: !FirstTrue
       - when: !calc ( not platform.name=="THEIA" and not platform.name=="WCOSS_C" )
-        do: NO
+        do: "NO"
         message: !expand "WARNING: Minimization monitoring is not enabled on {platform.name}!"
 
   CYC_TRACK:
@@ -252,10 +252,10 @@ vrfy_template: &vrfy_template !Template
         do: *CYC_TRACK_VARS
 
   VRFY_CDUMP_GFS:
-    type: str
+    type: string
     allowed: [ "YES", "NO" ]
     if_present: !FirstTrue
-      - when: !calc ( CDUMP=="gfs" & ( VSDB_STEP1=="YES" | VRFYPRCP=="YES" | VRFYG2OBS=="YES" ) )
+      - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1=="YES" or VRFYPRCP=="YES" or VRFYG2OBS=="YES" ) )
         do: *VRFY_CDUMP_GFS_VARS
 
   MIN_RAD_OZN:
@@ -266,28 +266,28 @@ vrfy_template: &vrfy_template !Template
         do: *MIN_RAD_OZN_VARS
 
   RAD:
-    type: str
+    type: string
     allowed: [ "YES", "NO" ]
     if_present: !FirstTrue
-      - when: !calc VRFYRAD=="YES" & CDUMP=="$CDFNL"
+      - when: !calc ( VRFYRAD=="YES" and CDUMP==CDFNL )
         do: *RAD_VARS
 
   OZN:
-    type: str
+    type: string
     allowed: [ "YES", "NO" ]
     if_present: !FirstTrue
       - when: !calc VRFYOZN=="YES"
         do: *OZN_VARS
 
   MIN:
-    type: str
+    type: string
     allowed: [ "YES", "NO" ]
     if_present: !FirstTrue
       - when: !calc VRFYMINMON=="YES"
         do: *MIN_VARS
 
   CYC_GEN:
-    type: str
+    type: string
     allowed: [ "YES", "NO" ]
     if_present: !FirstTrue
       - when: !calc VRFYGENESIS=="YES"

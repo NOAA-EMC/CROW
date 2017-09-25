@@ -237,6 +237,7 @@ vrfy: &vrfy_action !Action
   resources: !calc run_vrfy
   rocoto_memory: "3072M"
   accounting: !calc doc.platform.parallel_accounting
+  CDUMP: "gfs"
   VDUMP: "gfs"       # verifying dump
   CDUMPFCST: "gdas"  # Fit-to-obs with GDAS/GFS prepbufr
   CDFNL: "gdas"      # Scores verification against GDAS/GFS analysis
@@ -273,7 +274,7 @@ vrfy: &vrfy_action !Action
       do: "YES"
 
   RAD: !FirstTrue
-    - when: !calc VRFYRAD=="YES" and CDUMP=="$CDFNL"
+    - when: !calc ( VRFYRAD=="YES" and CDUMP==CDFNL )
       do: "YES"
 
   MIN: !FirstTrue

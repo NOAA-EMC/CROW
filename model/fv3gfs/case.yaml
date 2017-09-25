@@ -31,6 +31,7 @@ options: &options
   RUNDIR: !expand "{STMP}/RUNDIRS/{experiment_name}"
   ARCDIR: !expand "{NOSCRUB}/archive/{experiment_name}"
   ATARDIR: !expand "/NCEPDEV/{hpss_project}/1year/{tools.env('USER')}/{machine}/scratch/{experiment_name}"
+#  CDUMP: "gfs"
 
   # Component paths
   MYBASE_SVN: !expand "{NOSCRUB}/{tools.env('USER')}/svn"
