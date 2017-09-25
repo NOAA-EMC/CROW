@@ -1,7 +1,13 @@
 #! /usr/bin/env python3.6
 
 import os, sys, logging
-import crow.config
+
+try:
+    import crow.config
+except ModuleNotFoundError:
+    there=os.path.abspath(os.path.join(os.path.dirname(__file__),'../..'))
+    sys.path.append(there)
+    import crow.config
 from crow.config import Platform
 import crow.metascheduler
 
@@ -9,11 +15,18 @@ logging.basicConfig(stream=sys.stderr,level=logging.INFO,
    format='%(module)s:%(lineno)d: %(levelname)8s: %(message)s')
 logger=logging.getLogger('setup_expt')
 
-conf=crow.config.from_file(
-    'platform.yaml','template.yaml','options.yaml','runtime.yaml',
-    'actions.yaml','workflow.yaml')
+force=False
+if len(sys.argv)>1 and sys.argv[1]=='--force':
+    force=True
+    sys.argv.pop(1)
 
-force = len(sys.argv)>1 and sys.argv[1] == '--force'
+if len(sys.argv)<2:
+    logger.error('Format: setup_expt.py case.yaml')
+    exit(1)
+
+yamls=[ 'platform.yaml','template.yaml' ] + \
+    sys.argv[1:] + ['runtime.yaml','actions.yaml','workflow.yaml']
+conf=crow.config.from_file(*yamls)
 
 logger.info('Remove platforms from configuration.')
 for key in list(conf.keys()):

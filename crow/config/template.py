@@ -39,6 +39,10 @@ class Template(dict_eval):
                     did_something=True
                     checked.add(var)
                     scheme=template[var]
+
+                    if 'precheck' in scheme:
+                        scope[var]=scheme.precheck
+                        
                     validate_var(scheme,var,scope[var])
                     if 'if_present' in scheme:
                         ip=from_config(
@@ -51,7 +55,8 @@ class Template(dict_eval):
                     errors.append(ce)
                     raise
 
-        # Insert default values for all templates found thus far:
+        # Insert default values for all templates found thus far and
+        # override values if requested:
         for var in template:
             if var not in scope:
                 tmpl=template[var]
@@ -61,6 +66,8 @@ class Template(dict_eval):
                         scope[var]=tmpl._raw('default')
                     except AttributeError:
                         scope[var]=tmpl['default']
+                if 'override' in tmpl:
+                    scope[var]=tmpl.override
 
         if errors: raise TemplateErrors(errors)
 
