@@ -236,12 +236,27 @@ vrfy_template: &vrfy_template !Template
     type: logic
     allowed: [ "YES", "NO" ]
 
+  VRFYMINSH:
+    type: str
+    allowed: [ "YES", "NO" ]
+    override: !FirstTrue
+      - when: !calc ( not platform.name=="THEIA" and not platform.name=="WCOSS_C" )
+        do: NO
+        message: !expand "WARNING: Minimization monitoring is not enabled on {platform.name}!"
+
   CYC_TRACK:
     type: str
     allowed: [ "YES", "NO" ]
     if_present: !FirstTrue
       - when: !calc VRFYTRAK=="YES"
         do: *CYC_TRACK_VARS
+
+  VRFY_CDUMP_GFS:
+    type: str
+    allowed: [ "YES", "NO" ]
+    if_present: !FirstTrue
+      - when: !calc ( CDUMP=="gfs" & ( VSDB_STEP1=="YES" | VRFYPRCP=="YES" | VRFYG2OBS=="YES" ) )
+        do: *VRFY_CDUMP_GFS_VARS
 
   MIN_RAD_OZN:
     type: str
@@ -250,9 +265,30 @@ vrfy_template: &vrfy_template !Template
       - when: !calc ( VRFYRAD=="YES" or VRFYMINMON=="YES" or VRFYOZN=="YES" )
         do: *MIN_RAD_OZN_VARS
 
-  VRFYMINSH:
+  RAD:
     type: str
-    override: !FirstTrue
-      - when: !calc ( not platform.name=="THEIA" and not platform.name=="WCOSS_C" )
-        do: NO
-        message: !expand "WARNING: Minimization monitoring is not enabled on {platform.name}!"
+    allowed: [ "YES", "NO" ]
+    if_present: !FirstTrue
+      - when: !calc VRFYRAD=="YES" & CDUMP=="$CDFNL"
+        do: *RAD_VARS
+
+  OZN:
+    type: str
+    allowed: [ "YES", "NO" ]
+    if_present: !FirstTrue
+      - when: !calc VRFYOZN=="YES"
+        do: *OZN_VARS
+
+  MIN:
+    type: str
+    allowed: [ "YES", "NO" ]
+    if_present: !FirstTrue
+      - when: !calc VRFYMINMON=="YES"
+        do: *MIN_VARS
+
+  CYC_GEN:
+    type: str
+    allowed: [ "YES", "NO" ]
+    if_present: !FirstTrue
+      - when: !calc VRFYGENESIS=="YES"
+        do: *CYC_GEN_VARS
