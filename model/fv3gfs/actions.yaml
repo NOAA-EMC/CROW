@@ -3,7 +3,7 @@ action_template: &action_template
   BASE_GSI: !calc doc.platform.places.BASE_GSI
   BASE_GSM: !calc doc.platform.places.BASE_GSM
 
-ecen: &ecen_action
+ecen: &ecen_action !Action
   <<: *action_template
 
   # ----------------------------------------
@@ -27,7 +27,20 @@ ecen: &ecen_action
   J_JOB: ecen
   accounting: !calc doc.platform.parallel_accounting
 
-epos: &epos_action
+anal: &anal_action !Action
+  <<: *action_template
+  J_JOB: anal
+  walltime: !timedelta 01:30:00
+  resources: !calc run_anal
+  rocoto_memory: "3072M"
+  ANALYSISSH: !expand "{BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
+  GSIEXEC: !expand "${BASE_GSI}/exec/global_gsi"
+  npe_gsi: !expand "{npe_anal}"
+  nth_gsi: 4
+  nth_anal: 2
+  accounting: !calc doc.platform.parallel_accounting
+
+epos: &epos_action !Action
   <<: *action_template
   J_JOB: epos
   walltime: !timedelta 00:15:00
@@ -37,8 +50,8 @@ epos: &epos_action
   nth_epos: 2
   accounting: !calc doc.platform.parallel_accounting
 
-eobs: &eobs_action
-  <<: *action_template
+eobs: &eobs_action !Action
+  <<: *anal_action
   J_JOB: eobs
   walltime: !timedelta 00:15:00
   resources: !calc run_eobs
@@ -55,7 +68,7 @@ eobs: &eobs_action
   nth_eobs: 2
   accounting: !calc doc.platform.parallel_accounting
 
-eomg: &eomg_action
+eomg: &eomg_action !Action
   <<: *action_template
   J_JOB: eomg
   walltime: !timedelta 00:15:00
@@ -64,7 +77,7 @@ eomg: &eomg_action
   nth_eomg: 2
   accounting: !calc doc.platform.parallel_accounting
 
-eupd: &eupd_action
+eupd: &eupd_action !Action
   <<: *action_template
   J_JOB: eupd
   walltime: !timedelta 00:15:00
@@ -77,7 +90,7 @@ eupd: &eupd_action
   nth_eupd: 2
   accounting: !calc doc.platform.parallel_accounting
 
-efcs: &efcs_action
+efcs: &efcs_action !Action
   <<: *action_template
   J_JOB: efcs
   walltime: !timedelta 00:15:00
@@ -112,7 +125,7 @@ efcs: &efcs_action
 
   nth_efcs: 2
 
-earc: &earc_action
+earc: &earc_action !Action
   <<: *action_template
   J_JOB: earc
   walltime: !timedelta 00:15:00
@@ -122,7 +135,7 @@ earc: &earc_action
   nth_earc: 2
   accounting: !calc doc.platform.transfer_accounting
 
-final: &final_action
+final: &final_action !Action
   <<: *action_template
   walltime: !timedelta 00:03:00
   resources: !calc run_nothing
@@ -130,7 +143,7 @@ final: &final_action
   accounting: !calc doc.platform.serial_accounting
   J_JOB: /bin/true
 
-prep: &prep_action
+prep: &prep_action !Action
   <<: *action_template
   J_JOB: prep
   walltime: !timedelta 00:10:00
@@ -142,20 +155,7 @@ prep: &prep_action
   nth_prep: 2
   accounting: !calc doc.platform.parallel_accounting
 
-anal: &anal_action
-  <<: *action_template
-  J_JOB: anal
-  walltime: !timedelta 01:30:00
-  resources: !calc run_anal
-  rocoto_memory: "3072M"
-  ANALYSISSH: !expand "{BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
-  GSIEXEC: !expand "${BASE_GSI}/exec/global_gsi"
-  npe_gsi: !expand "{npe_anal}"
-  nth_gsi: 4
-  nth_anal: 2
-  accounting: !calc doc.platform.parallel_accounting
-
-fcst: &fcst_action
+fcst: &fcst_action !Action
   <<: *action_template
   J_JOB: fcst
   walltime: !timedelta 00:10:00
@@ -200,7 +200,7 @@ fcst: &fcst_action
   NC2NEMSIOSH: !expand "{BASE_GSM}/ush/fv3gfs_nc2nemsio.sh"
   nth_fcst: 2
 
-post: &post_action
+post: &post_action !Action
   <<: *action_template
   J_JOB: post
   walltime: !timedelta 00:15:00
@@ -220,7 +220,7 @@ post: &post_action
   nth_post: 2
   accounting: !calc doc.platform.parallel_accounting
 
-arch: &arch_action
+arch: &arch_action !Action
   <<: *action_template
   J_JOB: arch
   walltime: !timedelta 06:00:00
@@ -229,7 +229,7 @@ arch: &arch_action
   nth_arch: 2
   accounting: !calc doc.platform.transfer_accounting
 
-vrfy: &vrfy_action
+vrfy: &vrfy_action !Action
   <<: *action_template
   J_JOB: vrfy
   Template: *vrfy_template
@@ -253,27 +253,27 @@ vrfy: &vrfy_action
   VRFYGMPK: "NO"         # Gempak verification
 
   fitdir: !FirstTrue
-    - when: !calc ( machine=="WCOSS_C" & VRFYFITS=="YES" )
+    - when: !calc ( machine=="WCOSS_C" and VRFYFITS=="YES" )
       do: !expand "{BASE_SVN}/verif/global/parafits.fv3nems/batrun"
-    - when: !calc ( machine=="THEIA" & VRFYFITS=="YES" )
+    - when: !calc ( machine=="THEIA" and VRFYFITS=="YES" )
       do: !expand "{BASE_SVN}/verif/global/parafits.fv3nems/batrun"
 
   PREPQFITSH: !FirstTrue
-    - when: !calc ( machine=="WCOSS_C" & VRFYFITS=="YES" )
+    - when: !calc ( machine=="WCOSS_C" and VRFYFITS=="YES" )
       do: !expand "{fitdir}/subfits_cray_nems"
-    - when: !calc ( machine=="THEIA" & VRFYFITS=="YES" )
+    - when: !calc ( machine=="THEIA" and VRFYFITS=="YES" )
       do: !expand "fitdir}/subfits_theia_nems"
 
   VRFY_CDUMP_GFS: !FirstTrue
-    - when: !calc ( CDUMP=="gfs" & ( VSDB_STEP1=="YES" | VRFYPRCP=="YES" | VRFYG2OBS=="YES" ) )
+    - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1=="YES" or VRFYPRCP=="YES" or VRFYG2OBS=="YES" ) )
       do: "YES"
 
   MIN_RAD_OZN: !FirstTrue
-    - when: !calc ( VRFYRAD=="YES" | VRFYMINMON=="YES" | VRFYOZN=="YES" )
+    - when: !calc ( VRFYRAD=="YES" or VRFYMINMON=="YES" or VRFYOZN=="YES" )
       do: "YES"
 
   RAD: !FirstTrue
-    - when: !calc VRFYRAD=="YES" & CDUMP=="$CDFNL"
+    - when: !calc VRFYRAD=="YES" and CDUMP=="$CDFNL"
       do: "YES"
 
   MIN: !FirstTrue
