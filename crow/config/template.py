@@ -32,7 +32,7 @@ class Template(dict_eval):
 
             # Inner validation loop.  Validate based on all Templates
             # found thus far.  Add new templates if found via
-            # is_present.
+            # is_present.  Run prechecks if present
             for var in set(scope)-checked:
                 if var not in template: continue
                 try:
@@ -56,7 +56,8 @@ class Template(dict_eval):
                     raise
 
         # Insert default values for all templates found thus far and
-        # override values if requested:
+        # detect any missing, non-optional, variables
+        missing=list()
         for var in template:
             if var not in scope:
                 tmpl=template[var]
@@ -66,8 +67,16 @@ class Template(dict_eval):
                         scope[var]=tmpl._raw('default')
                     except AttributeError:
                         scope[var]=tmpl['default']
-                if 'override' in tmpl:
-                    scope[var]=tmpl.override
+                elif not tmpl.get('optional',False):
+                    missing.append(var)
+        if missing:
+            raise VariableMissing(f'{scope._path}: missing: '+
+                                  ', '.join(missing))
+
+        # Override any variables if requested via "override" clauses.
+        for var in template:
+            if var in scope and 'override' in tmpl:
+                scope[var]=tmpl.override
 
         if errors: raise TemplateErrors(errors)
 
