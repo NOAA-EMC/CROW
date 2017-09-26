@@ -119,6 +119,7 @@ class ToRocoto(object):
                             "must be a string.")
         self.__dummy_var_count=0
         self.__families_with_completes=set()
+        self._validate_tasks()
 
     def make_time_xml(self,indent=1):
         clock=self.suite.Clock
@@ -230,6 +231,12 @@ class ToRocoto(object):
         for key,what in _KEY_WARNINGS.items():
             if key in settings:
                 raise KeyError('%s: %s'%(key,what))
+
+    def _validate_tasks(self):
+        """!Validates all Perform subclauses of Tasks"""
+        for task in self.suite.walk_task_tree():
+            if 'Perform' in task:
+                crow.config.validate(task.Perform,'suite')
 
     def _record_item(self,view,complete):
         complete=complete | view.get_complete_dep()

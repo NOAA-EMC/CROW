@@ -11,7 +11,8 @@ logger=logging.getLogger('setup_expt')
 
 conf=crow.config.from_file(
     'platform.yaml','options.yaml','runtime.yaml',
-    'actions.yaml','workflow.yaml')
+    'actions.yaml','workflow.yaml',
+    validation_stage='')
 
 force = len(sys.argv)>1 and sys.argv[1] == '--force'
 

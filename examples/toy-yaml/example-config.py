@@ -3,11 +3,18 @@
 ## Simple test program for crow.config module
 
 import sys
+import logging
 from datetime import timedelta
 import crow.config
 
 config=crow.config.from_file('test.yml','platform.yml','templates.yml',
                              'actions.yml')
+
+logging.basicConfig(stream=sys.stderr,level=logging.INFO)
+
+crow.config.validate(config.fcst)
+crow.config.validate(config.test)
+crow.config.validate(config.gfsfcst)
 
 print()
 print("test = expected value = actual value")
@@ -56,3 +63,12 @@ with open('namelist.nl','rt') as fd:
 print('config.fcst.expand_text(...namelist.nl...): \n'+
       crow.config.expand_text(namelist_nl,config.fcst))
 
+print('Test the !error clause')
+try:
+    s=config.test.error
+    raise Exception('Should not get here.')
+except crow.config.ConfigUserError as e:
+    print(f'Success! {e}')
+
+print('Test the message clause of contionals.')
+config.test.message
