@@ -177,8 +177,6 @@ VRFY_CDUMP_GFS_VARS: &VRFY_CDUMP_GFS_VARS !Template
     default: "pgbq"
 
 vrfy_template: &vrfy_template !Template
-  ABC: XYZ
-
   # verifying dump
   VDUMP:
     type: string
@@ -212,30 +210,46 @@ vrfy_template: &vrfy_template !Template
     type: string
     allowed: [ "YES", "NO" ]
 
-  VRFYMINMON:      # GSI minimization monitoring
+  VRFYMINMON:
     type: string
     allowed: [ "YES", "NO" ]
+    if_present: !FirstTrue
+      - when: !calc VRFYMINMON=="YES"
+        do: *MIN_VARS
+      - otherwise: null
 
   VRFYRAD:         # Radiance data assimilation monitoring
     type: string
     allowed: [ "YES", "NO" ]
 
-  VRFYOZN:         # Ozone data assimilation monitoring
+  VRFYOZN:
     type: string
     allowed: [ "YES", "NO" ]
+    if_present: !FirstTrue
+      - when: !calc VRFYOZN=='YES'
+        do: *OZN_VARS
+      - otherwise: null
 
   VRFYTRAK:        # Hurricane track forecasts
     type: string
     allowed: [ "YES", "NO" ]
+    if_present: !FirstTrue
+      - when: !calc VRFYTRAK=="YES"
+        do: *CYC_TRACK_VARS
 
-  VRFYGENESIS:     # Cyclone genesis
+  VRFYGENESIS:
     type: string
     allowed: [ "YES", "NO" ]
+    if_present: !FirstTrue
+      - when: !calc VRFYGENESIS=="YES"
+        do: *CYC_GEN_VARS
 
   VRFYGMPK:        # Gempak verification
     type: string
     allowed: [ "YES", "NO" ]
 
+# End of user speficied variables
+#
   VRFYMINSH:
     type: string
     allowed: [ "YES", "NO" ]
@@ -243,13 +257,6 @@ vrfy_template: &vrfy_template !Template
       - when: !calc ( not platform.name=="THEIA" and not platform.name=="WCOSS_C" )
         do: "NO"
         message: !expand "WARNING: Minimization monitoring is not enabled on {platform.name}!"
-
-  CYC_TRACK:
-    type: string
-    allowed: [ "YES", "NO" ]
-    if_present: !FirstTrue
-      - when: !calc VRFYTRAK=="YES"
-        do: *CYC_TRACK_VARS
 
   VRFY_CDUMP_GFS:
     type: string
@@ -272,23 +279,3 @@ vrfy_template: &vrfy_template !Template
       - when: !calc ( VRFYRAD=="YES" and CDUMP==CDFNL )
         do: *RAD_VARS
 
-  OZN:
-    type: string
-    allowed: [ "YES", "NO" ]
-    if_present: !FirstTrue
-      - when: !calc VRFYOZN=="YES"
-        do: *OZN_VARS
-
-  MIN:
-    type: string
-    allowed: [ "YES", "NO" ]
-    if_present: !FirstTrue
-      - when: !calc VRFYMINMON=="YES"
-        do: *MIN_VARS
-
-  CYC_GEN:
-    type: string
-    allowed: [ "YES", "NO" ]
-    if_present: !FirstTrue
-      - when: !calc VRFYGENESIS=="YES"
-        do: *CYC_GEN_VARS

@@ -240,7 +240,7 @@ vrfy: &vrfy_action !Action
   resources: !calc run_vrfy
   rocoto_memory: "3072M"
   accounting: !calc doc.platform.parallel_accounting
-  CDUMP: "gfs"
+#  CDUMP: "gfs"
   VDUMP: "gfs"       # verifying dump
   CDUMPFCST: "gdas"  # Fit-to-obs with GDAS/GFS prepbufr
   CDFNL: "gdas"      # Scores verification against GDAS/GFS analysis
@@ -267,10 +267,10 @@ vrfy: &vrfy_action !Action
     - when: !calc ( machine=="WCOSS_C" and VRFYFITS=="YES" )
       do: !expand "{fitdir}/subfits_cray_nems"
     - when: !calc ( machine=="THEIA" and VRFYFITS=="YES" )
-      do: !expand "fitdir}/subfits_theia_nems"
+      do: !expand "{fitdir}/subfits_theia_nems"
     - otherwise: !error "Do not know subfits file (PREPQFITSH) for this platform"
 
-  VRFY_CDUMP_GFS: !FirstTrue
+  VRFY_CDUMP_GFS: "YES"!FirstTrue
     - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1=="YES" or VRFYPRCP=="YES" or VRFYG2OBS=="YES" ) )
       do: "YES"
     - otherwise: "NO"
