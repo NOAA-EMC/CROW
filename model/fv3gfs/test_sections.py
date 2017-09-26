@@ -22,4 +22,5 @@ conf=crow.config.from_file(sys.argv[1])
 
 for var in sys.argv[2:]:
     val=eval(var,{},conf)
+    crow.config.validate(val)
     print(f'{var} = {val!r}')
