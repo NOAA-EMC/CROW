@@ -11,6 +11,7 @@ following intermediate Python concepts:
 
 """
 
+from copy import copy
 from datetime import timedelta
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config
@@ -23,7 +24,7 @@ class Template(dict_eval):
     def _check_scope(self,scope,stage):
         checked=set()
         errors=list()
-        template=dict(self)
+        template=copy(self)
         did_something=True
 
         # Main validation loop.  Iteratively validate, adding new
@@ -55,7 +56,7 @@ class Template(dict_eval):
                         ip=from_config(
                             var,scheme._raw('if_present'),self._globals(),scope)
                         if not ip: continue
-                        new_template=dict(ip)
+                        new_template=copy(ip)
                         new_template.update(template)
                         template=new_template
                 except (IndexError,AttributeError) as pye:
@@ -69,6 +70,8 @@ class Template(dict_eval):
         for var in template:
             if var not in scope:
                 tmpl=template[var]
+                if not hasattr(tmpl,'__getitem__') or not hasattr(tmpl,'update'):
+                    raise TypeError(f'{self._path}.{var}: All entries in a !Template must be maps not {type(tmpl).__name__}')
                 if 'default' in tmpl:
                     try:
                         did_something=True
