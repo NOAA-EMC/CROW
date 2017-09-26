@@ -71,6 +71,11 @@ test_base: &test_base
       - def
       - ghi
 
+  message: !FirstMax
+    - when: 0
+      do: hello
+      message: This is an informational message.
+
 test:
   <<: *test_base
 

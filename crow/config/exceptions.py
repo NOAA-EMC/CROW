@@ -27,5 +27,8 @@ class TemplateErrors(ConfigError):
     def __init__(self,errors):
         super().__init__(self,'\n'.join([ str(e) for e in errors ]))
         self.template_errors=list(errors)
+    def __str__(self):
+        return 'Scope did not validate:\n' + \
+            '\n'.join(self.template_errors)
 
 class DependError(ConfigError): pass

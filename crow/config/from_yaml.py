@@ -184,12 +184,13 @@ class ConvertFromYAML(object):
         self.validatable=dict()
         self.ENV=ENV
 
-    def convert(self):
+    def convert(self,validation_stage):
         self.result=self.from_dict(self.tree,path='doc')
         globals={ 'tools':self.tools, 'doc':self.result, 'ENV': self.ENV }
         self.result._recursively_set_globals(globals)
-        for i,v in self.validatable.items():
-            v._validate()
+        if validation_stage is not None:
+            for i,v in self.validatable.items():
+                v._validate(validation_stage)
         return self.result
 
     def to_eval(self,v,locals,path):

@@ -97,6 +97,7 @@ class ProcessArgs(object):
             raise TypeError(f'{value}: not a mapping; not a valid scope '
                             f'(is a {type(result).__name__})')
         self.scope=result
+        crow.config.validate(result,'execution')
 
     def set_export_vars(self,value):
         if value.lower()[0] in [ 'y', 't' ]:

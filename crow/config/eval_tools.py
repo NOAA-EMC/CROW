@@ -185,10 +185,10 @@ class dict_eval(MutableMapping):
     def __delitem__(self,k): del(self.__child[k], self.__cache[k])
     def __iter__(self):
         for k in self.__child.keys(): yield k
-    def _validate(self):
+    def _validate(self,stage):
         """!Validates this dict_eval using its embedded Template object, if present """
         if 'Template' in self:
-            self.Template._check_scope(self)
+            self.Template._check_scope(self,stage)
     def __getitem__(self,key):
         val=self.__cache[key]
         if hasattr(val,'_result'):

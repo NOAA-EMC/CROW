@@ -2,12 +2,14 @@
 embedded yaml calculations, as well as internal representations of all
 custom data types in the yaml files."""
 
-import re, abc
+import re, abc, logging
 from datetime import timedelta
 from copy import deepcopy
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc
 from crow.tools import to_timedelta, Clock
+
+logger=logging.getLogger('crow.config')
 
 __all__=[ 'Action','Platform', 'Conditional', 'calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
@@ -86,8 +88,12 @@ class Conditional(list_eval):
                         f'{self._path}: no clauses match and no '
                         f'"otherwise" value was given. {keys} {values}')
                 self.__result=self[otherwise_idx].otherwise
+                idx=otherwise_idx
             else:
                 self.__result=values[idx]
+            if 'message' in self[idx]:
+                logger.info(f'{self._path}[{idx}]: {self[idx].message}')
+
         return self.__result
 
     def _deepcopy_privates_from(self,memo,other):

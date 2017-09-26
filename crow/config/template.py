@@ -11,6 +11,7 @@ following intermediate Python concepts:
 
 """
 
+from datetime import timedelta
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config
 from crow.config.represent import GenericList, GenericDict, GenericOrderedDict
@@ -19,7 +20,7 @@ class Template(dict_eval):
     """!Internal implementation of the YAML Template type.  Validates a
     dict_eval, inserting defaults and reporting errors via the
     TemplateErrors exception.    """
-    def _check_scope(self,scope):
+    def _check_scope(self,scope,stage):
         checked=set()
         errors=list()
         template=dict(self)
@@ -40,6 +41,12 @@ class Template(dict_eval):
                     checked.add(var)
                     scheme=template[var]
 
+                    if stage and 'stages' in scheme:
+                        if stage not in scheme.stages:
+                            continue # skip validation; wrong stage
+                    elif 'stages' in scheme:
+                        continue # skip validation of stage-specific schemes
+
                     if 'precheck' in scheme:
                         scope[var]=scheme.precheck
 
@@ -51,9 +58,10 @@ class Template(dict_eval):
                         new_template=dict(ip)
                         new_template.update(template)
                         template=new_template
+                except (IndexError,AttributeError) as pye:
+                    errors.append(f'{scope._path}.{var}: {pye}')
                 except ConfigError as ce:
-                    errors.append(ce)
-                    raise
+                    errors.append(str(ce))
 
         # Insert default values for all templates found thus far and
         # detect any missing, non-optional, variables
@@ -75,8 +83,8 @@ class Template(dict_eval):
 
         # Override any variables if requested via "override" clauses.
         for var in template:
-            if var in scope and 'override' in tmpl:
-                scope[var]=tmpl.override
+            if var in scope and 'override' in template[var]:
+                scope[var]=template[var].override
 
         if errors: raise TemplateErrors(errors)
 
@@ -122,7 +130,8 @@ def validate_dict(types,val,allowed,typ):
 TYPES={ 'int':[int], 'bool':[bool], 'string':[str,bytes],
         'float':[float], 'list':[set,list,tuple,list_eval,GenericList],
         'dict':[dict,dict_eval,GenericDict,GenericOrderedDict],
-        'seq':[set,list,tuple,list_eval,GenericList] }
+        'seq':[set,list,tuple,list_eval,GenericList],
+        'timedelta':[timedelta]}
 
 ## @var VALIDATORS
 # Mapping from YAML type to validation function.
@@ -133,7 +142,8 @@ VALIDATORS={ 'map':validate_dict,
              'int':validate_scalar,
              'bool':validate_scalar,
              'string':validate_scalar,
-             'float':validate_scalar }
+             'float':validate_scalar,
+             'timedelta': validate_scalar}
 
 def validate_type(path,var,typ,val,allowed):
     """!Top-level validation function.  Checks that the value val of the

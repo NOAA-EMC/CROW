@@ -19,7 +19,7 @@ __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
          'TaskStateAnd', 'TaskStateOr', 'TaskStateNot', 'TaskStateIs',
          'Taskable', 'Task', 'Family', 'CycleAt', 'CycleTime', 'Cycle',
          'Trigger', 'Depend', 'Timespec', 'SuitePath', 
-         'CycleExistsDependency']
+         'CycleExistsDependency', 'validate']
 
 def to_py(obj):
     return obj._to_py() if hasattr(obj,'_to_py') else obj
@@ -33,17 +33,22 @@ def expand_text(text,scope):
 
 evaluate_immediates=_evaluate_immediates
 
-def from_string(s,evaluate_immediates=True):
+def from_string(s,evaluate_immediates=True,validation_stage=None):
     c=ConvertFromYAML(yaml.load(s),CONFIG_TOOLS,ENV)
-    result=c.convert()
+    result=c.convert(validation_stage=validation_stage)
     if evaluate_immediates:
         _evaluate_immediates(result,recurse=True)
     return result
 
-def from_file(*args,evaluate_immediates=True):
+def from_file(*args,evaluate_immediates=True,validation_stage=None):
     data=list()
     for file in args:
         with open(file,'rt') as fopen:
             data.append(fopen.read())
     return from_string(u'\n\n\n'.join(data),
-                       evaluate_immediates=evaluate_immediates)
+                       evaluate_immediates=evaluate_immediates,
+                       validation_stage=validation_stage)
+
+def validate(obj,stage=''):
+    if getattr(obj,'_validate'):
+        obj._validate(stage)
