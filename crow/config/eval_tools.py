@@ -143,7 +143,7 @@ class dict_eval(MutableMapping):
     def __len__(self):          return len(self.__child)
     def __copy__(self):
         cls=type(self)
-        d=cls(copy(self.__child))
+        d=cls(self.__child,self._path)
         d.__globals=self.__globals
         return d
     def _invalidate_cache(self,key=None):
@@ -167,8 +167,9 @@ class dict_eval(MutableMapping):
         cls=type(self.__child)
         return deepcopy(self.__child,memo)
     def _deepcopy_privates_from(self,memo,other):
-        self.__globals=dict([ ( deepcopy(k,memo),deepcopy(v,memo) )
-                              for k,v in other.__globals.items() ])
+        self.__globals=deepcopy(other.__globals,memo)
+#dict([ ( deepcopy(k,memo),deepcopy(v,memo) )
+#                              for k,v in other.__globals.items() ])
         self.__cache=deepcopy(other.__cache,memo)
         self._path=deepcopy(other._path)
         #self.__globals=deepcopy(other.__globals,memo)

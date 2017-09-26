@@ -52,3 +52,6 @@ def from_file(*args,evaluate_immediates=True,validation_stage=None):
 def validate(obj,stage=''):
     if getattr(obj,'_validate'):
         obj._validate(stage)
+
+def document_root(obj):
+    return obj._globals()['doc']
