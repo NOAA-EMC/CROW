@@ -39,3 +39,4 @@ fcst_vars: &fcst_vars !Template
     default: !calc len(cow)
   some_array:
     type: int list
+    optional: true
