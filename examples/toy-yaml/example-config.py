@@ -56,3 +56,9 @@ with open('namelist.nl','rt') as fd:
 print('config.fcst.expand_text(...namelist.nl...): \n'+
       crow.config.expand_text(namelist_nl,config.fcst))
 
+print('Test the !error clause')
+try:
+    s=config.test.error
+    raise Exception('Should not get here.')
+except crow.config.ConfigUserError as e:
+    print(f'Success! {e}')

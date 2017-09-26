@@ -73,3 +73,5 @@ test_base: &test_base
 
 test:
   <<: *test_base
+
+  error: !error This is an error message.

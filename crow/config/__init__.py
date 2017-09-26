@@ -13,6 +13,7 @@ from .tasks import Suite, Depend, AndDependency, SuitePath, \
 from .to_yaml import to_yaml
 from .eval_tools import invalidate_cache
 from .eval_tools import evaluate_immediates as _evaluate_immediates
+from .exceptions import ConfigError, ConfigUserError
 
 __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
          'TaskStateAnd', 'TaskStateOr', 'TaskStateNot', 'TaskStateIs',
