@@ -42,8 +42,8 @@ class Template(dict_eval):
 
                     if 'precheck' in scheme:
                         scope[var]=scheme.precheck
-                        
-                    validate_var(scheme,var,scope[var])
+
+                    validate_var(scope._path,scheme,var,scope[var])
                     if 'if_present' in scheme:
                         ip=from_config(
                             var,scheme._raw('if_present'),self._globals(),scope)
@@ -126,27 +126,30 @@ VALIDATORS={ 'map':validate_dict,
              'string':validate_scalar,
              'float':validate_scalar }
 
-def validate_type(var,typ,val,allowed):
+def validate_type(path,var,typ,val,allowed):
     """!Top-level validation function.  Checks that the value val of the
     variable var is of the given type typ and has values in the list
     of those allowed.    """
     types=typ.split()
     for t in types:
         if t not in VALIDATORS:
-            raise InvalidConfigType('%s=%s: unknown type in %s'%(
-                str(var),repr(t),repr(typ)))
+            raise InvalidConfigType(
+                f'{path}.{var}={t!r}: unknown type in {typ!r}')
     result=VALIDATORS[types[-1]](types[:-1],val,allowed,types[-1])
     if result is UNKNOWN_TYPE:
-        raise InvalidConfigType('%s: type %s: unknown type in %s'%(
-            str(var),repr(t),repr(typ)))
+        raise InvalidConfigType(
+            f'{path}.{var}={t!r}: unknown type in {typ!r}')
     elif result is TYPE_MISMATCH:
-        raise InvalidConfigValue('%s=%s: not valid for type %s'%(
-            str(var),repr(val),repr(typ)))
+        val_repr='null' if val is None else repr(val)
+        raise InvalidConfigValue(
+            f'{path}.{var}={val_repr}: not valid for type {typ!r}')
     elif result is NOT_ALLOWED:
-        raise InvalidConfigValue('%s=%s: not an allowed value (%s)'%(
-            str(var),repr(val),', '.join([repr(s) for s in allowed])))
+        val_repr='null' if val is None else repr(val)
+        raise InvalidConfigValue(
+            f'{path}.{var}={val_repr}: not an allowed value ('
+            f'{", ".join([repr(s) for s in allowed])})')
 
-def validate_var(scheme,var,val):
+def validate_var(path,scheme,var,val):
     """!Main entry point to recursive validation system.  Validates
     variable var with value val against the YAML Template list item in
     scheme.    """
@@ -158,4 +161,4 @@ def validate_var(scheme,var,val):
     allowed=scheme.get('allowed',[])
     if not isinstance(allowed,list) and not isinstance(allowed,list_eval):
         raise InvalidConfigTemplate(var+'.allowed: must be a list')
-    validate_type(var,typ,val,allowed)
+    validate_type(path,var,typ,val,allowed)

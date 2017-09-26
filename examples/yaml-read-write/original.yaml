@@ -31,6 +31,7 @@ theia: &theia !Platform
 platform: !FirstTrue
   - { do: *theia,      when: !calc theia.detect }
   - { do: *wcoss_cray, when: !calc wcoss_cray.detect }
+  - { otherwise: !error unknown platform }
 
 testmax: !FirstMax
   - { do: a,  when: 1 }
@@ -43,10 +44,12 @@ testmin: !FirstMin
 testfirst: !FirstTrue
   - { do: a,  when: true }
   - { do: b,  when: false }
+  - { otherwise: should not get here }
 
 testlast: !LastTrue
   - { do: a,  when: true }
   - { do: b,  when: false }
+  - { otherwise: should not get here }
 
 template: &template !Template
   a:

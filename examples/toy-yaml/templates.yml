@@ -27,6 +27,7 @@ fcst_vars: &fcst_vars !Template
     if_present: !FirstTrue
       - do: *more_vars
         when: !calc a==10
+      - otherwise: null
   cow:
     type: string
     allowed: [ brown, black, white, red, blue ]

@@ -35,7 +35,12 @@ from copy import copy,deepcopy
 from crow.config.exceptions import *
 
 __all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval',
-          'list_eval', 'multidict', 'Eval' ]
+          'list_eval', 'multidict', 'Eval', 'user_error_message' ]
+
+class user_error_message(str):
+    """!Used to embed assertions in configuration code."""
+    def _result(self,globals,locals):
+        raise ConfigUserError(eval("f'''"+self+"'''",globals,locals))
 
 class expand(str):
     """!Represents a literal format string."""
@@ -128,11 +133,12 @@ class dict_eval(MutableMapping):
 
     * __getitem__(b) + __getitem__(c)    """
 
-    def __init__(self,child):
+    def __init__(self,child,path=''):
         #assert(not isinstance(child,dict_eval))
         self.__child=copy(child)
         self.__cache=copy(child)
         self.__globals={}
+        self._path=path
     def __contains__(self,k):   return k in self.__child
     def __len__(self):          return len(self.__child)
     def __copy__(self):
@@ -239,11 +245,12 @@ class list_eval(MutableSequence):
     [ self.__locals.__getitem__(b) + self.__locals.__getitem__(c),
       self.__locals.__getitem__(b) - self.__locals.__getitem__(c) ]
     \endcode    """
-    def __init__(self,child,locals):
+    def __init__(self,child,locals,path=''):
         self.__child=list(child)
         self.__cache=list(child)
         self.__locals=locals
         self.__globals={}
+        self._path=path
     def _raw_cache(self):       return self.__cache
     def __len__(self):          return len(self.__child)
     def _set_globals(self,g):   self.__globals=g

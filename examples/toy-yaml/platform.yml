@@ -39,3 +39,4 @@ platform: !FirstTrue
     when: !calc do.detect
   - do: *theia
     when: !calc do.detect
+  - otherwise: !error This platform is unsupported or unknown.

@@ -184,11 +184,14 @@ fcst: &fcst_action !Action
   restart_interval: !FirstTrue
     - when: !calc CDUMP=="gdas"
       do: 6
+    - otherwise: 0
+
   DIAG_TABLE: !FirstTrue
     - when: !calc CDUMP=="gdas"
       do: !expand "{BASE_GSM}/parm/parm_fv3diag/diag_table_da"
     - when: !calc CDUMP=="gfs"
       do: !expand "{BASE_GSM}/parm/parm_fv3diag/diag_table"
+    - otherwise: !error "Do not know DIAG_TABLE for CDUMP={CDUMP}"
 
   REGRID_NEMSIO_SH: !expand "{BASE_GSM}/ush/fv3gfs_regrid_nemsio.sh"
   REGRID_NEMSIO_TBL: !expand "{BASE_GSM}/parm/parm_fv3diag/variable_table_da.txt"
@@ -258,39 +261,48 @@ vrfy: &vrfy_action !Action
       do: !expand "{BASE_SVN}/verif/global/parafits.fv3nems/batrun"
     - when: !calc ( machine=="THEIA" and VRFYFITS=="YES" )
       do: !expand "{BASE_SVN}/verif/global/parafits.fv3nems/batrun"
+    - otherwise: !error "Do not know fitdir for this platform"
 
   PREPQFITSH: !FirstTrue
     - when: !calc ( machine=="WCOSS_C" and VRFYFITS=="YES" )
       do: !expand "{fitdir}/subfits_cray_nems"
     - when: !calc ( machine=="THEIA" and VRFYFITS=="YES" )
       do: !expand "fitdir}/subfits_theia_nems"
+    - otherwise: !error "Do not know subfits file (PREPQFITSH) for this platform"
 
   VRFY_CDUMP_GFS: !FirstTrue
     - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1=="YES" or VRFYPRCP=="YES" or VRFYG2OBS=="YES" ) )
       do: "YES"
+    - otherwise: "NO"
 
   MIN_RAD_OZN: !FirstTrue
     - when: !calc ( VRFYRAD=="YES" or VRFYMINMON=="YES" or VRFYOZN=="YES" )
       do: "YES"
+    - otherwise: 'NO'
 
   RAD: !FirstTrue
     - when: !calc ( VRFYRAD=="YES" and CDUMP==CDFNL )
       do: "YES"
+    - otherwise: 'NO'
 
   MIN: !FirstTrue
     - when: !calc VRFYMINMON=="YES"
       do: "YES"
+    - otherwise: 'NO'
 
   OZN: !FirstTrue
     - when: !calc VRFYOZN=="YES"
       do: "YES"
+    - otherwise: 'NO'
 
   CYC_TRACK: !FirstTrue
     - when: !calc VRFYTRAK=="YES"
       do: "YES"
+    - otherwise: 'NO'
 
   CYC_GEN: !FirstTrue
     - when: !calc VRFYGENESIS=="YES"
       do: "YES"
+    - otherwise: 'NO'
 
   nth_vrfy: 2

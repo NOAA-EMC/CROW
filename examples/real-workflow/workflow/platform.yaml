@@ -83,3 +83,4 @@ platform: !Immediate
         <<: *theia
         Evaluate: true
       when: !calc do.detect
+    - otherwise: !error Unknown platform.

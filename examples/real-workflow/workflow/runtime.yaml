@@ -11,3 +11,4 @@ clock: &clock !Clock
       when: !calc tools.have_env('YMDH')
     - do: null
       when: true
+    - otherwise: !error should not get here

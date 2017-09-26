@@ -55,11 +55,11 @@ TYPE_MAP={ PlatformYAML:     [ Platform,     dict,       None ],
            FamilyYAML:       [ Family,       OrderedDict, None ]
          }
 
-def type_for(t):
+def type_for(t,path):
     """!Returns an empty, internal representation, class for the given
     YAML type.  This is simply a wrapper around TYPE_MAP"""
     (internal_class,python_class,convert_class)=TYPE_MAP[type(t)]
-    return ( internal_class(python_class()), convert_class )
+    return ( internal_class(python_class(),path=path), convert_class )
 
 ########################################################################
 
@@ -100,6 +100,7 @@ def add_yaml_string(key,cls):
 
 add_yaml_string(u'!expand',expand)
 add_yaml_string(u'!calc',calc)
+add_yaml_string(u'!error',user_error_message)
 add_yaml_string(u'!Depend',Depend)
 
 ########################################################################
@@ -184,89 +185,100 @@ class ConvertFromYAML(object):
         self.ENV=ENV
 
     def convert(self):
-        self.result=self.from_dict(self.tree)
+        self.result=self.from_dict(self.tree,path='doc')
         globals={ 'tools':self.tools, 'doc':self.result, 'ENV': self.ENV }
         self.result._recursively_set_globals(globals)
         for i,v in self.validatable.items():
             v._validate()
         return self.result
 
-    def to_eval(self,v,locals):
+    def to_eval(self,v,locals,path):
         """!Converts the object v to an internal implementation class.  If the
         conversion has already happened, returns the converted object
         from self.memo        """
         if id(v) not in self.memo:
-            self.memo[id(v)]=self.to_eval_impl(v,locals)
+            self.memo[id(v)]=self.to_eval_impl(v,locals,path=path)
         return self.memo[id(v)]
 
-    def to_eval_impl(self,v,locals):
+    def to_eval_impl(self,v,locals,path):
         """!Unconditionally converts the object v to an internal
         implementation class, without checking self.memo."""
         top=self.result
         # Specialized containers:
         cls=type(v)
         if cls in CONDITIONALS:
-            return self.from_list(v,locals,CONDITIONALS[cls])
+            return self.from_list(v,locals,CONDITIONALS[cls],path)
         elif cls in SUITE:
-            return self.from_dict(v,SUITE[cls])
+            return self.from_dict(v,SUITE[cls],path)
         elif cls is EvalYAML:
-            return Eval(self.from_dict(v))
+            return Eval(self.from_dict(v,path=path))
         elif cls is ClockYAML:
-            return ClockMaker(self.from_dict(v))
+            return ClockMaker(self.from_dict(v,path=path))
         elif cls is ImmediateYAML:
-            return self.from_list(v,locals,Immediate)
+            return self.from_list(v,locals,Immediate,path)
         elif isinstance(v,list) and v and isinstance(v[0],tuple) \
              or isinstance(v,OrderedDict):
-            return self.from_ordered_dict(v,GenericOrderedDict)
+            return self.from_ordered_dict(v,GenericOrderedDict,path)
         # Generic containers:
-        elif isinstance(v,YAMLObject): return self.from_yaml(v)
-        elif isinstance(v,dict):     return self.from_dict(v)
-        elif isinstance(v,list):     return self.from_list(v,locals)
-        elif isinstance(v,set):      return set(self.from_list(v,locals))
-        elif isinstance(v,tuple):    return self.from_list(v,locals)
+        elif isinstance(v,YAMLObject): return self.from_yaml(v,path=path)
+        elif isinstance(v,dict):     return self.from_dict(v,path=path)
+        elif isinstance(v,list):     return self.from_list(v,locals,path=path)
+        elif isinstance(v,set):      return set(self.from_list(v,locals,path=path))
+        elif isinstance(v,tuple):    return self.from_list(v,locals,path=path)
 
-        # Scalar types;
+        # Scalar types:
         return v
 
-    def from_yaml(self,yobj):
+    def from_yaml(self,yobj,path):
         """!Converts a YAMLObject instance yobj of a YAML, and its elements,
         to internal implementation types.  Elements with unsupported
         names are ignored.        """
-        ret, cnv = type_for(yobj)
+        ret, cnv = type_for(yobj,path)
         for k in dir(yobj):
             if not valid_name(k): continue
-            ret[k]=self.to_eval(getattr(yobj,k),ret)
+            ret[k]=self.to_eval(getattr(yobj,k),ret,path=f'{path}.{k}')
         if cnv:
             kwargs=dict(ret)
             return cnv(**kwargs)
         self.validatable[id(ret)]=ret
         return ret
 
-    def from_ordered_dict(self,tree,cls=GenericOrderedDict):
+    def from_ordered_dict(self,tree,cls=GenericOrderedDict,path='doc'):
+        assert(isinstance(cls,type))
         top=self.result
-        ret=cls(OrderedDict())
+        ret=cls(OrderedDict(),path=path)
         for k,v in tree:
             if not valid_name(k): continue
-            ret[k]=self.to_eval(v,ret)
+            ret[k]=self.to_eval(v,ret,path=f'{path}.{k}')
         self.validatable[id(ret)]=ret
         return ret
 
-    def from_dict(self,tree,cls=GenericDict):
+    def from_dict(self,tree,cls=GenericDict,path='doc'):
         """!Converts an object yobj of a YAML standard map type, and its
         elements, to internal implementation types.  Elements with
         unsupported names are ignored.        """
+        assert(isinstance(cls,type))
         top=self.result
-        ret=cls(tree)
+        ret=cls(tree,path=path)
         for k,v in tree.items():
             if not valid_name(k): continue
-            ret[k]=self.to_eval(v,ret)
+            ret[k]=self.to_eval(v,ret,path=f'{path}.{k}')
         return ret
 
-    def from_list(self,sequence,locals,cls=GenericList):
+    def from_list(self,sequence,locals,cls=GenericList,path='doc'):
         """!Converts an object yobj of a YAML standard sequence type, and its
         elements, to internal implementation types.  Elements with
         unsupported names are ignored.  This is also used to handle
         other sequence-like types such as omap or set.        """
-        return cls(
-            [self.to_eval(s,locals) for s in sequence],
-            locals)
+        assert(isinstance(cls,type))
+        if hasattr(sequence,'__getitem__'):
+            content=list()
+            for i in range(len(sequence)):
+                content.append(self.to_eval(
+                    sequence[i],locals,f'{path}[{i}]'))
+            return cls(content,locals,path)
+        else:
+            # For types that do not support indexing
+            content=[self.to_eval(s,locals,path) for s in sequence]
+            return cls(content,locals,path+'[*]')
+

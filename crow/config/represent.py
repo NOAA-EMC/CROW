@@ -41,33 +41,55 @@ class Conditional(list_eval):
     def __init__(self,*args):
         super().__init__(*args)
         self.__result=Conditional.MISSING
+    def _gather_keys_and_values(self,globals,locals):
+        keys=list()
+        values=list()
+        otherwise_idx=Conditional.MISSING
+        for i in range(len(self)):
+            vk=self[i]
+            has_otherwise = vk._has_raw('otherwise')
+            has_when = vk._has_raw('when')
+            has_do = vk._has_raw('do')
+            if has_otherwise and ( has_when or has_do ):
+                raise ConditionalOverspecified(
+                    f'{self._path}[{i}]: cannot have "otherwise," '
+                    '"when," and "if" in the same entry')
+            elif has_otherwise and i!=len(self)-1:
+                raise ConditionalInvalidOtherwise(
+                    f'{self._path}[{i}]: "otherwise" must be the last item')
+            elif has_otherwise:
+                otherwise_idx=i
+            elif has_when and has_do:
+                values.append(vk._raw('do'))
+                vk_locals=multidict(vk,locals)
+                keys.append(from_config('when',vk._raw('when'),globals,vk_locals))
+            else:
+                raise ConditionalMissingDoWhen(
+                    f'{self._path}[{i}]: entries must have "do" and "when"'
+                    'or "otherwise".  Saw keys: '+', '.join(list(vk.keys())))
+        return keys, values, otherwise_idx
+
     def _result(self,globals,locals):
         assert('tools' in globals)
         assert('doc' in globals)
         if self.__result is Conditional.MISSING:
-            keys=list()
-            values=list()
-            for vk in self:
-                if vk._has_raw('when') and vk._has_raw('do'):
-                    values.append(vk._raw('do'))
-                    keys.append(from_config('when',vk._raw('when'),
-                        globals,multidict(vk,locals)))
-                else:
-                    raise ConditionalMissingDoWhen(
-                        'Conditional list entries must have "do" and "when" '
-                        'elements (saw keys: %s)'
-                        %(', '.join(list(vk.keys())), ))
-            index=self._index(keys)
-            if index is None:
-                self.__result=None
+            ( keys, values, otherwise_idx ) = \
+                self._gather_keys_and_values(globals,locals)
+            if self._require_an_otherwise_clause() and \
+               otherwise_idx is Conditional.MISSING:
+                raise ConditionalMissingOtherwise(
+                    f'{self._path}: no "otherwise" clause provided')
+            idx=self._index(keys)
+            if idx is None:
+                if otherwise_idx is Conditional.MISSING:
+                    raise ConditionalMissingOtherwise(
+                        f'{self._path}: no clauses match and no '
+                        f'"otherwise" value was given. {keys} {values}')
+                self.__result=self[otherwise_idx].otherwise
             else:
-                try:
-                    values=[ vk._raw('do') for vk in self ]
-                except AttributeError:
-                    values=[ vk.value for vk in self ]
-                    scope[var]=tmpl['default']
-                self.__result=values[index]
+                self.__result=values[idx]
         return self.__result
+
     def _deepcopy_privates_from(self,memo,other):
         super()._deepcopy_privates_from(memo,other)
         if other.__result is Conditional.MISSING:
@@ -79,20 +101,24 @@ class Conditional(list_eval):
     def _index(lst): pass
 
 class FirstMax(Conditional):
+    def _require_an_otherwise_clause(self): return False
     def _index(self,lst):
         return lst.index(max(lst)) if lst else None
 
 class FirstMin(Conditional):
+    def _require_an_otherwise_clause(self): return False
     def _index(self,lst):
         return lst.index(min(lst)) if lst else None
 
 class LastTrue(Conditional):
+    def _require_an_otherwise_clause(self): return True
     def _index(self,lst):
         for i in range(len(lst)-1,-1,-1):
             if lst[i]: return i
         return None
 
 class FirstTrue(Conditional):
+    def _require_an_otherwise_clause(self): return True
     def _index(self,lst):
         for i in range(len(lst)):
             if lst[i]: return i
