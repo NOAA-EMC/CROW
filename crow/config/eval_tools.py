@@ -170,6 +170,7 @@ class dict_eval(MutableMapping):
         self.__globals=dict([ ( deepcopy(k,memo),deepcopy(v,memo) )
                               for k,v in other.__globals.items() ])
         self.__cache=deepcopy(other.__cache,memo)
+        self._path=deepcopy(other._path)
         #self.__globals=deepcopy(other.__globals,memo)
     def __deepcopy__(self,memo):
         cls=type(self)
@@ -274,6 +275,7 @@ class list_eval(MutableSequence):
     def _deepcopy_privates_from(self,memo,other):
         self.__child=deepcopy(other.__child,memo)
         self.__cache=deepcopy(other.__cache,memo)
+        self._path=deepcopy(other._path)
         self.__globals=deepcopy(other.__globals,memo)
         self.__cache=deepcopy(other.__cache,memo)
     def _invalidate_cache(self,index=None):
