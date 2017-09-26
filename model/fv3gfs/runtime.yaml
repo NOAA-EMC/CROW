@@ -9,5 +9,4 @@ clock: &clock !Clock
   now: !FirstTrue
     - do: !calc tools.from_YMDH(tools.env('YMDH'))
       when: !calc tools.have_env('YMDH')
-    - do: null
-      when: true
+    - otherwise: null
