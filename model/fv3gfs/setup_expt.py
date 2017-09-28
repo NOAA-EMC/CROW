@@ -36,7 +36,6 @@ for key in list(conf.keys()):
 EXPDIR=conf.options.EXPDIR
 logger.info(f'Run directory: {EXPDIR}')
 config_yaml=os.path.join(EXPDIR,'config.yaml')
-yaml=crow.config.to_yaml(conf)
 
 try:
     os.makedirs(EXPDIR)
@@ -48,16 +47,20 @@ except FileExistsError:
     logger.warning(f'--force given; will replace config.yaml without '
                    'deleting directory')
 
-logger.info(f'Write the config file: {config_yaml}')
-with open(config_yaml,'wt') as fd:
-    fd.write(yaml)
-
 suite=conf.workflow
 
 expname=conf.options.experiment_name
 logger.info(f'Experiment name: {expname}')
 
-rocoto_xml=crow.metascheduler.to_rocoto(suite)
+rocoto_suite, rocoto_xml=crow.metascheduler.to_rocoto(suite)
+doc=crow.config.document_root(rocoto_suite)
+yaml=crow.config.to_yaml(doc)
+
+logger.info(f'Write the config file: {config_yaml}')
+with open(config_yaml,'wt') as fd:
+    fd.write(yaml)
+
+
 rocoto_xml_file=os.path.join(EXPDIR,f'{expname}.xml')
 logger.info(f'Rocoto XML file: {rocoto_xml_file}')
 with open(rocoto_xml_file,'wt') as fd:
