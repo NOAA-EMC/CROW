@@ -295,7 +295,7 @@ vrfy_template: &vrfy_template !Template
   VRFY_CDUMP_GFS:
     type: string
     allowed: [ "YES", "NO" ]
-    if_present: !FirstTrue
+    default: !FirstTrue
       - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1=="YES" or VRFYPRCP=="YES" or VRFYG2OBS=="YES" ) )
         do: *VRFY_CDUMP_GFS_VARS
       - otherwise: null
@@ -313,7 +313,7 @@ vrfy_template: &vrfy_template !Template
   MIN_RAD_OZN:
     type: string
     allowed: [ "YES", "NO" ]
-    if_present: !FirstTrue
+    default: !FirstTrue
       - when: !calc ( VRFYRAD=="YES" or VRFYMINMON=="YES" or VRFYOZN=="YES" )
         do: *MIN_RAD_OZN_VARS
       - otherwise: null
@@ -321,7 +321,7 @@ vrfy_template: &vrfy_template !Template
   RAD:
     type: string
     allowed: [ "YES", "NO" ]
-    if_present: !FirstTrue
+    default: !FirstTrue
       - when: !calc ( VRFYRAD=="YES" and CDUMP==CDFNL )
         do: *RAD_VARS
       - otherwise: null
