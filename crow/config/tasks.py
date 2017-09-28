@@ -57,15 +57,29 @@ class SuiteView(Mapping):
         # assert(isinstance(viewed,dict_eval))
         assert(isinstance(parent,SuiteView))
         self.suite=suite
-        self.viewed=copy(viewed)
+        # if isinstance(viewed,Task) and  'fcst' in '-'.join([str(s) for s in path]):
+        #     print(path)
+        #     print(viewed.keys())
+        #     assert('Template' in viewed)
+        #     assert('testvar' not in viewed)
+        self.viewed=viewed
         self.viewed.task_path_list=path[1:]
         self.viewed.task_path_str='/'+'/'.join(path[1:])
         self.viewed.task_path_var='.'.join(path[1:])
         self.viewed._path=self.viewed.task_path_var
+        if isinstance(self.viewed,Task):
+            for k,v in self.viewed.items():
+                v=copy(v)
+                if hasattr(v,"_validate"):
+                    v._validate('suite')
+                self.viewed[k]=v
         self.viewed.up=parent
         self.path=SuitePath(path)
         self.parent=parent
         self.__cache={}
+
+    def _globals(self):
+        return self.viewed._globals()
 
     def __eq__(self,other):
         return self.path==other.path and self.suite is other.suite
@@ -144,9 +158,13 @@ class SuiteView(Mapping):
     def __wrap(self,key,obj):
         if isinstance(obj,Taskable):
             # Add to path when recursing into a family or task
+            obj=copy(obj)
+            self.viewed[key]=obj
             return SuiteView(self.suite,obj,self.path+[key],self)
         if isinstance(obj,Cycle):
             # Reset path when we see a cycle
+            obj=copy(obj)
+            self.viewed[key]=obj
             return SuiteView(self.suite,obj,self.path[:1],self)
         return obj
 
@@ -189,9 +207,9 @@ class Suite(SuiteView):
     def has_cycle(self,dt):
         return CycleExistsDependency(to_timedelta(dt))
     def make_empty_copy(self,more_globals=EMPTY_DICT):
-        new_more_globals=copy(self._more_globals)
+        suite_copy=deepcopy(self)
+        new_more_globals=copy(suite_copy._more_globals)
         new_more_globals.update(more_globals)
-        suite_copy=deepcopy(self.viewed)
         return Suite(suite_copy,new_more_globals)
 
 class Depend(str):

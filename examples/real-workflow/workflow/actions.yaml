@@ -3,6 +3,9 @@
 # Convenient blocks to include in actions:
 
 generic_fcst_template: &fcst_template !Template
+  testvar:
+    type: int
+    default: 5
   nx: 
     type: int
   ny:
@@ -101,6 +104,7 @@ clim_fcst: &clim_fcst_action !Action
 
 ens_fcst: &ens_fcst_action !Action
   <<: *generic_fcst_action
+  Template: *fcst_template
   J_JOB: JENS_FCST
   resources:
     - exe: !calc doc.executables.fcst
