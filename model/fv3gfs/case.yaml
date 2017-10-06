@@ -1,5 +1,5 @@
 places: &places
-  PROJECT_DIR: /scratch4/NCEPDEV/ocean/scrub/
+  PROJECT_DIR: /scratch4/NCEPDEV/ocean/scrub
   HOMEDIR: !expand "{PROJECT_DIR}/save/{tools.env('USER')}"
   STMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
   PTMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
@@ -12,7 +12,8 @@ places: &places
 options: &options
   <<: *places
   # Project for CPU accounting.
-  cpu_project: !calc doc.platform.default_cpu_project #Formerly known as ACCOUNT
+  cpu_project: marine-cpu
+#  cpu_project: !calc doc.platform.default_cpu_project #Formerly known as ACCOUNT
 
   hpss_project: emc-global  # Project for storing HPSS data.
   noscrub_project: nems  # Project for storing non-scrubbed data.
