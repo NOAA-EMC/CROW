@@ -182,6 +182,10 @@ class ProcessArgs(object):
                 for k,v in self.import_all(value):
                     yield k,v
                 return
+            elif command=='from':
+                for k,v in self.import_from(value):
+                    yield k,v
+                return
             elif command=='expand' or command=='preprocess':
                 if self.have_handled_vars:
                     raise Exception(f'{arg}: cannot expand files and set '
@@ -219,6 +223,15 @@ class ProcessArgs(object):
             if re.match(regex,key):
                 yield self.express_var(key,key)
 
+    def import_from(self,var):
+        the_list=self.eval_expr(var)
+        if not hasattr(the_list,'index'):
+            raise TypeError(f'from:{var}: does not correspond to a list')
+        for varname in the_list:
+            if not isinstance(varname,str):
+                logger.warning("from:{var}:{varname}: variable names must be strings")
+            yield self.express_var(varname,varname)
+
     def express_var(self,var,expr):
         if self.have_expanded:
             raise Exception(f'{arg}: cannot expand files and set variables'
@@ -247,4 +260,3 @@ if __name__ == '__main__':
     except EpicFail:
         sys.stderr.write('Failure; see prior errors.\n')
         exit(1)
-
