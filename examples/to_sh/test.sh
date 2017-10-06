@@ -13,6 +13,7 @@ if [[ "${1:-missing}" == -v ]] ; then
     TO_SH() {
         if ( ! "$TO_SH" -v "$@" ) ; then
             echo "Non-zero exit." 1>&2
+            return 1
         fi
     }
 else
@@ -21,6 +22,7 @@ else
         echo "> $TO_SH" "$@" 1>&2
         if ( ! "$TO_SH" "$@" ) ; then
             echo "Non-zero exit." 1>&2
+            return 1
         fi
     }
 fi
@@ -41,6 +43,15 @@ eval $( TO_SH test.yaml scope:array[2] I=item T=texture )
 echo "  I = three = $I"
 echo "  T = fluffy = $T"
 unset I T
+
+unset DOG CAT BIRD MOUSE
+eval $( TO_SH test.yaml scope:import_from from:var_list )
+echo "  DOG = $DOG"
+echo "  CAT = $CAT"
+if [[ "Q" != "Q${BIRD:-}" ]] ; then
+    echo ERROR: Should not have exported BIRD. 1>&2
+    exit 1
+fi
 
 eval $( TO_SH test.yaml on=logical.TRUE_TEST scope:logical off=FALSE_TEST )
 echo "  on = YES = $on"
@@ -71,4 +82,14 @@ TO_SH test.yaml run:success_test
 
 TO_SH test.yaml run_ignore:failure_test
 
+set +e
 TO_SH test.yaml run:failure_test
+status="$?"
+echo "$status"
+if [[ "$status" == 0 ]] ; then
+    echo "BAD! Should have exited with non-zero status" 1>&2
+    exit 1
+else
+    echo "Rejoice!  Exited with non-zero status!"
+fi
+    

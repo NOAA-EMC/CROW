@@ -1,11 +1,15 @@
 abc: [ d, e, f ]
 one: 1
 
-vars:
+vars: &vars
   DOG: Roscoe
   CAT: Apollo
   BIRD: Girdy-Girl
   MOUSE: null
+
+import_from:
+  <<: *vars
+  var_list: [ DOG, CAT ]
 
 array:
   - item: one
