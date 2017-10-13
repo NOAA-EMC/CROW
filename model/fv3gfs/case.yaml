@@ -1,5 +1,5 @@
 places: &places
-  PROJECT_DIR: /scratch4/NCEPDEV/ocean/scrub
+  PROJECT_DIR: /scratch4/NCEPDEV/nems/
   HOMEDIR: !expand "{PROJECT_DIR}/save/{tools.env('USER')}"
   STMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
   PTMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"

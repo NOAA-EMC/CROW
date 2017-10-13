@@ -29,7 +29,7 @@ Rocoto: &Rocoto
     <jobname>{doc.options.experiment_name}{task_path_str}@<cyclestr>@Y@m@d@H</cyclestr></jobname>
     <join>&LOG_DIR;/<cyclestr>@Y@m@d@H</cyclestr>/{task_path_var}.log</join>
     <walltime>{Perform.walltime}</walltime>
-    <memory>{Perform.rocoto_memory}</memory>
+    <memory>{Perform.memory}</memory>
     {sched.rocoto_accounting(Perform.accounting)}
     {sched.rocoto_resources(Perform.resources)}
     <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
