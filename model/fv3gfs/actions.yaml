@@ -48,12 +48,16 @@ anal: &anal_action !Action
   walltime: !timedelta 02:00:00
   resources: !calc run_anal
   memory: "3072M"
+  APRUN_CALCINC: "'mpirun -np $ncmd'"
+  APRUN_GSI: "'mpirun -np 144'"
+  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
+  BASE_ENV: !expand "{BASE_FV3GFS}/gfs_workflow.v15.0.0/env"
+  BASE_JOB: !expand "{BASE_WORKFLOW}/jobs"
+  CHGRP_CMD: "'chgrp rstprod'"
+  DONST: NO
   ANALYSISSH: !expand "{BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   GSIEXEC: !expand "{BASE_GSI}/exec/global_gsi"
-  npe_gsi: !expand "{npe_anal}"
-  nth_gsi: 4
-  nth_anal: 2
-  accounting: !calc doc.platform.parallel_accounting
+  KEEPDATA: NO
   QUILTING: YES
   SMOOTH_ENKF: YES
   VERBOSE: YES
@@ -65,10 +69,16 @@ anal: &anal_action !Action
 
 epos: &epos_action !Action
   <<: *action_template
+  APRUN_EPOS: "'mpirun -np 84'"
   J_JOB: epos
   walltime: !timedelta 00:15:00
   resources: !calc run_epos
   memory: "3072M"
+  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
+  BASE_ENV: !expand "{BASE_FV3GFS}/gfs_workflow.v15.0.0/env"
+  BASE_JOB: !expand "{BASE_WORKFLOW}/jobs"
+  CHGRP_CMD: "'chgrp rstprod'"
+  DONST: NO
   ENKFPOSTSH: !expand "{BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_post_fv3gfs.sh.ecf"
   nth_epos: 2
   accounting: !calc doc.platform.parallel_accounting
