@@ -32,21 +32,35 @@ ecen: &ecen_action !Action
   CHGRP_CMD: "'chgrp rstprod'"
   DONST: NO
   KEEPDATA: NO
+  QUILTING: YES
+  OUTPUT_GRID: "gaussian_grid"
+  SMOOTH_ENKF: YES
+  VERBOSE: YES
+  WRITE_NEMSIOFILE: YES
+  assim_freq: 6
   J_JOB: ecen
   accounting: !calc doc.case.cpu_project
 
 anal: &anal_action !Action
   <<: *action_template
   J_JOB: anal
-  walltime: !timedelta 01:30:00
+  walltime: !timedelta 02:00:00
   resources: !calc run_anal
-  rocoto_memory: "3072M"
+  memory: "3072M"
   ANALYSISSH: !expand "{BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   GSIEXEC: !expand "{BASE_GSI}/exec/global_gsi"
   npe_gsi: !expand "{npe_anal}"
   nth_gsi: 4
   nth_anal: 2
   accounting: !calc doc.platform.parallel_accounting
+  QUILTING: YES
+  SMOOTH_ENKF: YES
+  VERBOSE: YES
+  WRITE_NEMSIOFILE: YES
+  assim_freq: 6
+  OUTPUT_GRID: "gaussian_grid"
+  NTHREADS_CALCINC: 1
+  NTHREADS_GSI: 4
 
 epos: &epos_action !Action
   <<: *action_template
