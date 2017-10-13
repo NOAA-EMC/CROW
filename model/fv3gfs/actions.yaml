@@ -8,9 +8,10 @@ ecen: &ecen_action !Action
 
   # ----------------------------------------
   # From config.resources
-  wtime_ecen: !timedelta 00:30:00 # was "walltime", renamed to align with 
-  resources: !calc run_ecen
-  memory_ecen: "3072M" # previously "rocoto_memory", renamed to align with current script
+  walltime: !timedelta 00:30:00 # was "walltime", renamed to align with 
+  resources: !calc run_ecen.resources
+  resource_env: !calc run_ecen.env
+  memory: "3072M" # previously "rocoto_memory", renamed to align with current script
 
   # Each command (APRUN_whatever) in config.resources needs a
   # run_whatever entry in the corresponding action.
@@ -33,14 +34,14 @@ ecen: &ecen_action !Action
   DONST: NO
   KEEPDATA: NO
   J_JOB: ecen
-  accounting: !calc doc.case.cpu_project
+  accounting: !calc doc.options.cpu_project
 
 anal: &anal_action !Action
   <<: *action_template
   J_JOB: anal
   walltime: !timedelta 01:30:00
   resources: !calc run_anal
-  rocoto_memory: "3072M"
+  memory: "3072M"
   ANALYSISSH: !expand "{BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   GSIEXEC: !expand "{BASE_GSI}/exec/global_gsi"
   npe_gsi: !expand "{npe_anal}"
@@ -53,7 +54,7 @@ epos: &epos_action !Action
   J_JOB: epos
   walltime: !timedelta 00:15:00
   resources: !calc run_epos
-  rocoto_memory: "3072M"
+  memory: "3072M"
   ENKFPOSTSH: !expand "{BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_post_fv3gfs.sh.ecf"
   nth_epos: 2
   accounting: !calc doc.platform.parallel_accounting
@@ -63,7 +64,7 @@ eobs: &eobs_action !Action
   J_JOB: eobs
   walltime: !timedelta 00:15:00
   resources: !calc run_eobs
-  rocoto_memory: "3072M"
+  memory: "3072M"
   INVOBSSH: !expand "{BASE_GSI}/scripts/exglobal_innovate_obs_fv3gfs.sh.ecf"
   ENKFINVOBSSH: !expand "{BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_innovate_obs_fv3gfs.sh.ecf"
   NMEM_EOMGGRP: 10
@@ -81,7 +82,7 @@ eomg: &eomg_action !Action
   J_JOB: eomg
   walltime: !timedelta 00:15:00
   resources: !calc run_eomg
-  rocoto_memory: "3072M"
+  memory: "3072M"
   nth_eomg: 2
   accounting: !calc doc.platform.parallel_accounting
 
@@ -90,7 +91,7 @@ eupd: &eupd_action !Action
   J_JOB: eupd
   walltime: !timedelta 00:15:00
   resources: !calc run_eupd
-  rocoto_memory: "3072M"
+  memory: "3072M"
   ENKFUPDSH: !expand "{BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_update_fv3gfs.sh.ecf"
   ENKFEXEC: !expand "{BASE_GSI}/exec/global_enkf"
   npe_enkf: !expand "{npe_eupd}"
@@ -103,7 +104,7 @@ efcs: &efcs_action !Action
   J_JOB: efcs
   walltime: !timedelta 00:15:00
   resources: !calc run_efcs
-  rocoto_memory: "3072M"
+  memory: "3072M"
   npe_fv3: !expand "{npe_efcs}"
   nth_fv3: 1
   accounting: !calc doc.platform.parallel_accounting
@@ -138,7 +139,7 @@ earc: &earc_action !Action
   J_JOB: earc
   walltime: !timedelta 00:15:00
   resources: !calc run_earc
-  rocoto_memory: "3072M"
+  memory: "3072M"
   NMEM_EARCGRP: 10
   nth_earc: 2
   accounting: !calc doc.platform.transfer_accounting
@@ -147,7 +148,7 @@ final: &final_action !Action
   <<: *action_template
   walltime: !timedelta 00:03:00
   resources: !calc run_nothing
-  rocoto_memory: "100M"
+  memory: "100M"
   accounting: !calc doc.platform.serial_accounting
   J_JOB: /bin/true
 
@@ -156,7 +157,7 @@ prep: &prep_action !Action
   J_JOB: prep
   walltime: !timedelta 00:10:00
   resources: !calc run_prep
-  rocoto_memory: "3072M"
+  memory: "3072M"
   DO_RELOCATE: "NO"
   DO_MAKEPREPBUFR: "YES"   # if NO, will copy prepbufr from globaldump
   DRIVE_MAKEPREPBUFRSH: !expand "{BASE_GSM}/ush/drive_makeprepbufr.sh"
@@ -168,7 +169,7 @@ fcst: &fcst_action !Action
   J_JOB: fcst
   walltime: !timedelta 00:10:00
   resources: !calc run_fcst
-  rocoto_memory: "3072M"
+  memory: "3072M"
   FORECASTSH: !expand "{BASE_GSM}/scripts/exglobal_fcst_nemsfv3gfs.sh"
   FCSTEXECDIR: !expand "{BASE_NEMSfv3gfs}/NEMS/exe"
   FCSTEXEC: "fv3_gfs_nh.prod.32bit.x"
@@ -216,7 +217,7 @@ post: &post_action !Action
   J_JOB: post
   walltime: !timedelta 00:15:00
   resources: !calc run_post
-  rocoto_memory: "3072M"
+  memory: "3072M"
   POSTJJOBSH: !expand "{BASE_WORKFLOW}/jobs/JGFS_POST.sh"
   POSTGPSH: !expand "{BASE_POST}/ush/global_nceppost.sh"
   POSTGPEXEC: !expand "{BASE_POST}/exec/ncep_post"
@@ -236,7 +237,7 @@ arch: &arch_action !Action
   J_JOB: arch
   walltime: !timedelta 06:00:00
   resources: !calc run_arch
-  rocoto_memory: "3072M"
+  memory: "3072M"
   nth_arch: 2
   accounting: !calc doc.platform.transfer_accounting
 
@@ -246,7 +247,7 @@ vrfy: &vrfy_action !Action
   Template: *vrfy_template
   walltime: !timedelta 01:00:00
   resources: !calc run_vrfy
-  rocoto_memory: "3072M"
+  memory: "3072M"
   accounting: !calc doc.platform.parallel_accounting
 #  CDUMP: "gfs"
   VDUMP: "gfs"       # verifying dump
