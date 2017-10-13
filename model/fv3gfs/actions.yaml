@@ -8,9 +8,9 @@ ecen: &ecen_action !Action
 
   # ----------------------------------------
   # From config.resources
-  walltime: !timedelta 00:30:00
+  wtime_ecen: !timedelta 00:30:00 # was "walltime", renamed to align with 
   resources: !calc run_ecen
-  rocoto_memory: "3072M"
+  memory_ecen: "3072M" # previously "rocoto_memory", renamed to align with current script
 
   # Each command (APRUN_whatever) in config.resources needs a
   # run_whatever entry in the corresponding action.
@@ -20,10 +20,18 @@ ecen: &ecen_action !Action
   # From config.ecen
   ENKFRECENSH: !expand "{BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_recenter_fv3gfs.sh.ecf"
   nth_ecen: 2
+  APRUN_CHGRES: "time"
+  APRUN_ECEN: "'mpirun -np 84'"
+  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
+  BASE_ENV: !expand "{BASE_FV3GFS}/gfs_workflow.v15.0.0/env"
+  BASE_JOB: !expand "{BASE_WORKFLOW}/jobs"
   CHGRESSH: !expand "{BASE_GSM}/ush/global_chgres_GSM.sh"
   CHGRESEXEC: !expand "{BASE_GSM}/exec/global_chgres_GSM"
   CHGRESVARS_ENKF: "use_ufo=.true.,nopdpvv=.true."
   CHGRESTHREAD: 12
+  CHGRP_CMD: "'chgrp rstprod'"
+  DONST: NO
+  KEEPDATA: NO
   J_JOB: ecen
   accounting: !calc doc.case.cpu_project
 

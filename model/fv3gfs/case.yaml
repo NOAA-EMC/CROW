@@ -59,11 +59,19 @@ options: &options
   FHMAX: 9 # GDAS forecast length in hours
   FHOUT: 3 # GDAS forecast output frequency in hours
 
+  # ENKF cycle info
+  FHMIN_ENKF: 3
+  FHMAX_ENKF: 9
+  FHOUT_ENKF: 3
+
   # GFS cycle info
   gfs_cyc: 4                # 0: no GFS cycle, 1: 00Z only, 2: 00Z and 12Z only, 4: all 4 cycles
   FHMIN_GFS: 0   # GFS forecast initial hour
   FHMAX_GFS: 120 # GFS forecast length in hours
   FHOUT_GFS: 6   # GFS forecast output frequency in hours
+
+  FHMAX_HF_GFS: 0
+  FHOUT_HF_GFS: 1
 
   # Shared parameters/switches
   DOHYBVAR: "YES"
