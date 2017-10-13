@@ -25,7 +25,7 @@ ecen: &ecen_action !Action
   CHGRESVARS_ENKF: "use_ufo=.true.,nopdpvv=.true."
   CHGRESTHREAD: 12
   J_JOB: ecen
-  accounting: !calc doc.platform.parallel_accounting
+  accounting: !calc doc.case.cpu_project
 
 anal: &anal_action !Action
   <<: *action_template

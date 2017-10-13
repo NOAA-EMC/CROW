@@ -159,19 +159,19 @@ VRFY_CDUMP_GFS_VARS: &VRFY_CDUMP_GFS_VARS !Template
     default: 24
   vsdbsave: 
     type: string
-    default: !expand "${NOSCRUB}/archive/vsdb_data"
+    default: !expand "{NOSCRUB}/archive/vsdb_data"
   vsdbhome: 
     type: string
-    default: !expand "${BASE_VERIF}" 
+    default: !expand "{BASE_VERIF}" 
   VSDBSH=: 
     type: string
-    default: !expand "${vsdbhome}/vsdbjob.sh"
+    default: !expand "{vsdbhome}/vsdbjob.sh"
   vlength=: 
     type: string
-    default: !expand "${FHMAX_GFS}"
+    default: !expand "{FHMAX_GFS}"
   vhr_rain: 
     type: string
-    default: !expand "${FHMAX_GFS}"
+    default: !expand "{FHMAX_GFS}"
   ftyplist: 
     type: string
     default: "pgbq"
