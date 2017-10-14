@@ -17,11 +17,9 @@ from crow.tools import to_timedelta
 import crow.config.from_yaml
 
 def to_yaml(yml):
-    simple=dict([ (k,v) for k,v in yml._raw_cache().items() ])
-    #print('INPUT: '+repr(simple))
-    result=yaml.dump(simple)
-    #print('OUTPUT: '+result)
-    return result
+    if hasattr(yml,'_raw_cache'):
+        yml=yml._raw_cache().copy()
+    return yaml.dump(yml)
 
 ########################################################################
 
@@ -46,6 +44,7 @@ def add_yaml_dict_eval(key,cls):
     """!Generates and registers a representer for a custom YAML mapping
     type    """
     def representer(dumper,data):
+        assert('up' not in data)
         if key is None:
             return dumper.represent_data(data._raw_child())
         else:
@@ -57,6 +56,7 @@ add_yaml_dict_eval(u'!Platform',Platform)
 add_yaml_dict_eval(u'!Action',Action)
 add_yaml_dict_eval(u'!Template',Template)
 add_yaml_dict_eval(u'!Eval',Eval)
+
 
 ########################################################################
 
@@ -83,19 +83,47 @@ def represent_ordered_mapping(dumper, tag, mapping, flow_style=None):
             node.flow_style = best_style
     return node
 
-def add_yaml_OrderedDict_eval(key,cls): 
+########################################################################
+
+NONE=object()
+
+def add_yaml_taskable(key,cls): 
     """!Generates and registers a representer for a custom YAML mapping
     type    """
     def representer(dumper,data):
         simple=data._raw_cache()
+        up=simple['up'] if 'up' in simple else NONE
+        if up is not NONE: del simple['up']
         if not isinstance(simple,OrderedDict):
             simple=OrderedDict([ (k,v) for k,v in simple.items() ])
-        return represent_ordered_mapping(dumper,key,simple)
+        rep=represent_ordered_mapping(dumper,key,simple)
+        if up is not NONE: simple['up']=up
+        return rep
     yaml.add_representer(cls,representer)
 
-add_yaml_OrderedDict_eval(u'!Task',Task)
-add_yaml_OrderedDict_eval(u'!Family',Family)
-add_yaml_OrderedDict_eval(u'!Cycle',Cycle)
+add_yaml_taskable(u'!Task',Task)
+add_yaml_taskable(u'!Family',Family)
+add_yaml_taskable(u'!Cycle',Cycle)
+
+########################################################################
+
+def add_yaml_suite_view(key,cls): 
+    """!Generates and registers a representer for a custom YAML mapping
+    type    """
+    def representer(dumper,data):
+        d=data.viewed._raw_child()
+        up=d['up']
+        del d['up']
+        assert('up' not in d)
+        rep=dumper.represent_ordered_mapping(dumper,key,d)
+        d['up']=up
+        return rep
+    yaml.add_representer(cls,representer)
+
+add_yaml_suite_view(u'!Task',TaskView)
+add_yaml_suite_view(u'!Family',FamilyView)
+add_yaml_suite_view(u'!Cycle',CycleView)
+add_yaml_suite_view(u'!Cycle',Suite)
 
 ########################################################################
 

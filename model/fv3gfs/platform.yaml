@@ -131,7 +131,7 @@ theia: &theia !Platform
   # svn, keep it or not?
   # Base directories for various builds
   BASE_SVN: "/scratch4/NCEPDEV/global/save/glopara/svn"
-  MYBASE_SVN: "/scratch4/NCEPDEV/global/save/{tools.env('USER')}/svn"
+  MYBASE_SVN: !expand "/scratch4/NCEPDEV/global/save/{tools.env('USER')}/svn"
   BASE_GFS: "/scratch4/NCEPDEV/global/save/glopara/svn/gfs/branches/gfs_q3fy17/global_shared.v14.1.0"
   BASE_GDAS: "/scratch4/NCEPDEV/global/save/glopara/svn/gfs/branches/gfs_q3fy17/global_shared.v14.1.0"
 
@@ -140,16 +140,16 @@ theia: &theia !Platform
 
   # Utilities needed in the scripts (mostly post)
   exes: 
-    NEMSIOGET: !expand "{NWPROD}/util/exec/nemsio_get"
-    NDATE: !expand "{NWPROD}/util/exec/ndate"
+    NEMSIOGET: !expand "{doc.platform.NWPROD}/util/exec/nemsio_get"
+    NDATE: !expand "{doc.platform.NWPROD}/util/exec/ndate"
     NHOUR: !expand "{$NWPROD}/util/exec/nhour"
     WGRIB: !expand "{$NWPROD}/util/exec/wgrib"
-    WGRIB2: !expand "{NWPROD}/util/exec/wgrib2"
-    COPYGB: !expand "{NWPROD}/util/exec/copygb"
-    COPYGB2: !expand "{NWPROD}/util/exec/copygb2"
-    GRBINDEX: !expand "{NWPROD}/util/exec/grbindex"
-    GRB2INDEX: !expand "{NWPROD}/util/exec/grb2index"
-    GRBINDEX2: !expand "{NWPROD}/util/exec/grb2index"
+    WGRIB2: !expand "{doc.platform.NWPROD}/util/exec/wgrib2"
+    COPYGB: !expand "{doc.platform.NWPROD}/util/exec/copygb"
+    COPYGB2: !expand "{doc.platform.NWPROD}/util/exec/copygb2"
+    GRBINDEX: !expand "{doc.platform.NWPROD}/util/exec/grbindex"
+    GRB2INDEX: !expand "{doc.platform.NWPROD}/util/exec/grb2index"
+    GRBINDEX2: !expand "{doc.platform.NWPROD}/util/exec/grb2index"
     CNVGRIB: "/apps/cnvgrib/1.4.0/bin/cnvgrib"
 
   NCO_NAMING_CONV: YES
@@ -162,13 +162,13 @@ theia: &theia !Platform
   pan_df: pan_df
   serial_accounting:
     queue: debug
-    project: !calc doc.options.cpu_project
+    project: !calc doc.case.cpu_project
   transfer_accounting:
     queue: batch
-    project: !calc doc.options.cpu_project
+    project: !calc doc.case.cpu_project
   parallel_accounting:
     queue: batch
-    project: !calc doc.options.cpu_project
+    project: !calc doc.case.cpu_project
   scheduler: &theia_scheduler
     name: MoabTorque
     physical_cores_per_node: 24
@@ -199,13 +199,13 @@ wcoss_cray: &wcoss_cray !Platform
   POSTGRB2TBL: "/gpfs/hps/nco/ops/nwprod/lib/g2tmpl/v1.3.0/src/params_grib2_tbl_new"
   serial_accounting:
     queue: dev
-    project: !calc doc.options.cpu_project
+    project: !calc doc.case.cpu_project
   transfer_accounting:
     queue: transfer
-    project: !calc doc.options.cpu_project
+    project: !calc doc.case.cpu_project
   parallel_accounting:
     queue: dev
-    project: !calc doc.options.cpu_project
+    project: !calc doc.case.cpu_project
   scheduler: &wcoss_cray_scheduler
     name: LSFAlps
     physical_cores_per_node: 24

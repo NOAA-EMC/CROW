@@ -11,8 +11,6 @@ source /apps/lmod/lmod/init/sh
 module purge
 module use /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/python/modulefiles/
 module load python/3.6.1-emc
-module load intel
-module load impi
 
 # Restore stack soft limit:
 ulimit -S -s "$ulimit_s"
@@ -24,4 +22,11 @@ export PYTHONPATH="$HOMEcrow${PYTHONPATH:+:$PYTHONPATH}"
 
 python3.6 -c 'import crow ; print(f"CROW library version {crow.version}")'
 
-"$HOMEtest/jobs/$1"
+if [[ "${1:0:1}" == "/" ]] ; then
+    exec "$@"
+fi
+
+# Relative path is from j-jobs directory
+prog=$1
+shift
+exec "$HOMEgfs/jobs/$prog.sh" "$@"

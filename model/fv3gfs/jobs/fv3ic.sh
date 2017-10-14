@@ -1,4 +1,4 @@
-#!/bin/ksh -x
+#!/bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
 # $Date: 2017-08-04 03:29:01 +0000 (Fri, 04 Aug 2017) $
@@ -20,20 +20,14 @@ export CDATE=${2:-$CDATE}
 export CDUMP=${3:-$CDUMP}
 ###############################################################
 
-###############################################################
-# Source relevant configs
-configs="base fv3ic"
-for config in $configs; do
-    . $EXPDIR/config.${config}
-    status=$?
-    [[ $status -ne 0 ]] && exit $status
-done
-
-###############################################################
-# Source machine runtime environment
-. $BASE_ENV/${machine}.env fv3ic
-status=$?
-[[ $status -ne 0 ]] && exit $status
+set -e
+JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
+( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH.env all:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
+( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
+unset JOBNAME
+echo just testing ; exit 0
 
 # Temporary runtime directory
 export DATA="$RUNDIR/$CDATE/$CDUMP/fv3ic$$"

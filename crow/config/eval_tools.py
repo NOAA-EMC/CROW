@@ -133,11 +133,11 @@ class dict_eval(MutableMapping):
 
     * __getitem__(b) + __getitem__(c)    """
 
-    def __init__(self,child,path=''):
+    def __init__(self,child,path='',globals=None):
         #assert(not isinstance(child,dict_eval))
         self.__child=copy(child)
         self.__cache=copy(child)
-        self.__globals={}
+        self.__globals={} if globals is None else globals
         self._path=path
     def __contains__(self,k):   return k in self.__child
     def __len__(self):          return len(self.__child)
@@ -189,7 +189,11 @@ class dict_eval(MutableMapping):
     def _validate(self,stage):
         """!Validates this dict_eval using its embedded Template object, if present """
         if 'Template' in self:
-            self.Template._check_scope(self,stage)
+            tmpl=self.Template
+            if not hasattr(tmpl,'_check_scope'):
+                tmpl=Template(self.Template,self._path+'.Template',
+                              self.__globals)
+            tmpl._check_scope(self,stage)
     def __getitem__(self,key):
         val=self.__cache[key]
         if hasattr(val,'_result'):
@@ -370,3 +374,5 @@ def evaluate_immediates(obj,recurse=False):
         return
     memo=set() if recurse else None
     evaluate_immediates_impl(obj,memo)
+
+from crow.config.template import Template

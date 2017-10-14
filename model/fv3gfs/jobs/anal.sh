@@ -17,38 +17,14 @@
 ## CDUMP  : cycle name (gdas / gfs)
 ###############################################################
 
-# CONFIG_SCOPE=gfs.fcst.Perform
-export CROW2SH="$CROW/to_sh.py scope:$CONFIG_SCOPE"
-
-eval $( $CROWSH SHELL_VARNAME=YAML_VARNAME \
-                import:"DOG_[0-9]+" )  # DOG_03 DOG_1 DOG_12345
-
-# YAML action panel:
-# some_action: !Action
-#     ... variables ...
-#     var1: val1
-#     var2: val2
-#     var3: val3
-#     env_export: [ var1, var2, var3 ]
-#
-
-eval $( $CROWSH from:doc.action.some_action.env_export )
-
-###############################################################
-# !! Getting rid of these !!
-# Source relevant configs
-#configs="base anal"
-#for config in $configs; do
-#    . $EXPDIR/config.${config}
-#    status=$?
-#    [[ $status -ne 0 ]] && exit $status
-#done
-
-###############################################################
-# Source machine runtime environment
-. $BASE_ENV/${machine}.env anal
-status=$?
-[[ $status -ne 0 ]] && exit $status
+set -e
+JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
+( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH.env all:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
+( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
+unset JOBNAME
+echo just testing ; exit 0
 
 ###############################################################
 # Set script and dependency variables

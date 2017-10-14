@@ -25,7 +25,8 @@ __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'StateDependency', 'Dependable', 'Taskable', 'Task',
           'Family', 'Cycle', 'RUNNING', 'COMPLETED', 'FAILED',
           'TRUE_DEPENDENCY', 'FALSE_DEPENDENCY', 'SuitePath',
-          'CycleExistsDependency' ]
+          'CycleExistsDependency', 'FamilyView', 'TaskView',
+          'CycleView' ]
 
 class StateConstant(object):
     def __init__(self,name):
@@ -130,7 +131,8 @@ class SuiteView(Mapping):
 
     def at(self,dt):
         dt=to_timedelta(dt)
-        ret=SuiteView(self.suite,self.viewed,
+        cls=type(self)
+        ret=cls(self.suite,self.viewed,
                          [self.path[0]+dt]+self.path[1:],self)
         return ret
 
@@ -156,16 +158,21 @@ class SuiteView(Mapping):
         return val
 
     def __wrap(self,key,obj):
-        if isinstance(obj,Taskable):
+        if isinstance(obj,Task):
             # Add to path when recursing into a family or task
             obj=copy(obj)
             self.viewed[key]=obj
-            return SuiteView(self.suite,obj,self.path+[key],self)
+            return TaskView(self.suite,obj,self.path+[key],self)
+        if isinstance(obj,Family):
+            # Add to path when recursing into a family or task
+            obj=copy(obj)
+            self.viewed[key]=obj
+            return FamilyView(self.suite,obj,self.path+[key],self)
         if isinstance(obj,Cycle):
             # Reset path when we see a cycle
             obj=copy(obj)
             self.viewed[key]=obj
-            return SuiteView(self.suite,obj,self.path[:1],self)
+            return CycleView(self.suite,obj,self.path[:1],self)
         return obj
 
     # Dependency handling.  When this SuiteView is wrapped around a
@@ -187,6 +194,10 @@ class SuiteView(Mapping):
         return StateDependency(self,FAILED)
     def is_completed(self):
         return StateDependency(self,COMPLETED)
+
+class CycleView(SuiteView): pass
+class TaskView(SuiteView): pass
+class FamilyView(SuiteView): pass
 
 class Suite(SuiteView):
     def __init__(self,suite,more_globals=EMPTY_DICT):
@@ -343,6 +354,7 @@ class StateDependency(LogicalDependency):
         if state not in [ COMPLETED, RUNNING, FAILED ]:
             raise TypeError('Invalid state.  Must be one of the constants '
                             'COMPLETED, RUNNING, or FAILED')
+        typecheck('view',view,SuiteView)
         self.view=view
         self.state=state
     @property

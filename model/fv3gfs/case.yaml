@@ -1,4 +1,4 @@
-places: &places
+case: &case
   PROJECT_DIR: /scratch4/NCEPDEV/nems/
   HOMEDIR: !expand "{PROJECT_DIR}/save/{tools.env('USER')}"
   STMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
@@ -7,10 +7,8 @@ places: &places
 
   # Locations of CROW and this test suite.
   HOMEcrow: !calc tools.crow_install_dir()
-  HOMEtest: !calc tools.crow_install_dir('examples/real-workflow')
+  HOMEgfs: !calc tools.crow_install_dir('model/fv3gfs')
 
-options: &options
-  <<: *places
   # Project for CPU accounting.
   cpu_project: marine-cpu
 #  cpu_project: !calc doc.platform.default_cpu_project #Formerly known as ACCOUNT
@@ -35,6 +33,7 @@ options: &options
 #  CDUMP: "gfs"
 
   # Component paths
+  BASE_SVN: !calc doc.platform.BASE_SVN
   MYBASE_SVN: !expand "{NOSCRUB}/{tools.env('USER')}/svn"
   BASE_FV3GFS: !expand "{BASE_SVN}/fv3gfs"
   BASE_GSM: !expand "{BASE_FV3GFS}/global_shared.v15.0.0"

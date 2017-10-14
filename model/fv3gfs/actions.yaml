@@ -1,7 +1,12 @@
 action_template: &action_template
   <<: *resource_defaults
-  BASE_GSI: !calc doc.platform.places.BASE_GSI
-  BASE_GSM: !calc doc.platform.places.BASE_GSM
+  Template: *fv3_resolution
+  BASE_NEMSfv3gfs: !calc doc.case.BASE_NEMSfv3gfs
+  CASE: !calc doc.case.CASE
+  BASE_GSI: !calc doc.case.BASE_GSI
+  BASE_GSM: !calc doc.case.BASE_GSM
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "nth.*", "npe.*" ]
+  resource_env: {} # overridden by actions as needed
 
 ecen: &ecen_action !Action
   <<: *action_template
@@ -34,7 +39,7 @@ ecen: &ecen_action !Action
   DONST: NO
   KEEPDATA: NO
   J_JOB: ecen
-  accounting: !calc doc.options.cpu_project
+  accounting: !calc doc.case.cpu_project
 
 anal: &anal_action !Action
   <<: *action_template
@@ -44,13 +49,14 @@ anal: &anal_action !Action
   memory: "3072M"
   ANALYSISSH: !expand "{BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   GSIEXEC: !expand "{BASE_GSI}/exec/global_gsi"
-  npe_gsi: !expand "{npe_anal}"
+  npe_gsi: !calc npe_anal
   nth_gsi: 4
   nth_anal: 2
   accounting: !calc doc.platform.parallel_accounting
 
 epos: &epos_action !Action
   <<: *action_template
+  CASE: !calc doc.case.CASE_ENKF
   J_JOB: epos
   walltime: !timedelta 00:15:00
   resources: !calc run_epos
@@ -62,6 +68,7 @@ epos: &epos_action !Action
 eobs: &eobs_action !Action
   <<: *anal_action
   J_JOB: eobs
+  CASE: !calc doc.case.CASE_ENKF
   walltime: !timedelta 00:15:00
   resources: !calc run_eobs
   memory: "3072M"
@@ -80,6 +87,7 @@ eobs: &eobs_action !Action
 eomg: &eomg_action !Action
   <<: *action_template
   J_JOB: eomg
+  CASE: !calc doc.case.CASE_ENKF
   walltime: !timedelta 00:15:00
   resources: !calc run_eomg
   memory: "3072M"
@@ -89,6 +97,7 @@ eomg: &eomg_action !Action
 eupd: &eupd_action !Action
   <<: *action_template
   J_JOB: eupd
+  CASE: !calc doc.case.CASE_ENKF
   walltime: !timedelta 00:15:00
   resources: !calc run_eupd
   memory: "3072M"
@@ -102,10 +111,12 @@ eupd: &eupd_action !Action
 efcs: &efcs_action !Action
   <<: *action_template
   J_JOB: efcs
+  CASE: !calc doc.case.CASE_ENKF
   walltime: !timedelta 00:15:00
   resources: !calc run_efcs
   memory: "3072M"
-  npe_fv3: !expand "{npe_efcs}"
+  npe_efcs: !calc "layout_x*layout_y*6"
+  npe_fv3: !calc npe_efcs
   nth_fv3: 1
   accounting: !calc doc.platform.parallel_accounting
 
@@ -136,6 +147,7 @@ efcs: &efcs_action !Action
 
 earc: &earc_action !Action
   <<: *action_template
+  CASE: !calc doc.case.CASE_ENKF
   J_JOB: earc
   walltime: !timedelta 00:15:00
   resources: !calc run_earc
@@ -244,7 +256,8 @@ arch: &arch_action !Action
 vrfy: &vrfy_action !Action
   <<: *action_template
   J_JOB: vrfy
-  Template: *vrfy_template
+  Template:
+    <<: [ *vrfy_template, *fv3_resolution ]
   walltime: !timedelta 01:00:00
   resources: !calc run_vrfy
   memory: "3072M"

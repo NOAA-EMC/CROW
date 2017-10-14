@@ -1,7 +1,7 @@
 Rocoto: &Rocoto
   scheduler: !calc doc.platform.scheduler
   parallelism: !calc doc.platform.parallelism
-  EXPDIR: !calc doc.options.EXPDIR
+  EXPDIR: !calc doc.case.EXPDIR
   max_tries: 3
 
   workflow_xml: !expand |
@@ -25,10 +25,10 @@ Rocoto: &Rocoto
     </workflow>
 
   task_template: &task_template !expand |
-    <command>$HOMEtest/workflow/job_wrapper.sh {Perform.J_JOB}</command>
-    <jobname>{doc.options.experiment_name}{task_path_str}@<cyclestr>@Y@m@d@H</cyclestr></jobname>
+    <command>$HOMEgfs/job_wrapper.sh {Perform.J_JOB}</command>
+    <jobname>{doc.case.experiment_name}{task_path_str}@<cyclestr>@Y@m@d@H</cyclestr></jobname>
     <join>&LOG_DIR;/<cyclestr>@Y@m@d@H</cyclestr>/{task_path_var}.log</join>
-    <walltime>{Perform.walltime}</walltime>
+    <walltime>00:03:00</walltime>
     <memory>{Perform.memory}</memory>
     {sched.rocoto_accounting(Perform.accounting)}
     {sched.rocoto_resources(Perform.resources)}
@@ -48,19 +48,19 @@ Rocoto: &Rocoto
     </envar>
     <envar>
       <name>TASK_PATH</name>
-      <value>{task_path_str}</value>
+      <value>{task_path_var}.Perform</value>
     </envar>
     <envar>
       <name>CONFIG_YAML</name>
-      <value>{doc.options.EXPDIR}/config.yaml</value>
+      <value>{doc.case.EXPDIR}/config.yaml</value>
     </envar>
     <envar>
-      <name>HOMEfv3gfs</name>
-      <value>{doc.options.HOMEcrow}</value>
+      <name>HOMEcrow</name>
+      <value>{doc.case.HOMEcrow}</value>
     </envar>
     <envar>
-      <name>HOMEtest</name>
-      <value>{doc.options.HOMEtest}</value>
+      <name>HOMEgfs</name>
+      <value>{doc.case.HOMEgfs}</value>
     </envar>
 
   efcs_task_template: &efcs_task_template !expand |
@@ -118,8 +118,8 @@ workflow: !Cycle
         grp1: !Task
           Perform:  
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 1   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -128,8 +128,8 @@ workflow: !Cycle
         grp2: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 2   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -138,8 +138,8 @@ workflow: !Cycle
         grp3: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 3   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -148,8 +148,8 @@ workflow: !Cycle
         grp4: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 4   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -158,8 +158,8 @@ workflow: !Cycle
         grp5: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 5   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -168,8 +168,8 @@ workflow: !Cycle
         grp6: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 6   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -178,8 +178,8 @@ workflow: !Cycle
         grp7: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 7   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -188,8 +188,8 @@ workflow: !Cycle
         grp8: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 8   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -233,8 +233,8 @@ workflow: !Cycle
         grp1: !Task 
           Perform:  
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 1   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -243,8 +243,8 @@ workflow: !Cycle
         grp2: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 2   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -253,8 +253,8 @@ workflow: !Cycle
         grp3: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 3   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -263,8 +263,8 @@ workflow: !Cycle
         grp4: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 4   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -273,8 +273,8 @@ workflow: !Cycle
         grp5: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 5   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -283,8 +283,8 @@ workflow: !Cycle
         grp6: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 6   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -293,8 +293,8 @@ workflow: !Cycle
         grp7: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 7   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -303,8 +303,8 @@ workflow: !Cycle
         grp8: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.options.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.options.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.case.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 8   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -402,8 +402,8 @@ workflow: !Cycle
       grp1: !Task
         Perform:  
           <<: *earc_action
-          NMEM_ENKF: !calc doc.options.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.case.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 1   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -411,8 +411,8 @@ workflow: !Cycle
       grp2: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.options.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.case.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 2   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -420,8 +420,8 @@ workflow: !Cycle
       grp3: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.options.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.case.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 3   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -429,8 +429,8 @@ workflow: !Cycle
       grp4: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.options.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.case.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 4   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -438,8 +438,8 @@ workflow: !Cycle
       grp5: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.options.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.case.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 5   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -447,8 +447,8 @@ workflow: !Cycle
       grp6: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.options.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.case.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 6   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -456,8 +456,8 @@ workflow: !Cycle
       grp7: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.options.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.case.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 7   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -465,8 +465,8 @@ workflow: !Cycle
       grp8: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.options.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.options.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.case.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 8   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template

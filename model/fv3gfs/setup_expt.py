@@ -24,7 +24,7 @@ if len(sys.argv)<2:
     logger.error('Format: setup_expt.py case.yaml')
     exit(1)
 
-yamls=[ 'platform.yaml','template.yaml' ] + \
+yamls=[ 'platform.yaml','template.yaml', 'resolution.yaml' ] + \
     sys.argv[1:] + ['runtime.yaml','actions.yaml','workflow.yaml']
 conf=crow.config.from_file(*yamls)
 
@@ -33,7 +33,7 @@ for key in list(conf.keys()):
     if isinstance(conf[key],Platform) and key!='platform':
         del conf[key]
 
-EXPDIR=conf.options.EXPDIR
+EXPDIR=conf.case.EXPDIR
 logger.info(f'Run directory: {EXPDIR}')
 config_yaml=os.path.join(EXPDIR,'config.yaml')
 
@@ -49,7 +49,7 @@ except FileExistsError:
 
 suite=conf.workflow
 
-expname=conf.options.experiment_name
+expname=conf.case.experiment_name
 logger.info(f'Experiment name: {expname}')
 
 rocoto_suite, rocoto_xml=crow.metascheduler.to_rocoto(suite)

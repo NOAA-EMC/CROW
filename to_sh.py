@@ -178,6 +178,7 @@ class ProcessArgs(object):
             elif command=='run_ignore': self.run_expr(value,False)
             elif command=='run':        self.run_expr(value,True)
             elif command=='apply':      self.exec_str(value)
+            elif command=='export':     self.set_export_vars(value)
             elif command=='import':
                 for k,v in self.import_all(value):
                     yield k,v
@@ -230,7 +231,12 @@ class ProcessArgs(object):
         for varname in the_list:
             if not isinstance(varname,str):
                 logger.warning("from:{var}:{varname}: variable names must be strings")
-            yield self.express_var(varname,varname)
+            elif not re.match('[A-Za-z_][A-Za-z0-9_]*$',varname):
+                # Probably a regex
+                for v,k in self.import_all(varname):
+                    yield v,k
+            else: # Just a variable name
+                yield self.express_var(varname,varname)
 
     def express_var(self,var,expr):
         if self.have_expanded:
@@ -241,9 +247,10 @@ class ProcessArgs(object):
         result=self.eval_expr(expr)
         formatted=self.format_object(result)
         if formatted is NotImplemented:
-            raise TypeError(
-                f'cannot convert a {type(result).__name__} '
+            logger.warning(
+                f'{var}={expr}: cannot convert a {type(result).__name__} '
                 'to a shell expression.')
+            return var,crow.config.to_yaml(result)
         if formatted is UNSET_VARIABLE:
             return 'unset '+var
         return var, formatted
@@ -255,8 +262,9 @@ if __name__ == '__main__':
     try:
         verbose=sys.argv[1]=='-v'
         pa=ProcessArgs(not verbose,sys.argv[verbose+1:])
-        writeme=' '.join(pa.process_args())
+        writeme=' ; '.join(pa.process_args())
         sys.stdout.write(writeme)
     except EpicFail:
+        sys.stdout.write('/bin/false failure- see prior errors.')
         sys.stderr.write('Failure; see prior errors.\n')
         exit(1)

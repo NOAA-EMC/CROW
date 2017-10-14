@@ -34,6 +34,7 @@ def expand_text(text,scope):
 evaluate_immediates=_evaluate_immediates
 
 def from_string(s,evaluate_immediates=True,validation_stage=None):
+    if not s: raise TypeError('Cannot parse null string')
     c=ConvertFromYAML(yaml.load(s),CONFIG_TOOLS,ENV)
     result=c.convert(validation_stage=validation_stage)
     if evaluate_immediates:
@@ -41,6 +42,7 @@ def from_string(s,evaluate_immediates=True,validation_stage=None):
     return result
 
 def from_file(*args,evaluate_immediates=True,validation_stage=None):
+    if not args: raise TypeError('Specify which files to read.')
     data=list()
     for file in args:
         with open(file,'rt') as fopen:

@@ -31,6 +31,7 @@ class Template(dict_eval):
         # Templates as they become available via is_present.
         while did_something:
             did_something=False
+            assert(hasattr(template,'_check_scope'))
 
             # Inner validation loop.  Validate based on all Templates
             # found thus far.  Add new templates if found via
@@ -56,7 +57,7 @@ class Template(dict_eval):
                         ip=from_config(
                             var,scheme._raw('if_present'),self._globals(),scope)
                         if not ip: continue
-                        new_template=copy(ip)
+                        new_template=Template(ip._raw_child())
                         new_template.update(template)
                         template=new_template
                 except (IndexError,AttributeError) as pye:
@@ -184,3 +185,4 @@ def validate_var(path,scheme,var,val):
     if not isinstance(allowed,list) and not isinstance(allowed,list_eval):
         raise InvalidConfigTemplate(var+'.allowed: must be a list')
     validate_type(path,var,typ,val,allowed)
+

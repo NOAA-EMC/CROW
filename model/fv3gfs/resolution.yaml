@@ -1,0 +1,78 @@
+fv3_resolution: &fv3_resolution !Template
+  CASE:
+    type: string
+    allowed: [ 'C48', 'C96', 'C192', 'C384', 'C768', 'C1152', 'C3072' ]
+    if_present: !FirstTrue
+      - when: !calc CASE=='C48'
+        do:
+          DELTIM: { default: 3600, type: int }
+          layout_x: { default: 4, type: int }
+          layout_y: { default: 8, type: int }
+          WRITE_GROUP: { default: 1, type: int }
+          WRTTASK_PER_GROUP: { default: 12, type: int }
+  
+      - when: !calc CASE=='C96'
+        do:
+          DELTIM: { default: 1800, type: int }
+          layout_x: { default: 4, type: int }
+          layout_y: { default: 8, type: int }
+          cdmbgwd:
+            default: "0.125,3.0"
+            type: string
+            description: "mountain blocking and gravity wave drag"
+          WRITE_GROUP: { default: 1, type: int }
+          WRTTASK_PER_GROUP: { default: 12, type: int }
+
+      - when: !calc CASE=='C192'
+        do:
+          DELTIM: { default: 900, type: int }
+          layout_x: { default: 4, type: int }
+          layout_y: { default: 8, type: int }
+          cdmbgwd:
+            default: "0.2,2.5"
+            type: string
+            description: "mountain blocking and gravity wave drag"
+          WRITE_GROUP: { default: 1, type: int }
+          WRTTASK_PER_GROUP: { default: 24, type: int }
+
+      - when: !calc CASE=='C384'
+        do:
+          DELTIM: { default: 450, type: int }
+          layout_x: { default: 4, type: int }
+          layout_y: { default: 8, type: int }
+          cdmbgwd:
+            default: "1.0,1.2"
+            type: string
+            description: "mountain blocking and gravity wave drag"
+          WRITE_GROUP: { default: 2, type: int }
+          WRTTASK_PER_GROUP: { default: 48, type: int }
+  
+      - when: !calc CASE=='C768'
+        do:
+          DELTIM: { default: 225, type: int }
+          layout_x: { default: 8, type: int }
+          layout_y: { default: 16, type: int }
+          cdmbgwd:
+            default: "3.5,0.25" 
+            type: string
+            description: 'mountain blocking and gravity wave drag'
+          WRITE_GROUP: { default: 2, type: int }
+          WRTTASK_PER_GROUP: { default: 96, type: int }
+  
+      - when: !calc CASE=='C1152'
+        do:
+          DELTIM: { default: 150, type: int }
+          layout_x: { default: 8, type: int }
+          layout_y: { default: 16, type: int }
+          WRITE_GROUP: { default: 2, type: int }
+          WRTTASK_PER_GROUP: { default: 120, type: int }
+  
+      - when: !calc CASE=='C3072'
+        do:
+          DELTIM: { default: 90, type: int }
+          layout_x: { default: 16, type: int }
+          layout_y: { default: 32, type: int }
+          WRITE_GROUP: { default: 4, type: int }
+          WRTTASK_PER_GROUP: { default: 120, type: int }
+  
+      - otherwise: null

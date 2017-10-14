@@ -1,4 +1,4 @@
-#!/bin/ksh -x
+#!/bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
 # $Date: 2017-08-16 21:42:24 +0000 (Wed, 16 Aug 2017) $
@@ -18,20 +18,14 @@
 ## ENSGRP : ensemble sub-group to make forecasts (1, 2, ...)
 ###############################################################
 
-###############################################################
-# Source relevant configs
-configs="base fcst efcs"
-for config in $configs; do
-    . $EXPDIR/config.${config}
-    status=$?
-    [[ $status -ne 0 ]] && exit $status
-done
-
-###############################################################
-# Source machine runtime environment
-. $BASE_ENV/${machine}.env efcs
-status=$?
-[[ $status -ne 0 ]] && exit $status
+set -ex
+JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
+( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH.env all:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
+( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
+unset JOBNAME
+echo just testing ; exit 0
 
 ###############################################################
 # Set script and dependency variables
