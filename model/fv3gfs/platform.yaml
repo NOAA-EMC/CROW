@@ -2,8 +2,8 @@ resource_defaults: &resource_defaults
 
 
   mpi_tuning: &mpi_tuning
-      npe_ecen="84" added to platform.yaml
-      npe_node_ecen="12" added to platform.yaml
+      npe_ecen: "84"
+      npe_node_ecen: "12"
       npe_node_max: 24
       nst_anl: YES
       MPI_BUFS_PER_HOST: 2048
@@ -18,7 +18,7 @@ resource_defaults: &resource_defaults
   run_ecen:
     env: *mpi_tuning
 
-    resource:
+    resources:
       - exe: placeholder
         mpi_ranks: 84
         # max_ppn comes from THEIA.env: 84/12 = 7
