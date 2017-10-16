@@ -88,7 +88,8 @@ class Template(dict_eval):
         # Override any variables if requested via "override" clauses.
         for var in template:
             if var in scope and 'override' in template[var]:
-                scope[var]=template[var].override
+                override=template[var].override
+                if override is not None: scope[var]=override
 
         if errors: raise TemplateErrors(errors)
 
