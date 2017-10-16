@@ -1,0 +1,39 @@
+default_places: &default_places
+  PROJECT_DIR: /scratch4/NCEPDEV/nems/
+
+  # Locations of CROW and this test suite.
+  HOMEcrow: !calc tools.crow_install_dir()
+
+  # NOTE: These two directories will need to be changed for the real
+  # fv3gfs workflow:
+  HOMEgfs: !calc tools.crow_install_dir('model/fv3gfs')
+  HOMEgdas: !calc HOMEgfs
+
+  HOMEDIR: !expand "{PROJECT_DIR}/save/{tools.env('USER')}"
+  STMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
+  PTMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
+  NOSCRUB: !expand "{PROJECT_DIR}/noscrub/{tools.env('USER')}"
+
+  BASE_WORKFLOW: !expand "{HOMEgfs}/gfs_workflow.v15.0.0"
+  BASE_GSM: !expand "{HOMEgfs}/global_shared.v15.0.0"
+  BASE_MODULES: !expand "{HOMEgfs}/global_shared.v15.0.0/modulefiles"
+
+  # User paths
+  EXPDIR: !expand "{HOMEDIR}/{experiment_name}"
+  ROTDIR: !expand "{PTMP}/{experiment_name}"
+  RUNDIR: !expand "{STMP}/RUNDIRS/{experiment_name}"
+  ARCDIR: !expand "{NOSCRUB}/archive/{experiment_name}"
+  ATARDIR: !expand "/NCEPDEV/{hpss_project}/1year/{tools.env('USER')}/{doc.platform.name}/scratch/{experiment_name}"
+#  CDUMP: "gfs"
+
+  # Component paths
+  BASE_SVN: !calc doc.platform.BASE_SVN
+  MYBASE_SVN: !expand "{NOSCRUB}/{tools.env('USER')}/svn"
+  BASE_GSM: !expand "{HOMEgfs}/global_shared.v15.0.0"
+  BASE_GSI: !expand "{BASE_GSM}/sorc/gsi.fd"
+  BASE_NEMSfv3gfs: !expand "{BASE_GSM}/sorc/fv3gfs.fd"
+  BASE_POST: !expand "{BASE_SVN}/fv3gfs/tags/post4fv3"
+  BASE_PREP: !expand "{BASE_SVN}/obsproc/releases/obsproc_prep_RB-4.0.0"
+  BASE_PREP_GLOBAL: !expand "{BASE_SVN}/obsproc/releases/obsproc_global_RB-3.0.0"
+  BASE_VERIF: !expand "{BASE_SVN}/verif/global/tags/vsdb"
+

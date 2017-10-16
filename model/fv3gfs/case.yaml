@@ -1,19 +1,9 @@
 case: &case
-  PROJECT_DIR: /scratch4/NCEPDEV/nems/
-  HOMEDIR: !expand "{PROJECT_DIR}/save/{tools.env('USER')}"
-  STMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
-  PTMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
-  NOSCRUB: !expand "{PROJECT_DIR}/noscrub/{tools.env('USER')}"
-
-  # Locations of CROW and this test suite.
-  HOMEcrow: !calc tools.crow_install_dir()
-  HOMEgfs: !calc tools.crow_install_dir('model/fv3gfs')
+  <<: [ *default_places, *default_settings ]
 
   # Project for CPU accounting.
-  cpu_project: marine-cpu
-#  cpu_project: !calc doc.platform.default_cpu_project #Formerly known as ACCOUNT
-
-  hpss_project: emc-global  # Project for storing HPSS data.
+  cpu_project: nems
+  hpss_project: emc-hwrf  # Project for storing HPSS data.
   noscrub_project: nems  # Project for storing non-scrubbed data.
 
   # User-defined experiment name; should be a-z followed by alphanumeric:
@@ -24,25 +14,6 @@ case: &case
   SDATE: 2016100100
   EDATE: 2016100112
 
-  # User paths
-  EXPDIR: !expand "{HOMEDIR}/{experiment_name}"
-  ROTDIR: !expand "{PTMP}/{experiment_name}"
-  RUNDIR: !expand "{STMP}/RUNDIRS/{experiment_name}"
-  ARCDIR: !expand "{NOSCRUB}/archive/{experiment_name}"
-  ATARDIR: !expand "/NCEPDEV/{hpss_project}/1year/{tools.env('USER')}/{machine}/scratch/{experiment_name}"
-#  CDUMP: "gfs"
-
-  # Component paths
-  BASE_SVN: !calc doc.platform.BASE_SVN
-  MYBASE_SVN: !expand "{NOSCRUB}/{tools.env('USER')}/svn"
-  BASE_FV3GFS: !expand "{BASE_SVN}/fv3gfs"
-  BASE_GSM: !expand "{BASE_FV3GFS}/global_shared.v15.0.0"
-  BASE_GSI: !expand "{BASE_GSM}/sorc/gsi.fd"
-  BASE_NEMSfv3gfs: !expand "{BASE_GSM}/sorc/fv3gfs.fd"
-  BASE_POST: !expand "{BASE_SVN}/fv3gfs/tags/post4fv3"
-  BASE_PREP: !expand "{BASE_SVN}/obsproc/releases/obsproc_prep_RB-4.0.0"
-  BASE_PREP_GLOBAL: !expand "{BASE_SVN}/obsproc/releases/obsproc_global_RB-3.0.0"
-  BASE_VERIF: !expand "{BASE_SVN}/verif/global/tags/vsdb"
 
   # Experiment settings
   # Resolution
@@ -57,6 +28,8 @@ case: &case
   FHMIN: 0 # GDAS forecast initial hour
   FHMAX: 9 # GDAS forecast length in hours
   FHOUT: 3 # GDAS forecast output frequency in hours
+
+  FHMAX_GFS: 240 # Last GFS forecast hour
 
   # ENKF cycle info
   FHMIN_ENKF: 3

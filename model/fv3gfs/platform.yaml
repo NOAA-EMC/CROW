@@ -1,115 +1,3 @@
-resource_defaults: &resource_defaults
-
-
-  mpi_tuning: &mpi_tuning
-      npe_ecen: "84"
-      npe_node_ecen: "12"
-      npe_node_max: 24
-      nst_anl: YES
-      MPI_BUFS_PER_HOST: 2048
-      MPI_BUFS_PER_PROC: 2048
-      MPI_GROUP_MAX: 256
-      MPI_MEMMAP_OFF: 1
-      MP_STDOUTMODE: "ORDERED"
-      NTHSTACK: 1024000000
-      OMP_STACKSIZE: 2048000
-
-  # From if[[...ecen]] block in config.resources:
-  run_ecen:
-    env: *mpi_tuning
-
-    resources:
-      - exe: placeholder
-        mpi_ranks: 84
-        # max_ppn comes from THEIA.env: 84/12 = 7
-        max_ppn: 7
-        OMP_NUM_THREADS: max
-
-      - exe: placeholder
-        mpi_ranks: 24
-        max_ppn: 24
-        OMP_NUM_THREADS: 1
-        
-  run_chgres:
-    - exe: time
-      OMP_NUM_THREADS: max
-      args:
-        - placeholder
-
-  run_nothing: # Special placeholder for "do nothing"
-    - exe: nothing
-
-  run_eobs:
-    - exe: placeholder
-      mpi_ranks: 24
-      max_ppn: 6
-      OMP_NUM_THREADS: max
-
-  run_eomg:
-    - exe: placeholder
-      mpi_ranks: 24
-      max_ppn: 6
-      OMP_NUM_THREADS: max
-
-  run_eupd:
-    - exe: placeholder
-      mpi_ranks: 10
-      max_ppn: 12
-      OMP_NUM_THREADS: max
-
-  run_efcs:
-    - exe: placeholder
-      mpi_ranks: 8
-      max_ppn: 24
-      OMP_NUM_THREADS: max
-
-  run_epos:
-    - exe: placeholder
-      mpi_ranks: 7
-      max_ppn: 12
-      OMP_NUM_THREADS: max
-
-  run_prep:
-    - exe: placeholder
-      mpi_ranks: 1
-      max_ppn: 12
-      OMP_NUM_THREADS: max
-
-  run_anal:
-    - exe: placeholder
-      mpi_ranks: 24
-      max_ppn: 6
-      OMP_NUM_THREADS: max
-
-  run_fcst:
-    - exe: placeholder
-      mpi_ranks: 16
-      max_ppn: 12
-      OMP_NUM_THREADS: max
-
-  run_post:
-    - exe: placeholder
-      mpi_ranks: 6
-      max_ppn: 12
-      OMP_NUM_THREADS: max
-
-  run_vrfy:
-    - exe: placeholder
-      mpi_ranks: 1
-      max_ppn: 1
-      OMP_NUM_THREADS: max
-
-  run_arch:
-    - exe: placeholder
-      mpi_ranks: 1
-      max_ppn: 1
-      OMP_NUM_THREADS: max
-
-  run_earc:
-    - exe: placeholder
-      mpi_ranks: 1
-      max_ppn: 1
-      OMP_NUM_THREADS: max
 
 theia: &theia !Platform
   <<: *resource_defaults
@@ -117,54 +5,34 @@ theia: &theia !Platform
   name: THEIA
   detect: !calc tools.isdir('/scratch4') and tools.isdir('/scratch3')
 
-  # here or options.yaml?
-  # queues and accounts
-  QUEUE: batch
-  QUEUE_ARCH: service
-  BASE_FV3GFS: "/scratch4/NCEPDEV/nems/noscrub/Samuel.Trahan/gitsvn/svn"     # need user input
-
-# Directories relative to installation areas:
-  BASE_WORKFLOW: !expand "{BASE_FV3GFS}/gfs_workflow.v15.0.0"
-  BASE_GSM: !expand "{BASE_FV3GFS}/global_shared.v15.0.0"
-  BASE_MODULES: !expand "{BASE_FV3GFS}/global_shared.v15.0.0/modulefiles"
-
-  # GLOBAL static environment parameters
-  NWPROD: "/scratch4/NCEPDEV/global/save/glopara/nwpara"
-  DMPDIR: "/scratch4/NCEPDEV/global/noscrub/dump"
-  RTMFIX: "/scratch4/NCEPDEV/da/save/Michael.Lueken/nwprod/lib/crtm/2.2.3/fix_update"
-
-  # svn, keep it or not?
-  # Base directories for various builds
   BASE_SVN: "/scratch4/NCEPDEV/global/save/glopara/svn"
-  MYBASE_SVN: !expand "/scratch4/NCEPDEV/global/save/{tools.env('USER')}/svn"
-  BASE_GFS: "/scratch4/NCEPDEV/global/save/glopara/svn/gfs/branches/gfs_q3fy17/global_shared.v14.1.0"
-  BASE_GDAS: "/scratch4/NCEPDEV/global/save/glopara/svn/gfs/branches/gfs_q3fy17/global_shared.v14.1.0"
 
-  # Post requires grib2 table
-  POSTGRB2TBL: "/scratch3/NCEPDEV/nwprod/lib/sorc/g2tmpl/params_grib2_tbl_new"
-
-  # Utilities needed in the scripts (mostly post)
-  exes: 
-    NEMSIOGET: !expand "{doc.platform.NWPROD}/util/exec/nemsio_get"
-    NDATE: !expand "{doc.platform.NWPROD}/util/exec/ndate"
-    NHOUR: !expand "{$NWPROD}/util/exec/nhour"
-    WGRIB: !expand "{$NWPROD}/util/exec/wgrib"
-    WGRIB2: !expand "{doc.platform.NWPROD}/util/exec/wgrib2"
-    COPYGB: !expand "{doc.platform.NWPROD}/util/exec/copygb"
-    COPYGB2: !expand "{doc.platform.NWPROD}/util/exec/copygb2"
-    GRBINDEX: !expand "{doc.platform.NWPROD}/util/exec/grbindex"
-    GRB2INDEX: !expand "{doc.platform.NWPROD}/util/exec/grb2index"
-    GRBINDEX2: !expand "{doc.platform.NWPROD}/util/exec/grb2index"
+  # Environment variables to set in all jobs
+  general_env: 
+    POSTGRB2TBL: "/scratch3/NCEPDEV/nwprod/lib/sorc/g2tmpl/params_grib2_tbl_new"
+    NWPROD: "/scratch4/NCEPDEV/global/save/glopara/nwpara"
+    DMPDIR: "/scratch4/NCEPDEV/global/noscrub/dump"
+    RTMFIX: "/scratch4/NCEPDEV/da/save/Michael.Lueken/nwprod/lib/crtm/2.2.3/fix_update"
+    NEMSIOGET: !expand "{NWPROD}/util/exec/nemsio_get"
+    NDATE: !expand "{NWPROD}/util/exec/ndate"
+    NHOUR: !expand "{NWPROD}/util/exec/nhour"
+    WGRIB: !expand "{NWPROD}/util/exec/wgrib"
+    WGRIB2: !expand "{NWPROD}/util/exec/wgrib2"
+    COPYGB: !expand "{NWPROD}/util/exec/copygb"
+    COPYGB2: !expand "{NWPROD}/util/exec/copygb2"
+    GRBINDEX: !expand "{NWPROD}/util/exec/grbindex"
+    GRB2INDEX: !expand "{NWPROD}/util/exec/grb2index"
+    GRBINDEX2: !expand "{NWPROD}/util/exec/grb2index"
     CNVGRIB: "/apps/cnvgrib/1.4.0/bin/cnvgrib"
 
-  NCO_NAMING_CONV: YES
-  NCP: "'/bin/cp -p'"
-  NLN: "'/bin/ln -sf'"
-  NMV: "/bin/mv"
+    prep_step: !expand "{NWPROD}/prod_util.v1.0.15/ush/prep_step"
+
+    NCP: "'/bin/cp -p'"
+    NLN: "'/bin/ln -sf'"
+    NMV: "/bin/mv"
 
   default_cpu_project: fv3-cpu
-  # Path to pan_df, the program used to get Panasas disk usage information:
-  pan_df: pan_df
+
   serial_accounting:
     queue: debug
     project: !calc doc.case.cpu_project
@@ -183,6 +51,9 @@ theia: &theia !Platform
   parallelism:
     <<: *theia_scheduler
     name: HydraIMPI
+
+  # Path to pan_df, the program used to get Panasas disk usage information:
+  pan_df: pan_df
   least_used_scrub: !Immediate 
     - !FirstMax
       - do: /scratch3/NCEPDEV/stmp1
@@ -196,12 +67,12 @@ theia: &theia !Platform
 
 wcoss_cray: &wcoss_cray !Platform
   <<: *resource_defaults
+
   Evaluate: false
-  detect: !calc tools.isdir('/scratch4') and tools.isdir('/scratch3')
+  detect: !calc |
+    tools.isdir('/gpfs/hps') and \
+    tools.isfile('/etc/SuSE-release')
   default_cpu_project: GFS-T2O
-  # Path to mmlsquota, the program used to get GPFS disk usage information:
-  mmlsquota: '/usr/lpp/mmfs/bin/mmlsquota'
-  POSTGRB2TBL: "/gpfs/hps/nco/ops/nwprod/lib/g2tmpl/v1.3.0/src/params_grib2_tbl_new"
   serial_accounting:
     queue: dev
     project: !calc doc.case.cpu_project
@@ -220,13 +91,20 @@ wcoss_cray: &wcoss_cray !Platform
   parallelism: 
     <<: *wcoss_cray_scheduler
     name: LSFAlps
+
+  BASE_SVN:  "/gpfs/hps3/emc/global/noscrub/emc.glopara/svn"
+
+  general_env:
+    POSTGRB2TBL: "/gpfs/hps/nco/ops/nwprod/lib/g2tmpl/v1.3.0/src/params_grib2_tbl_new"
+
+  # Path to mmlsquota, the program used to get GPFS disk usage information:
+  mmlsquota: '/usr/lpp/mmfs/bin/mmlsquota'
   least_used_scrub: !Immediate
     - !FirstMax
       - do: /gpfs/hps2/ptmp
         when: !calc tools.gpfs_gb(do,'hps2-ptmp','hps2',mmlsquota)
       - do: /gpfs/hps3/ptmp
         when: !calc tools.gpfs_gb(do,'hps3-ptmp','hps3',mmlsquota)
-  detect: !calc tools.isdir('/gpfs/hps') and tools.isfile('/etc/SuSE-release')
 
 platform: !Immediate
   - !FirstTrue

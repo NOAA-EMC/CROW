@@ -1,0 +1,111 @@
+resource_defaults: &resource_defaults
+
+  mpi_tuning: &mpi_tuning
+      npe_ecen: "84"
+      npe_node_ecen: "12"
+      npe_node_max: 24
+      nst_anl: YES
+      MPI_BUFS_PER_HOST: 2048
+      MPI_BUFS_PER_PROC: 2048
+      MPI_GROUP_MAX: 256
+      MPI_MEMMAP_OFF: 1
+      MP_STDOUTMODE: "ORDERED"
+      NTHSTACK: 1024000000
+      OMP_STACKSIZE: 2048000
+
+  run_test:
+    resources:
+      - exe: nothing
+        mpi_ranks: 1
+
+  # From if[[...ecen]] block in config.resources:
+  run_ecen:
+    env: *mpi_tuning
+
+    resources:
+      - exe: placeholder
+        mpi_ranks: 84
+        # max_ppn comes from THEIA.env: 84/12 = 7
+        max_ppn: 7
+        OMP_NUM_THREADS: max
+
+  run_chgres:
+    - exe: time
+      OMP_NUM_THREADS: max
+      args:
+        - placeholder
+
+  run_nothing: # Special placeholder for "do nothing"
+    - exe: nothing
+
+  run_eobs:
+    - exe: placeholder
+      mpi_ranks: !calc 24*6
+      max_ppn: 6
+      OMP_NUM_THREADS: max
+
+  run_eomg:
+    - exe: placeholder
+      mpi_ranks: !calc 6*24
+      max_ppn: 6
+      OMP_NUM_THREADS: max
+
+  run_eupd:
+    - exe: placeholder
+      mpi_ranks: !calc 10*12
+      max_ppn: 12
+      OMP_NUM_THREADS: max
+
+  run_efcs:
+    - exe: placeholder
+      mpi_ranks: !calc 8*24
+      max_ppn: 24
+      OMP_NUM_THREADS: max
+
+  run_epos:
+    - exe: placeholder
+      mpi_ranks: !calc 7*12
+      max_ppn: 12
+      OMP_NUM_THREADS: max
+
+  run_prep:
+    - exe: placeholder
+      mpi_ranks: 12
+      max_ppn: 12
+      OMP_NUM_THREADS: max
+
+  run_anal:
+    - exe: placeholder
+      mpi_ranks: !calc 24*6
+      max_ppn: 6
+      OMP_NUM_THREADS: max
+
+  run_fcst:
+    - exe: placeholder
+      mpi_ranks: !calc 18*12
+      max_ppn: 12
+      OMP_NUM_THREADS: max
+
+  run_post:
+    - exe: placeholder
+      mpi_ranks: !calc 6*12
+      max_ppn: 12
+      OMP_NUM_THREADS: max
+
+  run_vrfy:
+    - exe: placeholder
+      mpi_ranks: 1
+      max_ppn: 1
+      OMP_NUM_THREADS: max
+
+  run_arch:
+    - exe: placeholder
+      mpi_ranks: 1
+      max_ppn: 1
+      OMP_NUM_THREADS: max
+
+  run_earc:
+    - exe: placeholder
+      mpi_ranks: 1
+      max_ppn: 1
+      OMP_NUM_THREADS: max

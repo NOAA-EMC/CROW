@@ -24,7 +24,9 @@ if len(sys.argv)<2:
     logger.error('Format: setup_expt.py case.yaml')
     exit(1)
 
-yamls=[ 'platform.yaml','template.yaml', 'resolution.yaml' ] + \
+yamls=[
+    'resources.yaml','platform.yaml','template.yaml','resolution.yaml',
+    'places.yaml', 'settings.yaml' ]+ \
     sys.argv[1:] + ['runtime.yaml','actions.yaml','workflow.yaml']
 conf=crow.config.from_file(*yamls)
 

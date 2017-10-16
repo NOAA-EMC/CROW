@@ -11,37 +11,37 @@ CYC_TRACK_VARS: &CYC_TRACK_VARS !Template
     default: !expand "{BASE_GSM}/exec/gettrk"
   GETTX: 
     type: string
-    default: !expand "{GETTRKEXEC}"
+    default: !calc GETTRKEXEC
   SUPVX: 
     type: string
     default: !expand "{BASE_GSM}/exec/supvit"
   HOMERELO: 
     type: string
-    default: !expand "{BASE_GSM}"
+    default: !calc BASE_GSM
   homesyndir: 
     type: string
-    default: !expand "{BASE_GSM}"
-  prep_step: 
-    type: string
-    default: !expand "{NWPROD}/prod_util.v1.0.15/ush/prep_step"
+    default: !calc BASE_GSM
   FHOUT: 
-    type: string
+    type: int
     default: !FirstTrue
       - when: !calc CDUMP=="gfs"
-        do: !expand "{FHOUT_GFS}"
+        do: !calc FHOUT_GFS
       - otherwise: !error "FHOUT undefined!"
+  FHMIN: { type: int, default: 0 }
+  FHMIN_ENKF: { type: int, default: 3 }
+  FHMAX_ENKF: { type: int, default: 9 }
+  FHOUT_ENKF: { type: int, default: 3 }
+  FHMAX_GFS: { type: int, default: 384 } # 384 = operational value
+  FHMAX2_GFS: { type: int, default: !calc FHMAX_GFS }
   FHMAX: 
-    type: string
+    type: int
     default: !FirstTrue
       - when: !calc CDUMP=="gfs"
-        do: !expand "{FHMAX_GFS}"
+        do: !calc FHMAX2_GFS
       - otherwise: !error "FHMAX undefined!"
-  FHMAX2: 
-    type: string
-    default: !FirstTrue
-      - when: !calc CDUMP=="gfs"
-        do: !expand "{FHMAX2_GFS}"
-      - otherwise: !error "FHMAX2 undefined!"
+
+  FHMAX2: { type: int, default: !calc FHMAX2_GFS }
+
   COMROOTp1: 
     type: string
     default: !FirstTrue
@@ -91,10 +91,10 @@ MIN_VARS: &MIN_VARS !Template
     default: !expand "{BASE_SVN}/fv3gfs/trunk/gfs.v15.0.0"
   HOMEminmon: 
     type: string
-    default: !expand "{BASE_GSM}"
+    default: !calc BASE_GSM
   MINMON_SUFFIX: 
     type: string
-    default: !expand "{PSLOT}"
+    default: !calc experiment_name
   M_TANKverf: 
     type: string
     default: !expand "{NOSCRUB}/minmon"
@@ -111,10 +111,10 @@ MIN_VARS: &MIN_VARS !Template
 RAD_VARS: &RAD_VARS !Template
   HOMEradmon: 
     type: string
-    default: !expand "{BASE_GSM}"
+    default: !calc BASE_GSM
   RADMON_SUFFIX: 
     type: string
-    default: !expand "{PSLOT}"
+    default: !calc experiment_name
   TANKverf: 
     type: string
     default: !expand "{NOSCRUB}/radmon"
@@ -125,6 +125,7 @@ RAD_VARS: &RAD_VARS !Template
         do: !expand "{HOMEgdas}/jobs/JGDAS_VERFRAD"
       - when: !calc ( not doc.platform.name=="WCOSS_C" and not doc.platform.name=="THEIA" )
         message: !expand "WARNING: Radiance monitoring is not enabled on {doc.platform.name}!"
+        do: null
       - otherwise: null
 
 OZN_VARS: &OZN_VARS !Template
@@ -134,7 +135,7 @@ OZN_VARS: &OZN_VARS !Template
     default: "NO"
   OZNDIR: 
     type: string
-    default: !expand "{NOSCRUB}/$LOGNAME/ozone/stats/$PSLOT"
+    default: !expand "{NOSCRUB}/{LOGNAME}/ozone/stats/{experiment_name}"
   VRFYOZNSH:
     type: string
     default:  ""
@@ -145,7 +146,7 @@ OZN_VARS: &OZN_VARS !Template
 MIN_RAD_OZN_VARS: &MIN_RAD_OZN_VARS !Template
   HOMEgdas: 
     type: string
-    default: !expand "{BASE_GDAS}"
+    default: !calc BASE_GDAS
   envir: 
     type: string
     default: "para"
@@ -162,16 +163,16 @@ VRFY_CDUMP_GFS_VARS: &VRFY_CDUMP_GFS_VARS !Template
     default: !expand "{NOSCRUB}/archive/vsdb_data"
   vsdbhome: 
     type: string
-    default: !expand "{BASE_VERIF}" 
+    default: !calc BASE_VERIF
   VSDBSH=: 
     type: string
     default: !expand "{vsdbhome}/vsdbjob.sh"
   vlength=: 
     type: string
-    default: !expand "{FHMAX_GFS}"
+    default: !calc FHMAX_GFS
   vhr_rain: 
     type: string
-    default: !expand "{FHMAX_GFS}"
+    default: !calc FHMAX_GFS
   ftyplist: 
     type: string
     default: "pgbq"
@@ -235,7 +236,7 @@ vrfy_template: &vrfy_template !Template
     allowed: [ "YES", "NO" ]
     default: "NO"
     if_present: !FirstTrue
-      - when: !calc VRFYOZN=='YES'
+      - when: !calc VRFYOZN=="YES"
         message: "WARNING: Ozone Monitoring is just a stub for now!"
         do: *OZN_VARS
       - otherwise: null
@@ -288,14 +289,19 @@ vrfy_template: &vrfy_template !Template
         do: !expand "{fitdir}/subfits_theia_nems"
         message: "THEIA fits file"
       - when: !calc VRFYFITS!="YES"
-        do: '/dev/null'
+        do: "/dev/null"
         message: !expand vrfyfits = {VRFYFITS}
       - otherwise: !error "Do not know subfits file (PREPQFITSH) for {doc.platform.name}"
 
   VRFY_CDUMP_GFS:
     type: string
     allowed: [ "YES", "NO" ]
+    # FIXME: NEED DEFAULT
     default: !FirstTrue
+      - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1=="YES" or VRFYPRCP=="YES" or VRFYG2OBS=="YES" ) )
+        do: "YES"
+      - otherwise: "NO"
+    if_present: !FirstTrue
       - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1=="YES" or VRFYPRCP=="YES" or VRFYG2OBS=="YES" ) )
         do: *VRFY_CDUMP_GFS_VARS
       - otherwise: null
@@ -315,6 +321,10 @@ vrfy_template: &vrfy_template !Template
     allowed: [ "YES", "NO" ]
     default: !FirstTrue
       - when: !calc ( VRFYRAD=="YES" or VRFYMINMON=="YES" or VRFYOZN=="YES" )
+        do: "YES"
+      - otherwise: "NO"
+    if_present: !FirstTrue
+      - when: !calc ( VRFYRAD=="YES" or VRFYMINMON=="YES" or VRFYOZN=="YES" )
         do: *MIN_RAD_OZN_VARS
       - otherwise: null
 
@@ -322,6 +332,10 @@ vrfy_template: &vrfy_template !Template
     type: string
     allowed: [ "YES", "NO" ]
     default: !FirstTrue
+      - when: !calc ( VRFYRAD=="YES" and CDUMP==CDFNL )
+        do: "YES"
+      - otherwise: "NO"
+    if_present: !FirstTrue
       - when: !calc ( VRFYRAD=="YES" and CDUMP==CDFNL )
         do: *RAD_VARS
       - otherwise: null
