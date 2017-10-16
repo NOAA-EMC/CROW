@@ -2,7 +2,7 @@ Rocoto: &Rocoto
   scheduler: !calc doc.platform.scheduler
   parallelism: !calc doc.platform.parallelism
   EXPDIR: !calc doc.case.EXPDIR
-  max_tries: 99
+  max_tries: 1
 
   workflow_xml: !expand |
     <?xml version="1.0"?>
@@ -13,7 +13,7 @@ Rocoto: &Rocoto
       <!ENTITY TASK_THROTTLE "30">
       <!ENTITY ENSEMBLE_TASK_THROTTLE "20">
       <!ENTITY CYCLE_THROTTLE "2">
-      <!ENTITY MAX_TRIES "99">
+      <!ENTITY MAX_TRIES "1">
     ]>
     <workflow realtime="F"
               cyclethrottle="&CYCLE_THROTTLE;"
