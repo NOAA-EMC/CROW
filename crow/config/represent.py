@@ -67,8 +67,9 @@ class Conditional(list_eval):
                 keys.append(from_config('when',vk._raw('when'),globals,vk_locals))
             else:
                 raise ConditionalMissingDoWhen(
-                    f'{self._path}[{i}]: entries must have "do" and "when"'
-                    'or "otherwise".  Saw keys: '+', '.join(list(vk.keys())))
+                    f'{self._path}[{i}]: entries must have both "do" and "when"'
+                    'or "otherwise" (or "message").  Saw keys: '+
+                    ', '.join(list(vk.keys())))
         return keys, values, otherwise_idx
 
     def _result(self,globals,locals):
