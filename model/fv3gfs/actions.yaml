@@ -55,8 +55,11 @@ anal: &anal_action !Action
 #  resources: !calc run_anal
   resources: !calc run_test.resources
   memory: "3072M"
+  accounting: !calc doc.platform.parallel_accounting
+  assim_freq: 6
   APRUN_CALCINC: "'mpirun -np $ncmd'"
   APRUN_GSI: "'mpirun -np 144'"
+  ANALYSISSH: !expand "{BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
   BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
   BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
@@ -69,14 +72,14 @@ anal: &anal_action !Action
   nth_gsi: 4
   nth_anal: 2
   KEEPDATA: NO
+  NTHREADS_CALCINC: 1
+  NTHREADS_GSI: 4
+  NTHSTACK: 1024000000
+  OUTPUT_GRID: "gaussian_grid"
   QUILTING: YES
   SMOOTH_ENKF: YES
   VERBOSE: YES
   WRITE_NEMSIOFILE: YES
-  assim_freq: 6
-  OUTPUT_GRID: "gaussian_grid"
-  NTHREADS_CALCINC: 1
-  NTHREADS_GSI: 4
 
 epos: &epos_action !Action
   <<: *action_template
@@ -93,7 +96,14 @@ epos: &epos_action !Action
   CHGRP_CMD: "'chgrp rstprod'"
   DONST: NO
   ENKFPOSTSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_post_fv3gfs.sh.ecf"
+  KEEPDATA: NO
   nth_epos: 2
+  OUTPUT_GRID: "gaussian_grid"
+  QUILTING: YES
+  SMOOTH_ENKF: YES
+  VERBOSE: YES
+  WRITE_NEMSIOFILE: YES
+  accounting: !calc doc.platform.parallel_accounting
 
 eobs: &eobs_action !Action
   <<: *anal_action
