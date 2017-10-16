@@ -60,7 +60,7 @@ sub diffmod {
 
 my $pre=$ARGV[0];
 
-print("# checkit.pl $pre\n");
+print("# scan-env-changes.pl $pre\n");
 
 my %before_set=readit("$pre\%set\%before-to-sh");
 my %after_set=readit("$pre\%set\%after-to-sh");
