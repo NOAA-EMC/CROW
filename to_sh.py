@@ -268,3 +268,7 @@ if __name__ == '__main__':
         sys.stdout.write('/bin/false failure- see prior errors.')
         sys.stderr.write('Failure; see prior errors.\n')
         exit(1)
+    except:
+        sys.stdout.write('/bin/false failure- see prior errors.')
+        sys.stderr.write('Failure; see prior errors.\n')
+        raise
