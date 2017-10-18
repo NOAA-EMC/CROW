@@ -59,7 +59,7 @@ anal: &anal_action !Action
   assim_freq: 6
   APRUN_CALCINC: "'mpirun -np $ncmd'"
   APRUN_GSI: "'mpirun -np 144'"
-  ANALYSISSH: !expand "{BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
+  ANALYSISSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
   BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
   BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
@@ -89,7 +89,7 @@ epos: &epos_action !Action
   walltime: !timedelta 00:15:00
 #  resources: !calc run_epos
   resources: !calc run_test.resources
-  memory: "3072M"
+  memory: "254M"
   ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
   BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
   BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
@@ -113,22 +113,57 @@ eobs: &eobs_action !Action
 #  resources: !calc run_eobs
   resources: !calc run_test.resources
   memory: "3072M"
-  INVOBSSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_innovate_obs_fv3gfs.sh.ecf"
+  ANALYSISSH: "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
+  APRUN_GSI: "'mpirun -np 144'"
+  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
+  BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
+  BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
+  CHGRP_CMD: "'chgrp rstprod'"
+  DONST: NO
   ENKFINVOBSSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_innovate_obs_fv3gfs.sh.ecf"
+  INVOBSSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_innovate_obs_fv3gfs.sh.ecf"
+  KEEPDATA: NO
   NMEM_EOMGGRP: 10
-  RERUN_EOMGGRP: "YES"
+  NTHREADS_GSI: 4
+  NTHSTACK: 1024000000
   npe_eobs: !calc resources[0].mpi_ranks
   npe_gsi: !calc npe_eobs
   nth_gsi: 4
 # GSI namelist options related to observer for EnKF
   OBSINPUT_INVOBS: "dmesh(1)=225.0,dmesh(2)=225.0"
   OBSQC_INVOBS: "tcp_width=60.0,tcp_ermin=2.0,tcp_ermax=12.0"
+  OUTPUT_GRID: "gaussian_grid"
+  QUILTING: YES
+  RERUN_EOMGGRP: "YES"
+  SMOOTH_ENKF: YES
+  VERBOSE: YES
+  WRITE_NEMSIOFILE: YES
   nth_eobs: 2
 
 eomg: &eomg_action !Action
   <<: *action_template
   J_JOB: eomg
+  ANALYSISSH: "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
+  APRUN_GSI: "'mpirun -np 144'"
+  BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
+  BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
   CASE: !calc doc.case.CASE_ENKF
+  CHGRP_CMD: "'chgrp rstprod'"
+  DONST: NO
+  ENKFINVOBSSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_innovate_obs_fv3gfs.sh.ecf"
+  INVOBSSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_innovate_obs_fv3gfs.sh.ecf"
+  KEEPDATA: NO
+  NMEM_EOMGGRP: 10
+  NTHREADS_GSI: 4
+  NTHSTACK: 1024000000
+  OBSINPUT_INVOBS: "dmesh(1)=225.0,dmesh(2)=225.0"
+  OBSQC_INVOBS: "tcp_width=60.0,tcp_ermin=2.0,tcp_ermax=12.0"
+  OUTPUT_GRID: "gaussian_grid"
+  QUILTING: YES
+  RERUN_EOMGGRP: "YES"
+  SMOOTH_ENKF: YES
+  VERBOSE: YES
+  WRITE_NEMSIOFILE: YES
   walltime: !timedelta 00:15:00
 #  resources: !calc run_eomg
   resources: !calc run_test.resources
@@ -138,12 +173,27 @@ eomg: &eomg_action !Action
 eupd: &eupd_action !Action
   <<: *action_template
   J_JOB: eupd
+  ANALYSISSH: "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
+  APRUN_ENKF: "'mpirun -np 120'"
+  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
   CASE: !calc doc.case.CASE_ENKF
+  BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
+  BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
+  CHGRP_CMD: "'chgrp rstprod'"
+  DONST: NO
+  ENKFUPDSH: "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_update_fv3gfs.sh.ecf"
+  KEEPDATA: NO
+  NTHREADS_ENKF: 2
+  NTHSTACK: 1024000000
+  OUTPUT_GRID: "gaussian_grid"
+  QUILTING: YES
+  SMOOTH_ENKF: YES
+  VERBOSE: YES
+  WRITE_NEMSIOFILE: YES
   walltime: !timedelta 00:15:00
 #  resources: !calc run_eupd
   resources: !calc run_test.resources
   memory: "3072M"
-  ENKFUPDSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_update_fv3gfs.sh.ecf"
   ENKFEXEC: !expand "{doc.case.BASE_GSI}/exec/global_enkf"
   npe_eupd: !calc resources[0].mpi_ranks
   npe_enkf: !calc npe_eupd
@@ -161,40 +211,113 @@ efcs: &efcs_action !Action
   npe_efcs: !calc "layout_x*layout_y*6"
   npe_fv3: !calc npe_efcs
   nth_fv3: 1
-
+  APRUN_FV3: "'mpirun -np 204'"
+  APRUN_REGRID_NEMSIO: "'mpirun -np 65'"
+  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
+  BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
+  BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
+  CHGRP_CMD: "'chgrp rstprod'"
+  DELTIM: 1800
+  DIAG_TABLE: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/diag_table_da"
+  DONST: NO
+  DO_SHUM: NO
+  DO_SKEB: NO
+  DO_SPPT: NO
   ENKFFCSTSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_fcst_fv3gfs.sh.ecf"
+  FCSTEXEC: "fv3_gfs_nh.prod.32bit.x"
+  FCSTEXECDIR: !expand "{doc.case.BASE_GSM}/sorc/fv3gfs.fd/NEMS/exe"
+  FIELD_TABLE: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/field_table_ncld1"
+  FORECASTSH: !expand "{doc.case.BASE_GSM}/scripts/exglobal_fcst_nemsfv3gfs.sh"
+  KEEPDATA: NO
+  MONO: "non-mono"
+  NC2NEMSIOSH: !expand "{doc.case.BASE_GSM}/ush/fv3gfs_nc2nemsio.sh"
   NMEM_EFCSGRP: 10
+  NTHREADS_FV3: 1
+  NTHREADS_REGRID_NEMSIO: 1
+  NTHSTACK: 1024000000
+  OUTPUT_GRID: "gaussian_grid"
+  QUILTING: YES
+  REGRID_NEMSIO_SH: !expand "{doc.case.BASE_GSM}/ush/fv3gfs_regrid_nemsio.sh"
+  REGRID_NEMSIO_TBL: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/variable_table_da_nonsst.txt"
+  REMAPSH: !expand "{doc.case.BASE_GSM}/ush/fv3gfs_remap.sh"
   RERUN_EFCSGRP: "NO"
-
 # Stochastic physics parameters (only for ensemble forecasts)
+  DO_SHUM: NO
+  DO_SKEB: NO
+  DO_SPPT: NO
   SET_STP_SEED: "YES"
-  DO_SKEB: ".false."
   SKEB: 0.8
   SKEB_TAU: 21600.
   SKEB_LSCALE: 500000.
   SKEBNORM: 1
-  DO_SHUM: ".false."
   SHUM: 0.006
   SHUM_TAU: 21600.
   SHUM_LSCALE: 250000.
-  DO_SPPT: ".false."
   SPPT: 0.8
   SPPT_TAU: 21600.
   SPPT_LSCALE: 500000.
 
-  DIAG_TABLE: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/diag_table_da"
+  SMOOTH_ENKF: YES
+  TYPE: "nh"
+  USE_COUPLER_RES: NO
+  VERBOSE: YES
   restart_interval: 6
 
-  nth_efcs: 2
+  WRITE_GROUP: 1
+  WRITE_NEMSIOFILE: YES
+  WRTTASK_PER_GROUP: 12
+
+  assim_freq: 6
+  cdmbgwd: "0.125,3.0"
+  cores_per_node: 24
+  layout_x: 4"
+  layout_y: 8"
+  master_grid: "0p25deg"
+  memory_efcs: "254M"
+  memory_fcst: "1024M"
+  ncld: 1
+  npe_efcs: 204
+  npe_fcst: 216
+  npe_fv3: 204
+  npe_node_efcs: 24
+  npe_node_fcst: 12
+  npe_node_max: 24
+  npe_remap: 216
+  nst_anl: YES
+  nth_fv3: 1
+  nth_remap: 2
+  nwat: 2
+  restart_interval: 6
+  wtime_efcs: "02:00:00"
+  wtime_fcst: "03:00:00"
+  wtime_fcst_gfs: "06:00:00"
+  zhao_mic: YES
 
 earc: &earc_action !Action
   <<: *action_template
-  CASE: !calc doc.case.CASE_ENKF
+  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
+  BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
+  BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
+  CASE: "C192"
+  CASE_ENKF: !calc doc.case.CASE_ENKF
+  CHGRP_CMD: "'chgrp rstprod'"
+  DONST: NO
+  KEEPDATA: NO
+  NMEM_EARCGRP: 10
+  OUTPUT_GRID: "gaussian_grid"
+  QUILTING: YES
+  SMOOTH_ENKF: YES
+  VERBOSE: YES
+  WRITE_NEMSIOFILE: YES
   J_JOB: earc
   walltime: !timedelta 00:15:00
 #  resources: !calc run_earc
   resources: !calc run_test.resources
   memory: "3072M"
+  assim_freq: 6
+  npe_earc: 1
+  npe_node_earc: 1
+  nst_anl: YES
   NMEM_EARCGRP: 10
   nth_earc: 2
   accounting: !calc doc.platform.transfer_accounting
@@ -211,13 +334,95 @@ final: &final_action !Action
 prep: &prep_action !Action
   <<: *action_template
   J_JOB: prep
-  walltime: !timedelta 00:10:00
+  walltime: !timedelta 01:00:00
 #  resources: !calc run_prep
   resources: !calc run_test.resources
   memory: "3072M"
-  DO_RELOCATE: "NO"
-  DO_MAKEPREPBUFR: "YES"   # if NO, will copy prepbufr from globaldump
+  ARCDIR: !calc doc.case.ARCDIR
+  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
+  BACK: YES
+  BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
+  BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
+  BASE_GSI: !calc doc.case.BASE_GSI
+  BASE_NEMSfv3gfs: !calc doc.case.BASE_NEMSfv3gfs
+  BASE_POST: !calc doc.case.BASE_POST
+  BASE_PREP: !calc doc.case.BASE_PREP
+  BASE_PREP_GLOBAL: !calc doc.case.BASE_PREP_GLOBAL
+  BASE_SVN: !calc doc.platform.BASE_SVN
+  BASE_VERIF: !calc doc.case.BASE_VERIF
+  CASE: "C192"
+  CASE_ENKF: !calc doc.case.CASE_ENKF
+  CHGRP_CMD: "'chgrp rstprod'"
+  CNVGRIB: !calc doc.platform.CNVGRIB
+  COPYGB: !calc doc.platform.COPYGB
+  COPYGB2: !calc doc.platform.COPYGB2
+  DMPDIR: !calc doc.platform.DMPDIR
+  DOHYBVAR: !calc doc.case.DOHYBVAR
+  DONST: NO
+  DO_RELOCATE: NO
+  DO_MAKEPREPBUFR: YES   # if NO, will copy prepbufr from globaldump
   DRIVE_MAKEPREPBUFRSH: !expand "{doc.case.BASE_GSM}/ush/drive_makeprepbufr.sh"
+  EDATE: "2016100200"
+  FHCYC: 24
+  FHMAX: 9
+  FHMAX_ENKF: 9
+  FHMAX_GFS: 240
+  FHMAX_HF_GFS: 0
+  FHMIN: 0
+  FHMIN_ENKF: 3
+  FHMIN_GFS: 0
+  FHOUT: 3
+  FHOUT_ENKF: 3
+  FHOUT_GFS: 6
+  FHOUT_HF_GFS: 1
+  GRB2INDEX: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/grb2index"
+  GRBINDEX: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/grbindex"
+  GRBINDEX2: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/grb2index"
+  HOMEDIR: !calc doc.case.HOMEDIR
+  KEEPDATA: NO
+  LEVS: !calc doc.case.LEVS
+  MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
+  MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
+  MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
+  MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
+  MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
+  MYBASE_SVN: !calc doc.platform.MYBASE_SVN
+  NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
+  NCP: !calc doc.platform.NCP
+  NDATE: !calc doc.platform.NDATE
+  NEMSIOGET: !calc doc.platform.NEMSIOGET
+  NHOUR: !calc doc.platform.NHOUR
+  NLN: !calc doc.platform.NLN
+  NMEM_ENKF: !calc doc.case.NMEM_ENKF
+  NMV: !calc doc.platform.NMV
+  NOSCRUB: !calc doc.case.NOSCRUB
+  NTHSTACK: 1024000000
+  NWPROD: !calc doc.platform.NWPROD
+  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
+  OUTPUT_GRID: "gaussian_grid"
+  POE: NO
+  POSTGRB2TBL: !calc doc.platform.POSTGRB2TBL
+  PSLOT: !calc doc.case.PSLOT
+  PTMP: !calc doc.case.PTMP
+  QUILTING: YES
+  REALTIME: !calc doc.case.REALTIME
+  RECENTER_ENKF: !calc doc.case.RECENTER_ENKF
+  ROTDIR: !calc doc.case.ROTDIR
+  RTMFIX: !calc doc.platform.RTMFIX
+  RUNDIR: !calc doc.case.RUNDIR
+  SDATE: !calc doc.case.SDATE
+  SMOOTH_ENKF: YES
+  STMP: !calc doc.case.STMP
+  VERBOSE: YES
+  WGRIB: !calc doc.platform.WGRIB
+  WGRIB2: !calc doc.platform.WGRIB2
+  WRITE_NEMSIOFILE: YES
+  assim_freq: 6
+  npe_node_max: 24
+  npe_node_prep: 12
+  npe_prep: 12
+  nst_anl: YES
+  sys_tp: "Cray-CS400"
   nth_prep: 2
 
 fcst: &fcst_action !Action
@@ -228,6 +433,11 @@ fcst: &fcst_action !Action
 #  resources: !calc run_fcst
   resources: !calc run_test.resources
   memory: "3072M"
+  APRUN_FV3: "'mpirun -np 216'"
+  APRUN_REGRID_NEMSIO: "'mpirun -np 65'"
+  APRUN_REMAP: "'mpirun -np 216'"
+  ARCDIR: !calc doc.case.ARCDIR
+  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
   FORECASTSH: !expand "{doc.case.BASE_GSM}/scripts/exglobal_fcst_nemsfv3gfs.sh"
   FCSTEXECDIR: !expand "{doc.case.BASE_NEMSfv3gfs}/NEMS/exe"
   FCSTEXEC: "fv3_gfs_nh.prod.32bit.x"
