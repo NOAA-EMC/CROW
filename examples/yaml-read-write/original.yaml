@@ -15,23 +15,6 @@ action: &action !Action
   var1: 1
   calc1: !calc var1 + var1
 timedelta: !timedelta 03:15
-wcoss_cray: &wcoss_cray !Platform
-  detect: false
-theia: &theia !Platform
-  detect: true
-  scrub: !FirstMax
-    - do: /scratch3/NCEPDEV/stmp1
-      when: !calc tools.panasas_gb(do)
-    - do: /scratch3/NCEPDEV/stmp2
-      when: !calc tools.panasas_gb(do)
-    - do: /scratch4/NCEPDEV/stmp3
-      when: !calc tools.panasas_gb(do)
-    - do: /scratch4/NCEPDEV/stmp4
-      when: !calc tools.panasas_gb(do)
-platform: !FirstTrue
-  - { do: *theia,      when: !calc theia.detect }
-  - { do: *wcoss_cray, when: !calc wcoss_cray.detect }
-  - { otherwise: !error unknown platform }
 
 testmax: !FirstMax
   - { do: a,  when: 1 }
