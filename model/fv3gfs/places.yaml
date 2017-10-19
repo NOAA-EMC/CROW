@@ -1,5 +1,5 @@
 default_places: &default_places
-  PROJECT_DIR: /scratch4/NCEPDEV/nems/
+  PROJECT_DIR: /scratch4/NCEPDEV/ocean
 
   # Locations of CROW and this test suite.
   HOMEcrow: !calc tools.crow_install_dir()
@@ -17,6 +17,8 @@ default_places: &default_places
   BASE_WORKFLOW: !expand "{HOMEgfs}/gfs_workflow.v15.0.0"
   BASE_GSM: !expand "{HOMEgfs}/global_shared.v15.0.0"
   BASE_MODULES: !expand "{HOMEgfs}/global_shared.v15.0.0/modulefiles"
+  BASE_ENV: !expand "{HOMEgfs}/gfs_workflow.v15.0.0/env"
+  BASE_JOB: !expand "{BASE_WORKFLOW}/jobs"
 
   # User paths
   EXPDIR: !expand "{HOMEDIR}/{experiment_name}"
