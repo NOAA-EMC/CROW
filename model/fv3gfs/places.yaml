@@ -29,6 +29,9 @@ default_places: &default_places
 #  CDUMP: "gfs"
 
   # Component paths
+  BASE_FV3GFS: "/scratch4/NCEPDEV/nems/noscrub/Samuel.Trahan/gitsvn/svn"
+  BASE_GDAS: "/scratch4/NCEPDEV/nems/noscrub/Samuel.Trahan/gitsvn/svn/gdas.v15.0.0"
+  BASE_GFS: "/scratch4/NCEPDEV/nems/noscrub/Samuel.Trahan/gitsvn/svn/gfs.v15.0.0"
   BASE_SVN: !calc doc.platform.BASE_SVN
   MYBASE_SVN: !expand "{NOSCRUB}/{tools.env('USER')}/svn"
   BASE_GSM: !expand "{HOMEgfs}/global_shared.v15.0.0"
