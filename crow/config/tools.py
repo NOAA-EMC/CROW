@@ -1,6 +1,7 @@
 import crow.tools
 import os.path
 import os
+import re
 import datetime
 from collections import Sequence, Mapping
 from crow.config.exceptions import *
@@ -98,6 +99,7 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'as_seconds':seconds,
     'to_YMDH':to_YMDH, 'from_YMDH':from_YMDH,
     'to_YMD':to_YMD, 'from_YMD':from_YMD,
+    'grep':re.search,
     'join':join,
     'get_parallelism':crow.sysenv.get_parallelism, 
     'get_scheduler':crow.sysenv.get_scheduler,

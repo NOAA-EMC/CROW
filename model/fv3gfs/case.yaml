@@ -1,57 +1,66 @@
-case: &case
-  <<: [ *default_places, *default_settings ]
+fv3_settings: &fv3_settings
+  Template: *fv3_settings_template
+  LEVS: 65  # Number of vertical levels (mandatory)
 
+fv3_gfs_settings: &fv3_gfs_settings
+  <<: *fv3_settings
+  CASE: C192 # FV3 horizontal resolution (mandatory)
+
+fv3_enkf_settings: &fv3_enkf_settings
+  <<: *fv3_settings
+  CASE: C192 # FV3 horizontal resolution for ensemble (mandatory)
+  restart_interval: 6 # do not change
+
+fv3_gdas_settings: &fv3_gdas_settings
+  <<: *fv3_settings
+  #FIXME: Presently fv3_gdas_settings has to be identical to fv3_gfs_settings
+  #because the actions/009_fcst.yaml cannot differentiate
+
+########################################################################
+
+gfs_output_settings: &gfs_output_settings
+  Template: *gfs_output_settings_template
+
+  FHMAX_GFS: 120 # Last GFS forecast hour (mandatory)
+  FHOUT_GFS: 6 # GFS output frequency (optional)
+
+  OUTPUT_GRID: "gaussian_grid"
+
+########################################################################
+
+data_assimilation: &data_assimilation
+  Template: *data_assimilation_template
+  # Shared parameters/switches
+  DOHYBVAR: "YES"         # optional
+  NMEM_ENKF: 80           # DO NOT CHANGE (yet)
+  NMEM_ENKF_GRP_EOMN: 10  # DO NOT CHANGE (yet)
+  NMEM_ENKF_GRP_EFMN: 10  # DO NOT CHANGE (yet)
+  RECENTER_ENKF: "YES"    # optional
+  l4densvar: ".false."    # optional
+  lwrite4danl: ".false."  # optional
+  DO_MAKEPREPBUFR: YES   # if NO, will copy prepbufr from globaldump
+
+########################################################################
+
+accounting: &accounting
   # Project for CPU accounting.
+  Template: *accounting_template
   cpu_project: nems
   hpss_project: emc-hwrf  # Project for storing HPSS data.
   noscrub_project: nems  # Project for storing non-scrubbed data.
 
+########################################################################
+
+case:
+  Template: *case_template
   # User-defined experiment name; should be a-z followed by alphanumeric:
   experiment_name: expt #Formerly known as PSLOT
 
-  # Experiment specific parameters
-  REALTIME: NO
-  SDATE: 2016100100
-  EDATE: 2016100112
+  SDATE: 2016-10-01t00:00:00
+  EDATE: 2016-10-01t12:00:00  
 
+  DO_RELOCATE: NO # DO NOT CHANGE (yet) - relocate not yet implemented
 
-  # Experiment settings
-  # Resolution
-  LEVS: 65
-  CASE: C384
-  CASE_ENKF: C192
-
-  # Surface cycle update frequency
-  FHCYC: 24
-
-  # GDAS cycle info
-  FHMIN: 0 # GDAS forecast initial hour
-  FHMAX: 9 # GDAS forecast length in hours
-  FHOUT: 3 # GDAS forecast output frequency in hours
-
-  FHMAX_GFS: 240 # Last GFS forecast hour
-
-  # ENKF cycle info
-  FHMIN_ENKF: 3
-  FHMAX_ENKF: 9
-  FHOUT_ENKF: 3
-
-  # GFS cycle info
-  gfs_cyc: 4                # 0: no GFS cycle, 1: 00Z only, 2: 00Z and 12Z only, 4: all 4 cycles
-  FHMIN_GFS: 0   # GFS forecast initial hour
-  FHMAX_GFS: 120 # GFS forecast length in hours
-  FHOUT_GFS: 6   # GFS forecast output frequency in hours
-
-  FHMAX_HF_GFS: 0
-  FHOUT_HF_GFS: 1
-
-  # Shared parameters/switches
-  DOHYBVAR: "YES"
-  NMEM_ENKF: 80
-  NMEM_ENKF_GRP_EOMN: 10
-  NMEM_ENKF_GRP_EFMN: 10
-  RECENTER_ENKF: "YES"
-  l4densvar: ".false."
-  lwrite4danl: ".false."
+  master_grid: "0p25deg" # 1deg 0p5deg 0p25deg 0p125deg etc
 
 #-END OF FILE-#

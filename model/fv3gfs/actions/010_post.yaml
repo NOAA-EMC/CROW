@@ -1,0 +1,88 @@
+post: &post_action !Action
+  <<: *action_template
+  J_JOB: post
+  walltime: !timedelta 00:15:00
+  resources: !calc run_post.resources
+  memory: "3072M"
+
+  APRUN_DWN: !calc tools.command_without_exe(par,resources,'placeholder')
+  APRUN_NP: !calc tools.command_without_exe(par,resources,'placeholder')
+  ARCDIR: !calc doc.case.ARCDIR
+  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
+  BASE_ENV: !calc doc.places.BASE_ENV
+  BASE_GSI: !calc doc.places.BASE_GSI
+  BASE_JOB: !calc doc.places.BASE_JOB
+  BASE_NEMSfv3gfs: !calc doc.places.BASE_NEMSfv3gfs
+  BASE_POST: !calc doc.places.BASE_POST
+  BASE_PREP: !calc doc.places.BASE_PREP
+  BASE_PREP_GLOBAL: !calc doc.places.BASE_PREP_GLOBAL
+  BASE_SVN: !calc doc.places.BASE_SVN
+  BASE_VERIF: !calc doc.places.BASE_VERIF
+  CASE: !calc doc.case.CASE
+  CASE_ENKF: !calc doc.case.CASE_ENKF
+  CHGRP_CMD: "'chgrp rstprod'"
+  CNVGRIB: !calc doc.places.CNVGRIB
+  COPYGB: !calc doc.places.COPYGB
+  COPYGB2: !calc doc.places.COPYGB2
+  DOHYBVAR: !calc doc.case.DOHYBVAR
+  DONST: NO
+  DO_GDAS_FCST_POST: YES
+  EDATE: !calc doc.case.EDATE
+  FCSTEXEC: "fv3_gfs_nh.prod.32bit.x"
+  FORECASTSH: !expand "{doc.case.BASE_GSM}/scripts/exglobal_fcst_nemsfv3gfs.sh"
+  FCSTEXECDIR: !expand "{doc.case.BASE_NEMSfv3gfs}/NEMS/exe"
+  FCSTEXEC: "fv3_gfs_nh.prod.32bit.x"
+  FHCYC: 24
+  FHMAX: 9
+  FHMAX_ENKF: 9
+  FHMAX_GFS: 240
+  FHMAX_HF_GFS: 0
+  FHMIN: 0
+  FHMIN_ENKF: 3
+  FHMIN_GFS: 0
+  FHOUT: 3
+  FHOUT_ENKF: 3
+  FHOUT_GFS: 6
+  FHOUT_HF_GFS: 1
+  FLXF: YES
+  GFSDOWNSH: !expand "{doc.case.BASE_GSM}/ush/fv3gfs_downstream_nems.sh"
+  GFSDWNSH: !expand "{doc.case.BASE_GSM}/ush/fv3gfs_dwn_nems.sh"
+  GFS_DOWNSTREAM: YES
+  GOESF: NO
+  GPOST: YES
+  GRB2INDEX: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/grb2index"
+  GRBINDEX: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/grbindex"
+  GRBINDEX2: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/grb2index"  
+  GTGF: NO
+  HOMEDIR: !calc doc.places.HOMEDIR
+  KEEPDATA: NO
+  LEVS: !calc doc.case.LEVS
+  MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
+  MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
+  MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
+  MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
+  MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
+  MYBASE_SVN: !calc doc.places.MYBASE_SVN
+  NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
+  NCP: !calc doc.platform.NCP
+  NLN: !calc doc.platform.NLN
+  NMEM_ENKF: !calc doc.case.NMEM_ENKF
+  NMV: !calc doc.platform.NMV
+  NOSCRUB: !calc doc.case.NOSCRUB
+  NTHREADS_DWN: 2
+  NTHREADS_NP: 1
+  NTHSTACK: 1024000000
+  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
+  OUTPUT_GRID: "gaussian_grid"
+  POSTJJOBSH: !expand "{doc.case.BASE_WORKFLOW}/jobs/JGFS_POST.sh"
+  POSTGPSH: !expand "{doc.case.BASE_POST}/ush/global_nceppost.sh"
+  POSTGPEXEC: !expand "{doc.case.BASE_POST}/exec/ncep_post"
+  PSLOT: !calc doc.places.PSLOT
+  QUILTING: YES
+  REALTIME: !calc doc.case.REALTIME
+  RECENTER_ENKF: !calc doc.case.RECENTER_ENKF
+  ROTDIR: !calc doc.case.rundir
+  GFS_DOWNSTREAM: "YES"
+  GFSDOWNSH: !expand "{doc.case.BASE_WORKFLOW}/ush/fv3gfs_downstream_nems.sh"
+  GFSDWNSH: !expand "{doc.case.BASE_WORKFLOW}/ush/fv3gfs_dwn_nems.sh"
+  downset: 1

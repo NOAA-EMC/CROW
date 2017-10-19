@@ -10,6 +10,10 @@ vars: &vars
 import_from:
   <<: *vars
   var_list: [ DOG, CAT ]
+  var_list_recurse:
+    - [ logical, TRUE_TEST ]
+    - [ multi, 'VAR.*' ]
+    - [ vars, 'DOG|CAT' ]
 
 array:
   - item: one

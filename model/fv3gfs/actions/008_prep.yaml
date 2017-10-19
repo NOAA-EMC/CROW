@@ -1,0 +1,40 @@
+prep: &prep_action !Action
+  <<: *action_base
+  J_JOB: prep
+  walltime: !timedelta 01:00:00
+  resources: !calc run_prep.resources
+  memory: "3072M"
+
+  use_other_vars:
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.fv3_gfs_settings, ".*" ]
+    - [ doc.data_assimilation, ".*" ]
+    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+    - [ doc.places, "HOMEDIR|DRIVE_MAKEPREPBUFRSH|NOSCRUB|ATARDIR|ARCDIR" ]
+
+  CASE_ENKF: !calc doc.case.CASE_ENKF
+
+  MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
+  MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
+  MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
+  MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
+  MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
+
+  NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
+  NMEM_ENKF: !calc doc.case.NMEM_ENKF
+  NOSCRUB: !calc doc.case.NOSCRUB
+
+  NTHSTACK: 1024000000
+  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
+
+  POE: !calc doc.platform.name=='WCOSS_C'
+  PSLOT: !calc doc.case.experiment_name
+  VERBOSE: YES
+  WRITE_NEMSIOFILE: YES
+  sys_tp: !FirstTrue
+    - when: !calc doc.platform.name=="THEIA"
+      do: "Cray-CS400"
+    - when: !calc doc.platform.name=="WCOSS_C"
+      do: "Cray-XC40"
+    - otherwise: !error Do not know sys_tp for platform {doc.platform.name}

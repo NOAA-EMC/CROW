@@ -53,6 +53,15 @@ if [[ "Q" != "Q${BIRD:-}" ]] ; then
     exit 1
 fi
 
+unset DOG CAT TRUE_TEST VAR1 VAR2 VAR3
+eval $( TO_SH test.yaml scope:import_from from:var_list_recurse )
+echo "  DOG = $DOG"
+echo "  CAT = $CAT"
+echo "  TRUE_TEST = $TRUE_TEST"
+echo "  VAR1 = $VAR1"
+echo "  VAR2 = $VAR2"
+echo "  VAR3 = $VAR3"
+
 eval $( TO_SH test.yaml on=logical.TRUE_TEST scope:logical off=FALSE_TEST )
 echo "  on = YES = $on"
 echo "  off = NO = $off"

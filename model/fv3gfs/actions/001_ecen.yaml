@@ -1,0 +1,42 @@
+ecen: &ecen_action !Action
+  <<: *action_base
+
+  Template: *chgres_template
+
+  # ----------------------------------------
+  # From config.resources
+  J_JOB: ecen
+  walltime: !timedelta 00:30:00
+  resources: !calc run_ecen.resources
+  resource_env: !calc run_ecen.env
+  memory: "3072M" # previously "rocoto_memory", renamed to align with current script
+
+  # Each command (APRUN_whatever) in config.resources needs a
+  # run_whatever entry in the corresponding action.
+  # Executable name is specified deep inside scripts
+  # Use "placeholder" for exe name
+  # ----------------------------------------
+  # From config.ecen
+  ENKFRECENSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_recenter_fv3gfs.sh.ecf"
+  APRUN_CHGRES: !FirstTrue
+    - when: doc.platform.name == "THEIA"
+      do: "time"
+    - otherwise: !calc |
+        tools.command_without_exe(
+          par,chgres_resources,"placeholder")
+  APRUN_ECEN:  !calc tools.command_without_exe(par,resources,"placeholder")
+  NTHREADS_ECEN: ! nodes.omp_threads_for(resources[0])
+  APRUN_CHGRES: "time"
+
+  use_other_vars:
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.fv3_enkf_settings, "FHCYC" ]
+    - [ doc.data_assimilation, ".*" ]
+    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
+    - [ doc.places, "NOSCRUB|POSTJJOBSH|CHGRESSH|CHGRESEXEC" ]
+
+  CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
+  NTHSTACK: 1024000000
+  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
+  VERBOSE: YES

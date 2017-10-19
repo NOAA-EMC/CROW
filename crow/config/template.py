@@ -12,7 +12,7 @@ following intermediate Python concepts:
 """
 
 from copy import copy
-from datetime import timedelta
+from datetime import timedelta, datetime
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config
 from crow.config.represent import GenericList, GenericDict, GenericOrderedDict
@@ -136,7 +136,7 @@ TYPES={ 'int':[int], 'bool':[bool], 'string':[str,bytes],
         'float':[float], 'list':[set,list,tuple,list_eval,GenericList],
         'dict':[dict,dict_eval,GenericDict,GenericOrderedDict],
         'seq':[set,list,tuple,list_eval,GenericList],
-        'timedelta':[timedelta]}
+        'timedelta':[timedelta],'datetime':[datetime] }
 
 ## @var VALIDATORS
 # Mapping from YAML type to validation function.
@@ -147,6 +147,7 @@ VALIDATORS={ 'map':validate_dict,
              'int':validate_scalar,
              'bool':validate_scalar,
              'string':validate_scalar,
+             'datetime':validate_scalar,
              'float':validate_scalar,
              'timedelta': validate_scalar}
 

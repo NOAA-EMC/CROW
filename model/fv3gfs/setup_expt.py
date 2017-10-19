@@ -25,8 +25,12 @@ if len(sys.argv)<2:
     exit(1)
 
 yamls=[
-    'resources.yaml','platform.yaml','template.yaml','resolution.yaml',
-    'places.yaml', 'settings.yaml' ]+ \
+    'resources.yaml',
+    'platform.yaml',
+    'template.yaml',
+    'resolution.yaml',
+    'places.yaml',
+    'settings.yaml' ]+ \
     sys.argv[1:] + ['runtime.yaml','actions.yaml','workflow.yaml']
 conf=crow.config.from_file(*yamls)
 

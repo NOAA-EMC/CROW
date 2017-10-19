@@ -27,7 +27,7 @@ class ProcessArgs(object):
         self.quiet=bool(quiet)
         self.args = args
         self.config = None
-        self.scope = None
+        self.scopes = list()
         self.float_format = '%f'
         self.int_format = '%d'
         self.true_string = 'YES'
@@ -67,19 +67,27 @@ class ProcessArgs(object):
 
     def eval_expr(self,expr):
         globals={}
-        if hasattr(self.scope,'_globals'):
-            globals=self.scope._globals()
+        if hasattr(self.scopes[-1],'_globals'):
+            globals=self.scopes[-1]._globals()
         elif hasattr(self.config,'_globals'):
             globals=self.config._globals()
-        return eval(expr,globals,self.scope)
+        try:
+            return eval(expr,globals,self.scopes[-1])
+        except Exception as e:
+            logger.error(f'eval {expr}: {e}')
+            raise
 
     def exec_str(self,expr):
         globals={}
-        if hasattr(self.scope,'_globals'):
-            globals=self.scope._globals()
+        if hasattr(self.scopes[-1],'_globals'):
+            globals=self.scopes[-1]._globals()
         elif hasattr(self.config,'_globals'):
             globals=self.config._globals()
-        exec(expr,globals,self.scope)
+        try:
+            exec(expr,globals,self.scopes[-1])
+        except Exception as e:
+            logger.error(f'exec {expr}: {e}')
+            raise
 
     def set_int_format(self,value):
         test=value%3
@@ -92,14 +100,19 @@ class ProcessArgs(object):
     def set_null_string(self,value):
         self.null_string=value
 
-    def set_scope(self,value):
-        self.scope=self.config
-        result=self.eval_expr(value)
-        if not isinstance(result,Mapping):
-            raise TypeError(f'{value}: not a mapping; not a valid scope '
-                            f'(is a {type(result).__name__})')
-        self.scope=result
-        crow.config.validate(result,'execution')
+    def set_scope(self,value,push=False):
+        try:
+            self.scopes.append(self.config)
+            result=self.eval_expr(value)
+            if not isinstance(result,Mapping):
+                raise TypeError(f'{value}: not a mapping; not a valid scope '
+                                f'(is a {type(result).__name__})')
+            self.scopes[-1]=result
+            crow.config.validate(result,'execution')
+            if not push: self.scopes=[self.scopes[-1]]
+        except Exception as e:
+            self.scopes.pop()
+            raise
 
     def set_export_vars(self,value):
         if value.lower()[0] in [ 'y', 't' ]:
@@ -127,7 +140,7 @@ class ProcessArgs(object):
     def read_files(self):
         config=crow.config.from_file(*self.files)
         self.config = config
-        self.scope = config
+        self.scopes = [config]
         self.done_with_files=True
 
     def to_shell(self,var,value):
@@ -222,7 +235,8 @@ class ProcessArgs(object):
         yield None,None
 
     def import_all(self,regex):
-        for key in self.scope.keys():
+        logger.debug(f'Import {regex} from {self.scopes[-1]}')
+        for key in self.scopes[-1].keys():
             if re.match(regex,key):
                 yield self.express_var(key,key)
 
@@ -231,10 +245,18 @@ class ProcessArgs(object):
         if not hasattr(the_list,'index'):
             raise TypeError(f'from:{var}: does not correspond to a list')
         for varname in the_list:
-            if not isinstance(varname,str):
-                logger.warning("from:{var}:{varname}: variable names must be strings")
+            if hasattr(varname,'index') and hasattr(varname,'pop'):
+                # Probably a list
+                scope,regex = varname
+                logger.debug(f'Import {regex} from {scope}')
+                self.set_scope(scope,push=True)
+                for v,k in self.import_all(regex):
+                    yield v,k
+            elif not isinstance(varname,str):
+                logger.warning(f"from:{var}:{varname}: variable names must be strings")
             elif not re.match('[A-Za-z_][A-Za-z0-9_]*$',varname):
                 # Probably a regex
+                logger.debug(f'Import {varname} from {self.scopes[-1]}')
                 for v,k in self.import_all(varname):
                     yield v,k
             else: # Just a variable name

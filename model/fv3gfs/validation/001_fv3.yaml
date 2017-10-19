@@ -1,4 +1,100 @@
-fv3_resolution: &fv3_resolution !Template
+fv3_settings_template: &fv3_settings_template
+
+  do_vort_damp:
+    type: string
+    allowed: [ ".true.", ".false." ]
+    default: ".true."
+    description: vorticity and divergence damping
+  consv_te: 
+    type: string
+    default: "0."
+    description: conserve total energy
+  fv_sg_adj:
+    type: int
+    default: 900
+    description: time-scale to remove 2dz instability
+  dspheat:
+    type: string
+    default: ".false."
+    allowed: [ ".true.", ".false." ]
+    description: dissipative heating
+  shal_cnv:
+    type: string
+    allowed: [ ".true.", ".false." ]
+    default: ".true."
+    description: shallow convection flag
+  agrid_vel_rst:
+    type: string
+    allowed: [ ".true.", ".false." ]
+    default: ".true."
+    description: "write velocity restarts on A grid?"
+
+  LEVS:
+    type: int
+    description: Number of vertical levels in FV3
+
+  FHCYC: 
+    type: int
+    default: 24
+    description: Surface cycle update frequency
+
+  QUILTING: 
+    type: bool
+    default: YES
+    description: Should output quilting be used?
+
+  WRITE_NEMSIOFILE:
+    type: bool
+    default: YES
+    description: Should nemsio output be used (yes/true) instead of netcdf (no/false)?
+
+  nst_anl:
+    type: bool
+    default: YES
+
+  DONST:
+    type: bool
+    default: YES
+
+  MONO:
+    type: string
+    default: "non-mono"
+    allowed: [ mono, non-mono ]
+
+  DO_SHUM: { type: bool, default: NO }
+  DO_SKEB: { type: bool, default: NO }
+  DO_SPPT: { type: bool, default: NO }
+  RUN_EFCSGRP: { type: bool, default: NO }
+
+  # Stochastic physics parameters (only for ensemble forecasts)
+  SET_STP_SEED: { type: bool, default: YES }
+  SKEB: { type: float, default: 0.8 }
+  SKEB_TAU: { type: float, default: 21600. }
+  SKEB_LSCALE: { type: float, default: 500000. }
+  SKEBNORM: { type: float, default: 1 }
+  SHUM: { type: float, default: 0.006 }
+  SHUM_TAU: { type: float, default: 21600. }
+  SHUM_LSCALE: { type: float, default: 250000. }
+  SPPT: { type: float, default: 0.8 }
+  SPPT_TAU: { type: float, default: 21600. }
+  SPPT_LSCALE: { type: float, default: 500000. }
+
+  ncld: { type: int, default: 1 }
+  nwat: { type: int, default: 2 }
+
+  zhao_mic: { type: bool, default: YES }
+
+  nh_type: { type: string, default: 'nh' }
+
+  USE_COUPLER_RES: { type: bool, default: NO }
+
+  DIAG_TABLE: !FirstTrue
+    - when: !calc CDUMP=="gdas"
+      do: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/diag_table_da"
+    - when: !calc CDUMP=="gfs"
+      do: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/diag_table"
+    - otherwise: !error "Do not know DIAG_TABLE for CDUMP={CDUMP}"
+
   CASE:
     type: string
     allowed: [ 'C48', 'C96', 'C192', 'C384', 'C768', 'C1152', 'C3072' ]
