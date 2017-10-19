@@ -96,19 +96,16 @@ class ToRocoto(object):
 
         try:
             settings=suite.Rocoto.scheduler
-            scheduler_name=suite.Rocoto.scheduler.name
+            scheduler=suite.Rocoto.scheduler
             parallelism=suite.Rocoto.parallelism
-            parallelism_name=parallelism.name
-            sched=crow.sysenv.get_scheduler(scheduler_name,settings)
-            runner=crow.sysenv.get_parallelism(parallelism_name,settings)
         except(AttributeError,IndexError,TypeError,ValueError) as e:
             raise ValueError('A Suite must define a Rocoto section containing '
-                             'the "parallelism" and "scheduler" settings.')
+                             'a "parallelism" and a "scheduler."')
 
-        self.suite=Suite(suite,{'sched':sched,'to_rocoto':self,
-                                'runner':runner})
+        self.suite=Suite(suite,{'sched':scheduler,'to_rocoto':self,
+                                'runner':parallelism})
         self.settings=self.suite.Rocoto
-        self.sched=sched
+        self.sched=scheduler
         self.__all_defined=set()
         self.__completes=dict()
         self.__families=set()

@@ -2,19 +2,21 @@
 embedded yaml calculations, as well as internal representations of all
 custom data types in the yaml files."""
 
-import re, abc, logging
+import re, abc, logging, sys
 from datetime import timedelta
 from copy import deepcopy
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc
 from crow.tools import to_timedelta, Clock
+from copy import copy
+import crow.sysenv
 
 logger=logging.getLogger('crow.config')
 
 __all__=[ 'Action','Platform', 'Conditional', 'calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
           'GenericDict', 'GenericOrderedDict', 'ShellCommand',
-          'Immediate', 'ClockMaker' ]
+          'Immediate', 'ClockMaker', 'JobResourceSpecMaker' ]
 
 ########################################################################
 
@@ -26,6 +28,23 @@ class GenericOrderedDict(dict_eval): pass
 class GenericList(list_eval): pass
 class Platform(dict_eval): pass
 class ShellCommand(dict_eval): pass
+
+class JobResourceSpecMaker(list_eval):
+    def _result(self,globals,locals):
+        rank_specs=list()
+        for spec in self:
+            if not hasattr(spec,'_raw_child'):
+                rank_specs.append(spec)
+                continue
+            # Create a new dict_eval containing parent locals:
+            spec2dict=copy(locals)
+            spec2dict.update(spec._raw_child())
+            spec2=dict_eval(spec2dict,spec._path,self._get_globals())
+
+            # Get the value, from that new dict_eval, of all keys in spec.
+            # Store it in the rank_specs list for the later constructor.
+            rank_specs.append(dict([ (k,spec2[k]) for k in spec ]))
+        return crow.sysenv.JobResourceSpec(rank_specs)
 
 class ClockMaker(dict_eval):
     def _result(self,globals,locals):

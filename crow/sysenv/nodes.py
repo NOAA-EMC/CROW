@@ -8,6 +8,11 @@ from crow.sysenv.exceptions import *
 
 def noop(*args,**kwargs): pass
 
+def node_tool_for(node_type,settings):
+    if node_type != "generic":
+        raise UnknownNodeType(f"No such node type: {node_type}")
+    return GenericNodeSpec(settings)
+
 ########################################################################
 
 class NodeSpec(object):

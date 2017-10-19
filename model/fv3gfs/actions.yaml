@@ -15,8 +15,8 @@ ecen: &ecen_action !Action
   # ----------------------------------------
   # From config.resources
   walltime: !timedelta 00:30:00 # was "walltime", renamed to align with 
-#  resources: !calc run_ecen.resources
-  resources: !calc run_test.resources
+  resources: !calc run_ecen.resources
+  chgres_resources: !calc run_chgres.resources
   resource_env: !calc run_ecen.env
   memory: "3072M" # previously "rocoto_memory", renamed to align with current script
 
@@ -27,7 +27,7 @@ ecen: &ecen_action !Action
   # ----------------------------------------
   # From config.ecen
   ENKFRECENSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_recenter_fv3gfs.sh.ecf"
-  nth_ecen: 2
+  nth_ecen: !calc doc.platform.nodes.omp_threads_for(resources[0])
   APRUN_CHGRES: "time"
   APRUN_ECEN: "'mpirun -np 84'"
   ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
@@ -36,7 +36,7 @@ ecen: &ecen_action !Action
   CHGRESSH: !expand "{doc.case.BASE_GSM}/ush/global_chgres_GSM.sh"
   CHGRESEXEC: !expand "{doc.case.BASE_GSM}/exec/global_chgres_GSM"
   CHGRESVARS_ENKF: "use_ufo=.true.,nopdpvv=.true."
-  CHGRESTHREAD: 12
+  CHGRESTHREAD: !calc doc.platform.nodes.omp_threads_for(chgres_resources[0])
   CHGRP_CMD: "'chgrp rstprod'"
   DONST: NO
   KEEPDATA: NO
@@ -52,8 +52,10 @@ anal: &anal_action !Action
   <<: *action_template
   J_JOB: anal
   walltime: !timedelta 02:00:00
-#  resources: !calc run_anal
+  resources: !calc run_anal.resources
   resources: !calc run_test.resources
+  anal_resources: !calc run_anal.resources
+  gsi_resources: !calc run_gsi.resources
   memory: "3072M"
   accounting: !calc doc.platform.parallel_accounting
   assim_freq: 6
@@ -67,13 +69,13 @@ anal: &anal_action !Action
   DONST: NO
   ANALYSISSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   GSIEXEC: !expand "{doc.case.BASE_GSI}/exec/global_gsi"
-  npe_anal: resources[0].mpi_ranks
+  npe_anal: !calc resources.total_ranks()
   npe_gsi: !calc npe_anal
-  nth_gsi: 4
-  nth_anal: 2
+  nth_gsi: !calc doc.platform.nodes.omp_threads_for(gsi_resources[0])
+  NTHREADS_GSI: !calc nth_gsi
+  nth_anal: !calc doc.platform.nodes.omp_threads_for(anal_resources[0])
   KEEPDATA: NO
   NTHREADS_CALCINC: 1
-  NTHREADS_GSI: 4
   NTHSTACK: 1024000000
   OUTPUT_GRID: "gaussian_grid"
   QUILTING: YES
@@ -87,8 +89,7 @@ epos: &epos_action !Action
   CASE: !calc doc.case.CASE_ENKF
   J_JOB: epos
   walltime: !timedelta 00:15:00
-#  resources: !calc run_epos
-  resources: !calc run_test.resources
+  resources: !calc run_epos.resources
   memory: "3072M"
   ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
   BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
@@ -97,7 +98,7 @@ epos: &epos_action !Action
   DONST: NO
   ENKFPOSTSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_post_fv3gfs.sh.ecf"
   KEEPDATA: NO
-  nth_epos: 2
+  nth_epos: !calc doc.platform.nodes.omp_threads_for(resources[0])
   OUTPUT_GRID: "gaussian_grid"
   QUILTING: YES
   SMOOTH_ENKF: YES
@@ -110,57 +111,60 @@ eobs: &eobs_action !Action
   J_JOB: eobs
   CASE: !calc doc.case.CASE_ENKF
   walltime: !timedelta 00:15:00
-#  resources: !calc run_eobs
-  resources: !calc run_test.resources
+  resources: !calc run_eobs.resources
+  gsi_resources: !calc run_gsi.resources
   memory: "3072M"
   INVOBSSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_innovate_obs_fv3gfs.sh.ecf"
   ENKFINVOBSSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_innovate_obs_fv3gfs.sh.ecf"
   NMEM_EOMGGRP: 10
   RERUN_EOMGGRP: "YES"
-  npe_eobs: !calc resources[0].mpi_ranks
+  npe_eobs: !calc resources.total_ranks()
   npe_gsi: !calc npe_eobs
-  nth_gsi: 4
+  nth_gsi: !calc doc.platform.nodes.omp_threads_for(gsi_resources[0])
 # GSI namelist options related to observer for EnKF
   OBSINPUT_INVOBS: "dmesh(1)=225.0,dmesh(2)=225.0"
   OBSQC_INVOBS: "tcp_width=60.0,tcp_ermin=2.0,tcp_ermax=12.0"
-  nth_eobs: 2
+  nth_eobs: !calc doc.platform.nodes.omp_threads_for(resources[0])
 
 eomg: &eomg_action !Action
   <<: *action_template
   J_JOB: eomg
   CASE: !calc doc.case.CASE_ENKF
   walltime: !timedelta 00:15:00
-#  resources: !calc run_eomg
-  resources: !calc run_test.resources
+  resources: !calc run_eomg.resources
   memory: "3072M"
-  nth_eomg: 2
+  nth_eomg: !calc doc.platform.nodes.omp_threads_for(resources[0])
 
 eupd: &eupd_action !Action
   <<: *action_template
   J_JOB: eupd
   CASE: !calc doc.case.CASE_ENKF
   walltime: !timedelta 00:15:00
-#  resources: !calc run_eupd
-  resources: !calc run_test.resources
+  resources: !calc run_eupd.resources
+  enkf_resources: !calc run_enkf.resources
+  eupd_resources: !calc run_eupd.resources
   memory: "3072M"
   ENKFUPDSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_update_fv3gfs.sh.ecf"
   ENKFEXEC: !expand "{doc.case.BASE_GSI}/exec/global_enkf"
-  npe_eupd: !calc resources[0].mpi_ranks
+  npe_eupd: !calc resources.total_ranks()
   npe_enkf: !calc npe_eupd
-  nth_enkf: 4
-  nth_eupd: 2
+  nth_enkf: !calc doc.platform.nodes.omp_threads_for(enkf_resources[0])
+  nth_eupd: !calc doc.platform.nodes.omp_threads_for(eupd_resources[0])
 
 efcs: &efcs_action !Action
   <<: *action_template
   J_JOB: efcs
   CASE: !calc doc.case.CASE_ENKF
   walltime: !timedelta 00:15:00
-#  resources: !calc run_efcs
-  resources: !calc run_test.resources
+  efcs_resources: !JobRequest
+    - exe: placeholder
+      mpi_ranks: !calc "layout_x*layout_y*6"
+      OMP_NUM_THREADS: 1
+  resources: !calc efcs_resources
   memory: "3072M"
-  npe_efcs: !calc "layout_x*layout_y*6"
-  npe_fv3: !calc npe_efcs
-  nth_fv3: 1
+  npe_efcs: !calc efcs_resources.total_ranks()
+  npe_fv3: !calc efcs_resources.total_ranks()
+  nth_fv3: !calc doc.platform.nodes.omp_threads_for(resources[0])
 
   ENKFFCSTSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_fcst_fv3gfs.sh.ecf"
   NMEM_EFCSGRP: 10
@@ -185,25 +189,23 @@ efcs: &efcs_action !Action
   DIAG_TABLE: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/diag_table_da"
   restart_interval: 6
 
-  nth_efcs: 2
+  nth_efcs: !calc doc.platform.nodes.omp_threads_for(resources[0])
 
 earc: &earc_action !Action
   <<: *action_template
   CASE: !calc doc.case.CASE_ENKF
   J_JOB: earc
   walltime: !timedelta 00:15:00
-#  resources: !calc run_earc
-  resources: !calc run_test.resources
+  resources: !calc run_earc.resources
   memory: "3072M"
   NMEM_EARCGRP: 10
-  nth_earc: 2
+  nth_earc: !calc doc.platform.nodes.omp_threads_for(resources[0])
   accounting: !calc doc.platform.transfer_accounting
 
 final: &final_action !Action
   <<: *action_template
   walltime: !timedelta 00:03:00
-#  resources: !calc run_nothing
-  resources: !calc run_test.resources
+  resources: !calc run_nothing.resources
   memory: "100M"
   accounting: !calc doc.platform.serial_accounting
   J_JOB: /bin/true
@@ -212,27 +214,30 @@ prep: &prep_action !Action
   <<: *action_template
   J_JOB: prep
   walltime: !timedelta 00:10:00
-#  resources: !calc run_prep
-  resources: !calc run_test.resources
+  resources: !calc run_prep.resources
   memory: "3072M"
   DO_RELOCATE: "NO"
   DO_MAKEPREPBUFR: "YES"   # if NO, will copy prepbufr from globaldump
   DRIVE_MAKEPREPBUFRSH: !expand "{doc.case.BASE_GSM}/ush/drive_makeprepbufr.sh"
-  nth_prep: 2
+  nth_prep: !calc doc.platform.nodes.omp_threads_for(resources[0])
 
 fcst: &fcst_action !Action
   <<: *action_template
   J_JOB: fcst
-  npe_fcst: !calc "layout_x*layout_y*6"
+  #npe_fcst: !calc "layout_x*layout_y*6"
+  fcst_resources: !JobRequest
+    - exe: placeholder
+      mpi_ranks: !calc "layout_x*layout_y*6"
+      OMP_NUM_THREADS: 2
+  npe_fcst: !calc fcst_resources.total_ranks()
   walltime: !timedelta 00:10:00
-#  resources: !calc run_fcst
-  resources: !calc run_test.resources
+  resources: !calc fcst_resources
   memory: "3072M"
   FORECASTSH: !expand "{doc.case.BASE_GSM}/scripts/exglobal_fcst_nemsfv3gfs.sh"
   FCSTEXECDIR: !expand "{doc.case.BASE_NEMSfv3gfs}/NEMS/exe"
   FCSTEXEC: "fv3_gfs_nh.prod.32bit.x"
   npe_fv3: !calc npe_fcst # This is model resolution dependent, see note above
-  nth_fv3: 2
+  nth_fv3: !calc doc.platform.nodes.omp_threads_for(resources[0])
   TYPE: "nh"
   MONO: "non-mono"
   do_vort_damp: ".true."    # vorticity and divergence damping
@@ -273,13 +278,12 @@ post: &post_action !Action
   <<: *action_template
   J_JOB: post
   walltime: !timedelta 00:15:00
-#  resources: !calc run_post
-  resources: !calc run_test.resources
+  resources: !calc run_post.resources
   memory: "3072M"
   POSTJJOBSH: !expand "{doc.case.BASE_WORKFLOW}/jobs/JGFS_POST.sh"
   POSTGPSH: !expand "{doc.case.BASE_POST}/ush/global_nceppost.sh"
   POSTGPEXEC: !expand "{doc.case.BASE_POST}/exec/ncep_post"
-  npe_post: !calc resources[0].mpi_ranks
+  npe_post: !calc resources.total_ranks()
   npe_postgp: !calc npe_post
   nth_postgp: 1
   GFS_DOWNSTREAM: "YES"
@@ -287,17 +291,16 @@ post: &post_action !Action
   GFSDWNSH: !expand "{doc.case.BASE_WORKFLOW}/ush/fv3gfs_dwn_nems.sh"
   downset: 1
   npe_dwn: !calc npe_post
-  nth_dwn: 2
-  nth_post: 2
+  nth_dwn: !calc doc.platform.nodes.omp_threads_for(resources[0])
+  nth_post: !calc doc.platform.nodes.omp_threads_for(resources[0])
 
 arch: &arch_action !Action
   <<: *action_template
   J_JOB: arch
   walltime: !timedelta 06:00:00
-#  resources: !calc run_arch
-  resources: !calc run_test.resources
+  resources: !calc run_arch.resources
   memory: "3072M"
-  nth_arch: 2
+  nth_arch: !calc doc.platform.nodes.omp_threads_for(resources[0])
   accounting: !calc doc.platform.transfer_accounting
 
 vrfy: &vrfy_action !Action
@@ -306,8 +309,7 @@ vrfy: &vrfy_action !Action
   Template:
     <<: [ *vrfy_template, *fv3_resolution ]
   walltime: !timedelta 01:00:00
-#  resources: !calc run_vrfy
-  resources: !calc run_test.resources
+  resources: !calc run_vrfy.resources
   memory: "3072M"
   accounting: !calc doc.platform.parallel_accounting
 #  CDUMP: "gfs"
@@ -325,4 +327,4 @@ vrfy: &vrfy_action !Action
   VRFYTRAK: "YES"        # Hurricane track forecasts
   VRFYGENESIS: "YES"     # Cyclone genesis
   VRFYGMPK: "NO"         # Gempak verification
-  nth_vrfy: 2
+  nth_vrfy: !calc doc.platform.nodes.omp_threads_for(resources[0])

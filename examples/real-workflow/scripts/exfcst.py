@@ -20,8 +20,7 @@ def main():
     logger.info(f"{os.environ['CONFIG_YAML']}: read")
     conf=crow.config.from_file(os.environ['CONFIG_YAML'])
     conf.clock.now=datetime.datetime.strptime(os.environ['YMDH'],'%Y%m%d%H')
-    runner=crow.sysenv.get_parallelism(
-        conf.platform.parallelism.name,conf.platform.parallelism)
+    runner=conf.platform.parallelism
     scope_name=sys.argv[1]
     logger.info(f'{scope_name}: forecast in this scope')
     scope=conf[scope_name]

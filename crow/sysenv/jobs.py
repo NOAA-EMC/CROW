@@ -54,10 +54,9 @@ class JobRankSpec(Mapping):
         return not self.is_mpi() and not self.is_openmp()
     def want_max_threads(self):
         return self['OMP_NUM_THREADS']==MAXIMUM_THREADS
-    def is_openmp(self):
-        return self['OMP_NUM_THREADS']>0
-    def is_mpi(self):
-        return self['mpi_ranks']>0
+
+    def is_openmp(self):      return self['OMP_NUM_THREADS']>0
+    def is_mpi(self):         return self['mpi_ranks']>0
 
     def simplify(self,adapt):
         js=JobRankSpec(**self.__spec)
@@ -72,12 +71,12 @@ class JobRankSpec(Mapping):
         return JobRankSpec(**newspec)
 
     # Implement Mapping abstract methods:
-    def __getitem__(self,key): return self.__spec[key]
-    def __len__(self): return len(self.__spec)
+    def __getitem__(self,key):    return self.__spec[key]
+    def __len__(self):            return len(self.__spec)
+    def __contains__(self,key):   return key in self.__spec
     def __iter__(self):
         for k in self.__spec:
             yield k
-
     def __repr__(self):
         typ=type(self).__name__
         return typ+'{'+\

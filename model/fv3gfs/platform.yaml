@@ -42,15 +42,22 @@ theia: &theia !Platform
   parallel_accounting:
     queue: batch
     project: !calc doc.case.cpu_project
-  scheduler: &theia_scheduler
+
+  scheduler_settings: &theia_scheduler
     name: MoabTorque
     physical_cores_per_node: 24
     logical_cpus_per_core: 2
     hyperthreading_allowed: true
     indent_text: "  "
-  parallelism:
-    <<: *theia_scheduler
-    name: HydraIMPI
+  parallelism_settings: { <<: *theia_scheduler, name: HydraIMPI }
+  node_type_settings:   { <<: *theia_scheduler, node_type: generic }
+
+  scheduler: !calc |
+    tools.get_scheduler(scheduler_settings.name, scheduler_settings)
+  parallelism: !calc |
+    tools.get_parallelism(parallelism_settings.name, parallelism_settings)
+  nodes: !calc |
+    tools.node_tool_for(node_type_settings.node_type, node_type_settings)
 
   # Path to pan_df, the program used to get Panasas disk usage information:
   pan_df: pan_df
@@ -82,15 +89,22 @@ wcoss_cray: &wcoss_cray !Platform
   parallel_accounting:
     queue: dev
     project: !calc doc.case.cpu_project
-  scheduler: &wcoss_cray_scheduler
+
+  scheduler_settings: &wcoss_cray_scheduler
     name: LSFAlps
     physical_cores_per_node: 24
     logical_cpus_per_core: 2
     hyperthreading_allowed: true
     indent_text: "  "
-  parallelism: 
-    <<: *wcoss_cray_scheduler
-    name: LSFAlps
+  parallelism_settings: { <<: *wcoss_cray_scheduler, name: LSFAlps }
+  node_type_settings:   { <<: *wcoss_cray_scheduler, node_type: generic }
+
+  scheduler: !calc |
+    tools.get_scheduler(scheduler_settings.name, scheduler_settings)
+  parallelism: !calc |
+    tools.get_parallelism(parallelism_settings.name, parallelism_settings)
+  nodes: !calc |
+    tools.node_tool_for(node_type_settings.node_type, node_type_settings)
 
   BASE_SVN:  "/gpfs/hps3/emc/global/noscrub/emc.glopara/svn"
 

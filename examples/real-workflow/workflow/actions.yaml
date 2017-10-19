@@ -35,7 +35,7 @@ shared_serial_action: &shared_serial_action
   prior_com: !calc "{doc.runtime.prior_com}"
   rocoto_memory: "2G"
   accounting: !calc doc.platform.serial_accounting
-  resources: [ { exe: placeholder } ]
+  resources: !JobRequest [ { exe: placeholder } ]
   walltime: !timedelta 00:10:00
 
 parallel_unlimited_memory_action: &parallel_unlimited_memory_action
@@ -80,7 +80,7 @@ start_cycle: &start_cycle_action !Action
 clim_init: &clim_init_action !Action
   <<: *parallel_unlimited_memory_action
   J_JOB: JCLIM_INIT
-  resources:
+  resources: !JobRequest
     - exe: !calc doc.executables.climatology_init
       mpi_ranks: !calc doc.platform.init_ranks
   namelist: !expand |
@@ -96,7 +96,7 @@ clim_fcst: &clim_fcst_action !Action
   <<: *generic_fcst_action
   Template: *non_ens_fcst_template
   J_JOB: JCLIM_FCST
-  resources:
+  resources: !JobRequest
     - exe: !calc doc.executables.fcst
       mpi_ranks: !calc doc.platform.fcst_ranks
   copy_glob: 'fcst*grid'
@@ -106,7 +106,7 @@ ens_fcst: &ens_fcst_action !Action
   <<: *generic_fcst_action
   Template: *fcst_template
   J_JOB: JENS_FCST
-  resources:
+  resources: !JobRequest
     - exe: !calc doc.executables.fcst
       mpi_ranks: !calc doc.platform.ens_ranks
 
@@ -125,7 +125,7 @@ fcst: &fcst_action !Action
   <<: *generic_fcst_action
   Template: *non_ens_fcst_template
   J_JOB: JFCST
-  resources:
+  resources: !JobRequest
     - exe: !calc doc.executables.fcst
       mpi_ranks: !calc doc.platform.fcst_ranks
   copy_glob: 'fcst*grid'
@@ -134,7 +134,7 @@ fcst: &fcst_action !Action
 post: &post_action !Action
   <<: *parallel_unlimited_memory_action
   J_JOB: JPOST
-  resources:
+  resources: !JobRequest
     - exe: !calc doc.executables.post
       mpi_ranks: !calc doc.platform.fcst_ranks
 
@@ -169,7 +169,7 @@ post: &post_action !Action
 analysis: &analysis_action !Action
   <<: *parallel_unlimited_memory_action
   J_JOB: JANALYSIS
-  resources:
+  resources: !JobRequest
     - exe: !calc doc.executables.analysis
       mpi_ranks: !calc doc.platform.fcst_ranks
   member_input: member_%06d.grid

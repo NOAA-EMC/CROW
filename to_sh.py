@@ -49,8 +49,10 @@ class ProcessArgs(object):
         self.false_string=yes_no[1]
 
     def set_runner(self,expr='doc.platform.parallelism'):
-        settings=self.eval_expr(expr)
-        self.runner=crow.sysenv.get_parallelism(settings.name,settings)
+        runner=self.eval_expr(expr)
+        assert(runner is not None)
+        sys.stderr.write(repr(runner)+'\n')
+        self.runner=runner
 
     def run_expr(self,expr,check=False):
         cmd=self.eval_expr(expr)

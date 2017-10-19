@@ -8,8 +8,7 @@ def main():
 
     conf=crow.config.from_file(os.environ['CONFIG_YAML'])
     conf.clock.now=datetime.datetime.strptime(os.environ['YMDH'],'%Y%m%d%H')
-    runner=crow.sysenv.get_parallelism(
-        conf.platform.parallelism.name,conf.platform.parallelism)
+    runner=conf.platform.parallelism
     namelist=conf.clim_init.namelist
     with open('climatology_init.nl','wt') as fd:
         fd.write(namelist)

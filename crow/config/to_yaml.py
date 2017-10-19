@@ -1,5 +1,5 @@
 import yaml
-
+import sys
 from yaml.nodes import MappingNode, ScalarNode, SequenceNode
 
 from collections import OrderedDict
@@ -10,6 +10,7 @@ from crow.config.tasks import *
 from crow.config.template import Template
 from crow.config.exceptions import *
 from crow.tools import to_timedelta
+import crow.sysenv
 
 # We need to run the from_yaml module first, to initialize the yaml
 # representers for some types.  This module does not actually use any
@@ -36,6 +37,7 @@ add_yaml_list_eval(u'!FirstMin',FirstMin)
 add_yaml_list_eval(u'!LastTrue',LastTrue)
 add_yaml_list_eval(u'!FirstTrue',FirstTrue)
 add_yaml_list_eval(u'!Immediate',Immediate)
+add_yaml_list_eval(u'!JobRequest',JobResourceSpecMaker)
 add_yaml_list_eval(None,GenericList)
 
 ########################################################################
@@ -56,7 +58,6 @@ add_yaml_dict_eval(u'!Platform',Platform)
 add_yaml_dict_eval(u'!Action',Action)
 add_yaml_dict_eval(u'!Template',Template)
 add_yaml_dict_eval(u'!Eval',Eval)
-
 
 ########################################################################
 
@@ -145,6 +146,17 @@ def represent_omap(dumper, mapping, flow_style=None):
     return node
 
 yaml.add_representer(GenericOrderedDict,represent_omap)
+
+########################################################################
+
+def represent_JobResourceSpec(dumper,data):
+    return dumper.represent_sequence('!JobRequest',list(data))
+yaml.add_representer(crow.sysenv.JobResourceSpec,
+                     represent_JobResourceSpec)
+
+def represent_JobRankSpec(dumper,data):
+    return dumper.represent_data(dict(data))
+yaml.add_representer(crow.sysenv.JobRankSpec,represent_JobRankSpec)
 
 ########################################################################
 

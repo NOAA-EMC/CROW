@@ -14,7 +14,7 @@ resource_defaults: &resource_defaults
       OMP_STACKSIZE: 2048000
 
   run_test:
-    resources:
+    resources: !JobRequest
       - exe: nothing
         mpi_ranks: 1
 
@@ -22,90 +22,134 @@ resource_defaults: &resource_defaults
   run_ecen:
     env: *mpi_tuning
 
-    resources:
+    resources: !JobRequest
       - exe: placeholder
         mpi_ranks: 84
         # max_ppn comes from THEIA.env: 84/12 = 7
         max_ppn: 7
-        OMP_NUM_THREADS: max
+        OMP_NUM_THREADS: 2
 
   run_chgres:
-    - exe: time
-      OMP_NUM_THREADS: max
-      args:
-        - placeholder
+    env: { }
+    resources:  !JobRequest
+      - exe: time
+        OMP_NUM_THREADS: 12
+        args:
+          - placeholder
 
   run_nothing: # Special placeholder for "do nothing"
-    - exe: nothing
+    env: { }
+    resources:  !JobRequest
+      - exe: nothing
 
   run_eobs:
-    - exe: placeholder
-      mpi_ranks: !calc 24*6
-      max_ppn: 6
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 24*6
+        max_ppn: 6
+        OMP_NUM_THREADS: 4
 
   run_eomg:
-    - exe: placeholder
-      mpi_ranks: !calc 6*24
-      max_ppn: 6
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 6*24
+        max_ppn: 6
+        OMP_NUM_THREADS: 2
 
   run_eupd:
-    - exe: placeholder
-      mpi_ranks: !calc 10*12
-      max_ppn: 12
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 10*12
+        max_ppn: 12
+        OMP_NUM_THREADS: 2
+
+  run_enkf:
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 10*12
+        max_ppn: 12
+        OMP_NUM_THREADS: 4
 
   run_efcs:
-    - exe: placeholder
-      mpi_ranks: !calc 8*24
-      max_ppn: 24
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 8*24
+        max_ppn: 24
+        OMP_NUM_THREADS: 2
 
   run_epos:
-    - exe: placeholder
-      mpi_ranks: !calc 7*12
-      max_ppn: 12
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 7*12
+        max_ppn: 12
+        OMP_NUM_THREADS: 2
 
   run_prep:
-    - exe: placeholder
-      mpi_ranks: 12
-      max_ppn: 12
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: 12
+        max_ppn: 12
+        OMP_NUM_THREADS: max
 
   run_anal:
-    - exe: placeholder
-      mpi_ranks: !calc 24*6
-      max_ppn: 6
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 24*6
+        max_ppn: 6
+        OMP_NUM_THREADS: 2
+
+  run_gsi:
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 24*6
+        max_ppn: 4
+        OMP_NUM_THREADS: 4
 
   run_fcst:
-    - exe: placeholder
-      mpi_ranks: !calc 18*12
-      max_ppn: 12
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 18*12
+        max_ppn: 12
+        OMP_NUM_THREADS: max
 
   run_post:
-    - exe: placeholder
-      mpi_ranks: !calc 6*12
-      max_ppn: 12
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 6*12
+        max_ppn: 12
+        OMP_NUM_THREADS: max
 
   run_vrfy:
-    - exe: placeholder
-      mpi_ranks: 1
-      max_ppn: 1
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: 1
+        max_ppn: 1
+        OMP_NUM_THREADS: 2
 
   run_arch:
-    - exe: placeholder
-      mpi_ranks: 1
-      max_ppn: 1
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: 1
+        max_ppn: 1
+        OMP_NUM_THREADS: 2
 
   run_earc:
-    - exe: placeholder
-      mpi_ranks: 1
-      max_ppn: 1
-      OMP_NUM_THREADS: max
+    env: { }
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: 1
+        max_ppn: 1
+        OMP_NUM_THREADS: 2

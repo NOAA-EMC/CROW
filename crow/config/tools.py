@@ -4,6 +4,7 @@ import os
 import datetime
 from collections import Sequence, Mapping
 from crow.config.exceptions import *
+import crow.sysenv
 
 class Environment(dict):
     def __getattr__(self,key):
@@ -93,4 +94,7 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'to_YMDH':to_YMDH, 'from_YMDH':from_YMDH,
     'to_YMD':to_YMD, 'from_YMD':from_YMD,
     'join':join,
+    'get_parallelism':crow.sysenv.get_parallelism, 
+    'get_scheduler':crow.sysenv.get_scheduler,
+    'node_tool_for':crow.sysenv.node_tool_for,
 })

@@ -259,7 +259,9 @@ class list_eval(MutableSequence):
         self._path=path
     def _raw_cache(self):       return self.__cache
     def __len__(self):          return len(self.__child)
+    def _get_globals(self):     return self.__globals
     def _set_globals(self,g):   self.__globals=g
+    def _get_locals(self):      return self.__locals
     def _raw_child(self):       return self.__child
     def _raw(self,i):           
         """!Returns the value at index i without calling eval() on it"""

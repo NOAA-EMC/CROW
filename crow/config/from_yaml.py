@@ -22,6 +22,7 @@ from crow.config.tasks import *
 from crow.config.template import Template
 from crow.config.exceptions import *
 from crow.tools import to_timedelta
+import crow.sysenv
 
 __all__=['ConvertFromYAML']
 
@@ -42,6 +43,7 @@ class ShellCommandYAML(dict): pass
 class TaskYAML(OrderedDict): pass
 class FamilyYAML(OrderedDict): pass
 class CycleYAML(OrderedDict): pass
+class JobResourceSpecMakerYAML(list): pass
 
 # Mapping from YAML representation class to a pair:
 # * internal representation class
@@ -134,6 +136,7 @@ add_yaml_sequence(u'!FirstMin',FirstMinYAML)
 add_yaml_sequence(u'!LastTrue',LastTrueYAML)
 add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
 add_yaml_sequence(u'!Immediate',ImmediateYAML)
+add_yaml_sequence(u'!JobRequest',JobResourceSpecMakerYAML)
 
 ## @var CONDITIONALS
 # Used to handle custom yaml conditional types.  Maps from conditional type
@@ -217,6 +220,8 @@ class ConvertFromYAML(object):
             return ClockMaker(self.from_dict(v,path=path))
         elif cls is ImmediateYAML:
             return self.from_list(v,locals,Immediate,path)
+        elif cls is JobResourceSpecMakerYAML:
+            return self.from_list(v,locals,JobResourceSpecMaker,path)
         elif isinstance(v,list) and v and isinstance(v[0],tuple) \
              or isinstance(v,OrderedDict):
             return self.from_ordered_dict(v,GenericOrderedDict,path)
