@@ -24,6 +24,7 @@ default_places: &default_places
   EXPDIR: !expand "{HOMEDIR}/{experiment_name}"
   ROTDIR: !expand "{PTMP}/{experiment_name}"
   RUNDIR: !expand "{STMP}/RUNDIRS/{experiment_name}"
+  RTFMIX: "/scratch4/NCEPDEV/da/save/Michael.Lueken/nwprod/lib/crtm/2.2.3/fix_update"
   ARCDIR: !expand "{NOSCRUB}/archive/{experiment_name}"
   ATARDIR: !expand "/NCEPDEV/{hpss_project}/1year/{tools.env('USER')}/{doc.platform.name}/scratch/{experiment_name}"
 #  CDUMP: "gfs"
@@ -42,3 +43,5 @@ default_places: &default_places
   BASE_PREP_GLOBAL: !expand "{BASE_SVN}/obsproc/releases/obsproc_global_RB-3.0.0"
   BASE_VERIF: !expand "{BASE_SVN}/verif/global/tags/vsdb"
 
+  WGRIB: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/wgrib"
+  WGRIB2: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/wgrib2"

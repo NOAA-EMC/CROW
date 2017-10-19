@@ -1,22 +1,16 @@
 action_template: &action_template
-  <<: *resource_defaults
+  <<: [ *resource_defaults, *default_places ] 
   Template: *fv3_resolution
   ACCOUNT: !calc doc.case.cpu_project
-  BASE_FV3GFS: !calc doc.places.BASE_FV3GFS
-  BASE_GDAS: !calc doc.places.BASE_GDAS
-  BASE_GFS: !calc doc.places.BASE_GFS
-  BASE_GSM: !calc doc.places.BASE_GSM
-  BASE_MODULES: !calc doc.places.BASE_MODULES
-  BASE_WORKFLOW: !calc doc.places.BASE_WORKFLOW
+  DONST: NO
   HPSS_PROJECT: !calc doc.case.hpss_project
+  KEEPDATA: NO
+  PSLOT: !calc doc.case.experiment_name
   QUEUE: !calc doc.platform.queue
   QUEUE_ARCH: !calc doc.platform.queue_arch
   BASE_NEMSfv3gfs: !calc doc.case.BASE_NEMSfv3gfs
   CASE: !calc doc.case.CASE
-  BASE_GSI: !calc doc.places.BASE_GSI
-  BASE_GSM: !calc doc.places.BASE_GSM
-  BASE_ENV: !calc doc.places.BASE_ENV
-  BASE_JOB: !calc doc.places.BASE_JOB
+  CHGRP_CMD: "'chgrp rstprod'"
   shell_vars: [ "[A-Z][A-Z0-9_]*$", "nth.*", "npe.*" ]
   resource_env: {} # overridden by actions as needed
   accounting: !calc doc.platform.parallel_accounting
@@ -41,31 +35,17 @@ ecen: &ecen_action !Action
   nth_ecen: 2
   APRUN_CHGRES: "time"
   APRUN_ECEN: "'mpirun -np 84'"
-  ARCDIR: "/scratch4/NCEPDEV/ocean/noscrub/Samuel.Trahan/archive/wham"
-  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
-  BASE_ENV: !calc doc.places.BASE_ENV
-  BASE_GSI: !calc doc.places.BASE_GSI
-  BASE_JOB: !calc doc.places.BASE_JOB
-  BASE_NEMSfv3gfs: !calc doc.places.BASE_NEMSfv3gfs
-  BASE_POST: !calc doc.places.BASE_POST
-  BASE_PREP: !calc doc.places.BASE_PREP
-  BASE_PREP_GLOBAL: !calc doc.places.BASE_PREP_GLOBAL
-  BASE_SVN: !calc doc.platform.BASE_SVN
-  BASE_VERIF: !calc doc.places.BASE_VERIF
-  CASE: !calc doc.case.CASE
   CASE_ENKF: !calc doc.case.CASE_ENKF
   CHGRESSH: !expand "{doc.case.BASE_GSM}/ush/global_chgres_GSM.sh"
   CHGRESEXEC: !expand "{doc.case.BASE_GSM}/exec/global_chgres_GSM"
   CHGRESVARS_ENKF: "use_ufo=.true.,nopdpvv=.true."
   CHGRESTHREAD: 12
   CHGRESVARS_ENKF: "use_ufo=.true.,nopdpvv=.true."
-  CHGRP_CMD: "'chgrp rstprod'"
   CNVGRIB: !calc doc.platform.CNVGRIB
   COPYGB: !calc doc.platform.COPYGB
   COPYGB2: !calc doc.platform.COPYGB2
   DMPDIR: !calc doc.platform.DMPDIR
   DOHYBVAR: !calc doc.case.DOHYBVAR
-  DONST: NO
   EDATE: !calc doc.case.EDATE
   ENKFRECENSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_recenter_fv3gfs.sh.ecf"
   FHCYC: !calc doc.case.FHCYC
@@ -83,15 +63,12 @@ ecen: &ecen_action !Action
   GRB2INDEX: !calc doc.platform.GRB2INDEX
   GRBINDEX: !calc doc.platform.GRBINDEX
   GRBINDEX2: !calc doc.platform.GRBINDEX2
-  HOMEDIR: !calc doc.places.HOMEDIR
   LEVS: !calc doc.case.LEVS
-  KEEPDATA: NO
   MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
   MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
   MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
   MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
   MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
-  MYBASE_SVN: !calc doc.places.MYBASE_SVN
   NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
   NCP: !calc doc.platform.NCP
   NDATE: !calc doc.platform.NDATE
@@ -107,20 +84,12 @@ ecen: &ecen_action !Action
   OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
   OUTPUT_GRID: "gaussian_grid"
   POSTJJOBSH: !expand "{doc.case.BASE_WORKFLOW}/jobs/JGFS_POST.sh"
-  PSLOT: !calc doc.places.PSLOT
-  PTMP: !calc doc.places.PTMP
   QUILTING: YES
   REALTIME: !calc doc.case.REALTIME
   RECENTER_ENKF: !calc doc.case.RECENTER_ENKF
-  ROTDIR: !calc doc.places.ROTDIR
-  RTFMIX: !calc doc.places.RTMFIX
-  RUNDIR: !calc doc.places.RUNDIR
   SDATE: !calc doc.case.SDATE
   SMOOTH_ENKF: YES
-  STMP: !calc doc.places.STMP
   VERBOSE: YES
-  WGRIB: !calc doc.places.WGRIB
-  WGRIB2: !calc doc.places.WGRIB2
   WRITE_NEMSIOFILE: YES
   gfs_cyc: 1
   l4densvar: NO
@@ -147,53 +116,136 @@ anal: &anal_action !Action
   APRUN_CALCINC: "'mpirun -np $ncmd'"
   APRUN_GSI: "'mpirun -np 144'"
   ANALYSISSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
-  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
-  BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
-  BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
-  CHGRP_CMD: "'chgrp rstprod'"
-  DONST: NO
-  ANALYSISSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
-  GSIEXEC: !expand "{doc.case.BASE_GSI}/exec/global_gsi"
+  CASE_ENKF: !calc doc.case.CASE_ENKF
+  CNVGRIB: !calc doc.platform.CNVGRIB
+  COPYGB: !calc doc.platform.COPYGB
+  COPYGB2: !calc doc.platform.COPYGB2
+  DMPDIR: !calc doc.platform.DMPDIR
+  DOHYBVAR: !calc doc.case.DOHYBVAR
+  EDATE: !calc doc.case.EDATE
+  FHCYC: !calc doc.case.FHCYC
+  FHMAX: !calc doc.case.FHMAX
+  FHMAX_ENKF: !calc doc.case.FHMAX_ENKF
+  FHMAX_GFS: !calc doc.case.FHMAX_GFS
+  FHMAX_HF_GFS: !calc doc.case.FHMAX_HF_GFS
+  FHMIN: !calc doc.case.FHMIN
+  FHMIN_ENKF: !calc doc.case.FHMIN_ENKF
+  FHMIN_GFS: !calc doc.case.FHMIN_GFS
+  FHOUT: !calc doc.case.FHOUT
+  FHOUT_ENKF: !calc doc.case.FHOUT_ENKF
+  FHOUT_GFS: !calc doc.case.FHOUT_GFS
+  FHOUT_HF_GFS: !calc doc.case.FHOUT_HF_GFS
+  GRB2INDEX: !calc doc.platform.GRB2INDEX
+  GRBINDEX: !calc doc.platform.GRBINDEX
+  GRBINDEX2: !calc doc.platform.GRBINDEX2
+  MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
+  MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
+  MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
+  MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
+  MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
+  NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
+  NCP: !calc doc.platform.NCP
+  NDATE: !calc doc.platform.NDATE
+  NEMSIOGET: !calc doc.platform.NEMSIOGET
+  NHOUR: !calc doc.platform.NHOUR
+  NLN: !calc doc.platform.NLN
+  NMEM_ENKF: !calc doc.case.NMEM_ENKF
+  NMV: !calc doc.platform.NMV
+  NOSCRUB: !calc doc.case.NOSCRUB
+  NTHSTACK: 1024000000
+  NTHREADS_CALCINC: 1
+  NTHREADS_GSI: 4
+  NWPROD: !calc doc.platform.NWPROD
+  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
+  OUTPUT_GRID: "gaussian_grid"
+  POSTGRB2TBL: "/scratch3/NCEPDEV/nwprod/lib/sorc/g2tmpl/params_grib2_tbl_new"
+  PSLOT: !calc doc.places.PSLOT
+  PTMP: !calc doc.places.PTMP
+  QUILTING: YES
+  REALTIME: !calc doc.case.REALTIME
+  RECENTER_ENKF: !calc doc.case.RECENTER_ENKF
+  ROTDIR: !calc doc.places.ROTDIR
+  RTFMIX: !calc doc.places.RTMFIX
+  RUNDIR: !calc doc.places.RUNDIR
+  SDATE: !calc doc.case.SDATE
+  SMOOTH_ENKF: YES
+  STMP: !calc doc.places.STMP
+  VERBOSE: YES
+  WGRIB: !calc doc.places.WGRIB
+  WGRIB2: !calc doc.places.WGRIB2
+  WRITE_NEMSIOFILE: YES
   npe_anal: resources[0].mpi_ranks
   npe_gsi: !calc npe_anal
   nth_gsi: 4
   nth_anal: 2
-  KEEPDATA: NO
   NTHREADS_CALCINC: 1
   NTHREADS_GSI: 4
   NTHSTACK: 1024000000
-  OUTPUT_GRID: "gaussian_grid"
-  QUILTING: YES
   SMOOTH_ENKF: YES
-  VERBOSE: YES
-  WRITE_NEMSIOFILE: YES
+  HOMEDIR: !calc doc.case.HOMEDIR
 
 epos: &epos_action !Action
   <<: *action_template
   APRUN_EPOS: "'mpirun -np 84'"
-  CASE: !calc doc.case.CASE_ENKF
+  CASE_ENKF: "C96"
+  CNVGRIB: !calc doc.platform.CNVGRIB
+  COPYGB: !calc doc.platform.COPYGB
+  COPYGB2: !calc doc.platform.COPYGB2
+  DMPDIR: !calc doc.platform.DMPDIR
+  DOHYBVAR: !calc doc.case.DOHYBVAR
+  ENKFPOSTSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_post_fv3gfs.sh.ecf"
+  EDATE: !calc doc.case.EDATE
+  FHCYC: !calc doc.case.FHCYC
+  FHMAX: !calc doc.case.FHMAX
+  FHMAX_ENKF: !calc doc.case.FHMAX_ENKF
+  FHMAX_GFS: !calc doc.case.FHMAX_GFS
+  FHMAX_HF_GFS: !calc doc.case.FHMAX_HF_GFS
+  FHMIN: !calc doc.case.FHMIN
+  FHMIN_ENKF: !calc doc.case.FHMIN_ENKF
+  FHMIN_GFS: !calc doc.case.FHMIN_GFS
+  FHOUT: !calc doc.case.FHOUT
+  FHOUT_ENKF: !calc doc.case.FHOUT_ENKF
+  FHOUT_GFS: !calc doc.case.FHOUT_GFS
+  FHOUT_HF_GFS: !calc doc.case.FHOUT_HF_GFS
+  GRB2INDEX: !calc doc.platform.GRB2INDEX
+  GRBINDEX: !calc doc.platform.GRBINDEX
+  GRBINDEX2: !calc doc.platform.GRBINDEX2
+  MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
+  MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
+  MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
+  MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
+  MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
+  NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
+  NCP: !calc doc.platform.NCP
+  NDATE: !calc doc.platform.NDATE
+  NEMSIOGET: !calc doc.platform.NEMSIOGET
+  NHOUR: !calc doc.platform.NHOUR
+  NLN: !calc doc.platform.NLN
+  NTHREADS_EPOS: 2
+  NMEM_ENKF: !calc doc.case.NMEM_ENKF
+  NMV: !calc doc.platform.NMV
+  NOSCRUB: !calc doc.case.NOSCRUB
+  NTHSTACK: 1024000000
+  NWPROD: !calc doc.platform.NWPROD
+  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
+  POSTGRB2TBL: "/scratch3/NCEPDEV/nwprod/lib/sorc/g2tmpl/params_grib2_tbl_new"
+  REALTIME: !calc doc.case.REALTIME
+  RECENTER_ENKF: !calc doc.case.RECENTER_ENKF
+  SDATE: !calc doc.case.SDATE
+  SMOOTH_ENKF: YES
+  VERBOSE: YES
+
   J_JOB: epos
   walltime: !timedelta 00:15:00
 #  resources: !calc run_epos
   resources: !calc run_test.resources
   memory: "254M"
-  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
-  BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
-  BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
-  CHGRP_CMD: "'chgrp rstprod'"
-  DONST: NO
-  ENKFPOSTSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_post_fv3gfs.sh.ecf"
-  KEEPDATA: NO
   nth_epos: 2
-  OUTPUT_GRID: "gaussian_grid"
-  QUILTING: YES
-  SMOOTH_ENKF: YES
-  VERBOSE: YES
   WRITE_NEMSIOFILE: YES
   accounting: !calc doc.platform.parallel_accounting
 
 eobs: &eobs_action !Action
-  <<: *anal_action
+  <<: *action_template
   J_JOB: eobs
   CASE: !calc doc.case.CASE_ENKF
   walltime: !timedelta 00:15:00
@@ -203,13 +255,8 @@ eobs: &eobs_action !Action
   ANALYSISSH: "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   APRUN_GSI: "'mpirun -np 144'"
   ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
-  BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
-  BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
-  CHGRP_CMD: "'chgrp rstprod'"
-  DONST: NO
   ENKFINVOBSSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_innovate_obs_fv3gfs.sh.ecf"
   INVOBSSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_innovate_obs_fv3gfs.sh.ecf"
-  KEEPDATA: NO
   NMEM_EOMGGRP: 10
   NTHREADS_GSI: 4
   NTHSTACK: 1024000000
@@ -219,8 +266,6 @@ eobs: &eobs_action !Action
 # GSI namelist options related to observer for EnKF
   OBSINPUT_INVOBS: "dmesh(1)=225.0,dmesh(2)=225.0"
   OBSQC_INVOBS: "tcp_width=60.0,tcp_ermin=2.0,tcp_ermax=12.0"
-  OUTPUT_GRID: "gaussian_grid"
-  QUILTING: YES
   RERUN_EOMGGRP: "YES"
   SMOOTH_ENKF: YES
   VERBOSE: YES
@@ -428,18 +473,7 @@ prep: &prep_action !Action
   ARCDIR: !calc doc.case.ARCDIR
   ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
   BACK: YES
-  BASE_ENV: !expand "{doc.case.HOMEgfs}/gfs_workflow.v15.0.0/env"
-  BASE_JOB: !expand "{doc.case.BASE_WORKFLOW}/jobs"
-  BASE_GSI: !calc doc.case.BASE_GSI
-  BASE_NEMSfv3gfs: !calc doc.case.BASE_NEMSfv3gfs
-  BASE_POST: !calc doc.case.BASE_POST
-  BASE_PREP: !calc doc.case.BASE_PREP
-  BASE_PREP_GLOBAL: !calc doc.case.BASE_PREP_GLOBAL
-  BASE_SVN: !calc doc.platform.BASE_SVN
-  BASE_VERIF: !calc doc.case.BASE_VERIF
-  CASE: "C192"
   CASE_ENKF: !calc doc.case.CASE_ENKF
-  CHGRP_CMD: "'chgrp rstprod'"
   CNVGRIB: !calc doc.platform.CNVGRIB
   COPYGB: !calc doc.platform.COPYGB
   COPYGB2: !calc doc.platform.COPYGB2
@@ -449,31 +483,28 @@ prep: &prep_action !Action
   DO_RELOCATE: NO
   DO_MAKEPREPBUFR: YES   # if NO, will copy prepbufr from globaldump
   DRIVE_MAKEPREPBUFRSH: !expand "{doc.case.BASE_GSM}/ush/drive_makeprepbufr.sh"
-  EDATE: "2016100200"
-  FHCYC: 24
-  FHMAX: 9
-  FHMAX_ENKF: 9
-  FHMAX_GFS: 240
-  FHMAX_HF_GFS: 0
-  FHMIN: 0
-  FHMIN_ENKF: 3
-  FHMIN_GFS: 0
-  FHOUT: 3
-  FHOUT_ENKF: 3
-  FHOUT_GFS: 6
-  FHOUT_HF_GFS: 1
-  GRB2INDEX: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/grb2index"
-  GRBINDEX: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/grbindex"
-  GRBINDEX2: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/grb2index"
+  EDATE: !calc doc.case.EDATE
+  FHCYC: !calc doc.case.FHCYC
+  FHMAX: !calc doc.case.FHMAX
+  FHMAX_ENKF: !calc doc.case.FHMAX_ENKF
+  FHMAX_GFS: !calc doc.case.FHMAX_GFS
+  FHMAX_HF_GFS: !calc doc.case.FHMAX_HF_GFS
+  FHMIN: !calc doc.case.FHMIN
+  FHMIN_ENKF: !calc doc.case.FHMIN_ENKF
+  FHMIN_GFS: !calc doc.case.FHMIN_GFS
+  FHOUT: !calc doc.case.FHOUT
+  FHOUT_ENKF: !calc doc.case.FHOUT_ENKF
+  FHOUT_GFS: !calc doc.case.FHOUT_GFS
+  FHOUT_HF_GFS: !calc doc.case.FHOUT_HF_GFS
+  GRB2INDEX: !calc doc.platform.GRB2INDEX
+  GRBINDEX: !calc doc.platform.GRBINDEX
+  GRBINDEX2: !calc doc.platform.GRBINDEX2
   HOMEDIR: !calc doc.case.HOMEDIR
-  KEEPDATA: NO
-  LEVS: !calc doc.case.LEVS
   MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
   MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
   MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
   MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
   MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
-  MYBASE_SVN: !calc doc.platform.MYBASE_SVN
   NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
   NCP: !calc doc.platform.NCP
   NDATE: !calc doc.platform.NDATE
@@ -490,16 +521,11 @@ prep: &prep_action !Action
   POE: NO
   POSTGRB2TBL: !calc doc.platform.POSTGRB2TBL
   PSLOT: !calc doc.case.PSLOT
-  PTMP: !calc doc.case.PTMP
   QUILTING: YES
   REALTIME: !calc doc.case.REALTIME
   RECENTER_ENKF: !calc doc.case.RECENTER_ENKF
-  ROTDIR: !calc doc.case.ROTDIR
-  RTMFIX: !calc doc.platform.RTMFIX
-  RUNDIR: !calc doc.case.RUNDIR
   SDATE: !calc doc.case.SDATE
   SMOOTH_ENKF: YES
-  STMP: !calc doc.case.STMP
   VERBOSE: YES
   WGRIB: !calc doc.platform.WGRIB
   WGRIB2: !calc doc.platform.WGRIB2

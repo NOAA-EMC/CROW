@@ -1,3 +1,21 @@
+action_template: &action_template !Template
+  <<: [ *resource_defaults, *default_places ]
+  Template: *fv3_resolution
+  ACCOUNT: !calc doc.case.cpu_project
+  DONST: NO
+  HPSS_PROJECT: !calc doc.case.hpss_project
+  KEEPDATA: NO
+  PSLOT: !calc doc.case.experiment_name
+  QUEUE: !calc doc.platform.queue
+  QUEUE_ARCH: !calc doc.platform.queue_arch
+  QUILTING: YES
+  OUTPUT_GRID: "gaussian_grid"
+  BASE_NEMSfv3gfs: !calc doc.case.BASE_NEMSfv3gfs
+  CASE: !calc doc.case.CASE
+  CHGRP_CMD: "'chgrp rstprod'"
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "nth.*", "npe.*" ]
+  resource_env: {} # overridden by actions as needed
+  accounting: !calc doc.platform.parallel_accounting
 
 CYC_TRACK_VARS: &CYC_TRACK_VARS !Template
   TRACKERSH: 
