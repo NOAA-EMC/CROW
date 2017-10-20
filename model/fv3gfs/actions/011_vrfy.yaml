@@ -1,0 +1,58 @@
+
+vrfy: &vrfy_action !Action
+  <<: [ *case, *action_template ]
+  J_JOB: vrfy
+  Template:
+    <<: [ *vrfy_template, *fv3_resolution ]
+  walltime: !timedelta 01:00:00
+  resources: !calc run_vrfy.resources
+  memory: "3072M"
+  accounting: !calc doc.platform.parallel_accounting
+#  CDUMP: "gfs"
+  CASE_ENKF: !calc doc.case.CASE_ENKF
+  CDFNL: "gdas"
+  CDUMPFCST: "gdas"  # Fit-to-obs with GDAS/GFS prepbufr
+  CNVGRIB: !calc doc.places.CNVGRIB
+  COPYGB: !calc doc.places.COPYGB
+  COPYGB2: !calc doc.places.COPYGB2
+  DOHYBVAR: !calc doc.case.DOHYBVAR
+  GRB2INDEX: !calc doc.platform.GRB2INDEX
+  GRBINDEX: !calc doc.platform.GRBINDEX
+  GRBINDEX2: !calc doc.platform.GRBINDEX2
+  GRIB1_WORKS: NO
+  HOMEDIR: !calc doc.case.HOMEDIR
+  LEVS: !calc doc.case.LEVS
+  KEEPDATA: NO
+  MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
+  MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
+  MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
+  MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
+  MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
+  NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
+  NCP: !calc doc.platform.NCP
+  NLN: !calc doc.platform.NLN
+  NMEM_ENKF: !calc doc.case.NMEM_ENKF
+  NMV: !calc doc.platform.NMV
+  NOSCRUB: !calc doc.case.NOSCRUB
+  NTHSTACK: 1024000000
+  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
+  OUTPUT_GRID: "gaussian_grid"
+  POSTJJOBSH: !expand "{doc.case.BASE_WORKFLOW}/jobs/JGFS_POST.sh"
+  PSLOT: !calc doc.places.PSLOT
+  PTMP: !calc doc.places.PTMP
+  QUILTING: YES
+  REALTIME: !calc doc.case.REALTIME
+  RECENTER_ENKF: !calc doc.case.RECENTER_ENKF
+  ROTDIR: !calc doc.places.ROTDIR
+  RUNDIR: !calc doc.places.RUNDIR
+  SDATE: !calc doc.case.SDATE
+  SMOOTH_ENKF: YES
+  STMP: !calc doc.places.STMP
+  VRFYGENESIS: YES     # Cyclone genesis
+  VRFYGMPK: NO         # Gempak verification
+  WRITE_NEMSIOFILE: YES
+  assim_freq: 6
+  memory_vrfy: "16384M"
+  nst_anl: YES
+  WRITE_NEMSIOFILE: YES
+
