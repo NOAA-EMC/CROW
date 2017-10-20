@@ -83,7 +83,8 @@ class Conditional(list_eval):
             elif has_when and has_do:
                 values.append(vk._raw('do'))
                 vk_locals=multidict(vk,locals)
-                keys.append(from_config('when',vk._raw('when'),globals,vk_locals))
+                keys.append(from_config('when',vk._raw('when'),globals,vk_locals,
+                                        self._path))
             else:
                 raise ConditionalMissingDoWhen(
                     f'{self._path}[{i}]: entries must have both "do" and "when"'

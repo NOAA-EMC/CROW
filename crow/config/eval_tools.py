@@ -55,17 +55,17 @@ class strcalc(str):
     def _result(self,globals,locals):
         return eval(self,globals,locals)
 
-def from_config(key,val,globals,locals):
+def from_config(key,val,globals,locals,path):
     """!Converts s strcalc cor Conditional to another data type via eval().
     Other types are returned unmodified."""
     try:
         if hasattr(val,'_result'):
             return from_config(key,val._result(globals,locals),
-                               globals,locals)
+                               globals,locals,path)
         return val
     except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
-        raise CalcKeyError('%s: !%s %s -- %s %s'%(
-            str(key),type(val).__name__,repr(val),type(ke).__name__,str(ke)))
+        raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:40]} - '
+                           f'{type(ke).__name__} {str(ke)}')
     except RecursionError as re:
         raise CalcRecursionTooDeep('%s: !%s %s'%(
             str(key),type(val).__name__,str(val)))
@@ -198,7 +198,8 @@ class dict_eval(MutableMapping):
         val=self.__cache[key]
         if hasattr(val,'_result'):
             immediate=hasattr(val,'_is_immediate')
-            val=from_config(key,val,self.__globals,self)
+            val=from_config(key,val,self.__globals,self,
+                            f'{self._path}.{key}')
             self.__cache[key]=val
             if immediate:
                 self.__child[key]=val
@@ -302,7 +303,8 @@ class list_eval(MutableSequence):
         val=self.__cache[index]
         if hasattr(val,'_result'):
             immediate=hasattr(val,'_is_immediate')
-            val=from_config(index,val,self.__globals,self.__locals)
+            val=from_config(index,val,self.__globals,self.__locals,
+                            f'{self._path}[{index}]')
             self.__cache[index]=val
             if immediate:
                 self.__child[index]=val
