@@ -1,6 +1,6 @@
 #! /usr/bin/env python3.6
 
-import os, sys, logging
+import os, sys, logging, glob
 
 try:
     import crow.config
@@ -24,14 +24,13 @@ if len(sys.argv)<2:
     logger.error('Format: setup_expt.py case.yaml')
     exit(1)
 
-yamls=[
-    'resources.yaml',
-    'platform.yaml',
-    'template.yaml',
-    'resolution.yaml',
-    'places.yaml',
-    'settings.yaml' ]+ \
-    sys.argv[1:] + ['runtime.yaml','actions.yaml','workflow.yaml']
+yamls = [ 'resources.yaml', 'platform.yaml', ]
+yamls += sorted(list(glob.glob('validation/*')))
+yamls += [ 'places.yaml', 'settings.yaml' ]
+yamls += sys.argv[1:] + ['runtime.yaml']
+yamls += sorted(list(glob.glob('actions/*')))
+yamls += ['workflow.yaml']
+
 conf=crow.config.from_file(*yamls)
 
 logger.info('Remove platforms from configuration.')
