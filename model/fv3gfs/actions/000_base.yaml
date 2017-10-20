@@ -15,7 +15,6 @@ action_base: &action_base
 
   # Variables to import in shell:
   shell_vars: [ "[A-Z][A-Z0-9_]*$" ]
-  resource_env: {} # overridden by actions as needed
 
   # Used to convert resources to shell commands:
   accounting: !calc doc.platform.parallel_accounting

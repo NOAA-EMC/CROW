@@ -23,7 +23,7 @@ export CDUMP=${3:-$CDUMP}
 set -ex
 JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
-eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH.resource_env import:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML scope:workflow.$TASK_PATH from:use_other_vars )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
 unset JOBNAME
