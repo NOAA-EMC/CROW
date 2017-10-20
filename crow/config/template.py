@@ -30,7 +30,7 @@ class Inherit(list_eval):
             for key in scope:
                 if key not in IGNORE_WHILE_INHERITING  and \
                    re.search(regex,key) and key not in target:
-                    target[key]=scope[key]
+                    target._raw_child()[key]=scope._raw_child()[key]
 
 class Template(dict_eval):
     """!Internal implementation of the YAML Template type.  Validates a
@@ -104,7 +104,8 @@ class Template(dict_eval):
         # Override any variables if requested via "override" clauses.
         for var in template:
             if var in scope and 'override' in template[var]:
-                override=template[var].override
+                override=from_config(template[var],'override',scope._globals(),scope,
+                                     f'{scope._path}.Template.{var}.override')
                 if override is not None: scope[var]=override
 
         if errors: raise TemplateErrors(errors)
