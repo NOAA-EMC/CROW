@@ -31,7 +31,7 @@ yamls=[
     'resolution.yaml',
     'places.yaml',
     'settings.yaml' ]+ \
-    sys.argv[1:] + ['runtime.yaml','actions.yaml','workflow.yaml']
+    sys.argv[1:] + ['runtime.yaml','workflow.yaml','actions/*.yaml']
 conf=crow.config.from_file(*yamls)
 
 logger.info('Remove platforms from configuration.')

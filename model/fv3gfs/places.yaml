@@ -43,8 +43,14 @@ places: &places
   BASE_PREP_GLOBAL: !expand "{BASE_SVN}/obsproc/releases/obsproc_global_RB-3.0.0"
   BASE_VERIF: !expand "{BASE_SVN}/verif/global/tags/vsdb"
 
+  GFSDOWNSH: !expand "{BASE_GSM}/ush/fv3gfs_downstream_nems.sh"
+  GFSDWNSH: !expand "{BASE_GSM}/ush/fv3gfs_dwn_nems.sh"
+
   WGRIB: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/wgrib"
   WGRIB2: "/scratch4/NCEPDEV/global/save/glopara/nwpara/util/exec/wgrib2"
+
+  vsdbhome: "/scratch4/NCEPDEV/global/save/glopara/svn/verif/global/tags/vsdb"
+  vsdbsave: "/scratch4/NCEPDEV/ocean/noscrub/Samuel.Trahan/archive/vsdb_data"
 
   # Locations of specific scripts:
 
@@ -62,6 +68,8 @@ places: &places
   POSTGPSH: !expand "{BASE_POST}/ush/global_nceppost.sh"
   POSTGPEXEC: !expand "{BASE_POST}/exec/ncep_post"
   FIELD_TABLE: !expand "{BASE_GSM}/parm/parm_fv3diag/field_table_ncld1"
+
+  VSDBSH: "/scratch4/NCEPDEV/global/save/glopara/svn/verif/global/tags/vsdb/vsdbjob.sh"
 
   REGRID_NEMSIO_SH: !expand "{BASE_GSM}/ush/fv3gfs_regrid_nemsio.sh"
   REGRID_NEMSIO_TBL: !expand "{BASE_GSM}/parm/parm_fv3diag/variable_table_da_nonsst.txt"
