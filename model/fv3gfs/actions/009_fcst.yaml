@@ -21,7 +21,7 @@ fcst: &fcst_action !Action
   ARCDIR: !calc doc.case.ARCDIR
   ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
 
-  use_other_vars:
+  Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_gfs_settings, ".*" ]
     - [ doc.data_assimilation, ".*" ]

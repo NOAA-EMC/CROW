@@ -7,7 +7,7 @@ eomg: &eomg_action !Action
   resources: !calc run_eomg.resources
   memory: "3072M"
 
-  use_other_vars:
+  Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.data_assimilation, ".*" ]

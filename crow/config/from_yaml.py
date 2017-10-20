@@ -19,7 +19,7 @@ from yaml import YAMLObject
 from crow.config.eval_tools import *
 from crow.config.represent import *
 from crow.config.tasks import *
-from crow.config.template import Template
+from crow.config.template import *
 from crow.config.exceptions import *
 from crow.tools import to_timedelta
 import crow.sysenv
@@ -36,6 +36,7 @@ class FirstMinYAML(list):         yaml_tag=u'!FirstMin'
 class FirstTrueYAML(list):        yaml_tag=u'!FirstTrue'
 class LastTrueYAML(list):         yaml_tag=u'!LastTrue'
 class ImmediateYAML(list):        yaml_tag=u'!Immediate'
+class InheritYAML(list):          yaml_tag=u'!Inherit'
 
 class ClockYAML(dict):            yaml_tag=u'!Clock'
 class EvalYAML(dict): pass
@@ -136,6 +137,7 @@ add_yaml_sequence(u'!FirstMin',FirstMinYAML)
 add_yaml_sequence(u'!LastTrue',LastTrueYAML)
 add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
 add_yaml_sequence(u'!Immediate',ImmediateYAML)
+add_yaml_sequence(u'!Inherit',InheritYAML)
 add_yaml_sequence(u'!JobRequest',JobResourceSpecMakerYAML)
 
 ## @var CONDITIONALS
@@ -220,6 +222,8 @@ class ConvertFromYAML(object):
             return ClockMaker(self.from_dict(v,path=path))
         elif cls is ImmediateYAML:
             return self.from_list(v,locals,Immediate,path)
+        elif cls is InheritYAML:
+            return self.from_list(v,locals,Inherit,path)
         elif cls is JobResourceSpecMakerYAML:
             return self.from_list(v,locals,JobResourceSpecMaker,path)
         elif isinstance(v,list) and v and isinstance(v[0],tuple) \

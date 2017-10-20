@@ -24,7 +24,7 @@ anal: &anal_action !Action
       do: "aprun -j 1 -n \\$ncmd -N 1 -d {NTHREADS_CALCINC} -cc depth"
   NTHREADS_CALCINC: 1
 
-  use_other_vars:
+  Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.data_assimilation, ".*" ]

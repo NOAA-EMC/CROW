@@ -146,6 +146,7 @@ class dict_eval(MutableMapping):
         d=cls(self.__child,self._path)
         d.__globals=self.__globals
         return d
+
     def _invalidate_cache(self,key=None):
         if key is None:
             self.__cache=copy(self.__child)
@@ -186,8 +187,23 @@ class dict_eval(MutableMapping):
     def __delitem__(self,k): del(self.__child[k], self.__cache[k])
     def __iter__(self):
         for k in self.__child.keys(): yield k
-    def _validate(self,stage):
+    def _validate(self,stage,memo=None):
         """!Validates this dict_eval using its embedded Template object, if present """
+        # Make sure we don't get infinite recursion:
+        if memo is None: memo=set()
+        if id(self) in memo:
+            raise ValidationRecursionError(
+                f'{self._path}: cyclic Inherit detected')
+        memo.add(id(self))
+
+        # Inherit from other scopes:
+        if 'Inherit' in self and hasattr(self.Inherit,'_update'):
+            print(f'{self._path}: call Inherit._update')
+            self.Inherit._update(self,self.__globals,self,stage,memo)
+        elif 'Inherit' in self:
+            print(f'{type(self.Inherit).__name__} {repr(self.Inherit)}')
+
+        # Validate this scope:
         if 'Template' in self:
             tmpl=self.Template
             if not hasattr(tmpl,'_check_scope'):

@@ -6,7 +6,7 @@ earc: &earc_action !Action
   resources: !calc run_earc.resources
   accounting: !calc doc.platform.transfer_accounting
   memory: "3072M"
-  use_other_vars:
+  Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_enkf_settings, ".*" ]
     - [ doc.data_assimilation, ".*" ]
