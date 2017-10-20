@@ -10,7 +10,7 @@ epos: &epos_action !Action
   CASE: !calc doc.case.CASE_ENKF
   ENKFPOSTSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_post_fv3gfs.sh.ecf"
 
-  use_other_vars:
+  Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.data_assimilation, ".*" ]

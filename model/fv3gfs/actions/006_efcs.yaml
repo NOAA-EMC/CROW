@@ -19,7 +19,7 @@ efcs: &efcs_action !Action
       par,resources_regrid_nemsio,'placeholder')
   ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
 
-  use_other_vars:
+  Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_enkf_settings, ".*" ]
     - [ doc.data_assimilation, ".*" ]

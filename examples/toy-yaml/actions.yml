@@ -39,6 +39,17 @@ fcst: &fcst !Action
     - mpi_ranks: 192
       threads: 4
 
+fanciness:
+  fancy_var: 5
+  not_fancy: 6
+
+fancy_fcst: &fancy_fcst !Action
+  <<: *fcst
+  Inherit: !Inherit
+    - [ doc.fanciness, 'fancy_var' ]
+    - [ doc.gfsfcst, 'stuff' ]
+  Template: *fcst_vars
+
 gfsfcst: &gfsfcst !Action
     <<: *fcst
     stuff: [ !calc a+b , !calc 2*2 ]

@@ -72,3 +72,11 @@ except crow.config.ConfigUserError as e:
 
 print('Test the message clause of contionals.')
 config.test.message
+
+print('Test !Inherit')
+crow.config.validate(config.fancy_fcst)
+print(list(config.fancy_fcst.keys()))
+print(f'fancy_fcst.stuff[0] = 30 = {config.fancy_fcst.stuff[0]}')
+print(f'fancy_fcst.fancy_var = 5 = {config.fancy_fcst.fancy_var}')
+if 'not_fancy' in config.fancy_fcst:
+    raise Exception('Bad!  Should not have seen fancy_fcst.not_fancy!')

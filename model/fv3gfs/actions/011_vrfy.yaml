@@ -7,7 +7,7 @@ vrfy: &vrfy_action !Action
   resources: !calc run_vrfy.resources
   memory: "3072M"
 
-  use_other_vars:
+  Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_gfs_settings, ".*" ]
     - [ doc.data_assimilation, ".*" ]

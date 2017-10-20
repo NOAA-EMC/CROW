@@ -11,11 +11,26 @@ following intermediate Python concepts:
 
 """
 
+import re
 from copy import copy
 from datetime import timedelta, datetime
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config
 from crow.config.represent import GenericList, GenericDict, GenericOrderedDict
+
+IGNORE_WHILE_INHERITING = [ 'Inherit', 'Template' ]
+
+class Inherit(list_eval): 
+    def _update(self,target,globals,locals,stage,memo):
+        for scopename,regex in reversed(self):
+            scopename=str(scopename)
+            scope=eval(scopename,globals,locals)
+            if hasattr(scope,'_validate'):
+                scope._validate(stage,memo)
+            for key in scope:
+                if key not in IGNORE_WHILE_INHERITING  and \
+                   re.search(regex,key) and key not in target:
+                    target[key]=scope[key]
 
 class Template(dict_eval):
     """!Internal implementation of the YAML Template type.  Validates a
