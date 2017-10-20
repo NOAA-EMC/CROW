@@ -70,7 +70,8 @@ class Template(dict_eval):
                     validate_var(scope._path,scheme,var,scope[var])
                     if 'if_present' in scheme:
                         ip=from_config(
-                            var,scheme._raw('if_present'),self._globals(),scope)
+                            var,scheme._raw('if_present'),self._globals(),scope,
+                            f'{scope._path}.{var}')
                         if not ip: continue
                         new_template=Template(ip._raw_child())
                         new_template.update(template)
