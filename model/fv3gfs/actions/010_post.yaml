@@ -10,7 +10,7 @@ post: &post_action !Action
     - [ doc.fv3_gfs_settings, ".*" ]
     - [ doc.data_assimilation, ".*" ]
     - [ doc.platform.general_env, ".*" ]
-    - [ doc.platform.mpi_tunning, ".*" ]
+    - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
     - [ doc.places, "ARCDIR|ATARDIR|BASE_GSI|BASE_NEMSfv3gfs|BASE_ENV|BASE_JOB|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|GFSDOWNSH|GFSDWNSH|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|POSTGPSH|POSTGPEXEC|POSTJJOBSH|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]

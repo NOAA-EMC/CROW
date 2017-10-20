@@ -88,12 +88,15 @@ fv3_settings_template: &fv3_settings_template
 
   USE_COUPLER_RES: { type: bool, default: NO }
 
-  DIAG_TABLE: !FirstTrue
-    - when: !calc CDUMP=="gdas"
-      do: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/diag_table_da"
-    - when: !calc CDUMP=="gfs"
-      do: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/diag_table"
-    - otherwise: !error "Do not know DIAG_TABLE for CDUMP={CDUMP}"
+  DIAG_TABLE: 
+    type: string
+    stages: [ suite ]
+    default: !FirstTrue
+      - when: !calc CDUMP=="gdas"
+        do: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/diag_table_da"
+      - when: !calc CDUMP=="gfs"
+        do: !expand "{doc.case.BASE_GSM}/parm/parm_fv3diag/diag_table"
+      - otherwise: !error "Do not know DIAG_TABLE for CDUMP={CDUMP}"
 
   CASE:
     type: string

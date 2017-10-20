@@ -1,15 +1,15 @@
 Rocoto: &Rocoto
   scheduler: !calc doc.platform.scheduler
   parallelism: !calc doc.platform.parallelism
-  EXPDIR: !calc doc.case.EXPDIR
+#  EXPDIR: !calc doc.places.EXPDIR
   max_tries: 1
 
   workflow_xml: !expand |
     <?xml version="1.0"?>
     <!DOCTYPE workflow [
-      <!ENTITY LOG_DIR "{EXPDIR}/log">
-      <!ENTITY COM_DIR "{EXPDIR}/com">
-      <!ENTITY SCRUB_DIR "{EXPDIR}/scrub">
+      <!ENTITY LOG_DIR "{doc.places.EXPDIR}/log">
+      <!ENTITY COM_DIR "{doc.places.EXPDIR}/com">
+      <!ENTITY SCRUB_DIR "{doc.places.EXPDIR}/scrub">
       <!ENTITY TASK_THROTTLE "30">
       <!ENTITY ENSEMBLE_TASK_THROTTLE "20">
       <!ENTITY CYCLE_THROTTLE "2">
@@ -52,15 +52,15 @@ Rocoto: &Rocoto
     </envar>
     <envar>
       <name>CONFIG_YAML</name>
-      <value>{doc.case.EXPDIR}/config.yaml</value>
+      <value>{doc.places.EXPDIR}/config.yaml</value>
     </envar>
     <envar>
       <name>HOMEcrow</name>
-      <value>{doc.case.HOMEcrow}</value>
+      <value>{doc.places.HOMEcrow}</value>
     </envar>
     <envar>
       <name>HOMEgfs</name>
-      <value>{doc.case.HOMEgfs}</value>
+      <value>{doc.places.HOMEgfs}</value>
     </envar>
 
   efcs_task_template: &efcs_task_template !expand |

@@ -3,7 +3,7 @@ case_template: &case_template
     type: string
     description: user-defined experiment name
     override:
-      - when: !calc tools.grep('^[A-Za-z][A-Za-z0-9_]*$')
+      - when: !calc tools.grep('^[A-Za-z][A-Za-z0-9_]*$',experiment_name)
         do: null   # no change
       - otherwise: !error Experiment names must be alphanumeric and start with a letter.
 

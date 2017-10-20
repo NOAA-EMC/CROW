@@ -38,7 +38,7 @@ for key in list(conf.keys()):
     if isinstance(conf[key],Platform) and key!='platform':
         del conf[key]
 
-EXPDIR=conf.case.EXPDIR
+EXPDIR=conf.places.EXPDIR
 logger.info(f'Run directory: {EXPDIR}')
 config_yaml=os.path.join(EXPDIR,'config.yaml')
 

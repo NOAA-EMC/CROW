@@ -7,7 +7,7 @@ resource_defaults: &resource_defaults
 
   # From if[[...ecen]] block in config.resources:
   run_ecen:
-    env: *mpi_tuning
+    env: { } #*mpi_tuning
 
     resources: !JobRequest
       - exe: placeholder

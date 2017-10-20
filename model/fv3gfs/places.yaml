@@ -21,12 +21,12 @@ places: &places
   BASE_JOB: !expand "{BASE_WORKFLOW}/jobs"
 
   # User paths
-  EXPDIR: !expand "{HOMEDIR}/{experiment_name}"
-  ROTDIR: !expand "{PTMP}/{experiment_name}"
-  RUNDIR: !expand "{STMP}/RUNDIRS/{experiment_name}"
+  EXPDIR: !expand "{HOMEDIR}/{doc.case.experiment_name}"
+  ROTDIR: !expand "{PTMP}/{doc.case.experiment_name}"
+  RUNDIR: !expand "{STMP}/RUNDIRS/{doc.case.experiment_name}"
   RTFMIX: "/scratch4/NCEPDEV/da/save/Michael.Lueken/nwprod/lib/crtm/2.2.3/fix_update"
-  ARCDIR: !expand "{NOSCRUB}/archive/{experiment_name}"
-  ATARDIR: !expand "/NCEPDEV/{hpss_project}/1year/{tools.env('USER')}/{doc.platform.name}/scratch/{experiment_name}"
+  ARCDIR: !expand "{NOSCRUB}/archive/{doc.case.experiment_name}"
+  ATARDIR: !expand "/NCEPDEV/{doc.accounting.hpss_project}/1year/{tools.env('USER')}/{doc.platform.name}/scratch/{doc.case.experiment_name}"
 #  CDUMP: "gfs"
 
   # Component paths
