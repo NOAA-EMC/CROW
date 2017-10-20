@@ -1,58 +1,82 @@
 
 vrfy: &vrfy_action !Action
-  <<: [ *case, *action_template ]
+  <<: *action_base
+  Tmeplate: *002_vrfy 
   J_JOB: vrfy
-  Template:
-    <<: [ *vrfy_template, *fv3_resolution ]
   walltime: !timedelta 01:00:00
   resources: !calc run_vrfy.resources
   memory: "3072M"
-  accounting: !calc doc.platform.parallel_accounting
-#  CDUMP: "gfs"
+
+  use_other_vars:
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.fv3_gfs_settings, ".*" ]
+    - [ doc.data_assimilation, ".*" ]
+    - [ doc.platform.general_env, ".*" ]
+    - [ doc.platform.mpi_tunning, ".*" ]
+    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+    - [ doc.places, "ARCDIR|ATARDIR|BASE_GSI|BASE_NEMSfv3gfs|BASE_ENV|BASE_JOB|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|GFSDOWNSH|GFSDWNSH|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|POSTGPSH|POSTGPEXEC|POSTJJOBSH|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]
+
   CASE_ENKF: !calc doc.case.CASE_ENKF
   CDFNL: "gdas"
   CDUMPFCST: "gdas"  # Fit-to-obs with GDAS/GFS prepbufr
-  CNVGRIB: !calc doc.places.CNVGRIB
-  COPYGB: !calc doc.places.COPYGB
-  COPYGB2: !calc doc.places.COPYGB2
-  DOHYBVAR: !calc doc.case.DOHYBVAR
-  GRB2INDEX: !calc doc.platform.GRB2INDEX
-  GRBINDEX: !calc doc.platform.GRBINDEX
-  GRBINDEX2: !calc doc.platform.GRBINDEX2
   GRIB1_WORKS: NO
-  HOMEDIR: !calc doc.case.HOMEDIR
-  LEVS: !calc doc.case.LEVS
-  KEEPDATA: NO
-  MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
-  MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
-  MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
-  MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
-  MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
   NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
-  NCP: !calc doc.platform.NCP
-  NLN: !calc doc.platform.NLN
-  NMEM_ENKF: !calc doc.case.NMEM_ENKF
-  NMV: !calc doc.platform.NMV
-  NOSCRUB: !calc doc.case.NOSCRUB
-  NTHSTACK: 1024000000
-  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
-  OUTPUT_GRID: "gaussian_grid"
-  POSTJJOBSH: !expand "{doc.case.BASE_WORKFLOW}/jobs/JGFS_POST.sh"
-  PSLOT: !calc doc.places.PSLOT
-  PTMP: !calc doc.places.PTMP
-  QUILTING: YES
-  REALTIME: !calc doc.case.REALTIME
-  RECENTER_ENKF: !calc doc.case.RECENTER_ENKF
-  ROTDIR: !calc doc.places.ROTDIR
-  RUNDIR: !calc doc.places.RUNDIR
-  SDATE: !calc doc.case.SDATE
   SMOOTH_ENKF: YES
-  STMP: !calc doc.places.STMP
+  BACKDATEVSDB: !FirstTrue
+    - when: !calc CDUMP=="gfs"
+      do: 24
+    - otherwise:
+      do: NULL
+  VBACKUP_PRCP: !FirstTrue
+    - when: !calc CDUMP=="gfs"
+      do: 24
+    - otherwise:
+      do: NULL
+  VSDBSH: !FirstTrue
+    - when: !calc CDUMP=="gfs"
+      do: !doc.places.VSDBSH
+    - otherwise:
+      do: NULL
+  ftyplist: !FirstTrue
+    - when: !calc CDUMP=="gfs"
+      do: "pgbq"
+    - otherwise:
+      do: NULL
+  vhr_rain: !FirstTrue
+    - when: !calc CDUMP=="gfs"
+      do: 240
+    - otherwise:
+      do: NULL
+  vlength: !FirstTrue
+    - when: !calc CDUMP=="gfs"
+      do: 240
+    - otherwise:
+      do: NULL
+  vsdbhome: !FirstTrue
+    - when: !calc CDUMP=="gfs"
+      do: !doc.places.vsdbhome
+    - otherwise:
+      do: NULL
+  vsdbsave: !FirstTrue
+    - when: !calc CDUMP=="gfs"
+      do: !doc.places.vsdbsave
+    - otherwise:
+      do: NULL
+  VDUMP: "gfs"
+  VRFYG2OBS: NO
+  VRFYGENESIS: NO
+  VRFYGMPK: NO
+  VRFYMINMON: NO
+  VRFYOZN: NO
+  VRFYPRCP: YES
+  VRFYRAD: NO
+  VRFYTRAK: NO
+  VSDB_STEP1: YES
+  VSDB_STEP2: NO
   VRFYGENESIS: YES     # Cyclone genesis
   VRFYGMPK: NO         # Gempak verification
   WRITE_NEMSIOFILE: YES
   assim_freq: 6
   memory_vrfy: "16384M"
   nst_anl: YES
-  WRITE_NEMSIOFILE: YES
-
