@@ -1,11 +1,43 @@
-import subprocess
-import os, re
-import datetime
+import subprocess, os, re, logging, tempfile, datetime, shutil
 from datetime import timedelta
 from copy import deepcopy
 from collections.abc import Mapping
 
-__all__=['panasas_gb','gpfs_gb','to_timedelta']
+__all__=['panasas_gb','gpfs_gb','to_timedelta','deliver_file']
+_logger=logging.getLogger('crow.tools')
+
+def deliver_file(from_file: str,to_file: str,*,blocksize: int=1048576,
+                 permmask: int=2,preserve_perms: bool=True,
+                 preserve_times: bool=True,preserve_group: bool=True,
+                 mkdir: bool=True) -> None:
+    to_dir=os.path.dirname(to_file)
+    to_base=os.path.basename(to_file)
+    if mkdir and to_dir and not os.path.isdir(to_dir):
+        _logger.info(f'{to_dir}: makedirs')
+        os.makedirs(to_dir)
+    temppath=None # type: str
+    _logger.info(f'{to_file}: deliver from {from_file}')
+    try:
+        with open(from_file,'rb') as in_fd:
+            istat=os.fstat(in_fd.fileno())
+            with tempfile.NamedTemporaryFile(
+                    prefix=f"_tmp_{to_base}.part.",
+                    delete=False,dir=to_dir) as out_fd:
+                shutil.copyfileobj(in_fd,out_fd,length=blocksize)
+                temppath=out_fd.name
+        if preserve_perms:
+            os.chmod(temppath,istat.st_mode&~permmask)
+        if preserve_times:
+            os.utime(temppath,(istat.st_atime,istat.st_mtime))
+        if preserve_group:
+            os.chown(temppath,-1,istat.st_gid)
+        os.rename(temppath,to_file)
+        temppath=None
+    except Exception as e:
+        _logger.warning(f'{to_file}: {e}')
+        raise
+    finally: # Delete file on error
+        if temppath: os.unlink(temppath)
 
 def panasas_gb(dir,pan_df='pan_df'):
     rdir=os.path.realpath(dir)
