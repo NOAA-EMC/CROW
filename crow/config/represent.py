@@ -108,7 +108,7 @@ class Conditional(list_eval):
                     raise ConditionalMissingOtherwise(
                         f'{self._path}: no clauses match and no '
                         f'"otherwise" value was given. {keys} {values}')
-                self.__result=self[otherwise_idx].otherwise
+                self.__result=self[otherwise_idx]._raw('otherwise')
                 idx=otherwise_idx
             else:
                 self.__result=values[idx]

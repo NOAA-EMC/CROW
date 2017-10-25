@@ -1,21 +1,25 @@
 import yaml
-import sys
+import sys, logging
 from yaml.nodes import MappingNode, ScalarNode, SequenceNode
 
 from collections import OrderedDict
+from collections.abc import Mapping
 from crow.tools import Clock
 from crow.config.eval_tools import *
 from crow.config.represent import *
 from crow.config.tasks import *
-from crow.config.template import Template
+from crow.config.template import Template, Inherit
 from crow.config.exceptions import *
-from crow.tools import to_timedelta
+from crow.tools import to_timedelta, typecheck
+
 import crow.sysenv
 
 # We need to run the from_yaml module first, to initialize the yaml
 # representers for some types.  This module does not actually use any
 # symbols from from_yaml; only execution of that module is needed.
 import crow.config.from_yaml
+
+_logger=logging.getLogger('crow.config')
 
 def to_yaml(yml):
     if hasattr(yml,'_raw_cache'):
@@ -38,6 +42,7 @@ add_yaml_list_eval(u'!LastTrue',LastTrue)
 add_yaml_list_eval(u'!FirstTrue',FirstTrue)
 add_yaml_list_eval(u'!Immediate',Immediate)
 add_yaml_list_eval(u'!JobRequest',JobResourceSpecMaker)
+add_yaml_list_eval(u'!Inherit',Inherit)
 add_yaml_list_eval(None,GenericList)
 
 ########################################################################
@@ -47,10 +52,17 @@ def add_yaml_dict_eval(key,cls):
     type    """
     def representer(dumper,data):
         assert('up' not in data)
-        if key is None:
-            return dumper.represent_data(data._raw_child())
-        else:
-            return dumper.represent_mapping(key,data._raw_child())
+        typecheck('data',data,Mapping)
+        raw_data=data._raw_child()
+        typecheck('data._raw_child()',raw_data,Mapping)
+        try:
+            if key is None:
+                return dumper.represent_data(raw_data)
+            else:
+                return dumper.represent_mapping(key,raw_data)
+        except(IndexError,TypeError,ValueError) as e:
+            _logger.error(f'{data._path}: cannot represent: {e} (key={key})')
+            raise
     yaml.add_representer(cls,representer)
 
 add_yaml_dict_eval(None,GenericDict)

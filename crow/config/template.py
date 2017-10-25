@@ -11,32 +11,42 @@ following intermediate Python concepts:
 
 """
 
-import re
+import re, sys, logging
 from copy import copy
 from datetime import timedelta, datetime
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config
 from crow.config.represent import GenericList, GenericDict, GenericOrderedDict
+from collections.abc import Mapping
 
+_logger=logging.getLogger('crow.config')
 IGNORE_WHILE_INHERITING = [ 'Inherit', 'Template' ]
 
 class Inherit(list_eval): 
     def _update(self,target,globals,locals,stage,memo):
+        errors=list()
         for scopename,regex in reversed(self):
-            scopename=str(scopename)
-            scope=eval(scopename,globals,locals)
-            if hasattr(scope,'_validate'):
-                scope._validate(stage,memo)
-            for key in scope:
-                if key not in IGNORE_WHILE_INHERITING  and \
-                   re.search(regex,key) and key not in target:
-                    target._raw_child()[key]=scope._raw_child()[key]
+            try:
+                scopename=str(scopename)
+                _logger.debug(f'{target._path}: inherit from {scopename}')
+                scope=eval(scopename,globals,locals)
+                if hasattr(scope,'_validate'):
+                    scope._validate(stage,memo)
+                for key in scope:
+                    if key not in IGNORE_WHILE_INHERITING  and \
+                       re.search(regex,key) and key not in target:
+                        target._raw_child()[key]=scope._raw_child()[key]
+            except TemplateErrors as te:
+                errors.append(f'{target._path}: when including {scope._path}')
+                errors.extend(te.template_errors)
+        if errors: raise TemplateErrors(errors)
 
 class Template(dict_eval):
     """!Internal implementation of the YAML Template type.  Validates a
     dict_eval, inserting defaults and reporting errors via the
     TemplateErrors exception.    """
     def _check_scope(self,scope,stage):
+        _logger.debug(f'{scope._path}: validate')
         checked=set()
         errors=list()
         template=copy(self)
@@ -52,12 +62,13 @@ class Template(dict_eval):
             # found thus far.  Add new templates if found via
             # is_present.  Run prechecks if present
             for var in set(scope)-checked:
+                assert(isinstance(template,Template))
                 if var not in template: continue
                 try:
                     did_something=True
                     checked.add(var)
                     scheme=template[var]
-
+                    if not isinstance(scheme,Mapping): continue # not a template
                     if stage and 'stages' in scheme:
                         if stage not in scheme.stages:
                             continue # skip validation; wrong stage
@@ -66,7 +77,7 @@ class Template(dict_eval):
 
                     if 'precheck' in scheme:
                         scope[var]=scheme.precheck
-
+                
                     validate_var(scope._path,scheme,var,scope[var])
                     if 'if_present' in scheme:
                         ip=from_config(
@@ -76,10 +87,13 @@ class Template(dict_eval):
                         new_template=Template(ip._raw_child())
                         new_template.update(template)
                         template=new_template
+                        assert(isinstance(template,Template))
                 except (IndexError,AttributeError) as pye:
                     errors.append(f'{scope._path}.{var}: {pye}')
+                    _logger.debug(f'{scope._path}.{var}: {pye}',exc_info=True)
                 except ConfigError as ce:
                     errors.append(str(ce))
+                    _logger.debug(f'{scope._path}.{var}: {ce}',exc_info=True)
 
         # Insert default values for all templates found thus far and
         # detect any missing, non-optional, variables
@@ -103,10 +117,19 @@ class Template(dict_eval):
 
         # Override any variables if requested via "override" clauses.
         for var in template:
-            if var in scope and 'override' in template[var]:
+            if var in scope and isinstance(template[var],Mapping) and \
+               'override' in template[var]:
                 override=from_config(template[var],'override',scope._globals(),scope,
                                      f'{scope._path}.Template.{var}.override')
                 if override is not None: scope[var]=override
+
+        # Check for variables that evaluate to an error
+        for key,expr in scope._raw_child().items():
+            if hasattr(expr,'_is_error'):
+                try:
+                    scope[key]
+                except ConfigUserError as ce:
+                    errors.append(f'{scope._path}.{key}: {ce}')
 
         if errors: raise TemplateErrors(errors)
 

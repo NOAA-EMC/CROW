@@ -29,18 +29,21 @@ feature:
 
 """
 
-
-from collections.abc import MutableMapping, MutableSequence, Sequence
+import logging
+from collections.abc import MutableMapping, MutableSequence, Sequence, Mapping
 from copy import copy,deepcopy
 from crow.config.exceptions import *
+from crow.tools import typecheck
 
 __all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval',
           'list_eval', 'multidict', 'Eval', 'user_error_message' ]
+_logger=logging.getLogger('crow.config')
 
 class user_error_message(str):
     """!Used to embed assertions in configuration code."""
     def _result(self,globals,locals):
         raise ConfigUserError(eval("f'''"+self+"'''",globals,locals))
+    def _is_error(self): pass
 
 class expand(str):
     """!Represents a literal format string."""
@@ -135,6 +138,7 @@ class dict_eval(MutableMapping):
 
     def __init__(self,child,path='',globals=None):
         #assert(not isinstance(child,dict_eval))
+        typecheck('child',child,Mapping)
         self.__child=copy(child)
         self.__cache=copy(child)
         self.__globals={} if globals is None else globals
@@ -198,17 +202,14 @@ class dict_eval(MutableMapping):
 
         # Inherit from other scopes:
         if 'Inherit' in self and hasattr(self.Inherit,'_update'):
-            print(f'{self._path}: call Inherit._update')
             self.Inherit._update(self,self.__globals,self,stage,memo)
-        elif 'Inherit' in self:
-            print(f'{type(self.Inherit).__name__} {repr(self.Inherit)}')
 
         # Validate this scope:
         if 'Template' in self:
             tmpl=self.Template
+            if not tmpl: return
             if not hasattr(tmpl,'_check_scope'):
-                tmpl=Template(self.Template,self._path+'.Template',
-                              self.__globals)
+                tmpl=Template(tmpl,self._path+'.Template',self.__globals)
             tmpl._check_scope(self,stage)
     def __getitem__(self,key):
         val=self.__cache[key]
@@ -269,6 +270,7 @@ class list_eval(MutableSequence):
       self.__locals.__getitem__(b) - self.__locals.__getitem__(c) ]
     \endcode    """
     def __init__(self,child,locals,path=''):
+        typecheck('child',child,Sequence)
         self.__child=list(child)
         self.__cache=list(child)
         self.__locals=locals
