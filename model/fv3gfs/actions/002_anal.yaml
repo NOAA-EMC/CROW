@@ -1,8 +1,7 @@
-anal: &anal_action !Action
+anal_base: &anal_base !Action
   <<: *action_base
 
   shell_env_scopes:
-    - [ doc.platform.general_env,  ".*" ]
     - [ doc.data_assimilation,     ".*" ]
     - [ doc.gfs_output_settings,   ".*" ]
     - [ doc.fv3_gdas_settings,     ".*" ]
@@ -24,14 +23,6 @@ anal: &anal_action !Action
       do: "aprun -j 1 -n \\$ncmd -N 1 -d {NTHREADS_CALCINC} -cc depth"
   NTHREADS_CALCINC: 1
 
-  Inherit: !Inherit
-    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
-    - [ doc.fv3_enkf_settings, "FHCYC" ]
-    - [ doc.data_assimilation, ".*" ]
-    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
-    - [ doc.places, "HOMEDIR|NOSCRUB|POSTJJOBSH|CHGRESSH|RUNDIR|ROTDIR|CHGRESEXEC|PTMP|STMP" ]
-
   APRUN_GSI:  !calc tools.command_without_exe(par,run_gsi,"placeholder")
   ANALYSISSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   NTHREADS_GSI: !calc nodes.omp_threads_for(anal_resources[0])
@@ -48,3 +39,27 @@ anal: &anal_action !Action
 
   VERBOSE: YES
   NTHSTACK: 1024000000
+
+anal_gdas_action: &anal_gdas_action !Action
+  <<: [ *gfs_output_settings, *fv3_gdas_settings, *data_assimilation, *anal_base ]
+  CDUMP: gdas
+  Template: null
+  Inherit: !Inherit
+    - [ doc.platform.general_env,  ".*" ]
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.fv3_enkf_settings, "FHCYC" ]
+    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
+    - [ doc.places, "HOMEDIR|NOSCRUB|POSTJJOBSH|CHGRESSH|RUNDIR|ROTDIR|CHGRESEXEC|PTMP|STMP" ]
+
+anal_gfs_action: &anal_gfs_action !Action
+  <<: [ *gfs_output_settings, *fv3_gfs_settings, *data_assimilation, *anal_base ]
+  CDUMP: gfs
+  Template: null
+  Inherit: !Inherit
+    - [ doc.platform.general_env,  ".*" ]
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.fv3_enkf_settings, "FHCYC" ]
+    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
+    - [ doc.places, "HOMEDIR|NOSCRUB|POSTJJOBSH|CHGRESSH|RUNDIR|ROTDIR|CHGRESEXEC|PTMP|STMP" ]

@@ -1,19 +1,12 @@
-prep: &prep_action !Action
+prep: &prep_base !Action
   <<: *action_base
   J_JOB: prep
   walltime: !timedelta 01:00:00
   resources: !calc run_prep.resources
   memory: "3072M"
 
-  Inherit: !Inherit
-    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
-    - [ doc.fv3_gfs_settings, ".*" ]
-    - [ doc.data_assimilation, ".*" ]
-    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
-    - [ doc.places, "HOMEDIR|DRIVE_MAKEPREPBUFRSH|NOSCRUB|ATARDIR|ARCDIR" ]
-
   CASE_ENKF: !calc doc.case.CASE_ENKF
+  Template: null
 
   MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
   MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
@@ -22,7 +15,7 @@ prep: &prep_action !Action
   MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
 
   NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
-  NMEM_ENKF: !calc doc.case.NMEM_ENKF
+  NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
   NOSCRUB: !calc doc.case.NOSCRUB
 
   NTHSTACK: 1024000000
@@ -38,3 +31,23 @@ prep: &prep_action !Action
     - when: !calc doc.platform.name=="WCOSS_C"
       do: "Cray-XC40"
     - otherwise: !error Do not know sys_tp for platform {doc.platform.name}
+
+prep_gdas: &prep_gdas_action !Action
+  <<: [ *fv3_gdas_settings, *data_assimilation, *prep_base ]
+  CDUMP: gdas
+  Inherit: !Inherit
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+    - [ doc.places, "HOMEDIR|DRIVE_MAKEPREPBUFRSH|NOSCRUB|ATARDIR|ARCDIR" ]
+  Template: null
+
+prep_gfs: &prep_gfs_action !Action
+  <<: [ *fv3_gfs_settings, *data_assimilation, *prep_base ]
+  CDUMP: gfs
+  Inherit: !Inherit
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+    - [ doc.places, "HOMEDIR|DRIVE_MAKEPREPBUFRSH|NOSCRUB|ATARDIR|ARCDIR" ]
+  Template: null

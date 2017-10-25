@@ -1,20 +1,23 @@
 fv3_settings: &fv3_settings
-  Template: *fv3_settings_template
   LEVS: 65  # Number of vertical levels (mandatory)
 
 fv3_gfs_settings: &fv3_gfs_settings
   <<: *fv3_settings
+  Template: *fv3_settings_template
   CASE: C192 # FV3 horizontal resolution (mandatory)
+  CDUMP: gfs
 
 fv3_enkf_settings: &fv3_enkf_settings
   <<: *fv3_settings
+  Template: *fv3_settings_template
   CASE: C192 # FV3 horizontal resolution for ensemble (mandatory)
+  CDUMP: gdas
   restart_interval: 6 # do not change
 
 fv3_gdas_settings: &fv3_gdas_settings
-  <<: *fv3_settings
-  #FIXME: Presently fv3_gdas_settings has to be identical to fv3_gfs_settings
-  #because the actions/009_fcst.yaml cannot differentiate
+  <<: *fv3_gfs_settings
+  Template: *fv3_settings_template
+  CDUMP: gdas
 
 ########################################################################
 
@@ -31,11 +34,11 @@ gfs_output_settings: &gfs_output_settings
 data_assimilation: &data_assimilation
   Template: *data_assimilation_template
   # Shared parameters/switches
-  DOHYBVAR: "YES"         # optional
+  DOHYBVAR: YES           # optional
   NMEM_ENKF: 80           # DO NOT CHANGE (yet)
   NMEM_ENKF_GRP_EOMN: 10  # DO NOT CHANGE (yet)
   NMEM_ENKF_GRP_EFMN: 10  # DO NOT CHANGE (yet)
-  RECENTER_ENKF: "YES"    # optional
+  RECENTER_ENKF: YES      # optional
   l4densvar: ".false."    # optional
   lwrite4danl: ".false."  # optional
   DO_MAKEPREPBUFR: YES   # if NO, will copy prepbufr from globaldump

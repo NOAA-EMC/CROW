@@ -98,9 +98,7 @@ workflow: !Cycle
 
   gdas: !Family
     prep: !Task
-      Perform: 
-        <<: *prep_action
-        CDUMP: gdas
+      Perform: *prep_gdas_action
       Rocoto: *task_template  
       Complete: !Depend ~ suite.has_cycle('-6:00:00') 
       Trigger: !Depend  up.gdas.post.at('-6:00:00')
@@ -118,8 +116,8 @@ workflow: !Cycle
         grp1: !Task
           Perform:  
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 1   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -128,8 +126,8 @@ workflow: !Cycle
         grp2: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 2   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -138,8 +136,8 @@ workflow: !Cycle
         grp3: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 3   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -148,8 +146,8 @@ workflow: !Cycle
         grp4: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 4   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -158,8 +156,8 @@ workflow: !Cycle
         grp5: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 5   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -168,8 +166,8 @@ workflow: !Cycle
         grp6: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 6   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -178,8 +176,8 @@ workflow: !Cycle
         grp7: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 7   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -188,8 +186,8 @@ workflow: !Cycle
         grp8: !Task
           Perform:
             <<: *eomg_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
             GROUP_NUMBER: 8   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *eomn_task_template
@@ -233,8 +231,8 @@ workflow: !Cycle
         grp1: !Task 
           Perform:  
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 1   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -243,8 +241,8 @@ workflow: !Cycle
         grp2: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 2   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -253,8 +251,8 @@ workflow: !Cycle
         grp3: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 3   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -263,8 +261,8 @@ workflow: !Cycle
         grp4: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 4   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -273,8 +271,8 @@ workflow: !Cycle
         grp5: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 5   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -283,8 +281,8 @@ workflow: !Cycle
         grp6: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 6   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -293,8 +291,8 @@ workflow: !Cycle
         grp7: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 7   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -303,8 +301,8 @@ workflow: !Cycle
         grp8: !Task
           Perform:
             <<: *efcs_action
-            NMEM_ENKF: !calc doc.case.NMEM_ENKF
-            NMEM_ENKF_GRP_EFMN: !calc doc.case.NMEM_ENKF_GRP_EFMN
+            NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+            NMEM_ENKF_GRP_EFMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EFMN
             GROUP_NUMBER: 8   # Convert to ENSGRP %02d
           task_template: *task_template
           ens_more: *efcs_task_template
@@ -316,82 +314,64 @@ workflow: !Cycle
         Trigger: !Depend efcs
 
     anal: !Task
-      Perform: 
-        <<: *anal_action
-        CDUMP: gdas
+      Perform: *anal_gdas_action
       Rocoto: *task_template
       Complete: !Depend ~ suite.has_cycle('-6:00:00')
       Trigger: !Depend  ( prep & enkf.epos.at('-6:00:00') )
 
     fcst: !Task
-      Perform: 
-        <<: *fcst_action
-        CDUMP: gdas
+      Perform: *fcst_gdas_action
       Rocoto: *task_template
       Trigger: !Depend ( anal | ~ suite.has_cycle('-6:00:00') )
 
     post: !Task
-      Perform:
-        <<: *post_action
-        CDUMP: gdas
+      Perform: *post_gdas_action
       Rocoto: *task_template
       Trigger: !Depend fcst
 
     vrfy: !Task
-      Perform:
-        <<: *vrfy_action
-        CDUMP: gdas
+      Perform: *vrfy_gdas_action
       Rocoto: *task_template
       Trigger: !Depend post
 
   gfs: !Family
     Complete: !Depend ~ suite.has_cycle('-6:00:00')
     prep: !Task
-      Perform:
-        <<: *prep_action
-        CDUMP: gfs
+      Perform: *prep_gfs_action
       Rocoto: *task_template
       Trigger: !Depend  up.gdas.post.at('-6:00:00')
 
     anal: !Task
-      Perform:
-        <<: *anal_action
-        CDUMP: gfs
+      Perform: *anal_gfs_action
       Rocoto: *task_template
       Trigger: !Depend  ( prep & up.gdas.enkf.epos.at('-6:00:00') )
 
     fcst: !Task
-      Perform:
-        <<: *fcst_action
-        CDUMP: gfs
+      Perform: *fcst_gfs_action
       Rocoto: *task_template
       Trigger: !Depend anal
 
     post: !Task
-      Perform:
-        <<: *post_action
-        CDUMP: gfs
+      Perform: *post_gfs_action
       Rocoto: *task_template
       Trigger: !Depend fcst
     
     vrfy: !Task
-      Perform:
-        <<: *vrfy_action
-        CDUMP: gfs
+      Perform: *vrfy_gfs_action
       Rocoto: *task_template
       Trigger: !Depend post
 
   archive: !Family
     gdasarch: !Task
       Perform:
-        <<: *arch_action
+        <<: *arch_gdas_action
         CDUMP: gdas
       Rocoto: *task_template
       Trigger: !Depend up.gdas.vrfy
 
     gfsarch: !Task
       Perform:
-        <<: *arch_action
+        <<: *arch_gfs_action
         CDUMP: gfs
       Rocoto: *task_template
       Complete: !Depend ~ suite.has_cycle('-6:00:00')
@@ -402,8 +382,8 @@ workflow: !Cycle
       grp1: !Task
         Perform:  
           <<: *earc_action
-          NMEM_ENKF: !calc doc.case.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 1   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -411,8 +391,8 @@ workflow: !Cycle
       grp2: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.case.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 2   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -420,8 +400,8 @@ workflow: !Cycle
       grp3: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.case.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 3   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -429,8 +409,8 @@ workflow: !Cycle
       grp4: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.case.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 4   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -438,8 +418,8 @@ workflow: !Cycle
       grp5: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.case.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 5   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -447,8 +427,8 @@ workflow: !Cycle
       grp6: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.case.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 6   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -456,8 +436,8 @@ workflow: !Cycle
       grp7: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.case.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 7   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template
@@ -465,8 +445,8 @@ workflow: !Cycle
       grp8: !Task
         Perform:
           <<: *earc_action
-          NMEM_ENKF: !calc doc.case.NMEM_ENKF
-          NMEM_ENKF_GRP_EOMN: !calc doc.case.NMEM_ENKF_GRP_EOMN
+          NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
+          NMEM_ENKF_GRP_EOMN: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
           GROUP_NUMBER: 8   # Convert to ENSGRP %02d
         task_template: *task_template
         ens_more: *eomn_task_template

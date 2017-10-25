@@ -46,7 +46,7 @@ post: &post_action !Action
   NEMSIOGET: !calc doc.platform.NEMSIOGET
   NHOUR: !calc doc.platform.NHOUR
   NLN: !calc doc.platform.NLN
-  NMEM_ENKF: !calc doc.case.NMEM_ENKF
+  NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
   NMV: !calc doc.platform.NMV
   NOSCRUB: !calc doc.case.NOSCRUB
   NTHREADS_DWN: 2
@@ -115,7 +115,7 @@ vrfy: &vrfy_action !Action
   NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
   NCP: !calc doc.platform.NCP
   NLN: !calc doc.platform.NLN
-  NMEM_ENKF: !calc doc.case.NMEM_ENKF
+  NMEM_ENKF: !calc doc.data_assimilation.NMEM_ENKF
   NMV: !calc doc.platform.NMV
   NOSCRUB: !calc doc.case.NOSCRUB
   NTHSTACK: 1024000000

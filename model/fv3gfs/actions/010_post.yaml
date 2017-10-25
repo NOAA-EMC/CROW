@@ -1,19 +1,9 @@
-post: &post_action !Action
+post_base: &post_base !Action
   <<: *action_base
   J_JOB: post
   walltime: !timedelta 00:15:00
   resources: !calc run_post.resources
   memory: "3072M"
-
-  Inherit: !Inherit
-    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
-    - [ doc.fv3_gfs_settings, ".*" ]
-    - [ doc.data_assimilation, ".*" ]
-    - [ doc.platform.general_env, ".*" ]
-    - [ doc.platform.mpi_tuning, ".*" ]
-    - [ doc.fv3_settings, "LEVS|QUILTING|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
-    - [ doc.places, "ARCDIR|ATARDIR|BASE_GSI|BASE_NEMSfv3gfs|BASE_ENV|BASE_JOB|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|GFSDOWNSH|GFSDWNSH|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|POSTGPSH|POSTGPEXEC|POSTJJOBSH|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]
 
   APRUN_DWN: !calc tools.command_without_exe(par,resources,'placeholder')
   APRUN_NP: !calc tools.command_without_exe(par,resources,'placeholder')
@@ -30,3 +20,25 @@ post: &post_action !Action
   NTHREADS_DWN: 2
   NTHREADS_NP: 1
   downset: 1
+
+post_gfs: &post_gfs_action !Action
+  <<: [ *fv3_gfs_settings, *data_assimilation, *post_base ]
+  CDUMP: gfs
+  Template: null
+  Inherit: !Inherit
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.platform.general_env, ".*" ]
+    - [ doc.platform.mpi_tuning, ".*" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+    - [ doc.places, "ARCDIR|ATARDIR|BASE_GSI|BASE_NEMSfv3gfs|BASE_ENV|BASE_JOB|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|GFSDOWNSH|GFSDWNSH|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|POSTGPSH|POSTGPEXEC|POSTJJOBSH|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]
+
+post_gdas: &post_gdas_action !Action
+  <<: [ *fv3_gdas_settings, *data_assimilation, *post_base ]
+  CDUMP: gdas
+  Template: null
+  Inherit: !Inherit
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.platform.general_env, ".*" ]
+    - [ doc.platform.mpi_tuning, ".*" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+    - [ doc.places, "ARCDIR|ATARDIR|BASE_GSI|BASE_NEMSfv3gfs|BASE_ENV|BASE_JOB|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|GFSDOWNSH|GFSDWNSH|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|POSTGPSH|POSTGPEXEC|POSTJJOBSH|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]

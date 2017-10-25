@@ -1,4 +1,4 @@
-fcst: &fcst_action !Action
+fcst_base: &fcst_base !Action
   <<: *action_base
   J_JOB: fcst
   fcst_resources: !JobRequest
@@ -20,14 +20,6 @@ fcst: &fcst_action !Action
   APRUN_REMAP: !calc APRUN_FV3
   ARCDIR: !calc doc.case.ARCDIR
   ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
-
-  Inherit: !Inherit
-    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
-    - [ doc.fv3_gfs_settings, ".*" ]
-    - [ doc.data_assimilation, ".*" ]
-    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
-    - [ doc.places, "BASE_GSI|BASE_NEMSfv3gfs|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|FIELD_TABLE|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]
 
   CASE: !calc doc.fv3_gfs_settings.CASE
   CASE_ENKF: !calc doc.case.CASE_ENKF
@@ -64,10 +56,7 @@ fcst: &fcst_action !Action
   restart_interval: 6
 
 
-# Disable the use of coupler.res; get model start time from model_configure
-# export USE_COUPLER_RES="NO"
-
-  USE_COUPLER_RES: "NO"
+  USE_COUPLER_RES: NO
 
   restart_interval: !FirstTrue
     - when: !calc CDUMP=="gdas"
@@ -75,3 +64,21 @@ fcst: &fcst_action !Action
     - otherwise: 0
 
   master_grid: !calc doc.case.master_grid
+
+fcst_gdas: &fcst_gdas_action !Action
+  <<: [ *fv3_gdas_settings, *data_assimilation, *fcst_base ]
+  Template: *fv3_settings_template
+  Inherit: !Inherit
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+    - [ doc.places, "BASE_GSI|BASE_NEMSfv3gfs|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|FIELD_TABLE|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]
+  CDUMP: gdas
+
+fcst_gfs: &fcst_gfs_action !Action
+  <<: [ *fv3_gfs_settings, *data_assimilation, *fcst_base ]
+  Template: *fv3_settings_template
+  Inherit: !Inherit
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+    - [ doc.places, "BASE_GSI|BASE_NEMSfv3gfs|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|FIELD_TABLE|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]
+  CDUMP: gfs
