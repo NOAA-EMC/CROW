@@ -71,7 +71,7 @@ fv3_settings_template: &fv3_settings_template
   SKEB: { type: float, default: 0.8 }
   SKEB_TAU: { type: float, default: 21600. }
   SKEB_LSCALE: { type: float, default: 500000. }
-  SKEBNORM: { type: float, default: 1 }
+  SKEBNORM: { type: float, default: 1.0 }
   SHUM: { type: float, default: 0.006 }
   SHUM_TAU: { type: float, default: 21600. }
   SHUM_LSCALE: { type: float, default: 250000. }
