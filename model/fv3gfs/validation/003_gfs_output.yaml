@@ -32,3 +32,8 @@ gfs_output_settings_template: &gfs_output_settings_template
     type: int
     default: 1
     description: Output frequency until FHMAX_HF_GFS hours.
+
+  NCO_NAMING_CONV:
+    type: bool
+    default: YES
+    description: "YES = use standard, operational, naming conventions.  NO = use non-standard naming conventions"

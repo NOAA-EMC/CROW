@@ -1,8 +1,8 @@
 eomg: &eomg_action !Action
   <<: *action_base
   J_JOB: eomg
-  ANALYSISSH: "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
-  APRUN_GSI: !calc tools.command_without_exe(par,run_gsi,'placeholder')
+  ANALYSISSH: "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
+  APRUN_GSI: !calc tools.command_without_exe(par,run_gsi.resources,'placeholder')
   walltime: !timedelta 00:15:00
   resources: !calc run_eomg.resources
   memory: "3072M"
@@ -12,10 +12,9 @@ eomg: &eomg_action !Action
     - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.data_assimilation, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
-    - [ doc.places, "NOSCRUB|ATARDIR|INVOBSSH|ENKFINVOBSSH|BASE_ENV|BASE_JOB" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
-  CASE: !calc doc.case.CASE_ENKF
+  CASE: !calc doc.fv3_enkf_settings.CASE
   NMEM_EOMGGRP: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
   NTHREADS_GSI: !calc nodes.omp_threads_for(run_gsi.resources[0])
   NTHSTACK: 1024000000

@@ -1,7 +1,7 @@
 efcs: &efcs_action !Action
-  <<: *action_base
+  <<: [ *action_base, *places ]
   J_JOB: efcs
-  CASE: !calc doc.case.CASE_ENKF
+  CASE: !calc doc.fv3_enkf_settings.CASE
   walltime: !timedelta 00:15:00
   efcs_resources: !JobRequest
     - exe: placeholder
@@ -12,7 +12,7 @@ efcs: &efcs_action !Action
   APRUN_FV3: !calc tools.command_without_exe(par,resources,'placeholder')
   resources_regrid_nemsio: !JobRequest
     - exe: placeholder
-      mpi_ranks: !calc doc.case.LEVS
+      mpi_ranks: !calc doc.fv3_settings.LEVS
       max_ppn: !calc nodes.max_ranks_per_node(efcs_resources[0])
   APRUN_REGRID_NEMSIO: !calc |
     tools.command_without_exe(
@@ -24,8 +24,7 @@ efcs: &efcs_action !Action
     - [ doc.fv3_enkf_settings, ".*" ]
     - [ doc.data_assimilation, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
-    - [ doc.places, "DIAG_TABLE|BASE_ENV|ENKFFCSTSH|BASE_JOB|FCSTEXECDIR|FIELD_TABLE|FORECASTSH|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|REGRID_NEMSIO_TBL|REMAPSH" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
   NTHREADS_FV3: 1
   NTHREADS_REGRID_NEMSIO: 1

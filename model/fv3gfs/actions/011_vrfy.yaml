@@ -12,48 +12,39 @@ vrfy_base: &vrfy_base !Action
   CDFNL: "gdas"
   CDUMPFCST: "gdas"  # Fit-to-obs with GDAS/GFS prepbufr
   GRIB1_WORKS: NO
-  NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
   SMOOTH_ENKF: YES
   BACKDATEVSDB: !FirstTrue
     - when: !calc CDUMP=="gfs"
       do: 24
-    - otherwise:
-      do: NULL
+    - otherwise: null
   VBACKUP_PRCP: !FirstTrue
     - when: !calc CDUMP=="gfs"
       do: 24
-    - otherwise:
-      do: NULL
+    - otherwise: null
   VSDBSH: !FirstTrue
     - when: !calc CDUMP=="gfs"
       do: !calc doc.places.VSDBSH
-    - otherwise:
-      do: NULL
+    - otherwise: null
   ftyplist: !FirstTrue
     - when: !calc CDUMP=="gfs"
       do: "pgbq"
-    - otherwise:
-      do: NULL
+    - otherwise: null
   vhr_rain: !FirstTrue
     - when: !calc CDUMP=="gfs"
       do: 240
-    - otherwise:
-      do: NULL
+    - otherwise: null
   vlength: !FirstTrue
     - when: !calc CDUMP=="gfs"
       do: 240
-    - otherwise:
-      do: NULL
+    - otherwise: null
   vsdbhome: !FirstTrue
     - when: !calc CDUMP=="gfs"
       do: !calc doc.places.vsdbhome
-    - otherwise:
-      do: NULL
+    - otherwise: null
   vsdbsave: !FirstTrue
     - when: !calc CDUMP=="gfs"
       do: !calc doc.places.vsdbsave
-    - otherwise:
-      do: NULL
+    - otherwise: null
   VDUMP: "gfs"
   VRFYG2OBS: NO
   VRFYGENESIS: NO
@@ -81,8 +72,7 @@ vrfy_gfs_action: &vrfy_gfs_action !Action
     - [ doc.platform.general_env, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
-    - [ doc.places, "ARCDIR|ATARDIR|BASE_GSI|BASE_NEMSfv3gfs|BASE_ENV|BASE_JOB|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|GFSDOWNSH|GFSDWNSH|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|POSTGPSH|POSTGPEXEC|POSTJJOBSH|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
 
 vrfy_gdas_action: &vrfy_gdas_action !Action
   <<: [ *fv3_gdas_settings, *data_assimilation, *vrfy_base ]
@@ -93,5 +83,4 @@ vrfy_gdas_action: &vrfy_gdas_action !Action
     - [ doc.platform.general_env, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
-    - [ doc.places, "ARCDIR|ATARDIR|BASE_GSI|BASE_NEMSfv3gfs|BASE_ENV|BASE_JOB|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|GFSDOWNSH|GFSDWNSH|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|POSTGPSH|POSTGPEXEC|POSTJJOBSH|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]

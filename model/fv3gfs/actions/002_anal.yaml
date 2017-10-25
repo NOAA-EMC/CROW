@@ -21,24 +21,15 @@ anal_base: &anal_base !Action
       do: "mpirun -np $ncmd"
     - when: !calc doc.platform.name=="WCOSS_C"
       do: "aprun -j 1 -n \\$ncmd -N 1 -d {NTHREADS_CALCINC} -cc depth"
+    - otherwise: !error "No APRUN_CALCINC for unknown platform {doc.platform.name}"
   NTHREADS_CALCINC: 1
 
-  APRUN_GSI:  !calc tools.command_without_exe(par,run_gsi,"placeholder")
-  ANALYSISSH: !expand "{doc.case.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
+  APRUN_GSI:  !calc tools.command_without_exe(par,run_gsi.resources,"placeholder")
+  ANALYSISSH: !expand "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   NTHREADS_GSI: !calc nodes.omp_threads_for(anal_resources[0])
-  CASE_ENKF: !calc doc.case.CASE_ENKF
-
-  MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
-  MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
-  MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
-  MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
-  MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
-  NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
-  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
-  NTHSTACK: 1024000000
+  CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
 
   VERBOSE: YES
-  NTHSTACK: 1024000000
 
 anal_gdas_action: &anal_gdas_action !Action
   <<: [ *gfs_output_settings, *fv3_gdas_settings, *data_assimilation, *anal_base ]
@@ -47,10 +38,10 @@ anal_gdas_action: &anal_gdas_action !Action
   Inherit: !Inherit
     - [ doc.platform.general_env,  ".*" ]
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.platform.mpi_tuning, '.*' ]
     - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
-    - [ doc.places, "HOMEDIR|NOSCRUB|POSTJJOBSH|CHGRESSH|RUNDIR|ROTDIR|CHGRESEXEC|PTMP|STMP" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
 anal_gfs_action: &anal_gfs_action !Action
   <<: [ *gfs_output_settings, *fv3_gfs_settings, *data_assimilation, *anal_base ]
@@ -59,7 +50,7 @@ anal_gfs_action: &anal_gfs_action !Action
   Inherit: !Inherit
     - [ doc.platform.general_env,  ".*" ]
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.platform.mpi_tuning, '.*' ]
     - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
-    - [ doc.places, "HOMEDIR|NOSCRUB|POSTJJOBSH|CHGRESSH|RUNDIR|ROTDIR|CHGRESEXEC|PTMP|STMP" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc" ]

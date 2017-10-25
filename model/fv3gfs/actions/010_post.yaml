@@ -7,7 +7,7 @@ post_base: &post_base !Action
 
   APRUN_DWN: !calc tools.command_without_exe(par,resources,'placeholder')
   APRUN_NP: !calc tools.command_without_exe(par,resources,'placeholder')
-  CASE_ENKF: !calc doc.case.CASE_ENKF
+  CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
   DO_GDAS_FCST_POST: YES
 
   FCSTEXEC: "fv3_gfs_nh.prod.32bit.x"
@@ -16,7 +16,6 @@ post_base: &post_base !Action
   GOESF: NO
   GPOST: YES
   GTGF: NO
-  NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
   NTHREADS_DWN: 2
   NTHREADS_NP: 1
   downset: 1
@@ -29,8 +28,7 @@ post_gfs: &post_gfs_action !Action
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.platform.general_env, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
-    - [ doc.places, "ARCDIR|ATARDIR|BASE_GSI|BASE_NEMSfv3gfs|BASE_ENV|BASE_JOB|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|GFSDOWNSH|GFSDWNSH|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|POSTGPSH|POSTGPEXEC|POSTJJOBSH|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
 
 post_gdas: &post_gdas_action !Action
   <<: [ *fv3_gdas_settings, *data_assimilation, *post_base ]
@@ -40,5 +38,4 @@ post_gdas: &post_gdas_action !Action
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.platform.general_env, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
-    - [ doc.places, "ARCDIR|ATARDIR|BASE_GSI|BASE_NEMSfv3gfs|BASE_ENV|BASE_JOB|BASE_POST|BASE_PREP|BASE_PREP_GLOBAL|BASE_SVN|BASE_VERIF|FORECASTSH|FCSTEXECDIR|GFSDOWNSH|GFSDWNSH|HOMEDIR|MYBASE_SVN|NC2NEMSIOSH|NOSCRUB|REGRID_NEMSIO_SH|REGRID_NEMSIO_TBL|POSTGPSH|POSTGPEXEC|POSTJJOBSH|PTMP|ROTDIR|RUNDIR|STMP|REMAPSH|NC2NEMSIOSH" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]

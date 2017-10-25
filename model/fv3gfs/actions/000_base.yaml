@@ -1,11 +1,11 @@
 action_base: &action_base
-  <<: [ *resource_defaults ]
+  <<: [ *resource_defaults, *places ]
   KEEPDATA: NO
 
   # These are probably just needed by vrfy:
-  ACCOUNT: !calc doc.case.cpu_project
-  QUEUE: !calc doc.platform.queue
-  QUEUE_ARCH: !calc doc.platform.queue_arch
+  ACCOUNT: !calc doc.accounting.cpu_project
+  QUEUE: !calc doc.platform.parallel_accounting.queue
+  QUEUE_ARCH: !calc doc.platform.transfer_accounting.queue
 
   DONST: NO
   BASE_NEMSfv3gfs: !calc doc.places.BASE_NEMSfv3gfs
@@ -20,6 +20,8 @@ action_base: &action_base
   accounting: !calc doc.platform.parallel_accounting
   par: !calc doc.platform.parallelism
   nodes: !calc doc.platform.nodes
+
+  NCO_NAMING_CONV: !calc doc.gfs_output_settings.NCO_NAMING_CONV
 
   # FIXME: temporary kludge until scripts are updated to use mpiserial
   # on all platforms:

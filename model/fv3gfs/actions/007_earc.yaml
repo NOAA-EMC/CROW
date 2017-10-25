@@ -11,11 +11,10 @@ earc: &earc_action !Action
     - [ doc.fv3_enkf_settings, ".*" ]
     - [ doc.data_assimilation, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
-    - [ doc.places, "BASE_ENV|BASE_JOB|ATARDIR" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
   CASE: !calc CASE_ENKF
-  CASE_ENKF: !calc doc.case.CASE_ENKF
+  CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
 
   KEEPDATA: NO
   NMEM_EARCGRP: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN

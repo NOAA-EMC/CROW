@@ -9,7 +9,7 @@ post: &post_action !Action
   memory: "3072M"
   APRUN_DWN: "'mpirun -np 72'"
   APRUN_NP: "'mpirun -np 72'"
-  CASE_ENKF: !calc doc.case.CASE_ENKF
+  CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
   CNVGRIB: !calc doc.places.CNVGRIB
   COPYGB: !calc doc.places.COPYGB
   COPYGB2: !calc doc.places.COPYGB2
@@ -18,12 +18,12 @@ post: &post_action !Action
   DO_GDAS_FCST_POST: YES
   EDATE: !calc doc.case.EDATE
   FCSTEXEC: "fv3_gfs_nh.prod.32bit.x"
-  FORECASTSH: !expand "{doc.case.BASE_GSM}/scripts/exglobal_fcst_nemsfv3gfs.sh"
-  FCSTEXECDIR: !expand "{doc.case.BASE_NEMSfv3gfs}/NEMS/exe"
+  FORECASTSH: !expand "{doc.places.BASE_GSM}/scripts/exglobal_fcst_nemsfv3gfs.sh"
+  FCSTEXECDIR: !expand "{doc.places.BASE_NEMSfv3gfs}/NEMS/exe"
   FCSTEXEC: "fv3_gfs_nh.prod.32bit.x"
   FLXF: YES
-  GFSDOWNSH: !expand "{doc.case.BASE_GSM}/ush/fv3gfs_downstream_nems.sh"
-  GFSDWNSH: !expand "{doc.case.BASE_GSM}/ush/fv3gfs_dwn_nems.sh"
+  GFSDOWNSH: !expand "{doc.places.BASE_GSM}/ush/fv3gfs_downstream_nems.sh"
+  GFSDWNSH: !expand "{doc.places.BASE_GSM}/ush/fv3gfs_dwn_nems.sh"
   GFS_DOWNSTREAM: YES
   GOESF: NO
   GPOST: YES
@@ -33,7 +33,7 @@ post: &post_action !Action
   GTGF: NO
   HOMEDIR: !calc doc.places.HOMEDIR
   KEEPDATA: NO
-  LEVS: !calc doc.case.LEVS
+  LEVS: !calc doc.fv3_settings.LEVS
   MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
   MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
   MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
@@ -55,10 +55,10 @@ post: &post_action !Action
   NWPROD: !calc doc.platform.NWPROD
   OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
   OUTPUT_GRID: "gaussian_grid"
-  POSTJJOBSH: !expand "{doc.case.BASE_WORKFLOW}/jobs/JGFS_POST.sh"
-  POSTGPSH: !expand "{doc.case.BASE_POST}/ush/global_nceppost.sh"
+  POSTJJOBSH: !expand "{doc.places.BASE_WORKFLOW}/jobs/JGFS_POST.sh"
+  POSTGPSH: !expand "{doc.places.BASE_POST}/ush/global_nceppost.sh"
   POSTGRB2TBL: !calc doc.places.POSTGRB2TBL
-  POSTGPEXEC: !expand "{doc.case.BASE_POST}/exec/ncep_post"
+  POSTGPEXEC: !expand "{doc.places.BASE_POST}/exec/ncep_post"
   PSLOT: !calc doc.places.PSLOT
   QUILTING: YES
   REALTIME: !calc doc.case.REALTIME
@@ -68,8 +68,8 @@ post: &post_action !Action
   npe_postgp: !calc npe_post
   nth_postgp: 1
   GFS_DOWNSTREAM: "YES"
-  GFSDOWNSH: !expand "{doc.case.BASE_WORKFLOW}/ush/fv3gfs_downstream_nems.sh"
-  GFSDWNSH: !expand "{doc.case.BASE_WORKFLOW}/ush/fv3gfs_dwn_nems.sh"
+  GFSDOWNSH: !expand "{doc.places.BASE_WORKFLOW}/ush/fv3gfs_downstream_nems.sh"
+  GFSDWNSH: !expand "{doc.places.BASE_WORKFLOW}/ush/fv3gfs_dwn_nems.sh"
   downset: 1
   npe_dwn: !calc npe_post
   nth_dwn: 2
@@ -93,7 +93,7 @@ vrfy: &vrfy_action !Action
   memory: "3072M"
   accounting: !calc doc.platform.parallel_accounting
 #  CDUMP: "gfs"
-  CASE_ENKF: !calc doc.case.CASE_ENKF
+  CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
   CDFNL: "gdas"
   CDUMPFCST: "gdas"  # Fit-to-obs with GDAS/GFS prepbufr
   CNVGRIB: !calc doc.places.CNVGRIB
@@ -105,7 +105,7 @@ vrfy: &vrfy_action !Action
   GRBINDEX2: !calc doc.platform.GRBINDEX2
   GRIB1_WORKS: NO
   HOMEDIR: !calc doc.case.HOMEDIR
-  LEVS: !calc doc.case.LEVS
+  LEVS: !calc doc.fv3_settings.LEVS
   KEEPDATA: NO
   MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
   MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
@@ -121,7 +121,7 @@ vrfy: &vrfy_action !Action
   NTHSTACK: 1024000000
   OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
   OUTPUT_GRID: "gaussian_grid"
-  POSTJJOBSH: !expand "{doc.case.BASE_WORKFLOW}/jobs/JGFS_POST.sh"
+  POSTJJOBSH: !expand "{doc.places.BASE_WORKFLOW}/jobs/JGFS_POST.sh"
   PSLOT: !calc doc.places.PSLOT
   PTMP: !calc doc.places.PTMP
   QUILTING: YES

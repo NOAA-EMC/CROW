@@ -17,7 +17,7 @@ ecen: &ecen_action !Action
   # Use "placeholder" for exe name
   # ----------------------------------------
   # From config.ecen
-  ENKFRECENSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_recenter_fv3gfs.sh.ecf"
+  ENKFRECENSH: !expand "{doc.places.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_recenter_fv3gfs.sh.ecf"
   APRUN_CHGRES: !FirstTrue
     - when: doc.platform.name == "THEIA"
       do: "time"
@@ -33,10 +33,8 @@ ecen: &ecen_action !Action
     - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.data_assimilation, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
-    - [ doc.places, "NOSCRUB|POSTJJOBSH|CHGRESSH|CHGRESEXEC" ]
+    - [ doc.platform.mpi_tuning, '.*' ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
   CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
-  NTHSTACK: 1024000000
-  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
   VERBOSE: YES

@@ -5,28 +5,19 @@ epos: &epos_action !Action
   memory: "254M"
   walltime: !timedelta 00:15:00
   APRUN_EPOS: !calc tools.command_without_exe(par,resources,'placeholder')
-  NTHREADS_EPOS: !calc nodes.omp_threads_for(resources)
+  NTHREADS_EPOS: !calc nodes.omp_threads_for(resources[0])
 
-  CASE: !calc doc.case.CASE_ENKF
-  ENKFPOSTSH: !expand "{doc.case.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_post_fv3gfs.sh.ecf"
+  CASE: !calc doc.fv3_enkf_settings.CASE
+  ENKFPOSTSH: !expand "{doc.places.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_post_fv3gfs.sh.ecf"
 
   Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.platform.mpi_tuning, '.*' ]
     - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.data_assimilation, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.case, "EDATE|SDATE|REALTIME|gfs_cyc" ]
-    - [ doc.places, "NOSCRUB|POSTJJOBSH|CHGRESSH|CHGRESEXEC|ATARDIR" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
-  MPI_BUFS_PER_HOST: !calc doc.platform.MPI_BUFS_PER_HOST
-  MPI_BUFS_PER_PROC: !calc doc.platform.MPI_BUFS_PER_PROC
-  MPI_GROUP_MAX: !calc doc.platform.MPI_GROUP_MAX
-  MPI_MEMMAP_OFF: !calc doc.platform.MPI_MEMMAP_OFF
-  MP_STDOUTMODE: !calc doc.platform.MP_STDOUTMODE
-
-  NCO_NAMING_CONV: !calc doc.platform.NCO_NAMING_CONV
-  NTHSTACK: 1024000000
-  OMP_STACKSIZE: !calc doc.platform.OMP_STACKSIZE
   VERBOSE: YES
   WRITE_NEMSIOFILE: YES
   accounting: !calc doc.platform.parallel_accounting
