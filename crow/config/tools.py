@@ -5,6 +5,7 @@ import re
 import datetime
 from collections import Sequence, Mapping
 from crow.config.exceptions import *
+from crow.tools import typecheck
 import crow.sysenv
 
 class Environment(dict):
@@ -71,6 +72,7 @@ def env(var,default=MISSING):
 def have_env(var): return var in os.environ
 
 def command_without_exe(parallelism,jobspec,exe):
+    typecheck('jobspec',jobspec,crow.sysenv.JobResourceSpec)
     shell_command_obj=parallelism.make_ShellCommand(jobspec)
     cmd=list(shell_command_obj.command)
     return ' '.join( [ s for s in cmd if s!=exe ] )
