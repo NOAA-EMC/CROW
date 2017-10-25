@@ -12,9 +12,10 @@ import crow.sysenv
 from crow.exceptions import CROWException
 from crow.tools import str_to_posix_sh
 from collections import Mapping
+from datetime import datetime
 
 logger=logging.getLogger('CROW')
-logging.basicConfig(level=logging.INFO,stream=sys.stderr)
+logging.basicConfig(level=logging.DEBUG,stream=sys.stderr)
 
 UNSET_VARIABLE=object()
 SUCCESS=object()
@@ -32,6 +33,7 @@ class ProcessArgs(object):
         self.int_format = '%d'
         self.true_string = 'YES'
         self.false_string = 'NO'
+        self.datetime_format = '%Y%m%d%H'
         self.null_string=UNSET_VARIABLE
         self.done_with_files=False
         self.files=list()
@@ -39,6 +41,7 @@ class ProcessArgs(object):
         self.have_expanded=False
         self.have_handled_vars=False
         self.runner=None
+        self.null_format=''
 
     def set_bool_format(self,value):
         yes_no = value.split(',')
@@ -135,6 +138,8 @@ class ProcessArgs(object):
             return self.float_format%obj
         elif isinstance(obj,int):
             return self.int_format%obj
+        elif isinstance(obj,datetime):
+            return obj.strftime(self.datetime_format)
         return NotImplemented
 
     def read_files(self):
@@ -148,15 +153,15 @@ class ProcessArgs(object):
         try:
             if var is None:
                 return SUCCESS
-            value=str(str_to_posix_sh(value),'ascii')
             if value is UNSET_VARIABLE:
                 return f'unset {var}'
             else:
+                value=str(str_to_posix_sh(value),'ascii')
                 return f'{export}{var}={value}'
         except ( NameError, AttributeError, LookupError, NameError,
                  ReferenceError, ValueError, TypeError, CROWException,
                  subprocess.CalledProcessError ) as ERR:
-            logger.error(f'{arg}: {ERR!s}',exc_info=not self.quiet)
+            logger.error(f'{var}: {ERR!s}',exc_info=not self.quiet)
             return FAILURE
 
     def process_args(self):
@@ -187,6 +192,7 @@ class ProcessArgs(object):
             if command=='bool':         self.set_bool_format(value)
             elif command=='int':        self.set_int_format(value)
             elif command=='float':      self.set_float_format(value)
+            elif command=='datetime':   self.datetime_format=value
             elif command=='scope':      self.set_scope(value)
             elif command=='null':       self.set_null_string(value)
             elif command=='runner':     self.set_runner(value)
@@ -235,7 +241,7 @@ class ProcessArgs(object):
         yield None,None
 
     def import_all(self,regex):
-        logger.debug(f'Import {regex} from {self.scopes[-1]}')
+        logger.debug(f'Import {regex} from {self.scopes[-1]._path}')
         for key in self.scopes[-1].keys():
             if re.match(regex,key):
                 yield self.express_var(key,key)
@@ -248,7 +254,7 @@ class ProcessArgs(object):
             if hasattr(varname,'index') and hasattr(varname,'pop'):
                 # Probably a list
                 scope,regex = varname
-                logger.debug(f'Import {regex} from {scope}')
+                logger.debug(f'Import {regex} from {scope._path}')
                 self.set_scope(scope,push=True)
                 for v,k in self.import_all(regex):
                     yield v,k
@@ -256,7 +262,7 @@ class ProcessArgs(object):
                 logger.warning(f"from:{var}:{varname}: variable names must be strings")
             elif not re.match('[A-Za-z_][A-Za-z0-9_]*$',varname):
                 # Probably a regex
-                logger.debug(f'Import {varname} from {self.scopes[-1]}')
+                logger.debug(f'Import {varname} from {self.scopes[-1]._path}')
                 for v,k in self.import_all(varname):
                     yield v,k
             else: # Just a variable name
@@ -269,14 +275,16 @@ class ProcessArgs(object):
         self.have_handled_vars=True
         if not self.done_with_files: self.read_files()
         result=self.eval_expr(expr)
-        formatted=self.format_object(result)
+        if result is None:
+            logger.info(f'{var}={expr}: evaluates to null.  I will unset the variable.')
+            formatted=UNSET_VARIABLE
+        else:
+            formatted=self.format_object(result)
         if formatted is NotImplemented:
             logger.warning(
                 f'{var}={expr}: cannot convert a {type(result).__name__} '
                 'to a shell expression.')
             return var,crow.config.to_yaml(result)
-        if formatted is UNSET_VARIABLE:
-            return 'unset '+var
         return var, formatted
 
 
