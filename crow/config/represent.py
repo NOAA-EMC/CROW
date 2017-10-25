@@ -11,7 +11,7 @@ from crow.tools import to_timedelta, Clock
 from copy import copy
 import crow.sysenv
 
-logger=logging.getLogger('crow.config')
+_logger=logging.getLogger('crow.config')
 
 __all__=[ 'Action','Platform', 'Conditional', 'calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
@@ -113,7 +113,7 @@ class Conditional(list_eval):
             else:
                 self.__result=values[idx]
             if 'message' in self[idx]:
-                logger.info(f'{self._path}[{idx}]: {self[idx].message}')
+                _logger.info(f'{self._path}[{idx}]: {self[idx].message}')
 
         return self.__result
 
