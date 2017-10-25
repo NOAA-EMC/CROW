@@ -254,7 +254,7 @@ class ProcessArgs(object):
             if hasattr(varname,'index') and hasattr(varname,'pop'):
                 # Probably a list
                 scope,regex = varname
-                logger.debug(f'Import {regex} from {scope._path}')
+                logger.debug(f'Import {regex} from {scope}')
                 self.set_scope(scope,push=True)
                 for v,k in self.import_all(regex):
                     yield v,k
@@ -276,15 +276,15 @@ class ProcessArgs(object):
         if not self.done_with_files: self.read_files()
         result=self.eval_expr(expr)
         if result is None:
-            logger.info(f'{var}={expr}: evaluates to null.  I will unset the variable.')
+            logger.info(f'{var}={expr}: evaluates to null.  Unsetting the variable.')
             formatted=UNSET_VARIABLE
         else:
             formatted=self.format_object(result)
         if formatted is NotImplemented:
-            logger.warning(
+            logger.error(
                 f'{var}={expr}: cannot convert a {type(result).__name__} '
-                'to a shell expression.')
-            return var,crow.config.to_yaml(result)
+                'to a shell expression.  Unsetting the variable.')
+            return var,UNSET_VARIABLE
         return var, formatted
 
 
