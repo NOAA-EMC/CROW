@@ -7,7 +7,8 @@ from typing import Generator, Callable, List, Tuple, Any, Union, Dict, IO
 from contextlib import contextmanager
 
 __all__=['from_datetime','transaction','add_slot','itercur','create_tables',
-         'get_meta','add_message','set_data','get_location','select_slot' ]
+         'get_meta','add_message','set_data','get_location','select_slot',
+         'del_cycle','add_cycle']
 
 _logger=logging.getLogger('crow.dataflow')
 _ZERO_DT=timedelta(seconds=0)
@@ -66,13 +67,13 @@ def _conex(con: Connection,*args) -> Cursor:
 def _a_eq_b(a: str,b: str) -> str:
     return f'{a}={b}'
 def _to_datetime(s: str) -> datetime:
-    return datetime.strptime(s,'%Y-%m-%d %H:%M:%S.%f')
+    return datetime.strptime(s,'%Y-%m-%dt%H:%M:%S.%f')
 def _to_timedelta(i: int) -> timedelta:
     return timedelta(seconds=i)
 def _from_timedelta(d: timedelta) -> float:
     return d.total_seconds()
 def from_datetime(s: datetime) -> str:
-    return datetime.strftime(s,'%Y-%m:%d %H:%M:%S.%f')
+    return datetime.strftime(s,'%Y-%m-%dt%H:%M:%S.%f')
 def _a_bool_eq_b(a: str,b: str) -> str:
     return f'( {a}<>0 AND {b}<>0 ) OR ( {a}=0 AND {b}=0 )'
 
@@ -222,4 +223,33 @@ def select_slot(con: Connection,actor: str=None,slot: str=None,flow: str=None,
     cmd=cmdf.getvalue()
     cmdf.close()
     #print(cmd)
+    _logger.debug(f'query: {cmd}')
+    _logger.debug(f'args: {args}')
     return _conex(con,cmd,args)
+
+def del_cycle(con,cycle):
+    con.execute('DELETE FROM Data WHERE cycle=?',[from_datetime(cycle)])
+
+def add_cycle(con,cycle: datetime) -> None:
+    args=list() # type: List[Any]
+    scycle=from_datetime(cycle)
+    for pid,actor,slot,defloc in itercur(_conex(con,
+            'SELECT pid,actor,slot,defloc FROM Slot WHERE flow="O" AND '
+            'defloc IS NOT NULL')):
+        globals={'cycle':cycle,'actor':actor,'slot':slot}
+        if "'''" in defloc:
+            _logger.error(
+                f"Cannot have ''' in default location: {defloc}")
+            continue
+        meta=get_meta(con,pid)
+        exec_me="f'''"+defloc+"'''"
+        try:
+            loc=eval(exec_me,globals,meta)
+        except(Exception) as e:
+            _logger.error(f"defloc {defloc}: {e} (actor={actor} slot={slot} meta={meta})")
+            continue
+        _logger.debug(f'loc {loc} for cycle={cycle:%Y%m%d%H%M} actor={actor} slot={slot} meta={meta}')
+        args.extend([pid,scycle,loc])
+    if not args: return
+    _conex(con,'INSERT INTO Data(pid,cycle,loc) VALUES ' + \
+               '(?,?,?), '*(len(args)//3-1) + '(?,?,?);',args)

@@ -5,37 +5,47 @@ from getopt import getopt
 from contextlib import suppress
 from crow.dataflow import Dataflow
 from datetime import datetime
+from crow.tools import shell_to_python_type
 
 ALLOWED_DATE_FORMATS=[ '%Y-%m-%dt%H:%M:%S', '%Y-%m-%dT%H:%M:%S',
                        '%Y-%m-%d %H:%M:%S' ]
 
-def usage(why):
-    sys.stderr.write('''Format: crow_dataflow_sh.py [-v] [-m] ( -i input | -o output ) \
+USAGE='''Format: crow_dataflow_sh.py [-v] [-m] ( -i input | -o output ) \\
   dataflow.db cycle actor var=value [var=value [...]]
 
   -m = expect multiple matches; -i or -o are formats instead of paths
   -v = verbose (set logging level to logging.DEBUG)
-  -i input = local file to deliver to an output slot
-  -o output = local file to receive data from an input slot
+  -i input = local file to deliver to an output slot or "-" for stdin
+  -o output = local file to receive data from an input slot or "-" for stdout
   dataflow.db = sqlite3 database file with state information
   cycle = forecast cycle in ISO format: 2019-08-15t13:08:14
   actor = actor (job) producing the data (period-separated: path.to.actor)
   slot=slotname = name of slot that produces or consumes the data
-''')
+  var=type::value = specify type of value: int, float, bool, str
+'''
+
+def usage(why):
+    sys.stderr.write(USAGE)
     sys.stderr.write(why+'\n')
     exit(1)
 
-def deliver_by_name(flow,local,message):
+def deliver_by_name(logger,flow,local,message):
     if local != '-':
-        message.deliver(local)
+        if flow == 'O':
+            message.deliver(local)
+        else:
+            message.obtain(local)
     elif flow=='I':
-        with message.open('rb') as out_fd:
-            shutil.copyfileobj(in_fd,sys.stdout)
+        with message.open('rb') as in_fd:
+            shutil.copyfileobj(in_fd,sys.stdout.buffer)
     elif flow=='O':
-        with message.open('wb') as in_fd:
-            shutil.copyfileobj(sys.stdin,out_fd)
+        with message.open('wb') as out_fd:
+            data=sys.stdin.buffer.read()
+            logger.info(f'write {data}')
+            #shutil.copyfileobj(sys.stdin.buffer,out_fd)
+            out_fd.write(data)
 
-def deliver_by_format(flow,format,message):
+def deliver_by_format(logger,flow,format,message):
     if "'''" in format:
         raise ValueError(f"{format}: cannot contain three single quotes "
                          "in a row '''")
@@ -43,38 +53,40 @@ def deliver_by_format(flow,format,message):
               'cycle':message.cycle }
     locals=message.get_meta()
     local_file=eval("f'''"+format+"'''",globals,locals)
-    deliver_by_name(local_file,message)
+    deliver_by_name(logger,flow,local_file,message)
 
 def main():
     (optval, args) = getopt(sys.argv[1:],'o:i:vm')
     options=dict(optval)
 
-    level=logging.DEBUG if optval['v'] else logging.INFO
+    level=logging.DEBUG if '-v' in options else logging.INFO
     logging.basicConfig(stream=sys.stderr,level=level)
     logger=logging.getLogger('crow_dataflow_sh')
 
     if ( '-i' in options ) == ( '-o' in options ):
         usage('specify exactly one of -o and -i')
 
-    flow = 'I' if '-i' in options else 'O'
+    flow = 'O' if '-i' in options else 'I'
 
     if len(args)<4:
         usage('specify dataflow db file, cycle, actor, and at least one var=value')
 
     ( dbfile, cyclestr, actor ) = args[0:3]
-
+    cycle=None
     for fmt in ALLOWED_DATE_FORMATS:
         with suppress(ValueError):
             cycle=datetime.strptime(cyclestr,fmt)
             break
+    if cycle is None: usage(f'unknown cycle format: {cyclestr}')
 
     slot=None
     meta={}
     for arg in args[3:]:
         split=arg.split('=',1)
-        if split!=2:
+        if len(split)!=2:
             usage(f'{arg}: arguments must be var=value')
-        ( var, value ) = split
+        ( var, strvalue ) = split
+        value=shell_to_python_type(strvalue)
         if var=='slot':
             slot=value
         elif var=='flow':
@@ -86,29 +98,36 @@ def main():
 
     db=Dataflow(dbfile)
     if flow=='I':
+        logger.info(f'{dbfile}: find input slot actor={actor} slot={slot} '
+                    f'meta={meta}')
         matches=iter(db.find_input_slot(actor,slot,meta))
-        local=options['-i']
-    else:
-        matches=iter(db.find_output_slot(actor,slot,meta))
         local=options['-o']
+    else:
+        logger.info(f'{dbfile}: find output slot actor={actor} slot={slot} '
+                    f'meta={meta}')
+        matches=iter(db.find_output_slot(actor,slot,meta))
+        local=options['-i']
 
     slot1, slot2 = None, None
     with suppress(StopIteration):
-        slot1=found.next()
-        slot2=found.next()
+        slot1=next(matches)
+        slot2=next(matches)
 
     if slot1 is None:
-        logger.error('No match.')
+        logger.error('No match for query.  Such a slot does not exist.')
         exit(1)
 
-    if slot2 is not None and 'm' not in options:
+    if slot2 is not None and '-m' not in options:
         logger.error('Multiple matches, and -m not specified.  Abort.')
         exit(1)
 
-    delivery = deliver_by_format if 'm' in options else deliver_by_name
+    deliver = deliver_by_format if '-m' in options else deliver_by_name
 
     for slot in [ slot1, slot2 ]:
         if slot is not None:
-            deliver(flow,local,slot.at(cycle))
+            deliver(logger,flow,local,slot.at(cycle))
     for slot in matches:
-        deliver(flow,local,slot.at(cycle))
+        deliver(logger,flow,local,slot.at(cycle))
+
+if __name__ == '__main__':
+    main()

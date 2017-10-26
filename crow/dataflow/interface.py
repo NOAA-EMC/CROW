@@ -1,4 +1,4 @@
-import sqlite3, logging, time, abc
+import sqlite3, logging, time, abc, os
 from datetime import datetime, timedelta
 from sqlite3 import Cursor, Connection
 from typing import Generator, Callable, List, Tuple, Any, Union, Dict, IO
@@ -17,6 +17,8 @@ class Slot(object):
         self._con, self._pid, self._flow = con, pid, flow
         self.actor, self.slot, self.defloc = actor, slot, defloc
         self.__meta=None # type: dict
+    @property
+    def flow(self): return self._flow
     def get_meta(self) -> dict:
         if self.__meta is None:
             self.__meta=get_meta(self._con,self._pid)
@@ -54,10 +56,16 @@ class InputMessage(Message):
     def open(self,mode: str,buffering: int=-1,encoding: str=None) -> IO:
         if mode[0] != 'r':
             raise TypeError(f'{mode}: cannot open an input slot for writing.')
+        _logger.debug(f'{self._location}: open mode {mode}')
         return open(self._location,mode,buffering,encoding)
 
 class OutputMessage(Message):
     def open(self,mode: str,buffering: int=-1,encoding: str=None) -> IO:
+        parent=os.path.dirname(self._location)
+        if parent and not os.path.exists(parent):
+            _logger.debug(f'{parent}: makedirs')
+            os.makedirs(parent)
+        _logger.debug(f'{self._location}: open mode {mode}')
         return open(self._location,mode,buffering,encoding)
     def deliver(self,from_location: str,to_location: str=None) -> None:
         if to_location is None:
@@ -107,34 +115,12 @@ class Dataflow(object):
 
     def add_cycle(self,cycle: datetime) -> None:
         with transaction(self._con):
-            self._add_cycle(cycle)
+            add_cycle(self._con,cycle)
 
-    def _add_cycle(self,cycle: datetime) -> None:
-        args=list() # type: List[Any]
-        scycle=from_datetime(cycle)
-        for pid,actor,slot,defloc in itercur(self._con.execute(
-                'SELECT pid,actor,slot,defloc FROM Slot WHERE flow="O" AND '
-                'defloc IS NOT NULL')):
-            globals={'cycle':cycle,'actor':actor,'slot':slot}
-            if "'''" in defloc:
-                _logger.error(
-                    f"Cannot have ''' in default location: {defloc}")
-                continue
-            meta=get_meta(self._con,pid)
-            exec_me="f'''"+defloc+"'''"
-            try:
-                loc=eval(exec_me,globals,meta)
-            except(Exception) as e:
-                _logger.error(f"defloc {defloc}: {e} (actor={actor} slot={slot} meta={meta})")
-                continue
-            _logger.debug(f'loc {loc} for cycle={cycle:%Y%m%d%H%M} actor={actor} slot={slot} meta={meta}')
-            args.extend([pid,scycle,loc])
-        if not args: return
-        self._con.execute('INSERT INTO Data(pid,cycle,loc) VALUES ' + \
-               '(?,?,?), '*(len(args)//3-1) + '(?,?,?);',args)
     def del_cycle(self,cycle: datetime) -> None:
-        self._con.execute('DELETE FROM Data WHERE cycle=?',
-                          [from_datetime(cycle)])
+        _logger.debug(f'{cycle:%Y-%m-%dt%H:%M:%S}: delete Data table '
+                      'entries for cycle')
+        del_cycle(self._con,cycle)
 
     def _dump(self,fd):
         for row in self._con.iterdump():

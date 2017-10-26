@@ -1,5 +1,5 @@
 #! /usr/bin/env python3.6
-import logging, os, sys
+import logging, os, sys, shutil
 from datetime import datetime, timedelta
 from crow.dataflow import Dataflow
 

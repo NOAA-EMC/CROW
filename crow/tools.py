@@ -1,6 +1,7 @@
 import subprocess, os, re, logging, tempfile, datetime, shutil
 from datetime import timedelta
 from copy import deepcopy
+from contextlib import suppress
 from collections.abc import Mapping
 
 __all__=['panasas_gb','gpfs_gb','to_timedelta','deliver_file']
@@ -213,3 +214,22 @@ class Clock(object):
 
     def prior(self,mul=1):
         return self.__now+self.step*-mul
+
+########################################################################
+
+_SHELL_CLASS_MAP={ 'int':int, 'float':float, 'bool':bool, 'str':str }
+
+def shell_to_python_type(arg):
+    split=arg.split('::',1)
+    if len(split)>1 and split[0] in CLASS_MAP:
+        typename, strval=split
+        if typename not in _SHELL_CLASS_MAP:
+            raise ValueError(f'{arg}: unknown type {typename}')
+        cls=_SHELL_CLASS_MAP[typename]
+        return cls(strval)
+    else:
+        with suppress(ValueError): return int(arg)
+        with suppress(ValueError): return float(arg)
+        if arg.upper() in [ 'YES', 'TRUE' ]: return True
+        if arg.upper() in [ 'NO', 'FALSE' ]: return False
+        return arg
