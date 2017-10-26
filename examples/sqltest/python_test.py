@@ -36,6 +36,9 @@ def main():
 
     if os.path.exists('test.db'):
         os.unlink('test.db')
+    if os.path.exists('com'):
+        shutil.rmtree('com')
+
     d=Dataflow('test.db')
     
     PRE='com/{cycle:%Y%m%d%H}/{actor}/{slot}.t{cycle:%H}z'
