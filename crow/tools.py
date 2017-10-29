@@ -160,9 +160,10 @@ def str_to_posix_sh(s,encoding='ascii'):
 
     return b'"'+s+b'"'
 
-def typecheck(name,obj,cls):
+def typecheck(name,obj,cls,tname=None):
     if not isinstance(obj,cls):
-        msg=f'{name!s} must be a {cls.__name__!s} not a {type(obj).__name__!s}'
+        if tname is None: tname=cls.__name__
+        msg=f'{name!s} must be type {tname} not {type(obj).__name__!s}'
         raise TypeError(msg)
 
 ########################################################################

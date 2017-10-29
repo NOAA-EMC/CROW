@@ -32,7 +32,7 @@ def check_cycle(d: Dataflow, cycle: datetime) -> None:
             print(f"{fd.readline().strip()}: {imessage}")
 
 def main():
-    logging.basicConfig(stream=sys.stderr,level=logging.DEBUG)
+    logging.basicConfig(stream=sys.stderr,level=logging.INFO)
 
     if os.path.exists('test.db'):
         os.unlink('test.db')
@@ -55,14 +55,16 @@ def main():
     for S in [1,2,3]:
         for L in 'AB':
             d.add_input_slot('fam.job3','islot',{'plopnum':S, 'letter':L})
-
-    three_hours=timedelta(seconds=21600)
+    d.dump(sys.stdout)
+    six_hours=timedelta(seconds=3600*6)
     for islot in d.find_input_slot('fam.job3','islot'):
         meta=islot.get_meta()
+        print(meta)
         found=False
         for oslot in d.find_output_slot('fam.job2','oslot',{
                 'slotnum':meta['plopnum'], 'letter':meta['letter'] }):
-            islot.connect_to(oslot,rel_time=three_hours)
+            islot.connect_to(oslot,rel_time=six_hours)
+            break
 
     cycle1=datetime.strptime('2017081500','%Y%m%d%H')
     cycle2=datetime.strptime('2017081506','%Y%m%d%H')

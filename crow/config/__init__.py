@@ -9,7 +9,7 @@ from .tasks import Suite, Depend, AndDependency, SuitePath, \
     OrDependency, NotDependency, StateDependency, Dependable, \
     Taskable, Task, Family, Cycle, LogicalDependency, SuiteView, \
     RUNNING, COMPLETED, FAILED, TRUE_DEPENDENCY, FALSE_DEPENDENCY, \
-    CycleExistsDependency
+    CycleExistsDependency, InputSlot, OutputSlot
 from .to_yaml import to_yaml
 from .eval_tools import invalidate_cache
 from .eval_tools import evaluate_immediates as _evaluate_immediates

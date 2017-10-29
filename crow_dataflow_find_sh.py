@@ -65,11 +65,12 @@ def main():
             message+=f' {k}={v}'
 
     logger.info(message)
-
+    db.dump(sys.stderr)
     for slot in find(primary['actor'],primary['slot'],meta):
-        meta=slot.get_meta()
-        if meta:
-            metas=[ f'{k}={v}' for k,v in meta.items() ]
+        localmeta=slot.get_meta()
+        sys.stderr.write(f'{slot} meta = {localmeta}\n')
+        if localmeta:
+            metas=[ f'{k}={v}' for k,v in localmeta.items() ]
             print(f'{slot.flow} {slot.actor} {slot.slot} {" ".join(metas)}')
         else:
             print(f'{slot.flow} {slot.actor} {slot.slot}')

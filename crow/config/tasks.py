@@ -10,11 +10,11 @@ following basic Python concepts:
 """
 
 from functools import reduce
-import operator
+import operator, io
 from datetime import timedelta
 from abc import abstractmethod
 from collections import namedtuple, OrderedDict, Sequence
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from copy import copy, deepcopy
 from crow.config.exceptions import *
 from crow.config.eval_tools import dict_eval, strcalc, multidict
@@ -26,7 +26,7 @@ __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'Family', 'Cycle', 'RUNNING', 'COMPLETED', 'FAILED',
           'TRUE_DEPENDENCY', 'FALSE_DEPENDENCY', 'SuitePath',
           'CycleExistsDependency', 'FamilyView', 'TaskView',
-          'CycleView' ]
+          'CycleView', 'Slot', 'InputSlot', 'OutputSlot', 'Message' ]
 
 class StateConstant(object):
     def __init__(self,name):
@@ -41,6 +41,10 @@ MISSING=object()
 VALID_STATES=[ 'RUNNING', 'FAILED', 'COMPLETED' ]
 ZERO_DT=timedelta()
 EMPTY_DICT={}
+SUITE_SPECIAL_KEYS=set([ 'parent', 'up', 'task_path', 'task_path_var',
+                         'task_path_str', 'task_path_list' ])
+SLOT_SPECIALS = SUITE_SPECIAL_KEYS|set([ 'slot', 'flow', 'actor', 'meta',
+                                         'Out', 'Loc'])
 
 class SuitePath(list):
     """!Simply a list that can be hashed."""
@@ -57,6 +61,7 @@ class SuiteView(Mapping):
         # assert(isinstance(suite,Suite))
         # assert(isinstance(viewed,dict_eval))
         assert(isinstance(parent,SuiteView))
+        assert(not isinstance(viewed,SuiteView))
         self.suite=suite
         # if isinstance(viewed,Task) and  'fcst' in '-'.join([str(s) for s in path]):
         #     print(path)
@@ -74,7 +79,8 @@ class SuiteView(Mapping):
                 if hasattr(v,"_validate"):
                     v._validate('suite')
                 self.viewed[k]=v
-        self.viewed.up=parent
+        if type(self.viewed) in SUITE_CLASS_MAP:
+            self.viewed.up=parent
         self.path=SuitePath(path)
         self.parent=parent
         self.__cache={}
@@ -97,6 +103,15 @@ class SuiteView(Mapping):
     def __iter__(self):
         for var in self.viewed: yield var
 
+    def __repr__(self):
+        return f'{type(self.viewed).__name__}@{self.path}'
+
+    def __str__(self):
+        s=str(self.viewed)
+        if self.path[0]:
+            s=f'dt=[{self.path[0]}]:'+s
+        return s
+
     def get_trigger_dep(self):
         return self.get('Trigger',TRUE_DEPENDENCY)
 
@@ -109,18 +124,19 @@ class SuiteView(Mapping):
     def child_iter(self):
         """!Iterates over all tasks and families that are direct 
         children of this family, yielding a SuiteView of each."""
-        for var,val in self.items():
+        for var,rawval in self.viewed._raw_child().items():
             if var=='up': continue
+            if hasattr(rawval,'_as_dependency'): continue
+            val=self[var]
             if isinstance(val,SuiteView):
                 yield val
 
     def walk_task_tree(self):
         """!Iterates over the entire tree of descendants below this SuiteView,
         yielding a SuiteView of each."""
-        for var,val in self.items():
-            if var=='up': continue
+        for val in self.child_iter():
+            yield val
             if isinstance(val,SuiteView):
-                yield val
                 for t in val.walk_task_tree():
                     yield t
 
@@ -128,6 +144,8 @@ class SuiteView(Mapping):
         return key in self.viewed
 
     def is_task(self): return isinstance(self.viewed,Task)
+    def is_input_slot(self): return isinstance(self.viewed,InputSlot)
+    def is_output_slot(self): return isinstance(self.viewed,OutputSlot)
 
     def at(self,dt):
         dt=to_timedelta(dt)
@@ -149,30 +167,26 @@ class SuiteView(Mapping):
 
         if isinstance(val,SuiteView):
             return val
-        elif isinstance(val,Task) or isinstance(val,Family):
+        elif type(val) in SUITE_CLASS_MAP:
             val=self.__wrap(key,val)
         elif hasattr(val,'_as_dependency'):
+            locals=multidict(self.parent,self)
             val=self.__wrap(key,val._as_dependency(
-                self.viewed._globals(),self.parent,self.path))
+                self.viewed._globals(),locals,self.path))
         self.__cache[key]=val
         return val
 
     def __wrap(self,key,obj):
-        if isinstance(obj,Task):
-            # Add to path when recursing into a family or task
-            obj=copy(obj)
-            self.viewed[key]=obj
-            return TaskView(self.suite,obj,self.path+[key],self)
-        if isinstance(obj,Family):
-            # Add to path when recursing into a family or task
-            obj=copy(obj)
-            self.viewed[key]=obj
-            return FamilyView(self.suite,obj,self.path+[key],self)
         if isinstance(obj,Cycle):
             # Reset path when we see a cycle
             obj=copy(obj)
             self.viewed[key]=obj
             return CycleView(self.suite,obj,self.path[:1],self)
+        elif type(obj) in SUITE_CLASS_MAP:
+            view_class=SUITE_CLASS_MAP[type(obj)]
+            obj=copy(obj)
+            self.viewed[key]=obj
+            return view_class(self.suite,obj,self.path+[key],self)
         return obj
 
     # Dependency handling.  When this SuiteView is wrapped around a
@@ -195,9 +209,80 @@ class SuiteView(Mapping):
     def is_completed(self):
         return StateDependency(self,COMPLETED)
 
+class SlotView(SuiteView):
+    def __init__(self,suite,viewed,path,parent,search=MISSING):
+        super().__init__(suite,viewed,path,parent)
+        assert(isinstance(path,Sequence))
+        if search is MISSING: 
+            self.__search={}
+            return
+        for naughty in search:
+            if naughty in SLOT_SPECIALS:
+                pathstr='.'.join(path[1:])
+                raise ValueError(
+                    f'{pathstr}: {naughty}: cannot be in meta')
+        self.__search=dict()
+    def get_actor_path(self):
+        return '.'.join(self.path[1:-1])
+    def get_slot_name(self):
+        return self.path[-1]
+    def get_search(self):
+        return self.__search
+    @abstractmethod
+    def get_flow_name(self): pass
+    def slot_iter(self):
+        cls=type(self)
+        arrays=list()
+        names=list()
+        for k in self:
+            if k in SLOT_SPECIALS: continue
+            v=self[k]
+            if not isinstance(v,Sequence): continue
+            if isinstance(v,str): continue
+            names.append(k)
+            arrays.append(v)
+        if not names:
+            yield self
+            return
+        lens=[ len(a) for a in arrays ]
+        index=[ 0 ] * len(lens)
+        while True:
+            result=cls(self.suite,copy(self.viewed),self.path,
+                       self.parent,self.__search)
+            for i in range(len(arrays)):
+                result.viewed[names[i]]=self[names[i]][index[i]]
+            yield result
+            for i in range(len(arrays)):
+                index[i]+=1
+                if index[i]<lens[i]: break
+                if i == len(arrays)-1: return
+                index[i]=0
+    def get_meta(self):
+        d=dict()
+        for k in self:
+            if k in SLOT_SPECIALS: continue
+            v=self[k]
+            if type(v) in [ int, float, bool, str ]:
+                d[k]=v
+        return d
+    def __call__(self,**kwargs):
+        cls=type(self)
+        return cls(self.suite,self.viewed,self.path,
+                   self.parent,kwargs)
+    def __invert__(self): raise TypeError('cannot invert a Slot')
+    def is_running(self): raise TypeError('data cannot run')
+    def is_failed(self): raise TypeError('data cannot run')
+    def is_completed(self): raise TypeError('data cannot run')
+
 class CycleView(SuiteView): pass
 class TaskView(SuiteView): pass
 class FamilyView(SuiteView): pass
+class InputSlotView(SlotView):
+    def get_output_slot(self): return self.Out
+    def get_flow_name(self): return 'I'
+class OutputSlotView(SlotView):
+    def get_flow_name(self): return 'O'
+    def get_slot_location(self): return self.Loc
 
 class Suite(SuiteView):
     def __init__(self,suite,more_globals=EMPTY_DICT):
@@ -222,6 +307,17 @@ class Suite(SuiteView):
         new_more_globals=copy(suite_copy._more_globals)
         new_more_globals.update(more_globals)
         return Suite(suite_copy,new_more_globals)
+    def update_globals(self,*args,**kwargs):
+        globals=self.viewed._get_globals()
+        globals.update(*args,**kwargs)
+        self.viewed._recursively_set_globals(globals)
+
+class Message(str):
+    def _as_dependency(self,globals,locals,path):
+        try:
+            return eval(self,globals,locals)
+        except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
+            raise DependError(f'!Message {self}: {ke}')
 
 class Depend(str):
     def _as_dependency(self,globals,locals,path):
@@ -235,11 +331,11 @@ class Depend(str):
 def as_dependency(obj,path=MISSING,state=COMPLETED):
     """!Converts the containing object to a State.  Action objects are
     compared to the "complete" state."""
-    if isinstance(obj,SuiteView):
-        return StateDependency(obj,state)
-    if isinstance(obj,LogicalDependency):
-        return obj
-    raise TypeError(f'{type(obj).__name__} is not a valid type for a dependency')
+    if isinstance(obj,SuiteView) and not isinstance(obj,SlotView):
+         return StateDependency(obj,state)
+    if isinstance(obj,LogicalDependency): return obj
+    raise TypeError(
+        f'{type(obj).__name__} is not a valid type for a dependency')
     return NotImplemented
 
 class LogicalDependency(object):
@@ -355,6 +451,8 @@ class StateDependency(LogicalDependency):
             raise TypeError('Invalid state.  Must be one of the constants '
                             'COMPLETED, RUNNING, or FAILED')
         typecheck('view',view,SuiteView)
+        if isinstance(view,SlotView):
+            raise NotImplementedError('Data dependencies are not implemented')
         self.view=view
         self.state=state
     @property
@@ -402,7 +500,25 @@ class FalseDependency(LogicalDependency):
 TRUE_DEPENDENCY=TrueDependency()
 FALSE_DEPENDENCY=FalseDependency()
 
-class Dependable(dict_eval): pass
+class Dependable(dict_eval):
+    def __str__(self):
+        sio=io.StringIO()
+        sio.write(f'{type(self).__name__}@{self._path}')
+        sio.write('{')
+        first=True
+        for k,v in self._raw_child().items():
+            if k not in SUITE_SPECIAL_KEYS:
+                sio.write(f'{", " if not first else ""}{k}={v!r}')
+                first=False
+        sio.write('}')
+        v=sio.getvalue()
+        sio.close()
+        return v
+
+class Slot(Dependable): pass
+class InputSlot(Slot): pass
+class OutputSlot(Slot): pass
+
 class Taskable(Dependable): pass
 class Task(Taskable): pass
 class Family(Taskable): pass
@@ -447,3 +563,5 @@ class TaskArray(Taskable):
 
 
 
+SUITE_CLASS_MAP={ Task:TaskView, Family: FamilyView, 
+                  OutputSlot: OutputSlotView, InputSlot:InputSlotView }

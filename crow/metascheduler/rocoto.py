@@ -90,8 +90,8 @@ def _xml_quote(s):
 
 class ToRocoto(object):
     def __init__(self,suite):
-        if not isinstance(suite,Cycle):
-            raise TypeError('The suite argument must be a Cycle, '
+        if not isinstance(suite,Suite):
+            raise TypeError('The suite argument must be a Suite, '
                             'not a '+type(suite).__name__)
 
         try:
@@ -102,8 +102,9 @@ class ToRocoto(object):
             raise ValueError('A Suite must define a Rocoto section containing '
                              'a "parallelism" and a "scheduler."')
 
-        self.suite=Suite(suite,{'sched':scheduler,'to_rocoto':self,
-                                'runner':parallelism})
+        self.suite=suite
+        self.suite.update_globals(sched=scheduler,to_rocoto=self,
+                                  runner=parallelism)
         self.settings=self.suite.Rocoto
         self.sched=scheduler
         self.__all_defined=set()

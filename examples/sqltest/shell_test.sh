@@ -35,7 +35,7 @@ cycle=2017-08-15t06:00:00
 echo stdin for fam.job1 oslot | \
 ../../crow_dataflow_deliver_sh.py -i - test.db $cycle \
     fam.job1 slot=oslot
-
+set -x
 ../../crow_dataflow_find_sh.py test.db O actor=fam.job2 | \
 while [[ 1 == 1 ]] ; do
     set +e
@@ -43,11 +43,13 @@ while [[ 1 == 1 ]] ; do
     if  [[ "$?" != 0 ]] ; then
         break
     fi
+    echo $flow $actor $slot $meta
     set -e
     echo "testfile for $flow $actor $slot $meta $cycle" > testfile
     ../../crow_dataflow_deliver_sh.py -i testfile test.db $cycle \
         "$actor" "slot=$slot" ${meta:- }
 done
+set +x
 
 echo ======================================== obtain second cycle input
 cycle=2017-08-15t12:00:00

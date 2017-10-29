@@ -12,7 +12,6 @@ following python concept:
 from datetime import timedelta
 from collections import namedtuple, OrderedDict
 import re
-
 import yaml
 from yaml import YAMLObject
 
@@ -44,6 +43,8 @@ class ShellCommandYAML(dict): pass
 class TaskYAML(OrderedDict): pass
 class FamilyYAML(OrderedDict): pass
 class CycleYAML(OrderedDict): pass
+class InputSlotYAML(dict): pass
+class OutputSlotYAML(dict): pass
 class JobResourceSpecMakerYAML(list): pass
 
 # Mapping from YAML representation class to a pair:
@@ -105,6 +106,7 @@ add_yaml_string(u'!expand',expand)
 add_yaml_string(u'!calc',calc)
 add_yaml_string(u'!error',user_error_message)
 add_yaml_string(u'!Depend',Depend)
+add_yaml_string(u'!Message',Message)
 
 ########################################################################
 
@@ -161,6 +163,8 @@ def add_yaml_ordered_dict(key,cls):
     yaml.add_constructor(key,constructor)
 
 add_yaml_ordered_dict(u'!Eval',EvalYAML)
+add_yaml_ordered_dict(u'!InputSlot',InputSlotYAML)
+add_yaml_ordered_dict(u'!OutputSlot',OutputSlotYAML)
 add_yaml_ordered_dict(u'!Clock',ClockYAML)
 add_yaml_ordered_dict(u'!Cycle',CycleYAML)
 add_yaml_ordered_dict(u'!Task',TaskYAML)
@@ -170,7 +174,9 @@ SUITE={ EvalYAML: Eval,
         CycleYAML: Cycle,
         TaskYAML: Task,
         FamilyYAML: Family,
-        ClockYAML:ClockMaker }
+        ClockYAML:ClockMaker,
+        OutputSlotYAML: OutputSlot,
+        InputSlotYAML: InputSlot}
 
 ########################################################################
 
@@ -216,10 +222,6 @@ class ConvertFromYAML(object):
             return self.from_list(v,locals,CONDITIONALS[cls],path)
         elif cls in SUITE:
             return self.from_dict(v,SUITE[cls],path)
-        elif cls is EvalYAML:
-            return Eval(self.from_dict(v,path=path))
-        elif cls is ClockYAML:
-            return ClockMaker(self.from_dict(v,path=path))
         elif cls is ImmediateYAML:
             return self.from_list(v,locals,Immediate,path)
         elif cls is InheritYAML:

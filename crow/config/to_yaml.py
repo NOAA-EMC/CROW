@@ -70,6 +70,8 @@ add_yaml_dict_eval(u'!Platform',Platform)
 add_yaml_dict_eval(u'!Action',Action)
 add_yaml_dict_eval(u'!Template',Template)
 add_yaml_dict_eval(u'!Eval',Eval)
+add_yaml_dict_eval(u'!InputSlot',InputSlot)
+add_yaml_dict_eval(u'!OutputSlot',OutputSlot)
 
 ########################################################################
 

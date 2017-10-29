@@ -13,10 +13,10 @@ _ZERO_DT=timedelta(seconds=0)
 
 class Slot(object):
     def __init__(self,con: Connection,pid: int,actor: str,slot: str,
-                 flow: str,defloc: str) -> None:
+                 flow: str,defloc: str, meta: Dict[str,Any]) -> None:
         self._con, self._pid, self._flow = con, pid, flow
         self.actor, self.slot, self.defloc = actor, slot, defloc
-        self.__meta=None # type: dict
+        self.__meta=None if meta is None else dict(meta) # type: dict
     @property
     def flow(self): return self._flow
     def get_meta(self) -> dict:
@@ -31,7 +31,7 @@ class Slot(object):
 class Message(Slot):
     def __init__(self,con: Connection,pid: int,actor: str,slot: str,
                  flow: str,cycle: datetime) -> None:
-        super().__init__(con,pid,actor,slot,flow,None)
+        super().__init__(con,pid,actor,slot,flow,None,None)
         self.cycle=cycle
         self.__location=None # type: str
     def _get_location(self) -> str:
@@ -96,22 +96,25 @@ class Dataflow(object):
 
     def add_output_slot(self,actor: str,slot: str,defloc: str,
                         meta: Dict[str,Any]=None) -> None:
-        add_slot(self._con,actor,slot,'O',defloc,meta)
+        pid=add_slot(self._con,actor,slot,'O',defloc,meta)
+        return OutputSlot(self._con,pid,actor,slot,'O',defloc,meta)
 
-    def add_input_slot(self,actor: str,slot: str,meta: Dict[str,Any]=None) -> None:
-        add_slot(self._con,actor,slot,'I',None,meta)
+    def add_input_slot(self,actor: str,slot: str,
+                       meta: Dict[str,Any]=None) -> InputSlot:
+        pid=add_slot(self._con,actor,slot,'I',None,meta)
+        return InputSlot(self._con,pid,actor,slot,'I',None,meta)
 
     def find_input_slot(self,actor: str=None,slot: str=None,
                         meta: Dict[str,Any]=None) -> Generator[InputSlot,None,None]:
         for pid,actor,slot,flow,defloc in itercur(select_slot(
                 self._con,actor,slot,'I',meta)):
-            yield InputSlot(self._con,pid,actor,slot,flow,defloc)
+            yield InputSlot(self._con,pid,actor,slot,flow,defloc,None)
 
     def find_output_slot(self,actor: str=None,slot: str=None,
                          meta: Dict[str,Any]=None) -> Generator[OutputSlot,None,None]:
         for pid,actor,slot,flow,defloc in itercur(select_slot(
                 self._con,actor,slot,'O',meta)):
-            yield OutputSlot(self._con,pid,actor,slot,flow,defloc)
+            yield OutputSlot(self._con,pid,actor,slot,flow,defloc,None)
 
     def add_cycle(self,cycle: datetime) -> None:
         with transaction(self._con):
@@ -122,6 +125,6 @@ class Dataflow(object):
                       'entries for cycle')
         del_cycle(self._con,cycle)
 
-    def _dump(self,fd):
+    def dump(self,fd):
         for row in self._con.iterdump():
             fd.write(row+'\n')
