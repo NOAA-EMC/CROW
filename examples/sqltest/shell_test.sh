@@ -30,12 +30,21 @@ for cyc in 2017-08-15t00:00:00 2017-08-15t06:00:00 2017-08-15t12:00:00 ; do
 done
 echo ======================================== del first cycle
 ../../crow_dataflow_cycle_sh.py -v test.db del 2017-08-15t00:00:00
+echo ======================================== check for second cycle input
+cycle=2017-08-15t06:00:00
+echo stdin for fam.job1 oslot | \
+../../crow_dataflow_deliver_sh.py -c -o - test.db $cycle \
+  fam.job2 slot=tslot
+
+../../crow_dataflow_deliver_sh.py -c -m -o - \
+    test.db $cycle fam.job3 slot=islot
+
 echo ======================================== deliver first cycle output
 cycle=2017-08-15t06:00:00
 echo stdin for fam.job1 oslot | \
 ../../crow_dataflow_deliver_sh.py -i - test.db $cycle \
     fam.job1 slot=oslot
-set -x
+
 ../../crow_dataflow_find_sh.py test.db O actor=fam.job2 | \
 while [[ 1 == 1 ]] ; do
     set +e
@@ -49,7 +58,6 @@ while [[ 1 == 1 ]] ; do
     ../../crow_dataflow_deliver_sh.py -i testfile test.db $cycle \
         "$actor" "slot=$slot" ${meta:- }
 done
-set +x
 
 echo ======================================== obtain second cycle input
 cycle=2017-08-15t12:00:00
@@ -63,3 +71,11 @@ cycle=2017-08-15t12:00:00
 for PL in 1A 1B 2A 2B 3A 3B ; do
     echo fam.job3 islot $PL text $( head -1 test-$PL )
 done
+echo ======================================== check for second cycle input
+
+../../crow_dataflow_deliver_sh.py -c -o - test.db $cycle \
+  fam.job2 slot=tslot
+
+../../crow_dataflow_deliver_sh.py -c -m -o - \
+    test.db $cycle fam.job3 slot=islot
+

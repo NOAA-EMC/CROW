@@ -12,7 +12,7 @@ ALLOWED_DATE_FORMATS=[ '%Y-%m-%dt%H:%M:%S', '%Y-%m-%dT%H:%M:%S',
 
 USAGE='''Format: crow_dataflow_sh.py [-v] [-m] ( -i input | -o output ) \\
   dataflow.db cycle actor var=value [var=value [...]]
-
+  -c = just check for files; don't deliver them
   -m = expect multiple matches; -i or -o are formats instead of paths
   -v = verbose (set logging level to logging.DEBUG)
   -i input = local file to deliver to an output slot or "-" for stdin
@@ -29,8 +29,24 @@ def usage(why):
     sys.stderr.write(why+'\n')
     exit(1)
 
-def deliver_by_name(logger,flow,local,message):
-    if local != '-':
+def deliver_by_name(logger,flow,local,message,check):
+    if check:
+        strloc=local
+        if local == '-' and flow=='O': strloc='(stdin)'
+        if local == '-' and flow=='I': strloc='(stdout)'
+        avail=message.availability_time()
+        when='0'
+        if avail:
+            when=datetime.fromtimestamp(avail).strftime('%Y-%m-%dt%H:%M:%S')
+        localmeta=message.get_meta()
+        if localmeta:
+            metas=[ f'{k}={v}' for k,v in localmeta.items() ]
+            print(f'{bool(avail)} ({when}) - {message.flow} {message.actor} '
+                  f'{message.slot} {" ".join(metas)}')
+        else:
+            print(f'{bool(avail)} ({when}) - {message.flow} {message.actor} '
+                  f'{message.slot}')
+    elif local != '-':
         if flow == 'O':
             message.deliver(local)
         else:
@@ -45,7 +61,7 @@ def deliver_by_name(logger,flow,local,message):
             #shutil.copyfileobj(sys.stdin.buffer,out_fd)
             out_fd.write(data)
 
-def deliver_by_format(logger,flow,format,message):
+def deliver_by_format(logger,flow,format,message,check):
     if "'''" in format:
         raise ValueError(f"{format}: cannot contain three single quotes "
                          "in a row '''")
@@ -53,10 +69,10 @@ def deliver_by_format(logger,flow,format,message):
               'cycle':message.cycle }
     locals=message.get_meta()
     local_file=eval("f'''"+format+"'''",globals,locals)
-    deliver_by_name(logger,flow,local_file,message)
+    deliver_by_name(logger,flow,local_file,message,check)
 
 def main():
-    (optval, args) = getopt(sys.argv[1:],'o:i:vm')
+    (optval, args) = getopt(sys.argv[1:],'o:i:vmc')
     options=dict(optval)
 
     level=logging.DEBUG if '-v' in options else logging.INFO
@@ -121,13 +137,14 @@ def main():
         logger.error('Multiple matches, and -m not specified.  Abort.')
         exit(1)
 
-    deliver = deliver_by_format if '-m' in options else deliver_by_name
+    if '-m' in options:   deliver = deliver_by_format
+    else:                 deliver = deliver_by_name
 
     for slot in [ slot1, slot2 ]:
         if slot is not None:
-            deliver(logger,flow,local,slot.at(cycle))
+            deliver(logger,flow,local,slot.at(cycle),'-c' in options)
     for slot in matches:
-        deliver(logger,flow,local,slot.at(cycle))
+        deliver(logger,flow,local,slot.at(cycle),'-c' in options)
 
 if __name__ == '__main__':
     main()

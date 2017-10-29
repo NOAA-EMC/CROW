@@ -34,15 +34,20 @@ class Message(Slot):
         super().__init__(con,pid,actor,slot,flow,None,None)
         self.cycle=cycle
         self.__location=None # type: str
-    def _get_location(self) -> str:
-        if self.__location is None:
-            avail, self.__location=get_location(
+        self.__avail=None
+    def _get_avail_loc(self) -> Tuple[int,str]:
+        if self.__location is None or self.__avail is None:
+            self.__avail, self.__location=get_location(
                 self._con,self._pid,self._flow,self.cycle)
-        return self.__location
+        return self.__avail, self.__location
+    def _get_location(self) -> str:
+        return self._get_avail_loc()[1]
+    def availability_time(self) -> int:
+        return self._get_avail_loc()[0]
     _location=property(_get_location,None,None,
                        'Internal variable: data location on disk.')
     def set_data(self,location: str,avail: int) -> None:
-        set_data(self._con,self._pid,self.cycle,location,1)
+        set_data(self._con,self._pid,self.cycle,location,int(time.time()))
         self.__location=location
     def obtain(self,location: str) -> None:
         deliver_file(self._location,location)
