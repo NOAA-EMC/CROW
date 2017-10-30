@@ -63,8 +63,8 @@ def from_config(key,val,globals,locals,path):
     Other types are returned unmodified."""
     try:
         if hasattr(val,'_result'):
-            return from_config(key,val._result(globals,locals),
-                               globals,locals,path)
+            result=val._result(globals,locals)
+            return from_config(key,result,globals,locals,path)
         return val
     except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:40]} - '

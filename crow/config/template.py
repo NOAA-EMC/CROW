@@ -119,8 +119,10 @@ class Template(dict_eval):
         for var in template:
             if var in scope and isinstance(template[var],Mapping) and \
                'override' in template[var]:
-                override=from_config(template[var],'override',scope._globals(),scope,
-                                     f'{scope._path}.Template.{var}.override')
+                override=from_config(
+                    'override',template[var]._raw('override'),
+                    scope._globals(),scope,
+                    f'{scope._path}.Template.{var}.override')
                 if override is not None: scope[var]=override
 
         # Check for variables that evaluate to an error
