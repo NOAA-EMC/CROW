@@ -18,5 +18,7 @@ eomg: &eomg_action !Action
   NMEM_EOMGGRP: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
   NTHREADS_GSI: !calc nodes.omp_threads_for(run_gsi.resources[0])
   NTHSTACK: 1024000000
+  GROUP_NUMBER: null  # replaced in workflow
+  ENSGRP: !expand "{GROUP_NUMBER:02d}"
   VERBOSE: YES
   WRITE_NEMSIOFILE: YES

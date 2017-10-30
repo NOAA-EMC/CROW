@@ -15,6 +15,8 @@ earc: &earc_action !Action
 
   CASE: !calc CASE_ENKF
   CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
+  GROUP_NUMBER: null  # replaced in workflow
+  ENSGRP: !expand "{GROUP_NUMBER:02d}"
 
   KEEPDATA: NO
   NMEM_EARCGRP: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN

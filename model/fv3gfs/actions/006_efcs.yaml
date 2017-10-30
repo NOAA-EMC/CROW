@@ -36,6 +36,9 @@ efcs: &efcs_action !Action
   NMEM_EFCSGRP: 10
   NTHSTACK: 1024000000
 
+  GROUP_NUMBER: null  # replaced in workflow
+  ENSGRP: !expand "{GROUP_NUMBER:02d}"
+
   SMOOTH_ENKF: YES
   TYPE: doc.fv3_enkf_settings.nh_type
 
