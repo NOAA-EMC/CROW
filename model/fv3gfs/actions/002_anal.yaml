@@ -1,11 +1,6 @@
 anal_base: &anal_base !Action
   <<: *action_base
 
-  shell_env_scopes:
-    - [ doc.data_assimilation,     ".*" ]
-    - [ doc.gfs_output_settings,   ".*" ]
-    - [ doc.fv3_gdas_settings,     ".*" ]
-
   J_JOB: anal
   walltime: !timedelta 02:00:00
   resources: !calc run_anal.resources
@@ -32,11 +27,13 @@ anal_base: &anal_base !Action
   VERBOSE: YES
 
 anal_gdas_action: &anal_gdas_action !Action
-  <<: [ *gfs_output_settings, *fv3_gdas_settings, *data_assimilation, *anal_base ]
+  <<: *anal_base
   CDUMP: gdas
   Template: null
   Inherit: !Inherit
     - [ doc.platform.general_env,  ".*" ]
+    - [ doc.fv3_gdas_settings, ".*" ]
+    - [ doc.data_assimilation, ".*" ]
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.platform.mpi_tuning, '.*' ]
     - [ doc.fv3_enkf_settings, "FHCYC" ]
@@ -44,11 +41,13 @@ anal_gdas_action: &anal_gdas_action !Action
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
 anal_gfs_action: &anal_gfs_action !Action
-  <<: [ *gfs_output_settings, *fv3_gfs_settings, *data_assimilation, *anal_base ]
+  <<: *anal_base
   CDUMP: gfs
   Template: null
   Inherit: !Inherit
     - [ doc.platform.general_env,  ".*" ]
+    - [ doc.fv3_gfs_settings, ".*" ]
+    - [ doc.data_assimilation, ".*" ]
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.platform.mpi_tuning, '.*' ]
     - [ doc.fv3_enkf_settings, "FHCYC" ]

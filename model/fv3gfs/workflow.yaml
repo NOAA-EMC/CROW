@@ -10,7 +10,7 @@ Rocoto: &Rocoto
       <!ENTITY LOG_DIR "{doc.places.EXPDIR}/log">
       <!ENTITY COM_DIR "{doc.places.EXPDIR}/com">
       <!ENTITY SCRUB_DIR "{doc.places.EXPDIR}/scrub">
-      <!ENTITY TASK_THROTTLE "30">
+      <!ENTITY TASK_THROTTLE "1">
       <!ENTITY ENSEMBLE_TASK_THROTTLE "20">
       <!ENTITY CYCLE_THROTTLE "2">
       <!ENTITY MAX_TRIES "1">
@@ -25,7 +25,7 @@ Rocoto: &Rocoto
     </workflow>
 
   task_template: &task_template !expand |
-    <command>$HOMEgfs/job_wrapper.sh {Perform.J_JOB}</command>
+    <command>{doc.places.BASE_JOB}/job_wrapper.sh {Perform.J_JOB}</command>
     <jobname>{doc.case.experiment_name}{task_path_str}@<cyclestr>@Y@m@d@H</cyclestr></jobname>
     <join>&LOG_DIR;/<cyclestr>@Y@m@d@H</cyclestr>/{task_path_var}.log</join>
     <walltime>00:03:00</walltime>
@@ -59,8 +59,16 @@ Rocoto: &Rocoto
       <value>{doc.places.HOMEcrow}</value>
     </envar>
     <envar>
+      <name>BASE_JOB</name>
+      <value>{doc.places.BASE_JOB}</value>
+    </envar>
+    <envar>
       <name>HOMEgfs</name>
       <value>{doc.places.HOMEgfs}</value>
+    </envar>
+    <envar>
+      <name>ACTUALLY_RUN</name>
+      <value>{"YES" if doc.case.ACTUALLY_RUN else "NO"}</value>
     </envar>
 
   efcs_task_template: &efcs_task_template !expand |

@@ -22,9 +22,11 @@ prep: &prep_base !Action
     - otherwise: !error Do not know sys_tp for platform {doc.platform.name}
 
 prep_gdas: &prep_gdas_action !Action
-  <<: [ *fv3_gdas_settings, *data_assimilation, *prep_base ]
+  <<: *prep_base
   CDUMP: gdas
   Inherit: !Inherit
+    - [ doc.fv3_gdas_settings, '.*' ]
+    - [ doc.data_assimilation, '.*' ]
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
@@ -32,9 +34,11 @@ prep_gdas: &prep_gdas_action !Action
   Template: null
 
 prep_gfs: &prep_gfs_action !Action
-  <<: [ *fv3_gfs_settings, *data_assimilation, *prep_base ]
+  <<: *prep_base
   CDUMP: gfs
   Inherit: !Inherit
+    - [ doc.fv3_gfs_settings, '.*' ]
+    - [ doc.data_assimilation, '.*' ]
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]

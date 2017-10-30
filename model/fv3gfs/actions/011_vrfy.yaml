@@ -13,38 +13,6 @@ vrfy_base: &vrfy_base !Action
   CDUMPFCST: "gdas"  # Fit-to-obs with GDAS/GFS prepbufr
   GRIB1_WORKS: NO
   SMOOTH_ENKF: YES
-  BACKDATEVSDB: !FirstTrue
-    - when: !calc CDUMP=="gfs"
-      do: 24
-    - otherwise: null
-  VBACKUP_PRCP: !FirstTrue
-    - when: !calc CDUMP=="gfs"
-      do: 24
-    - otherwise: null
-  VSDBSH: !FirstTrue
-    - when: !calc CDUMP=="gfs"
-      do: !calc doc.places.VSDBSH
-    - otherwise: null
-  ftyplist: !FirstTrue
-    - when: !calc CDUMP=="gfs"
-      do: "pgbq"
-    - otherwise: null
-  vhr_rain: !FirstTrue
-    - when: !calc CDUMP=="gfs"
-      do: 240
-    - otherwise: null
-  vlength: !FirstTrue
-    - when: !calc CDUMP=="gfs"
-      do: 240
-    - otherwise: null
-  vsdbhome: !FirstTrue
-    - when: !calc CDUMP=="gfs"
-      do: !calc doc.places.vsdbhome
-    - otherwise: null
-  vsdbsave: !FirstTrue
-    - when: !calc CDUMP=="gfs"
-      do: !calc doc.places.vsdbsave
-    - otherwise: null
   VDUMP: "gfs"
   VRFYG2OBS: NO
   VRFYGENESIS: NO
@@ -64,21 +32,33 @@ vrfy_base: &vrfy_base !Action
   nst_anl: YES
 
 vrfy_gfs_action: &vrfy_gfs_action !Action
-  <<: [ *fv3_gfs_settings, *data_assimilation, *vrfy_base ]
+  <<: *vrfy_base
   CDUMP: gfs
   CASE: !calc doc.fv3_gfs_settings.CASE
   Inherit: !Inherit
+    - [ doc.fv3_gfs_settings, ".*" ]
+    - [ doc.data_assimilation, ".*" ]
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.platform.general_env, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+  BACKDATEVSDB: 24
+  VBACKUP_PRCP: 24
+  VSDBSH: !calc doc.places.VSDBSH
+  ftyplist: "pgbq"
+  vhr_rain: 240
+  vlength: 240
+  vsdbhome: !calc doc.places.vsdbhome
+  vsdbsave: !calc doc.places.vsdbsave
 
 vrfy_gdas_action: &vrfy_gdas_action !Action
-  <<: [ *fv3_gdas_settings, *data_assimilation, *vrfy_base ]
+  <<: *vrfy_base
   CDUMP: gdas
   CASE: !calc doc.fv3_gdas_settings.CASE
   Inherit: !Inherit
+    - [ doc.fv3_gdas_settings, ".*" ]
+    - [ doc.data_assimilation, ".*" ]
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.platform.general_env, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]

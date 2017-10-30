@@ -29,4 +29,4 @@ fi
 # Relative path is from j-jobs directory
 prog=$1
 shift
-exec "$HOMEgfs/jobs/$prog.sh" "$@"
+exec "$BASE_JOB/$prog.sh" "$@"

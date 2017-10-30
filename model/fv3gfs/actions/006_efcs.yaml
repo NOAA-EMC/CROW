@@ -1,7 +1,6 @@
 efcs: &efcs_action !Action
   <<: [ *action_base, *places ]
   J_JOB: efcs
-  CASE: !calc doc.fv3_enkf_settings.CASE
   walltime: !timedelta 00:15:00
   efcs_resources: !JobRequest
     - exe: placeholder
@@ -25,6 +24,9 @@ efcs: &efcs_action !Action
     - [ doc.data_assimilation, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
+
+  CASE: !calc doc.fv3_enkf_settings.CASE
+  CASE_ENKF: !calc CASE
 
   NTHREADS_FV3: 1
   NTHREADS_REGRID_NEMSIO: 1

@@ -33,7 +33,7 @@ ecen: &ecen_action !Action
     - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.data_assimilation, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
-    - [ doc.platform.mpi_tuning, '.*' ]
+    - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
   CASE_ENKF: !calc doc.fv3_enkf_settings.CASE

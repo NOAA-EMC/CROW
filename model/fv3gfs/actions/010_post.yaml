@@ -21,20 +21,24 @@ post_base: &post_base !Action
   downset: 1
 
 post_gfs: &post_gfs_action !Action
-  <<: [ *fv3_gfs_settings, *data_assimilation, *post_base ]
+  <<: *post_base
   CDUMP: gfs
   Template: null
   Inherit: !Inherit
+    - [ doc.fv3_gfs_settings, ".*" ]
+    - [ doc.data_assimilation, ".*" ]
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.platform.general_env, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
 
 post_gdas: &post_gdas_action !Action
-  <<: [ *fv3_gdas_settings, *data_assimilation, *post_base ]
+  <<: *post_base
   CDUMP: gdas
   Template: null
   Inherit: !Inherit
+    - [ doc.fv3_gdas_settings, ".*" ]
+    - [ doc.data_assimilation, ".*" ]
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.platform.general_env, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]
