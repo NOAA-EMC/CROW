@@ -399,9 +399,8 @@ class ToRocoto(object):
         self._write_task_text(fd,' final="true"',indent,final,dep,timedelta.min)
         
 def to_rocoto(suite):
-    typecheck('suite',suite,Cycle)
-    tr=ToRocoto(suite)
-    return tr.suite, tr._expand_workflow_xml()
+    typecheck('suite',suite,Suite)
+    return ToRocoto(suite)._expand_workflow_xml()
 
 def test():
     def to_string(action):

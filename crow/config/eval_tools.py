@@ -159,6 +159,7 @@ class dict_eval(MutableMapping):
     def _raw_child(self):       return self.__child
     def _has_raw(self,key):     return key in self.__child
     def _set_globals(self,g):   self.__globals=g
+    def _get_globals(self):     return self.__globals
     def _raw_cache(self):       return self.__cache
     def _raw(self,key):
         """!Returns the value for the given key, without calling eval() on it"""
