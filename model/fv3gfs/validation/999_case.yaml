@@ -22,11 +22,24 @@ case_template: &case_template
   SDATE:
     type: datetime
     description: |
-      First cycle to run GDAS.  This is a "half-cycle" in that it only runs
-      the parts of the workflow that do not require a prior cycle.  The first
-      "real" cycle is the following cycle.
+      First cycle to run.  In the cycled workflow, this is a
+      "half-cycle" in that it only runs the parts of the workflow that
+      do not require a prior cycle.  The first "real" cycle is the
+      following cycle.
 
   EDATE:
     type: datetime
     description: Last cycle to run GDAS.
   
+  CYCLING:
+    type: bool
+    description: "Run data assimilation to cycle the workflow?"
+    if_present:
+      IC_CDUMP:
+        type: string
+        allowed: [ GDAS, GFS ]
+        description: Get initial conditions from 1st cycle from GFS or GDAS
+        default: GDAS
+      IC_DIR:
+        type: string
+        description: Disk location of initial conditions for cycled workflow

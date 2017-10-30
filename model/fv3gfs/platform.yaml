@@ -85,7 +85,7 @@ theia: &theia !Platform
 
 wcoss_cray: &wcoss_cray !Platform
   <<: *resource_defaults
-
+  name: WCOSS_C
   Evaluate: false
   detect: !calc |
     tools.isdir('/gpfs/hps') and \

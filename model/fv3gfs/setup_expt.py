@@ -1,6 +1,8 @@
-#! /usr/bin/env python3.6
+#! /usr/bin/env python3
+f'This script requires python 3.6 or later'
 
 import os, sys, logging, glob
+from create_comrot import create_COMROT
 
 try:
     import crow.config
@@ -51,6 +53,8 @@ except FileExistsError:
         sys.exit(1)
     logger.warning(f'--force given; will replace config.yaml without '
                    'deleting directory')
+
+create_COMROT(conf)
 
 suite=crow.config.Suite(conf.workflow)
 doc=crow.config.document_root(suite)
