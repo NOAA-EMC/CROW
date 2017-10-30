@@ -6,19 +6,20 @@ places: &places
 
   # NOTE: These two directories will need to be changed for the real
   # fv3gfs workflow:
-  HOMEgfs: !calc tools.crow_install_dir('model/fv3gfs')
+  HOMEgfs: /scratch4/NCEPDEV/nems/noscrub/Samuel.Trahan/fv3gfs-fcst-post/EXP-cyc-try2/
+#!calc tools.crow_install_dir('model/fv3gfs')
   HOMEgdas: !calc HOMEgfs
 
   HOMEDIR: !expand "{PROJECT_DIR}/save/{tools.env('USER')}"
-  STMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
-  PTMP: !expand "{doc.platform.least_used_scrub}{tools.env('USER')}"
+  STMP: !expand "{doc.platform.least_used_scrub}/{tools.env('USER')}"
+  PTMP: !expand "{doc.platform.least_used_scrub}/{tools.env('USER')}"
   NOSCRUB: !expand "{PROJECT_DIR}/noscrub/{tools.env('USER')}"
 
   BASE_WORKFLOW: !expand "{HOMEgfs}/gfs_workflow.v15.0.0"
   BASE_GSM: !expand "{HOMEgfs}/global_shared.v15.0.0"
   BASE_MODULES: !expand "{HOMEgfs}/global_shared.v15.0.0/modulefiles"
   BASE_ENV: !expand "{HOMEgfs}/gfs_workflow.v15.0.0/env"
-  BASE_JOB: !expand "{BASE_WORKFLOW}/jobs"
+  BASE_JOB: !expand "{HOMEcrow}/model/fv3gfs/jobs"
 
   # User paths
   EXPDIR: !expand "{HOMEDIR}/{doc.case.experiment_name}"

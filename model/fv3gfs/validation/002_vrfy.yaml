@@ -131,8 +131,8 @@ RAD_VARS: &RAD_VARS !Template
 OZN_VARS: &OZN_VARS !Template
 # echo "WARNING: Ozone Monitoring is just a stub for now!"
   VRFYOZN: 
-    type: string
-    default: "NO"
+    type: bool
+    default: NO
   OZNDIR: 
     type: string
     default: !expand "{NOSCRUB}/{LOGNAME}/ozone/stats/{experiment_name}"
@@ -168,10 +168,10 @@ VRFY_CDUMP_GFS_VARS: &VRFY_CDUMP_GFS_VARS !Template
     type: string
     default: !expand "{vsdbhome}/vsdbjob.sh"
   vlength=: 
-    type: string
+    type: int
     default: !calc FHMAX_GFS
   vhr_rain: 
-    type: string
+    type: int
     default: !calc FHMAX_GFS
   ftyplist: 
     type: string
@@ -183,86 +183,84 @@ vrfy_template: &vrfy_template !Template
     type: string
     allowed: [ "gfs", "gdas" ]
 
-  CDUMPFCST:         # Fit-to-obs with GDAS/GFS prepbufr
+  CDUMPFCST:
+    description: Fit-to-obs with GDAS/GFS prepbufr
     type: string
     allowed: [ "gfs", "gdas" ]
 
-  CDFNL:             # Scores verification against GDAS/GFS analysis
+  CDFNL:
+    description: Scores verification against GDAS/GFS analysis
     type: string
     allowed: [ "gfs", "gdas" ]
 
-  VSDB_STEP1:      # populate VSDB database
-    type: string
-    default: "NO"
-    allowed: [ "YES", "NO" ]
+  VSDB_STEP1:
+    description: populate VSDB database
+    type: bool
+    default: NO
 
   VSDB_STEP2:
-    type: string
-    default: "NO"
-    allowed: [ "YES", "NO" ]
+    type: bool
+    default: NO
 
-  VRFYG2OBS:            # Grid to observations
-    type: string
-    default: "NO"
-    allowed: [ "YES", "NO" ]
+  VRFYG2OBS:
+    description: Grid to observations
+    type: bool
+    default: NO
 
-  VRFYFITS:        # Fit to observations
-    type: string
-    defualt: "NO"
-    allowed: [ "YES", "NO" ]
+  VRFYFITS:
+    description: Fit to observations
+    type: bool
+    default: NO
 
-  VRFYPRCP:        # Precip threat scores
-    type: string
-    default: "NO"
-    allowed: [ "YES", "NO" ]
-
+  VRFYPRCP:
+    description: Precip threat scores
+    type: bool
+    default: NO
+    
   VRFYMINMON:
-    type: string
-    default: "NO"
-    allowed: [ "YES", "NO" ]
+    type: bool
+    default: NO
     if_present: !FirstTrue
-      - when: !calc VRFYMINMON=="YES"
+      - when: !calc VRFYMINMON
         do: *MIN_VARS
       - otherwise: null
         message: !expand "WARNING: Minimization monitoring is not enabled on {doc.platform.name}!"
 
-  VRFYRAD:         # Radiance data assimilation monitoring
-    type: string
-    default: "NO"
-    allowed: [ "YES", "NO" ]
+  VRFYRAD:
+    description: Radiance data assimilation monitoring
+    type: bool
+    default: NO
 
   VRFYOZN:
-    type: string
-    allowed: [ "YES", "NO" ]
-    default: "NO"
+    type: bool
+    default: NO
     if_present: !FirstTrue
-      - when: !calc VRFYOZN=="YES"
+      - when: !calc VRFYOZN
         message: "WARNING: Ozone Monitoring is just a stub for now!"
         do: *OZN_VARS
       - otherwise: null
 
-  VRFYTRAK:        # Hurricane track forecasts
-    type: string
-    allowed: [ "YES", "NO" ]
-    default: "NO"
+  VRFYTRAK:
+    description: Hurricane track forecasts
+    type: bool
+    default: NO
     if_present: !FirstTrue
-      - when: !calc VRFYTRAK=="YES"
+      - when: !calc VRFYTRAK
         do: *CYC_TRACK_VARS
       - otherwise: null
 
   VRFYGENESIS:
-    type: string
-    allowed: [ "YES", "NO" ]
-    default: "NO"
+    type: bool
+    default: NO
     if_present: !FirstTrue
-      - when: !calc VRFYGENESIS=="YES"
+      - when: !calc VRFYGENESIS
         do: *CYC_GEN_VARS
       - otherwise: null
 
-  VRFYGMPK:        # Gempak verification
-    type: string
-    default: "NO"
-    allowed: [ "YES", "NO" ]
+  VRFYGMPK:
+    description: Gempak verification
+    type: bool
+    default: NO
 
   nth_vrfy:
     type: int
@@ -273,70 +271,65 @@ vrfy_template: &vrfy_template !Template
   fitdir:
     type: string
     default: !FirstTrue
-      - when: !calc ( doc.platform.name=="WCOSS_C" and VRFYFITS=="YES" )
+      - when: !calc ( doc.platform.name=="WCOSS_C" and VRFYFITS )
         do: !expand "{BASE_SVN}/verif/global/parafits.fv3nems/batrun"
-      - when: !calc ( doc.platform.name=="THEIA" and VRFYFITS=="YES" )
+      - when: !calc ( doc.platform.name=="THEIA" and VRFYFITS )
         do: !expand "{BASE_SVN}/verif/global/parafits.fv3nems/batrun"
       - otherwise: !error "Do not know fitdir for this platform"
 
   PREPQFITSH:
     type: string
     default: !FirstTrue
-      - when: !calc ( doc.platform.name=="WCOSS_C" and VRFYFITS=="YES" )
+      - when: !calc ( doc.platform.name=="WCOSS_C" and VRFYFITS )
         do: !expand "{fitdir}/subfits_cray_nems"
         message: WCOSS_C fits file
-      - when: !calc ( doc.platform.name=="THEIA" and VRFYFITS=="YES" )
+      - when: !calc ( doc.platform.name=="THEIA" and VRFYFITS )
         do: !expand "{fitdir}/subfits_theia_nems"
         message: "THEIA fits file"
-      - when: !calc VRFYFITS!="YES"
+      - when: !calc VRFYFITS!=YES
         do: "/dev/null"
         message: !expand vrfyfits = {VRFYFITS}
       - otherwise: !error "Do not know subfits file (PREPQFITSH) for {doc.platform.name}"
 
   VRFY_CDUMP_GFS:
-    type: string
-    allowed: [ "YES", "NO" ]
-    # FIXME: NEED DEFAULT
+    type: bool
     default: !FirstTrue
-      - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1=="YES" or VRFYPRCP=="YES" or VRFYG2OBS=="YES" ) )
-        do: "YES"
-      - otherwise: "NO"
+      - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1 or VRFYPRCP or VRFYG2OBS ) )
+        do: YES
+      - otherwise: NO
     if_present: !FirstTrue
-      - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1=="YES" or VRFYPRCP=="YES" or VRFYG2OBS=="YES" ) )
+      - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1 or VRFYPRCP or VRFYG2OBS ) )
         do: *VRFY_CDUMP_GFS_VARS
       - otherwise: null
 
   NO_VRFYMINSH:
-    type: string
-    default: "NO"
-    allowed: [ "YES", "NO" ]
+    type: bool
+    default: NO
     override: !FirstTrue
       - when: !calc ( not doc.platform.name=="THEIA" and not doc.platform.name=="WCOSS_C" )
-        do: "YES"
+        do: YES
         message: !expand "WARNING: Minimization monitoring is not enabled on {doc.platform.name}!"
       - otherwise: null
 
   MIN_RAD_OZN:
-    type: string
-    allowed: [ "YES", "NO" ]
+    type: bool
     default: !FirstTrue
-      - when: !calc ( VRFYRAD=="YES" or VRFYMINMON=="YES" or VRFYOZN=="YES" )
-        do: "YES"
-      - otherwise: "NO"
+      - when: !calc ( VRFYRAD or VRFYMINMON or VRFYOZN )
+        do: YES
+      - otherwise: NO
     if_present: !FirstTrue
-      - when: !calc ( VRFYRAD=="YES" or VRFYMINMON=="YES" or VRFYOZN=="YES" )
+      - when: !calc ( VRFYRAD or VRFYMINMON or VRFYOZN )
         do: *MIN_RAD_OZN_VARS
       - otherwise: null
 
   RAD:
-    type: string
-    allowed: [ "YES", "NO" ]
+    type: bool
     default: !FirstTrue
-      - when: !calc ( VRFYRAD=="YES" and CDUMP==CDFNL )
-        do: "YES"
-      - otherwise: "NO"
+      - when: !calc ( VRFYRAD and CDUMP==CDFNL )
+        do: YES
+      - otherwise: NO
     if_present: !FirstTrue
-      - when: !calc ( VRFYRAD=="YES" and CDUMP==CDFNL )
+      - when: !calc ( VRFYRAD and CDUMP==CDFNL )
         do: *RAD_VARS
       - otherwise: null
         message: !expand "WARNING: Radiance monitoring is not enabled on {doc.platform.name}!"

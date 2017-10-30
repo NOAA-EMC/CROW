@@ -213,6 +213,8 @@ class dict_eval(MutableMapping):
                 tmpl=Template(tmpl,self._path+'.Template',self.__globals)
             tmpl._check_scope(self,stage)
     def __getitem__(self,key):
+        if key not in self.__cache:
+            self.__cache[key]=self.__child[key]
         val=self.__cache[key]
         if hasattr(val,'_result'):
             immediate=hasattr(val,'_is_immediate')

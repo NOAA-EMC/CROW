@@ -66,4 +66,6 @@ case:
 
   master_grid: "0p25deg" # 1deg 0p5deg 0p25deg 0p125deg etc
 
+  ACTUALLY_RUN: NO
+
 #-END OF FILE-#
