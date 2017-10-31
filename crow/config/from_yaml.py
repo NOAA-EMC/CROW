@@ -147,7 +147,7 @@ add_yaml_sequence(u'!JobRequest',JobResourceSpecMakerYAML)
 # to the function that performs the comparison.
 CONDITIONALS={ FirstMaxYAML:FirstMax,
                FirstMinYAML:FirstMin,
-               FirstTrueYAML:LastTrue,
+               FirstTrueYAML:FirstTrue,
                LastTrueYAML:LastTrue}
 
 ########################################################################
