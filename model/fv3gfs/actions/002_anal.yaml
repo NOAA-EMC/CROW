@@ -5,8 +5,8 @@ anal_base: &anal_base !Action
   walltime: !timedelta 02:00:00
   resources: !calc run_anal.resources
   anal_resources: !calc run_anal.resources
+  memory: !calc run_anal.memory
   gsi_resources: !calc run_gsi.resources
-  memory: "3072M"
   accounting: !calc doc.platform.parallel_accounting
   assim_freq: 6
 

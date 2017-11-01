@@ -9,6 +9,8 @@ logger=logging.getLogger('create_comrot')
 def make_link(src,tgt):
     logger.debug(f'{src}: symlink {tgt}')
     with suppress(FileNotFoundError): os.unlink(tgt)
+    if not os.path.exists(src):
+        logger.warning(f'{src}: link target does not exist')
     os.symlink(src,tgt)
 
 def make_dir(dir):
@@ -24,7 +26,7 @@ def create_COMROT(conf):
     idate = conf.case.SDATE
     detdir = f'{cdump}.{idate:%Y%m%d}/{idate:%H}'
     nens = conf.data_assimilation.NMEM_ENKF
-    enkfdir = f'enkf.{cdump}.{idate:%Y%m%d}.{idate:%H}'
+    enkfdir = f'enkf.{cdump}.{idate:%Y%m%d}/{idate:%H}'
     idatestr = f'{idate:%Y%m%d%H}'
 
     logger.info(f'Input conditions: {icsdir}')
@@ -38,7 +40,7 @@ def create_COMROT(conf):
     for i in range(1, nens + 1):
         memdir=os.path.join(comrot,enkfdir,f'mem{i:03d}')
         make_dir(memdir)
-        src=os.path.join(icsdir, idatestr, f'c{resens}mem{i:03d}')
+        src=os.path.join(icsdir, idatestr, f'C{resens}',f'mem{i:03d}','INPUT')
         tgt=os.path.join(comrot, enkfdir, f'mem{i:03d}', 'INPUT')
         make_link(src,tgt)
 

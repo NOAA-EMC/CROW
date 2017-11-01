@@ -8,7 +8,10 @@ resource_defaults: &resource_defaults
   # From if[[...ecen]] block in config.resources:
   run_ecen:
     env: { } #*mpi_tuning
-
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
     resources: !JobRequest
       - exe: placeholder
         mpi_ranks: 84
@@ -26,11 +29,16 @@ resource_defaults: &resource_defaults
 
   run_nothing: # Special placeholder for "do nothing"
     env: { }
+    memory: 300M
     resources:  !JobRequest
       - exe: nothing
 
   run_eobs:
     env: { }
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: !calc 24*6
@@ -39,6 +47,10 @@ resource_defaults: &resource_defaults
 
   run_eomg:
     env: { }
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: !calc 6*24
@@ -47,6 +59,10 @@ resource_defaults: &resource_defaults
 
   run_eupd:
     env: { }
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: !calc 10*12
@@ -63,14 +79,17 @@ resource_defaults: &resource_defaults
 
   run_efcs:
     env: { }
-    resources:  !JobRequest
-      - exe: placeholder
-        mpi_ranks: !calc 8*24
-        max_ppn: 24
-        OMP_NUM_THREADS: 2
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
 
   run_epos:
     env: { }
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "254M"
+      - otherwise: ""
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: !calc 7*12
@@ -79,6 +98,10 @@ resource_defaults: &resource_defaults
 
   run_prep:
     env: { }
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: 12
@@ -87,6 +110,10 @@ resource_defaults: &resource_defaults
 
   run_anal:
     env: { }
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: !calc 24*6
@@ -103,14 +130,17 @@ resource_defaults: &resource_defaults
 
   run_fcst:
     env: { }
-    resources:  !JobRequest
-      - exe: placeholder
-        mpi_ranks: !calc 18*12
-        max_ppn: 12
-        OMP_NUM_THREADS: max
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
 
   run_post:
     env: { }
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: !calc 6*12
@@ -119,6 +149,10 @@ resource_defaults: &resource_defaults
 
   run_vrfy:
     env: { }
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: "16384M"
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: 1
@@ -127,6 +161,7 @@ resource_defaults: &resource_defaults
 
   run_arch:
     env: { }
+    memory: "3072M"
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: 1
@@ -135,6 +170,7 @@ resource_defaults: &resource_defaults
 
   run_earc:
     env: { }
+    memory: "3072M"
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: 1

@@ -6,12 +6,12 @@ fv3_settings_template: &fv3_settings_template
     default: ".true."
     description: vorticity and divergence damping
   consv_te: 
-    type: string
-    default: "0."
+    type: float
+    default: 0.
     description: conserve total energy
   fv_sg_adj:
     type: int
-    default: 900
+    default: 450
     description: time-scale to remove 2dz instability
   dspheat:
     type: string
@@ -28,6 +28,26 @@ fv3_settings_template: &fv3_settings_template
     allowed: [ ".true.", ".false." ]
     default: ".true."
     description: "write velocity restarts on A grid?"
+
+  IEMS: { type: int, default: 1 }
+  IALB: { type: int, default: 1 }
+  ISOL: { type: int, default: 2 }
+  IAER: { type: int, default: 111 }
+  ICO2: { type: int, default: 2 }
+
+  warm_start:
+    type: string
+    allowed: [ ".true.", ".false." ]
+    default: ".false."
+
+  read_increment:
+    type: string
+    allowed: [ ".true.", ".false." ]
+    default: ".false."
+
+  restart_interval:
+    type: int
+    default: 0
 
   LEVS:
     type: int
@@ -61,23 +81,68 @@ fv3_settings_template: &fv3_settings_template
     default: "non-mono"
     allowed: [ mono, non-mono ]
 
-  DO_SHUM: { type: bool, default: NO }
-  DO_SKEB: { type: bool, default: NO }
-  DO_SPPT: { type: bool, default: NO }
-  RUN_EFCSGRP: { type: bool, default: NO }
+  MEMBER:
+    type: int
+    stage: [ execution ]
+    default: -1
+    description: "-1: control, 0: ensemble mean, >0: ensemble member $MEMBER"
 
-  # Stochastic physics parameters (only for ensemble forecasts)
-  SET_STP_SEED: { type: bool, default: YES }
-  SKEB: { type: float, default: 0.8 }
-  SKEB_TAU: { type: float, default: 21600. }
-  SKEB_LSCALE: { type: float, default: 500000. }
-  SKEBNORM: { type: float, default: 1.0 }
-  SHUM: { type: float, default: 0.006 }
-  SHUM_TAU: { type: float, default: 21600. }
-  SHUM_LSCALE: { type: float, default: 250000. }
-  SPPT: { type: float, default: 0.8 }
-  SPPT_TAU: { type: float, default: 21600. }
-  SPPT_LSCALE: { type: float, default: 500000. }
+  ISEED:
+    type: int
+    default: 0
+    stage: [ execution ]
+    description: >
+      Default seed for shum, skeb, and sppt, if specific seeds
+      are not specified.
+
+  SET_STP_SEED:
+    type: bool
+    default: YES
+    description: >
+      Automatically set seeds for SKEB, SHUM, and SPPT at execution
+      time based on simulation date and member.
+
+  DO_SHUM:
+    type: bool
+    default: NO
+    if_present: !FirstTrue
+      - when: !calc DO_SHUM
+        do:
+          ISEED_SHUM:  { type: int,    optional: true }
+          SHUM:        { type: float,  default: -999. }
+          SHUM_TAU:    { type: float,  default: -999. }
+          SHUM_LSCALE: { type: float,  default: -999. }
+      - otherwise: null
+
+  DO_SKEB:
+    type: bool
+    default: NO
+    if_present: !FirstTrue
+      - when: !calc DO_SKEB
+        do:
+          ISEED_SHUM:  { type: int,   optional: true }
+          SKEB_TAU:    { type: float, default: -999. }
+          SKEB_LSCALE: { type: float, default: -999. }
+          SKEBNORM:    { type: int,   default: 1 }
+      - otherwise: null
+
+  DO_SPPT:
+    type: bool
+    default: NO
+    if_present: !FirstTrue
+      - when: !calc DO_SPPT==True
+        do:
+          ISEED_SHUM:  { type: int,   optional: true }
+          SPPT:        { type: float }
+          SPPT_TAU:    { type: float, default: -999. }
+          SPPT_LSCALE: { type: float, default: -999. }
+          SPPT_SFCLIMIT:
+            type: string
+            allowed: [ ".true.", ".false." ]
+            default: ".true."
+      - otherwise: !Message "Don't SPPT"
+
+  RUN_EFCSGRP: { type: bool, default: NO }
 
   ncld: { type: int, default: 1 }
   nwat: { type: int, default: 2 }

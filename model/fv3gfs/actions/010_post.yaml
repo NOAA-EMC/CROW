@@ -3,7 +3,7 @@ post_base: &post_base !Action
   J_JOB: post
   walltime: !timedelta 00:15:00
   resources: !calc run_post.resources
-  memory: "3072M"
+  memory: !calc run_post.memory
 
   APRUN_DWN: !calc tools.command_without_exe(par,resources,'placeholder')
   APRUN_NP: !calc tools.command_without_exe(par,resources,'placeholder')

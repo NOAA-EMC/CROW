@@ -10,7 +10,7 @@ eupd: &eupd_action !Action
   enkf_resources: !calc run_enkf.resources
   eupd_resources: !calc run_eupd.resources
   resources: !calc run_eupd.resources
-  memory: "3072M"
+  memory: !calc run_eupd.memory
 
   Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
@@ -18,7 +18,7 @@ eupd: &eupd_action !Action
     - [ doc.data_assimilation, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
-
+  CDUMP: gdas
   CASE: !calc doc.fv3_enkf_settings.CASE
   NTHREADS_ENKF: 2
   NTHSTACK: 1024000000

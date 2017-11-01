@@ -3,7 +3,7 @@ prep: &prep_base !Action
   J_JOB: prep
   walltime: !timedelta 01:00:00
   resources: !calc run_prep.resources
-  memory: "3072M"
+  memory: !calc run_prep.memory
 
   CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
   Template: null

@@ -3,7 +3,7 @@ theia: &theia !Platform
   <<: *resource_defaults
   Evaluate: false
   name: THEIA
-  detect: !calc tools.isdir('/scratch4') and tools.isdir('/scratch3')
+  detect: !calc tools.isdir("/scratch4") and tools.isdir("/scratch3")
 
   BASE_SVN: "/scratch4/NCEPDEV/global/save/glopara/svn"
 
@@ -27,8 +27,8 @@ theia: &theia !Platform
 
     prep_step: !expand "{NWPROD}/prod_util.v1.0.15/ush/prep_step"
 
-    NCP: "'/bin/cp -p'"
-    NLN: "'/bin/ln -sf'"
+    NCP: "/bin/cp -p"
+    NLN: "/bin/ln -sf"
     NMV: "/bin/mv"
 
     CHGRP_CMD: chgrp rstprod
@@ -39,10 +39,10 @@ theia: &theia !Platform
     queue: debug
     project: !calc doc.accounting.cpu_project
   transfer_accounting:
-    queue: batch
+    queue: urgent
     project: !calc doc.accounting.cpu_project
   parallel_accounting:
-    queue: batch
+    queue: urgent
     project: !calc doc.accounting.cpu_project
 
   scheduler_settings: &theia_scheduler
@@ -88,8 +88,8 @@ wcoss_cray: &wcoss_cray !Platform
   name: WCOSS_C
   Evaluate: false
   detect: !calc |
-    tools.isdir('/gpfs/hps') and \
-    tools.isfile('/etc/SuSE-release')
+    tools.isdir("/gpfs/hps") and \
+    tools.isfile("/etc/SuSE-release")
   default_cpu_project: GFS-T2O
   serial_accounting:
     queue: dev
@@ -134,13 +134,13 @@ wcoss_cray: &wcoss_cray !Platform
     CHGRP_CMD: chgrp rstprod
 
   # Path to mmlsquota, the program used to get GPFS disk usage information:
-  mmlsquota: '/usr/lpp/mmfs/bin/mmlsquota'
+  mmlsquota: "/usr/lpp/mmfs/bin/mmlsquota"
   least_used_scrub: !Immediate
     - !FirstMax
       - do: /gpfs/hps2/ptmp
-        when: !calc tools.gpfs_gb(do,'hps2-ptmp','hps2',mmlsquota)
+        when: !calc tools.gpfs_gb(do,"hps2-ptmp","hps2",mmlsquota)
       - do: /gpfs/hps3/ptmp
-        when: !calc tools.gpfs_gb(do,'hps3-ptmp','hps3',mmlsquota)
+        when: !calc tools.gpfs_gb(do,"hps3-ptmp","hps3",mmlsquota)
 
 platform: !Immediate
   - !FirstTrue

@@ -37,8 +37,8 @@ case_template: &case_template
     if_present:
       IC_CDUMP:
         type: string
-        allowed: [ GDAS, GFS ]
-        description: Get initial conditions from 1st cycle from GFS or GDAS
+        allowed: [ gdas, gfs ]
+        description: Get initial conditions from 1st cycle from gfs or gdas
         default: GDAS
       IC_DIR:
         type: string

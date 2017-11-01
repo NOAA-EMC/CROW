@@ -5,16 +5,20 @@
 ulimit_s=$( ulimit -S -s )
 ulimit -S -s 10000
 
-source /apps/lmod/lmod/init/sh
+source "$BASE_MODULES"/module-setup.sh.inc
+module use "$BASE_MODULES"
+module load module_base.$( echo $MACHINE | tr A-Z a-z )
 
 # FIXME: Remove hard-coded modules.
-module purge
 module use /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/python/modulefiles/
+module unload python anaconda
 module load python/3.6.1-emc
 
 # Restore stack soft limit:
 ulimit -S -s "$ulimit_s"
 unset ulimit_s
+
+module list
 
 set -xue
 

@@ -8,11 +8,11 @@ fv3_gfs_settings: &fv3_gfs_settings
   CDUMP: gfs
 
 fv3_enkf_settings: &fv3_enkf_settings
-  <<: *fv3_settings
+  <<: [ *fv3_enkf_defaults, *fv3_settings ]
   Template: *fv3_settings_template
   CASE: C192 # FV3 horizontal resolution for ensemble (mandatory)
   CDUMP: gdas
-  restart_interval: 6 # do not change
+  QUILTING: NO
 
 fv3_gdas_settings: &fv3_gdas_settings
   <<: *fv3_gfs_settings
@@ -35,7 +35,7 @@ data_assimilation: &data_assimilation
   Template: *data_assimilation_template
   # Shared parameters/switches
   DOHYBVAR: YES           # optional
-  NMEM_ENKF: 80           # DO NOT CHANGE (yet)
+  NMEM_ENKF: 20           # DO NOT CHANGE (yet)
   NMEM_ENKF_GRP_EOMN: 10  # DO NOT CHANGE (yet)
   NMEM_ENKF_GRP_EFMN: 10  # DO NOT CHANGE (yet)
   RECENTER_ENKF: YES      # optional
@@ -69,7 +69,7 @@ case:
   ACTUALLY_RUN: YES
   CYCLING: YES
 
-  IC_CDUMP: GDAS # Get initial conditions from 1st cycle from GFS or GDAS
+  IC_CDUMP: gdas # Get initial conditions from 1st cycle from GFS or GDAS
   IC_DIR: !FirstTrue
     - when: !calc doc.platform.name == "THEIA"
       do: "/scratch4/NCEPDEV/global/noscrub/glopara/ICS/FV3GFS"

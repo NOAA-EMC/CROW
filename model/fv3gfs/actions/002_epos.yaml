@@ -2,7 +2,7 @@ epos: &epos_action !Action
   <<: *action_base
   J_JOB: epos
   resources: !calc run_epos.resources
-  memory: "254M"
+  memory: !calc run_epos.memory
   walltime: !timedelta 00:15:00
   APRUN_EPOS: !calc tools.command_without_exe(par,resources,'placeholder')
   NTHREADS_EPOS: !calc nodes.omp_threads_for(resources[0])
@@ -13,11 +13,11 @@ epos: &epos_action !Action
   Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.platform.mpi_tuning, '.*' ]
-    - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.data_assimilation, ".*" ]
-    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
+    - [ doc.fv3_enkf_settings, "FHCYC|QUILTING|WRITE_NEMSIOFILE|nst_anl|CDUMP" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
-
+  CDUMP: gdas
   VERBOSE: YES
   WRITE_NEMSIOFILE: YES
+  LEVS: !calc "doc.fv3_enkf_settings.LEVS - 1"
   accounting: !calc doc.platform.parallel_accounting

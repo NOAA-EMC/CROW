@@ -7,11 +7,12 @@ fcst_base: &fcst_base !Action
       OMP_NUM_THREADS: 2
   walltime: !timedelta 00:10:00
   resources: !calc fcst_resources
-  memory: "3072M"
+  memory: !calc run_fcst.memory
   resources_regrid_nemsio: !JobRequest
     - exe: placeholder
       mpi_ranks: !calc doc.fv3_settings.LEVS
       max_ppn: !calc nodes.max_ranks_per_node(fcst_resources[0])
+  true_false_vars: [ 'QUILTING', 'WRITE_NEMSIOFILE' ]
 
   APRUN_REGRID_NEMSIO: !calc |
     tools.command_without_exe(

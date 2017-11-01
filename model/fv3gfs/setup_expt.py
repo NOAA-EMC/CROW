@@ -13,7 +13,7 @@ except ModuleNotFoundError:
 from crow.config import Platform
 import crow.metascheduler
 
-logging.basicConfig(stream=sys.stderr,level=logging.INFO,
+logging.basicConfig(stream=sys.stderr,level=logging.DEBUG,
    format='%(module)s:%(lineno)d: %(levelname)8s: %(message)s')
 logger=logging.getLogger('setup_expt')
 
@@ -28,7 +28,7 @@ if len(sys.argv)<2:
 
 yamls = [ 'resources.yaml', 'platform.yaml', ]
 yamls += sorted(list(glob.glob('validation/*')))
-yamls += [ 'places.yaml', 'settings.yaml' ]
+yamls += [ 'places.yaml', 'settings.yaml', 'fv3_enkf_defaults.yaml' ]
 yamls += sys.argv[1:] + ['runtime.yaml']
 yamls += sorted(list(glob.glob('actions/*')))
 yamls += ['workflow.yaml']
@@ -62,7 +62,9 @@ doc=crow.config.document_root(suite)
 expname=conf.case.experiment_name
 logger.info(f'Experiment name: {expname}')
 
+logger.info(f'Generate suite definition')
 rocoto_xml=crow.metascheduler.to_rocoto(suite)
+logger.info(f'Prepare cached YAML')
 yaml=crow.config.to_yaml(doc)
 
 logger.info(f'Write the config file: {config_yaml}')

@@ -3,7 +3,7 @@ arch_base: &arch_base !Action
   J_JOB: arch
   walltime: !timedelta 06:00:00
   resources: !calc run_arch.resources
-  memory: "3072M"
+  memory: !calc run_arch.memory
   accounting: !calc doc.platform.transfer_accounting
 
   CASE_ENKF: "C96"

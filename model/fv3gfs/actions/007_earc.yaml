@@ -5,7 +5,7 @@ earc: &earc_action !Action
   walltime: !timedelta 00:15:00
   resources: !calc run_earc.resources
   accounting: !calc doc.platform.transfer_accounting
-  memory: "3072M"
+  memory: !calc run_earc.memory
   Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_enkf_settings, ".*" ]
@@ -13,6 +13,7 @@ earc: &earc_action !Action
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
+  CDUMP: gdas
   CASE: !calc CASE_ENKF
   CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
   GROUP_NUMBER: null  # replaced in workflow

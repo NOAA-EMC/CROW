@@ -6,7 +6,7 @@ eobs: &eobs_action !Action
   walltime: !timedelta 00:15:00
   resources: !calc run_eobs.resources
   gsi_resources: !calc run_gsi.resources
-  memory: "3072M"
+  memory: !calc run_eobs.memory
   ANALYSISSH: "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   APRUN_GSI:  !calc tools.command_without_exe(par,gsi_resources,'placeholder')
 
@@ -20,7 +20,7 @@ eobs: &eobs_action !Action
   NMEM_EOMGGRP: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
   NTHREADS_GSI: !calc nodes.omp_threads_for(gsi_resources[0])
   NTHSTACK: 1024000000
-
+  CDUMP: gdas
 # GSI namelist options related to observer for EnKF
   VERBOSE: YES
   WRITE_NEMSIOFILE: YES

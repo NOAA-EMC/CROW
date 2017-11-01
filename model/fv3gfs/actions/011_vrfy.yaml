@@ -6,7 +6,7 @@ vrfy_base: &vrfy_base !Action
   J_JOB: vrfy
   walltime: !timedelta 01:00:00
   resources: !calc run_vrfy.resources
-  memory: "3072M"
+  memory: !calc run_vrfy.memory
 
   CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
   CDFNL: "gdas"
@@ -28,7 +28,6 @@ vrfy_base: &vrfy_base !Action
   VRFYGMPK: NO         # Gempak verification
   WRITE_NEMSIOFILE: YES
   assim_freq: 6
-  memory_vrfy: "16384M"
   nst_anl: YES
 
 vrfy_gfs_action: &vrfy_gfs_action !Action
