@@ -74,7 +74,7 @@ class Conditional(list_eval):
             if has_otherwise and ( has_when or has_do ):
                 raise ConditionalOverspecified(
                     f'{self._path}[{i}]: cannot have "otherwise," '
-                    '"when," and "if" in the same entry')
+                    '"when," and "do" in the same entry')
             elif has_otherwise and i!=len(self)-1:
                 raise ConditionalInvalidOtherwise(
                     f'{self._path}[{i}]: "otherwise" must be the last item')
@@ -96,26 +96,27 @@ class Conditional(list_eval):
     def _result(self,globals,locals):
         assert('tools' in globals)
         assert('doc' in globals)
-        if self.__result is Conditional.MISSING:
-            ( keys, values, otherwise_idx ) = \
-                self._gather_keys_and_values(globals,locals)
-            if self._require_an_otherwise_clause() and \
-               otherwise_idx is Conditional.MISSING:
+        ( keys, values, otherwise_idx ) = \
+            self._gather_keys_and_values(globals,locals)
+        if self._require_an_otherwise_clause() and \
+           otherwise_idx is Conditional.MISSING:
+            raise ConditionalMissingOtherwise(
+                f'{self._path}: no "otherwise" clause provided')
+        idx=self._index(keys)
+        if idx is None:
+            if otherwise_idx is Conditional.MISSING:
                 raise ConditionalMissingOtherwise(
-                    f'{self._path}: no "otherwise" clause provided')
-            idx=self._index(keys)
-            if idx is None:
-                if otherwise_idx is Conditional.MISSING:
-                    raise ConditionalMissingOtherwise(
-                        f'{self._path}: no clauses match and no '
-                        f'"otherwise" value was given. {keys} {values}')
-                self.__result=self[otherwise_idx]._raw('otherwise')
-                idx=otherwise_idx
-            else:
-                self.__result=values[idx]
-            if 'message' in self[idx]:
-                _logger.info(f'{self._path}[{idx}]: {self[idx].message}')
-
+                    f'{self._path}: no clauses match and no '
+                    f'"otherwise" value was given. {keys} {values}')
+            self.__result=self[otherwise_idx]._raw('otherwise')
+            _logger.debug(f'{self._path}: result=otherwise: {self.__result!r}')
+            idx=otherwise_idx
+        else:
+            self.__result=values[idx]
+            _logger.debug(f'{self._path}: result index {idx}: {self.__result!r}')
+        if 'message' in self[idx]:
+            _logger.info(f'{self._path}[{idx}]: {self[idx].message}')
+        assert(self.__result is not Conditional.MISSING)
         return self.__result
 
     def _deepcopy_privates_from(self,memo,other):
