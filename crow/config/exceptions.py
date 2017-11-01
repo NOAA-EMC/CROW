@@ -18,10 +18,11 @@ class ExpandMissingResult(ConfigCalcError): pass
 class CalcKeyError(ConfigCalcError): pass
 
 class TemplateError(ConfigError): pass
-class VariableMissing(ConfigError): pass
+class VariableMissing(TemplateError): pass
 class InvalidConfigTemplate(TemplateError): pass
 class InvalidConfigValue(TemplateError): pass
 class InvalidConfigType(TemplateError): pass
+class ValidationRecursionError(TemplateError): pass
 
 class TemplateErrors(ConfigError):
     def __init__(self,errors):
