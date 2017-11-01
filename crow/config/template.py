@@ -80,20 +80,25 @@ class Template(dict_eval):
                 
                     validate_var(scope._path,scheme,var,scope[var])
                     if 'if_present' in scheme:
+                        _logger.debug(f'{scope._path}.{var}: evaluate if_present {scheme._raw("if_present")._path}')
                         ip=from_config(
                             var,scheme._raw('if_present'),self._globals(),scope,
                             f'{scope._path}.{var}')
+                        _logger.debug(f'{scope._path}.{var}: result = {ip!r}')
                         if not ip: continue
+                        if hasattr(ip,'_path'):
+                            _logger.debug(f'{scope._path}.{var}: present ({scope._raw(var)!r}); add {ip._path} to validation')
+                        if not isinstance(ip,Mapping): continue
                         new_template=Template(ip._raw_child())
                         new_template.update(template)
                         template=new_template
                         assert(isinstance(template,Template))
-                except (IndexError,AttributeError) as pye:
-                    errors.append(f'{scope._path}.{var}: {pye}')
+                except (IndexError,AttributeError,TypeError,ValueError) as pye:
+                    errors.append(f'{scope._path}.{var}: {type(pye).__name__}: {pye}')
                     _logger.debug(f'{scope._path}.{var}: {pye}',exc_info=True)
                 except ConfigError as ce:
                     errors.append(str(ce))
-                    _logger.debug(f'{scope._path}.{var}: {ce}',exc_info=True)
+                    _logger.debug(f'{scope._path}.{var}: {type(ce).__name__}: {ce}',exc_info=True)
 
         # Insert default values for all templates found thus far and
         # detect any missing, non-optional, variables
