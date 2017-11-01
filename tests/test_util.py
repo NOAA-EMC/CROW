@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
+f'This script requires python 3.6 or later'
 
 import unittest
+from context import crow
 from crow.sysenv.util import ranks_to_nodes_ppn
 
 class TestRankstoNodes(unittest.TestCase):
