@@ -142,6 +142,7 @@ class dict_eval(MutableMapping):
         self.__child=copy(child)
         self.__cache=copy(child)
         self.__globals={} if globals is None else globals
+        self.__is_validated=False
         self._path=path
     def __contains__(self,k):   return k in self.__child
     def __len__(self):          return len(self.__child)
@@ -177,7 +178,8 @@ class dict_eval(MutableMapping):
 #dict([ ( deepcopy(k,memo),deepcopy(v,memo) )
 #                              for k,v in other.__globals.items() ])
         self.__cache=deepcopy(other.__cache,memo)
-        self._path=deepcopy(other._path)
+        self._path=deepcopy(other._path,memo)
+        self.__is_validated=deepcopy(other.__is_validated,memo)
         #self.__globals=deepcopy(other.__globals,memo)
     def __deepcopy__(self,memo):
         cls=type(self)
@@ -200,6 +202,8 @@ class dict_eval(MutableMapping):
             raise ValidationRecursionError(
                 f'{self._path}: cyclic Inherit detected')
         memo.add(id(self))
+        if self.__is_validated: return
+        self.__is_validated=True
 
         # Inherit from other scopes:
         if 'Inherit' in self and hasattr(self.Inherit,'_update'):
