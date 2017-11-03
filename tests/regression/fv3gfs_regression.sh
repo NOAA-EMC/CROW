@@ -137,7 +137,7 @@ if [[ $system == "cray" ]]; then
  ICS_dir=$ICS_dir_cray
  PTMP=$PTMP_cray
 else
- ICS_dir=$PTMP_theia
+ ICS_dir=$ICS_dir_theia
  PTMP=$PTMP_theia
 fi
 
