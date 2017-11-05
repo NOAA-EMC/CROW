@@ -21,6 +21,13 @@ action_base: &action_base
   par: !calc doc.platform.parallelism
   nodes: !calc doc.platform.nodes
 
+  sys_tp: !FirstTrue
+    - when: !calc doc.platform.name=="THEIA"
+      do: "Cray-CS400"
+    - when: !calc doc.platform.name=="WCOSS_C"
+      do: "Cray-XC40"
+    - otherwise: !error Do not know sys_tp for platform {doc.platform.name}
+
   NCO_NAMING_CONV: !calc doc.gfs_output_settings.NCO_NAMING_CONV
 
   # FIXME: temporary kludge until scripts are updated to use mpiserial

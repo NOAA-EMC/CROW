@@ -125,7 +125,7 @@ resource_defaults: &resource_defaults
     resources:  !JobRequest
       - exe: placeholder
         mpi_ranks: !calc 24*6
-        max_ppn: 4
+        max_ppn: 6
         OMP_NUM_THREADS: 4
 
   run_fcst:
@@ -145,7 +145,7 @@ resource_defaults: &resource_defaults
       - exe: placeholder
         mpi_ranks: !calc 6*12
         max_ppn: 12
-        OMP_NUM_THREADS: max
+        OMP_NUM_THREADS: 1
 
   run_vrfy:
     env: { }

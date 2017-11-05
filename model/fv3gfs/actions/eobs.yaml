@@ -7,8 +7,10 @@ eobs: &eobs_action !Action
   resources: !calc run_eobs.resources
   gsi_resources: !calc run_gsi.resources
   memory: !calc run_eobs.memory
-  ANALYSISSH: "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
+  ANALYSISSH: !expand "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   APRUN_GSI:  !calc tools.command_without_exe(par,gsi_resources,'placeholder')
+
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "assim_freq", "l.*4d.*" ]
 
   Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]

@@ -21,23 +21,27 @@ CYC_TRACK_VARS: &CYC_TRACK_VARS !Template
   homesyndir: 
     type: string
     default: !calc BASE_GSM
+  FHMIN: { type: int, default: 0 }
+  FHMIN_ENKF: { type: int, default: !calc doc.gfs_output_settings.FHMIN_ENKF }
+  FHMAX_ENKF: { type: int, default: !calc doc.gfs_output_settings.FHMAX_ENKF }
+  FHOUT_ENKF: { type: int, default: !calc doc.gfs_output_settings.FHOUT_ENKF }
+  FHMAX_GFS:  { type: int, default: !calc doc.gfs_output_settings.FHMAX_GFS  }
+  FHMAX2_GFS: { type: int, default: !calc FHMAX_GFS }
   FHOUT: 
     type: int
     default: !FirstTrue
       - when: !calc CDUMP=="gfs"
         do: !calc FHOUT_GFS
+      - when: !calc CDUMP=="gdas"
+        do: !calc doc.gfs_output_settings.FHOUT_GDAS
       - otherwise: !error "FHOUT undefined!"
-  FHMIN: { type: int, default: 0 }
-  FHMIN_ENKF: { type: int, default: 3 }
-  FHMAX_ENKF: { type: int, default: 9 }
-  FHOUT_ENKF: { type: int, default: 3 }
-  FHMAX_GFS: { type: int, default: 384 } # 384 = operational value
-  FHMAX2_GFS: { type: int, default: !calc FHMAX_GFS }
   FHMAX: 
     type: int
     default: !FirstTrue
       - when: !calc CDUMP=="gfs"
         do: !calc FHMAX2_GFS
+      - when: !calc CDUMP=="gdas"
+        do: !calc doc.gfs_output_settings.FHMAX_GDAS
       - otherwise: !error "FHMAX undefined!"
 
   FHMAX2: { type: int, default: !calc FHMAX2_GFS }
@@ -94,7 +98,7 @@ MIN_VARS: &MIN_VARS !Template
     default: !calc BASE_GSM
   MINMON_SUFFIX: 
     type: string
-    default: !calc experiment_name
+    default: !calc doc.case.experiment_name
   M_TANKverf: 
     type: string
     default: !expand "{NOSCRUB}/minmon"
@@ -114,7 +118,7 @@ RAD_VARS: &RAD_VARS !Template
     default: !calc BASE_GSM
   RADMON_SUFFIX: 
     type: string
-    default: !calc experiment_name
+    default: !calc doc.case.experiment_name
   TANKverf: 
     type: string
     default: !expand "{NOSCRUB}/radmon"
@@ -135,13 +139,14 @@ OZN_VARS: &OZN_VARS !Template
     default: NO
   OZNDIR: 
     type: string
-    default: !expand "{NOSCRUB}/{LOGNAME}/ozone/stats/{experiment_name}"
+    stages: [ execution ]
+    default: !expand "{NOSCRUB}/{tools.env('LOGNAME')}/ozone/stats/{doc.case.experiment_name}"
   VRFYOZNSH:
     type: string
     default:  ""
   BASEDIR_OZNMON: 
     type: string
-    default: !expand "{BASE_OZNMON}/util/Ozone_Monitor"
+    default: !expand "{doc.places.BASE_OZNMON}/util/Ozone_Monitor"
 
 MIN_RAD_OZN_VARS: &MIN_RAD_OZN_VARS !Template
   HOMEgdas: 
@@ -271,9 +276,9 @@ vrfy_template: &vrfy_template !Template
   fitdir:
     type: string
     default: !FirstTrue
-      - when: !calc ( doc.platform.name=="WCOSS_C" and VRFYFITS )
+      - when: !calc doc.platform.name=="WCOSS_C"
         do: !expand "{BASE_SVN}/verif/global/parafits.fv3nems/batrun"
-      - when: !calc ( doc.platform.name=="THEIA" and VRFYFITS )
+      - when: !calc doc.platform.name=="THEIA"
         do: !expand "{BASE_SVN}/verif/global/parafits.fv3nems/batrun"
       - otherwise: !error "Do not know fitdir for this platform"
 
@@ -286,9 +291,8 @@ vrfy_template: &vrfy_template !Template
       - when: !calc ( doc.platform.name=="THEIA" and VRFYFITS )
         do: !expand "{fitdir}/subfits_theia_nems"
         message: "THEIA fits file"
-      - when: !calc VRFYFITS!=YES
+      - when: !calc not VRFYFITS
         do: "/dev/null"
-        message: !expand vrfyfits = {VRFYFITS}
       - otherwise: !error "Do not know subfits file (PREPQFITSH) for {doc.platform.name}"
 
   VRFY_CDUMP_GFS:

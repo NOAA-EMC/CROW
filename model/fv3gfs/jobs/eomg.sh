@@ -1,10 +1,10 @@
-#!/bin/bash
+#! /bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
-# $Date: 2017-08-16 21:42:24 +0000 (Wed, 16 Aug 2017) $
-# $Revision: 96658 $
+# $Date: 2017-10-30 18:48:54 +0000 (Mon, 30 Oct 2017) $
+# $Revision: 98721 $
 # $Author: fanglin.yang@noaa.gov $
-# $Id: eomg.sh 96658 2017-08-16 21:42:24Z fanglin.yang@noaa.gov $
+# $Id: eomg.sh 98721 2017-10-30 18:48:54Z fanglin.yang@noaa.gov $
 ###############################################################
 
 ###############################################################
@@ -21,8 +21,8 @@
 set -ex
 JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
-eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:platform.general_env import:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
 unset JOBNAME
@@ -30,6 +30,7 @@ if [[ "${ACTUALLY_RUN:-NO}" == NO ]] ; then echo just testing ; exit 0 ; fi
 
 ###############################################################
 # Set script and dependency variables
+export CASE=$CASE_ENKF
 export GDATE=$($NDATE -$assim_freq $CDATE)
 
 cymd=$(echo $CDATE | cut -c1-8)
@@ -43,7 +44,6 @@ export ASUFFIX=".nemsio"
 export GPREFIX="${CDUMP}.t${ghh}z."
 export GSUFFIX=".nemsio"
 
-export COMIN_OBS="$DMPDIR/$CDATE/$CDUMP"
 export COMIN_GES="$ROTDIR/$CDUMP.$gymd/$ghh"
 export COMIN_GES_ENS="$ROTDIR/enkf.$CDUMP.$gymd/$ghh"
 export COMOUT="$ROTDIR/enkf.$CDUMP.$cymd/$chh"
@@ -73,8 +73,8 @@ export SELECT_OBS="$COMOUT/${APREFIX}obsinput.ensmean"
 
 ###############################################################
 # Get ENSBEG/ENSEND from ENSGRP and NMEM_EOMGGRP
-ENSEND=$(echo "$NMEM_EOMGGRP * $ENSGRP" | bc)
-ENSBEG=$(echo "$ENSEND - $NMEM_EOMGGRP + 1" | bc)
+ENSEND=$((NMEM_EOMGGRP * ENSGRP))
+ENSBEG=$((ENSEND - NMEM_EOMGGRP + 1))
 export ENSBEG=$ENSBEG
 export ENSEND=$ENSEND
 

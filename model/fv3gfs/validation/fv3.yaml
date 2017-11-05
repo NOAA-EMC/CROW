@@ -7,7 +7,7 @@ fv3_settings_template: &fv3_settings_template
     description: vorticity and divergence damping
   consv_te: 
     type: float
-    default: 0.
+    default: 1.
     description: conserve total energy
   fv_sg_adj:
     type: int
@@ -15,7 +15,7 @@ fv3_settings_template: &fv3_settings_template
     description: time-scale to remove 2dz instability
   dspheat:
     type: string
-    default: ".false."
+    default: ".true."
     allowed: [ ".true.", ".false." ]
     description: dissipative heating
   shal_cnv:
@@ -47,7 +47,7 @@ fv3_settings_template: &fv3_settings_template
 
   restart_interval:
     type: int
-    default: 0
+    default: 6
 
   LEVS:
     type: int
@@ -172,7 +172,7 @@ fv3_settings_template: &fv3_settings_template
     allowed: [ 'C48', 'C96', 'C192', 'C384', 'C768', 'C1152', 'C3072' ]
     if_present: !FirstTrue
       - when: !calc CASE=='C48'
-        do:
+        do: !Template
           DELTIM: { default: 3600, type: int }
           layout_x: { default: 4, type: int }
           layout_y: { default: 8, type: int }
@@ -180,7 +180,7 @@ fv3_settings_template: &fv3_settings_template
           WRTTASK_PER_GROUP: { default: 12, type: int }
   
       - when: !calc CASE=='C96'
-        do:
+        do: !Template
           DELTIM: { default: 1800, type: int }
           layout_x: { default: 4, type: int }
           layout_y: { default: 8, type: int }
@@ -192,7 +192,7 @@ fv3_settings_template: &fv3_settings_template
           WRTTASK_PER_GROUP: { default: 12, type: int }
 
       - when: !calc CASE=='C192'
-        do:
+        do: !Template
           DELTIM: { default: 900, type: int }
           layout_x: { default: 4, type: int }
           layout_y: { default: 8, type: int }
@@ -204,7 +204,7 @@ fv3_settings_template: &fv3_settings_template
           WRTTASK_PER_GROUP: { default: 24, type: int }
 
       - when: !calc CASE=='C384'
-        do:
+        do: !Template
           DELTIM: { default: 450, type: int }
           layout_x: { default: 4, type: int }
           layout_y: { default: 8, type: int }
@@ -216,7 +216,7 @@ fv3_settings_template: &fv3_settings_template
           WRTTASK_PER_GROUP: { default: 48, type: int }
   
       - when: !calc CASE=='C768'
-        do:
+        do: !Template
           DELTIM: { default: 225, type: int }
           layout_x: { default: 8, type: int }
           layout_y: { default: 16, type: int }

@@ -13,6 +13,8 @@ earc: &earc_action !Action
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "assim_freq", "l.*4d.*" ]
+
   CDUMP: gdas
   CASE: !calc CASE_ENKF
   CASE_ENKF: !calc doc.fv3_enkf_settings.CASE

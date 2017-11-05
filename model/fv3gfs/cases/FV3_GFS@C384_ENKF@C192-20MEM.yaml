@@ -1,10 +1,11 @@
 fv3_settings: &fv3_settings
   LEVS: 65  # Number of vertical levels (mandatory)
+  QUILTING: NO
 
 fv3_gfs_settings: &fv3_gfs_settings
   <<: *fv3_settings
   Template: *fv3_settings_template
-  CASE: C192 # FV3 horizontal resolution (mandatory)
+  CASE: C384 # FV3 horizontal resolution (mandatory)
   CDUMP: gfs
 
 fv3_enkf_settings: &fv3_enkf_settings
@@ -12,7 +13,6 @@ fv3_enkf_settings: &fv3_enkf_settings
   Template: *fv3_settings_template
   CASE: C192 # FV3 horizontal resolution for ensemble (mandatory)
   CDUMP: gdas
-  QUILTING: NO
 
 fv3_gdas_settings: &fv3_gdas_settings
   <<: *fv3_gfs_settings
@@ -33,9 +33,9 @@ gfs_output_settings: &gfs_output_settings
 
 data_assimilation: &data_assimilation
   Template: *data_assimilation_template
-  # Shared parameters/switches
+  # Shared parameters/switches for data assimilation
   DOHYBVAR: YES           # optional
-  NMEM_ENKF: 20           # DO NOT CHANGE (yet)
+  NMEM_ENKF: 20
   NMEM_ENKF_GRP_EOMN: 10  # DO NOT CHANGE (yet)
   NMEM_ENKF_GRP_EFMN: 10  # DO NOT CHANGE (yet)
   RECENTER_ENKF: YES      # optional
@@ -43,19 +43,15 @@ data_assimilation: &data_assimilation
   lwrite4danl: ".false."  # optional
   DO_MAKEPREPBUFR: YES   # if NO, will copy prepbufr from globaldump
 
-########################################################################
-
-accounting: &accounting
-  # Project for CPU accounting.
-  Template: *accounting_template
-  cpu_project: nems
-  hpss_project: emc-hwrf  # Project for storing HPSS data.
-  noscrub_project: nems  # Project for storing non-scrubbed data.
+prepbufr: &prepbufr
+  # Parameters and switches for propbufr creation.
+  Template: *obsproc_template
+  # See validation/obsproc.yaml for variables you can override
 
 ########################################################################
 
 case:
-  Template: *case_template
+  Template: [ *case_template, *known_workflows ]
   # User-defined experiment name; should be a-z followed by alphanumeric:
   experiment_name: fv3gfs2 #Formerly known as PSLOT
 
@@ -66,8 +62,9 @@ case:
 
   master_grid: "0p25deg" # 1deg 0p5deg 0p25deg 0p125deg etc
 
-  ACTUALLY_RUN: YES
-  CYCLING: YES
+  ACTUALLY_RUN: YES # do not change
+
+  workflow: cycled_workflow
 
   IC_CDUMP: gdas # Get initial conditions from 1st cycle from GFS or GDAS
   IC_DIR: !FirstTrue

@@ -24,6 +24,19 @@ gfs_output_settings_template: &gfs_output_settings_template
     default: 3
     description: GDAS ENKF output frequency in hours
 
+  FHMIN_GDAS:
+    type: int
+    default: 0
+    description: GDAS initial hour for output
+  FHMAX_GDAS:
+    type: int
+    default: 9
+    description: GDAS forecast length
+  FHOUT_GDAS:
+    type: int
+    default: 3
+    description: GDAS output frequency in hours
+
   FHMAX_HF_GFS:
     type: int
     default: 0

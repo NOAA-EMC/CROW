@@ -1,10 +1,10 @@
-#!/bin/bash
+#! /bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
-# $Date: 2017-08-16 21:42:24 +0000 (Wed, 16 Aug 2017) $
-# $Revision: 96658 $
+# $Date: 2017-10-30 18:48:54 +0000 (Mon, 30 Oct 2017) $
+# $Revision: 98721 $
 # $Author: fanglin.yang@noaa.gov $
-# $Id: prep.sh 96658 2017-08-16 21:42:24Z fanglin.yang@noaa.gov $
+# $Id: prep.sh 98721 2017-10-30 18:48:54Z fanglin.yang@noaa.gov $
 ###############################################################
 
 ###############################################################
@@ -20,8 +20,8 @@
 set -ex
 JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
-eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:platform.general_env import:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
 unset JOBNAME
@@ -35,7 +35,6 @@ chh=$(echo  $CDATE | cut -c9-10)
 
 export OPREFIX="${CDUMP}.t${chh}z."
 
-export COMIN_OBS="$DMPDIR/$CDATE/$CDUMP"
 export COMOUT="$ROTDIR/$CDUMP.$cymd/$chh"
 [[ ! -d $COMOUT ]] && mkdir -p $COMOUT
 
@@ -49,13 +48,14 @@ fi
 
 # Generate prepbufr files from dumps or copy from OPS
 if [ $DO_MAKEPREPBUFR = "YES" ]; then
-    $DRIVE_MAKEPREPBUFRSH
+    "$BASE_JOB"/drive_makeprepbufr.sh
     [[ $status -ne 0 ]] && exit $status
 else
-    $NCP $COMIN_OBS/${OPREFIX}prepbufr               $COMOUT/${OPREFIX}prepbufr
-    $NCP $COMIN_OBS/${OPREFIX}prepbufr.acft_profiles $COMOUT/${OPREFIX}prepbufr.acft_profiles
+    $NCP $DMPDIR/$CDATE/$CDUMP/${OPREFIX}prepbufr               $COMOUT/${OPREFIX}prepbufr
+    $NCP $DMPDIR/$CDATE/$CDUMP/${OPREFIX}prepbufr.acft_profiles $COMOUT/${OPREFIX}prepbufr.acft_profiles
+    [[ $DONST = "YES" ]] && $NCP $DMPDIR/$CDATE/$CDUMP/${OPREFIX}nsstbufr $COMOUT/${OPREFIX}nsstbufr
 fi
 
-###############################################################
+################################################################################
 # Exit out cleanly
 exit 0

@@ -15,16 +15,25 @@ anal_base: &anal_base !Action
     - when: !calc doc.platform.name=="THEIA"
       do: "mpirun -np $ncmd"
     - when: !calc doc.platform.name=="WCOSS_C"
-      do: "aprun -j 1 -n \\$ncmd -N 1 -d {NTHREADS_CALCINC} -cc depth"
+      do: !expand "aprun -j 1 -n $ncmd -N 1 -d {NTHREADS_CALCINC} -cc depth"
     - otherwise: !error "No APRUN_CALCINC for unknown platform {doc.platform.name}"
+  APRUN_CYCLE: !FirstTrue
+    - when: !calc doc.platform.name=="THEIA"
+      do: time
+    - when: !calc doc.platform.name=="WCOSS_C"
+      do: !expand "aprun -j 1 -n $ncmd -N 1 -d {NTHREADS_CYCLE} -cc depth"
+    - otherwise: !error "No APRUN_CALCINC for unknown platform {doc.platform.name}"
+  NTHREADS_CYCLE: 12
   NTHREADS_CALCINC: 1
 
   APRUN_GSI:  !calc tools.command_without_exe(par,run_gsi.resources,"placeholder")
   ANALYSISSH: !expand "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
-  NTHREADS_GSI: !calc nodes.omp_threads_for(anal_resources[0])
+  NTHREADS_GSI: !calc nodes.omp_threads_for(run_gsi.resources[0])
   CASE_ENKF: !calc doc.fv3_enkf_settings.CASE
 
   VERBOSE: YES
+
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "assim_freq", "sys_tp", "l.*4d.*" ]
 
 anal_gdas_action: &anal_gdas_action !Action
   <<: *anal_base

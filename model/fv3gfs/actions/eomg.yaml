@@ -1,16 +1,12 @@
-eupd: &eupd_action !Action
+eomg: &eomg_action !Action
   <<: *action_base
-  J_JOB: eupd
+  J_JOB: eomg
   ANALYSISSH: "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
-  APRUN_ENKF: !calc |
-    tools.command_without_exe(
-      par,enkf_resources,'placeholder')
-  ATARDIR: "/NCEPDEV/emc-global/1year/Samuel.Trahan/THEIA/scratch/wham"
+  APRUN_GSI: !calc tools.command_without_exe(par,run_gsi.resources,'placeholder')
   walltime: !timedelta 00:15:00
-  enkf_resources: !calc run_enkf.resources
-  eupd_resources: !calc run_eupd.resources
-  resources: !calc run_eupd.resources
-  memory: !calc run_eupd.memory
+  resources: !calc run_eomg.resources
+  memory: !calc run_eomg.memory
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "assim_freq", "sys_tp", "l.*4d.*" ]
 
   Inherit: !Inherit
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
@@ -20,7 +16,10 @@ eupd: &eupd_action !Action
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
   CDUMP: gdas
   CASE: !calc doc.fv3_enkf_settings.CASE
-  NTHREADS_ENKF: 2
+  NMEM_EOMGGRP: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
+  NTHREADS_GSI: !calc nodes.omp_threads_for(run_gsi.resources[0])
   NTHSTACK: 1024000000
+  GROUP_NUMBER: null  # replaced in workflow
+  ENSGRP: !expand "{GROUP_NUMBER:02d}"
   VERBOSE: YES
   WRITE_NEMSIOFILE: YES

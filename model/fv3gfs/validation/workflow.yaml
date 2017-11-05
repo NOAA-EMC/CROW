@@ -1,0 +1,15 @@
+known_workflows: &known_workflows
+  workflow:
+    type: str
+    allowed: [ cycled_workflow ]
+    if_present: !FirstTrue
+      - when: workflow=="cycled_workflow"
+        do:
+          IC_CDUMP:
+            type: string
+            allowed: [ gdas, gfs ]
+            description: Get initial conditions from 1st cycle from gfs or gdas
+            default: GDAS
+          IC_DIR:
+            type: string
+            description: Disk location of initial conditions for cycled workflow

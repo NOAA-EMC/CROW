@@ -1,7 +1,6 @@
 post_base: &post_base !Action
   <<: *action_base
   J_JOB: post
-  walltime: !timedelta 00:15:00
   resources: !calc run_post.resources
   memory: !calc run_post.memory
 
@@ -19,6 +18,7 @@ post_base: &post_base !Action
   NTHREADS_DWN: 2
   NTHREADS_NP: 1
   downset: 1
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "assim_freq", "l.*4d.*" ]
 
 post_gfs: &post_gfs_action !Action
   <<: *post_base
@@ -31,6 +31,7 @@ post_gfs: &post_gfs_action !Action
     - [ doc.platform.general_env, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+  walltime: !timedelta 02:35:00
 
 post_gdas: &post_gdas_action !Action
   <<: *post_base
@@ -43,3 +44,4 @@ post_gdas: &post_gdas_action !Action
     - [ doc.platform.general_env, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+  walltime: !timedelta 00:25:00

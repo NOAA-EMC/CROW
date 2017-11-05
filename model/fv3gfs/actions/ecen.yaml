@@ -11,6 +11,8 @@ ecen: &ecen_action !Action
   resource_env: !calc run_ecen.env
   memory: !calc run_ecen.memory
 
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "assim_freq", "l.*4d.*" ]
+
   # Each command (APRUN_whatever) in config.resources needs a
   # run_whatever entry in the corresponding action.
   # Executable name is specified deep inside scripts

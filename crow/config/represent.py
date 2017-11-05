@@ -115,7 +115,8 @@ class Conditional(list_eval):
             self.__result=values[idx]
             _logger.debug(f'{self._path}: result index {idx}: {self.__result!r}')
         if 'message' in self[idx]:
-            _logger.info(f'{self._path}[{idx}]: {self[idx].message}')
+            message=from_config('message',self[idx].message,globals,locals,self._path)
+            _logger.info(f'{self._path}[{idx}]: {message}')
         assert(self.__result is not Conditional.MISSING)
         return self.__result
 

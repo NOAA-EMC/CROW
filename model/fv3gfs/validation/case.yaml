@@ -31,15 +31,3 @@ case_template: &case_template
     type: datetime
     description: Last cycle to run GDAS.
   
-  CYCLING:
-    type: bool
-    description: "Run data assimilation to cycle the workflow?"
-    if_present:
-      IC_CDUMP:
-        type: string
-        allowed: [ gdas, gfs ]
-        description: Get initial conditions from 1st cycle from gfs or gdas
-        default: GDAS
-      IC_DIR:
-        type: string
-        description: Disk location of initial conditions for cycled workflow
