@@ -1,7 +1,7 @@
 eupd: &eupd_action !Action
   <<: *action_base
   J_JOB: eupd
-  ANALYSISSH: "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
+  ANALYSISSH: !expand "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   APRUN_ENKF: !calc |
     tools.command_without_exe(
       par,enkf_resources,'placeholder')

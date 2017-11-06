@@ -1,7 +1,7 @@
 eomg: &eomg_action !Action
   <<: *action_base
   J_JOB: eomg
-  ANALYSISSH: "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
+  ANALYSISSH: !expand "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   APRUN_GSI: !calc tools.command_without_exe(par,run_gsi.resources,'placeholder')
   walltime: !timedelta 00:15:00
   resources: !calc run_eomg.resources

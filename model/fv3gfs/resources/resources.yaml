@@ -41,7 +41,19 @@ resource_defaults: &resource_defaults
       - otherwise: ""
     resources:  !JobRequest
       - exe: placeholder
-        mpi_ranks: !calc 24*6
+        mpi_ranks: !calc 12*6
+        max_ppn: 6
+        OMP_NUM_THREADS: 4
+
+  run_eobs_gsi:
+    env: { }
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: !calc 12*6
         max_ppn: 6
         OMP_NUM_THREADS: 4
 

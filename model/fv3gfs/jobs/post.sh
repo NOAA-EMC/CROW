@@ -24,6 +24,7 @@ JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:platform.general_env import:".*" )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH bool:.true.,.false. from:true_false_vars )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
 unset JOBNAME
 if [[ "${ACTUALLY_RUN:-NO}" == NO ]] ; then echo just testing ; exit 0 ; fi
@@ -54,6 +55,8 @@ if [ $QUILTING = ".false." ]; then
     status=$?
     [[ $status -ne 0 ]] && exit $status
 else
+    echo SHOULD NOT GET HERE
+    exit 99
     # write component does not add JCAP anymore
     res=$(echo $CASE | cut -c2-)
     export JCAP=$((res*2-2))
