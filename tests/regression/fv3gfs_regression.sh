@@ -95,6 +95,7 @@ if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
  fi
 fi
 
+log_message "INFO" "running regression script on host $HOST"
 if [[ -d $1 ]]; then
   check_base_line_dir=`readlink -f $1`
   regressionID='baseline'
@@ -185,6 +186,7 @@ if [[ $CHECKOUT == 'TRUE' ]]; then
    if [[ ! -z "${fv3gfs_git_branch}// }" ]]; then
     cd ${checkout_dir_basename}
     git checkout remotes/origin/${fv3gfs_git_branch} -b ${fv3gfs_git_branch}
+    git rev-parse HEAD | xargs git show --stat
     cd ${CHECKOUT_DIR}
    fi
 
@@ -237,11 +239,14 @@ fi
 if [[ ! -d ${EXP_FULLPATH} ]]; then
   log_message "CRITICAL" "experment directory $EXP_FULLPATH not found"
 fi
-cd ${EXP_FULLPATH}
 
 if [[ $RUNROCOTO == 'TRUE' ]]; then
+    log_message "INFO" "running regression script on host $HOST"
+    log_message "INTO" "moving to PWD $EXP_FULLPATH to run cycleing in experiment directory"
+    cd ${EXP_FULLPATH}
 
-    log_message "INFO" "Starting to run fv3gfs cycling regression test run using $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml -v 10"
+    log_message "INFO" "Starting to run fv3gfs cycling regression test run using $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
+    log_message "INFO" "running $rocotoruncmd from $PWD"
 
     $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml
     if [[ $? != 0 ]]; then
