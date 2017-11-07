@@ -1,0 +1,13 @@
+no_enkf: &no_enkf
+  CDUMP: gdas
+  CASE: !calc doc.fv3_gdas_settings.CASE
+  LEVS: !calc doc.fv3_gdas_settings.LEVS
+
+no_gdas: &no_gdas
+  CDUMP: gdas
+  CASE: !calc doc.fv3_gfs_settings.CASE
+  LEVS: !calc doc.fv3_gfs_settings.LEVS
+
+no_data_assimilation: &data_assimilation {}
+
+no_prepbufr: &no_prepbufr

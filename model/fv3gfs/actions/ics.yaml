@@ -1,0 +1,18 @@
+fv3ic: &fv3ic_action !Action
+  <<: *action_base
+  J_JOB: fv3ic
+  walltime: !timedelta 00:30:00
+  resources: !calc run_fv3ic.resources
+  memory: !calc run_fv3ic.memory
+
+getic: &getic_action !Action
+  <<: *action_base
+  J_JOB: getic
+  walltime: !timedelta 06:00:00
+  resources: !calc run_arch.resources
+  memory: !calc run_arch.memory
+
+  ics_from: !calc doc.case.ics_from
+
+  # Variables to import in shell:
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "ics_from", "parexp", "HPSS_PAR_PATH" ]

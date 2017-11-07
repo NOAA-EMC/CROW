@@ -58,12 +58,6 @@ case:
   SDATE: 2017-07-31t18:00:00
   EDATE: 2017-08-05t00:00:00
 
-  DO_RELOCATE: NO # DO NOT CHANGE (yet) - relocate not yet implemented
-
-  master_grid: "0p25deg" # 1deg 0p5deg 0p25deg 0p125deg etc
-
-  ACTUALLY_RUN: YES # do not change
-
   workflow: cycled_workflow
 
   IC_CDUMP: gdas # Get initial conditions from 1st cycle from GFS or GDAS

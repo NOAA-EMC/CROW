@@ -31,3 +31,41 @@ case_template: &case_template
     type: datetime
     description: Last cycle to run GDAS.
   
+  master_grid:
+    type: string
+    default: "0p25deg"
+    allowed: [ "1deg" "0p5deg" "0p25deg" "0p125deg" ]
+    description: Original grid of the post
+
+  DO_RELOCATE:
+    type: bool
+    default: NO
+    allowed: [ NO ]
+    description: vortex relocation flag - keep as NO - relocate not yet implemented
+
+  ACTUALLY_RUN:
+    type: bool
+    default: YES
+    description: For test purposes only.  Keep as YES
+
+  experiment_name:
+    type: string
+    default: !calc doc.experiment_name
+    description: |
+      User-defined experiment name; should be a-z followed by alphanumeric.
+      Formerly known as PSLOT.
+
+  ics_from:
+    type: string
+    allowed: [ opsgfs, pargfs ]
+    default: opsgfs
+    if_present: !Template
+      parexp:
+        default: prnemsrn
+        type: string
+        description: Name of a GFS parallel experiment to pull from tape
+      HPSS_PAR_PATH:
+        default: !expand "/5year/NCEPDEV/emc-global/emc.glopara/WCOSS_C/{parexp}"
+        type: string
+        description: Path to HPSS tapes with GFS parallel data
+
