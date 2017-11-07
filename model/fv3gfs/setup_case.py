@@ -88,14 +88,16 @@ def main():
     logging.basicConfig(stream=sys.stderr,level=level)
     force="--force" in options
 
-    if len(args)!=1:
-        sys.stderr.write("Format: setup_case.py [-v] [--force] case-name\n")
+    if len(args)!=2:
+        sys.stderr.write("Format: setup_case.py [-v] [--force] case-name experiment-name\n")
         exit(1)
 
     case=args[0]
+    experiment_name=args[1]
 
     logger.info(f"read case {case}")
     conf=read_contents(case)
+    conf.experiment_name=experiment_name
     logger.info("Remove platforms from configuration.")
     for key in list(conf.keys()):
         if isinstance(conf[key],Platform) and key!='platform':
