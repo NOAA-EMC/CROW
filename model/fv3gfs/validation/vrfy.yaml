@@ -169,10 +169,10 @@ VRFY_CDUMP_GFS_VARS: &VRFY_CDUMP_GFS_VARS !Template
   vsdbhome: 
     type: string
     default: !calc BASE_VERIF
-  VSDBSH=: 
+  VSDBSH: 
     type: string
     default: !expand "{vsdbhome}/vsdbjob.sh"
-  vlength=: 
+  vlength: 
     type: int
     default: !calc FHMAX_GFS
   vhr_rain: 
@@ -304,6 +304,7 @@ vrfy_template: &vrfy_template !Template
     if_present: !FirstTrue
       - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1 or VRFYPRCP or VRFYG2OBS ) )
         do: *VRFY_CDUMP_GFS_VARS
+        message: VRFY_CDUMP_GFS_VARS
       - otherwise: null
 
   NO_VRFYMINSH:

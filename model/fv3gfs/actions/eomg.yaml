@@ -2,7 +2,7 @@ eomg: &eomg_action !Action
   <<: *action_base
   J_JOB: eomg
   ANALYSISSH: !expand "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
-  APRUN_GSI: !calc tools.command_without_exe(par,run_gsi.resources,'placeholder')
+  APRUN_GSI: !calc tools.command_without_exe(par,run_eomg.resources,'placeholder')
   walltime: !timedelta 00:15:00
   resources: !calc run_eomg.resources
   memory: !calc run_eomg.memory
@@ -23,3 +23,12 @@ eomg: &eomg_action !Action
   ENSGRP: !expand "{GROUP_NUMBER:02d}"
   VERBOSE: YES
   WRITE_NEMSIOFILE: YES
+  APRUN_CALCINC: " "
+
+  APRUN_CYCLE: !FirstTrue
+    - when: !calc doc.platform.name=="THEIA"
+      do: time
+    - when: !calc doc.platform.name=="WCOSS_C"
+      do: !expand "aprun -j 1 -n $ncmd -N 1 -d {NTHREADS_CYCLE} -cc depth"
+    - otherwise: !error "No APRUN_CALCINC for unknown platform {doc.platform.name}"
+  NTHREADS_CYCLE: 12

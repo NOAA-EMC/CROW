@@ -6,10 +6,9 @@ eobs: &eobs_action !Action
   CASE: !calc doc.fv3_gdas_settings.CASE
   walltime: !timedelta 00:15:00
   resources: !calc run_eobs.resources
-  gsi_resources: !calc run_eobs_gsi.resources
   memory: !calc run_eobs.memory
   ANALYSISSH: !expand "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
-  APRUN_GSI:  !calc tools.command_without_exe(par,gsi_resources,'placeholder')
+  APRUN_GSI:  !calc tools.command_without_exe(par,resources,'placeholder')
 
   shell_vars: [ "[A-Z][A-Z0-9_]*$", "assim_freq", "l.*4d.*" ]
 
@@ -24,7 +23,7 @@ eobs: &eobs_action !Action
   true_false_vars: [ 'QUILTING', 'WRITE_NEMSIOFILE', 'nst_anl', 'zhao_mic' ]
 
   NMEM_EOMGGRP: !calc doc.data_assimilation.NMEM_ENKF_GRP_EOMN
-  NTHREADS_GSI: !calc nodes.omp_threads_for(gsi_resources[0])
+  NTHREADS_GSI: !calc nodes.omp_threads_for(resources[0])
   NTHSTACK: 1024000000
   CDUMP: gdas
 # GSI namelist options related to observer for EnKF

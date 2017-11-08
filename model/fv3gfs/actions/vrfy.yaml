@@ -15,7 +15,6 @@ vrfy_base: &vrfy_base !Action
   CDUMPFCST: "gdas"  # Fit-to-obs with GDAS/GFS prepbufr
   GRIB1_WORKS: NO
   SMOOTH_ENKF: YES
-  VDUMP: "gfs"
   VRFYG2OBS: NO
   VRFYGENESIS: NO
   VRFYGMPK: NO
@@ -26,11 +25,11 @@ vrfy_base: &vrfy_base !Action
   VRFYTRAK: NO
   VSDB_STEP1: YES
   VSDB_STEP2: NO
-  VRFYGENESIS: YES     # Cyclone genesis
   VRFYGMPK: NO         # Gempak verification
   WRITE_NEMSIOFILE: YES
   assim_freq: 6
   nst_anl: YES
+  true_false_vars: [ 'QUILTING', 'WRITE_NEMSIOFILE', 'nst_anl', 'zhao_mic' ]
 
 vrfy_gfs_action: &vrfy_gfs_action !Action
   <<: *vrfy_base
@@ -47,11 +46,15 @@ vrfy_gfs_action: &vrfy_gfs_action !Action
   BACKDATEVSDB: 24
   VBACKUP_PRCP: 24
   VSDBSH: !calc doc.places.VSDBSH
+  FHMIN: !calc doc.gfs_output_settings.FHMIN_GFS
+  FHMAX: !calc doc.gfs_output_settings.FHMIN_GFS
+  FHOUT: !calc doc.gfs_output_settings.FHMIN_GFS
   ftyplist: "pgbq"
   vhr_rain: 240
   vlength: 240
   vsdbhome: !calc doc.places.vsdbhome
   vsdbsave: !calc doc.places.vsdbsave
+  VDUMP: !calc CDUMP
 
 vrfy_gdas_action: &vrfy_gdas_action !Action
   <<: *vrfy_base
@@ -65,3 +68,4 @@ vrfy_gdas_action: &vrfy_gdas_action !Action
     - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
+  VDUMP: !calc CDUMP
