@@ -1,20 +1,24 @@
 #!/bin/bash
 
 usage () {
-   echo -e "\033[1mUSAGE:\033[0m\n $0 [[baseline_dir]] [[ compair_dir ]]"
+   echo -e "\033[1mUSAGE:\033[0m\n $0 [[baseline_dir]] [[ compair_dir ]] [[--non-interactive]]"
    echo -e "\tno arguments           : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_baseline  fv3gfs_exp_basline respectivly"
    echo -e "\tone argument  (string) : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${string} respectivly"
    echo -e "\tone argument  (dir)    : creates a test_run with sorc and exp dir in \$PWD named fvgfs_sorc_testrun   fv3gfs_exp_testrun respectivly"
    echo -e "\ttwo arguments (dir) (str) : creates a test_run with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${srting} respectivly"
    echo -e "\ttwo arguments (dir) (dir) : does a bitwise compair on the gfs files from the first dir to the second"
+   echo -e "\tthird optional argument is used when acctually running the script so no promps are given, otherwize the script will report on the settings."
    exit
 }
 
-if [[ "$#" -gt "2" ]] || [[ $1 == '--help' ]]; then
+
+# Traps that only allow the above inputs
+
+if [[ "$#" -gt "3" ]] || [[ $1 == '--help' ]]; then
  usage
 fi
 
-if [[ "$#" == "2" ]]; then
+if [[ "$#" == "2" ]] || [[ "$#" == "3" ]]; then
  if [[ ! -d $1 ]] && [[ ! -d $2 ]]; then
   usage
  fi
@@ -26,8 +30,9 @@ fi
 
 log_message () {
  logtime=`date`
- echo "LOG : $logtime : $1 : $2"
+ echo -e "LOG : $logtime : $1 : $2"
  if [[ $1 == "CRITICAL" ]]; then
+  exit -1
   exit -1
  fi
 }
@@ -43,9 +48,9 @@ CREATE_EXP='TRUE'
 RUNROCOTO='TRUE'
 #RUNROCOTO='FALSE'
 
-regressionID='svntrunk'
+regressionID='baseline'
 idate='2017073118'
-edate='2017080206'
+edate='2017080106'
 
 ICS_dir_cray='/gpfs/hps3/emc/global/noscrub/emc.glopara/ICS'
 PTMP_cray='/gpfs/hps3/ptmp'
@@ -54,7 +59,7 @@ PTMP_theia='/scratch4/NCEPDEV/stmp4'
 
 find_data_dir () {
 
-    check_base_line_dir=$1
+    local _check_baseline_dir=$1
 
     STARTTIME=$(date +%s)
     while IFS= read -r -d '' file
@@ -62,49 +67,63 @@ find_data_dir () {
        gfsfile=`basename $file | cut -f 1 -d"."`
        if [[ $gfsfile == "enkf" ]]; then
           check_real_base_dir=`dirname $file`
-          echo "dir $check_real_base_dir"
-          echo "file $file"
           if ls $check_real_base_dir/gdas.* 1> /dev/null 2>&1; then
            real_base_dir=$check_real_base_dir
            break 
           fi
        fi
-       if [[ $(($ENDTIME - $STARTTIME)) > 41 ]]; then
+       if [[ $(($ENDTIME - $STARTTIME)) > 20 ]]; then
          log_message "CRITICAL" "looking for valid baseline directory put then gave up after a minute"
        fi
-    done < <(find $check_base_line_dir -print0 )
+    done < <(find $_check_baseline_dir -print0 )
 
     if [[ -z $real_base_dir ]]; then
-      log_message "CRITICAL" "$check_base_line_dir is not a directory with a baseline to test in it"
+      log_message "CRITICAL" "$_check_baseline_dir is not a directory with a baseline to test in it"
     fi
-    if [[ $real_base_dir != $check_base_line_dir ]]; then
-      log_message "WARNING" "given directory did not have gfs data, but subdirectory found that did"
-    fi
-    check_base_line_dir=`dirname $file`
-    log_message "INFO" "found baseline fv3gfs gfs data found in directory: $check_base_line_dir"
+    #if [[ $real_base_dir != $_check_baseline_dir ]]; then
+    #log_message "WARNING" "given directory did not have gfs data, but a subsiquent subdirectory was found that did"
+    #fi
+    _check_baseline_dir=`dirname $file`
+    #log_message "INFO" "found baseline fv3gfs gfs data found in directory: $_check_baseline_dir"
+    echo $_check_baseline_dir
 }
 
-COMPAIR_BASELINE='FALSE'
+COMPAIR_BASE='FALSE'
 if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
- if [[ -z $1 ]]; then
-  regressionID='baseline'
-  log_message "INFO" "No arguments given assuming to make baseline with default ID '$regressionID'"
- else
-  regressionID=$1
-  log_message "INFO" "No baseline specifed, createing baseline with regression ID: $regressionID"
+ if [[ -z $1 ||  $1 == "--non-interactive" ]]; then
+    regressionID='baseline'
+    log_message "INFO" "No arguments given assuming to make new baseline with default ID: $regressionID"
+ else 
+  log_message "INFO" "No baseline specifed, createing new baseline with regression ID: $regressionID"
  fi
 fi
 
 log_message "INFO" "running regression script on host $HOST"
+
+checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
+pslot="${pslot_basename}_exp_${regressionID}"
+
 if [[ -d $1 ]]; then
-  check_base_line_dir=`readlink -f $1`
-  regressionID='baseline'
-  log_message "INFO" "Running test run agaist regression baseline in directory $check_base_line_dir"
-  COMPAIR_BASELINE='TRUE'
+  check_baseline_dir=`readlink -f $1`
+  if [[ ! -z "$2" ]] && [[ ! -d $2 ]] ; then
+   regressionID="$2"
+  else
+   regressionID='test_run'
+  fi
+  pslot_basename='fv3gfs'
+  checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
+  pslot="${pslot_basename}_exp_${regressionID}"
+  log_message "INFO" "Running test run ($regressionID) agaist regression baseline in directory $check_baseline_dir"
+  COMPAIR_BASE='TRUE'
 fi
 
-if [[ $COMPAIR_BASELINE == 'TRUE' ]]; then
- find_data_dir $check_base_line_dir
+if [[ $COMPAIR_BASE == 'TRUE' ]]; then
+ check_baseline_dir_get=$( find_data_dir $check_baseline_dir )
+ if [[ $check_baseline_dir != $_check_baseline_dir_get ]]; then
+    check_baseline_dir=$check_baseline_dir_get
+    log_message "WARNING" "given directory did not have gfs data, but a subsiquent subdirectory was found that did"
+    log_message "INFO" "found baseline fv3gfs gfs data found in directory: $check_baseline_dir"
+ fi
 fi
 
 fv3gfs_git_branch='master'
@@ -119,6 +138,52 @@ elif [[ -d /gpfs/hps3 ]]; then
 else
   log_message "CRITICAL" "Unknown machine $system, not supported"
   exit -1
+fi
+
+JUST_COMPAIR_TWO_DIRS='FALSE'
+if [[ -d $1 ]] && [[ -d $2 ]]; then
+ CHECKOUT='FALSE'
+ BUILD='FALSE'
+ CREATE_EXP='FALSE'
+ RUNROCOTO='FALSE'
+ check_baseline_dir_with_this_dir=`readlink -f $2`
+ check_baseline_dir_with_this_dir=$( find_data_dir $check_baseline_dir_with_this_dir )
+ log_message "INFO" "Simply doing a diff on these two directories:\n  $check_baseline_dir \n  $check_baseline_dir_with_this_dir"
+ JUST_COMPAIR_TWO_DIRS='TRUE'
+fi
+
+INTERACTIVE='TRUE'
+if [[ ! -z $1 && $1 == "--non-interactive" ]] || [[ -z $2 && $2 == "--non-interactive" ]] || [[ -z $3 && $3 == "--non-interactive" ]]; then
+   INTERACTIVE='FALSE'
+fi
+
+
+if [[ $INTERACTIVE == "TRUE" ]]; then
+   echo -e "Current Settings are:\n"
+   echo "regressionID = $regressionID"
+   echo "idate        = $idate"
+   echo "edate        = $edate"
+   echo "CHECKOUT_DIR = $CHECKOUT_DIR"
+   echo "CHECKOUT     = $CHECKOUT"
+   echo "BUILD        = $BUILD"
+   echo "CREATE_EXP   = $CREATE_EXP"
+   echo "COMPAIR_BASE = $COMPAIR_BASE"
+   echo -e "RUNROCOTO    = $RUNROCOTO\n"
+   while read -n1 -r -p "Are these the correct settings (y/n): " answer
+    do
+    if [[ $answer == "n" ]]; then
+     echo -e "\n"
+     exit
+    fi 
+    if [[ $answer == "y" ]]; then
+     break 
+    fi
+    echo ""
+   done
+#else
+  #if [[ -z $3 && $3 != "--non-interactive" ]]; then
+  # log_message "CRITICAL" "The third argument is only valid as --non-interactive, argument given was: $3"
+  #fi
 fi
 
 module load $load_rocoto
@@ -236,11 +301,10 @@ if [[ $BUILD == 'TRUE' ]]; then
  fi
 fi
 
-if [[ ! -d ${EXP_FULLPATH} ]]; then
-  log_message "CRITICAL" "experment directory $EXP_FULLPATH not found"
-fi
-
 if [[ $RUNROCOTO == 'TRUE' ]]; then
+    if [[ ! -d ${EXP_FULLPATH} ]]; then
+     log_message "CRITICAL" "experment directory $EXP_FULLPATH not found"
+    fi
     log_message "INFO" "running regression script on host $HOST"
     log_message "INTO" "moving to PWD $EXP_FULLPATH to run cycleing in experiment directory"
     cd ${EXP_FULLPATH}
@@ -257,7 +321,7 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
     fi
     log_message "INFO" "rocotorun successfully ran initial rocoorun to to create database file:  ${pslot}.db"
 
-    log_message "INFO" "running: $rocotostatcmd -d ${pslot}.db -w ${pslot}.xml -s -c all | tail -1 | awk '{print $1}'"
+    log_message "INFO" "running: $rocotostatcmd -d ${pslot}.db -w ${pslot}.xml -s -c all | tail -1 | awk '{print \$1}'"
     lastcycle=`$rocotostatcmd -d ${pslot}.db -w ${pslot}.xml -s -c all | tail -1 | awk '{print $1}'`
     if [[ $? != 0 ]]; then
      log_message "CRITICAL" "rocotostat failed when determining last cycle in test run"
@@ -294,9 +358,12 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
 fi
 
 diff_file_name="${CHECKOUT_DIR}/diff_file_list_${regressionID}.txt"
-if [[ $COMPAIR_BASELINE == 'TRUE' ]]; then
-   log_message "INFO" "doing the diff compair in $check_base_line_dir against $comrot_test_dir"
-   if [[ ! -d $check_base_line_dir ]] || [[ ! -d $comrot_test_dir ]]; then
+if [[ $COMPAIR_BASE == 'TRUE' ]]; then
+   if [[ $JUST_COMPAIR_TWO_DIRS=='TRUE' ]]; then
+    comrot_test_dir=$check_baseline_dir_with_this_dir
+   fi
+   log_message "INFO" "doing the diff compair in $check_baseline_dir against $comrot_test_dir"
+   if [[ ! -d $check_baseline_dir ]] || [[ ! -d $comrot_test_dir ]]; then
      log_message "CRITICAL" "One of the target directories does not exist"
    fi
    log_message "INFO" "Moving to direcotry $comrot to do the compare"
@@ -305,9 +372,9 @@ if [[ $COMPAIR_BASELINE == 'TRUE' ]]; then
    else
      log_message "CRITICAL" "The directory $comrot does not exsist"
    fi
-   check_base_line_dir_basename=`basename $check_base_line_dir`
+   check_baseline_dir_basename=`basename $check_baseline_dir`
    comrot_test_dir_basename=`basename $comrot_test_dir`
-   log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\"  $check_base_line_dir_basename $comrot_test_dir_basename >& $$diff_file_name" 
-   diff --brief -Nr --exclude "*.log*" $check_base_line_dir_basename $comrot_test_dir_basename >  ${diff_file_name} 2>&1
+   log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\"  $check_baseline_dir_basename $comrot_test_dir_basename >& $$diff_file_name" 
+   diff --brief -Nr --exclude "*.log*" $check_baseline_dir_basename $comrot_test_dir_basename >  ${diff_file_name} 2>&1
    log_message "INFO" "completed runing diff for fv3gfs regression test ($regressionID) resluts in file: $diff_file_name"
 fi
