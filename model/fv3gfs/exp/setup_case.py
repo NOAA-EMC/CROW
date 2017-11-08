@@ -5,7 +5,7 @@ import os, sys, logging, glob, io, getopt, re
 from collections.abc import Sequence
 
 sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(__file__),'../..')))
+    os.path.dirname(__file__),'../../..')))
 
 from create_comrot import create_COMROT
 import crow.config, crow.metascheduler
@@ -98,6 +98,7 @@ def main():
     logger.info(f"read case {case}")
     conf=read_contents(case)
     conf.experiment_name=experiment_name
+    crow.config.validate(conf.case)
     logger.info("Remove platforms from configuration.")
     for key in list(conf.keys()):
         if isinstance(conf[key],Platform) and key!='platform':
@@ -117,7 +118,8 @@ def main():
         logger.warning(f'--force given; will replace config.yaml without '
                        'deleting directory')
     
-    create_COMROT(conf)
+    if 'IC_CDUMP' in conf.case and 'IC_DIR' in conf.case:
+        create_COMROT(conf)
     
     chosen_workflow=conf.case.workflow
     conf.workflow=conf[chosen_workflow]

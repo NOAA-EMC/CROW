@@ -8,6 +8,6 @@ no_gdas: &no_gdas
   CASE: !calc doc.fv3_gfs_settings.CASE
   LEVS: !calc doc.fv3_gfs_settings.LEVS
 
-no_data_assimilation: &data_assimilation {}
+no_data_assimilation: &no_data_assimilation {}
 
-no_prepbufr: &no_prepbufr
+no_prepbufr: &no_prepbufr {}

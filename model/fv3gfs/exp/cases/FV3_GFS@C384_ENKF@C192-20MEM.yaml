@@ -51,9 +51,7 @@ prepbufr: &prepbufr
 ########################################################################
 
 case:
-  Template: [ *case_template, *known_workflows ]
-  # User-defined experiment name; should be a-z followed by alphanumeric:
-  experiment_name: fv3gfs2 #Formerly known as PSLOT
+  Template: !Template { <<: [ *case_template, *known_workflows ] }
 
   SDATE: 2017-07-31t18:00:00
   EDATE: 2017-08-05t00:00:00

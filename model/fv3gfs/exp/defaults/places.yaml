@@ -24,6 +24,7 @@ default_places: &default_places
   # User paths
   EXPDIR: !expand "{HOMEDIR}/{doc.case.experiment_name}"
   ROTDIR: !expand "{PTMP}/{doc.case.experiment_name}"
+  ICSDIR: !expand "{ROTDIR}/FV3ICS"
   RUNDIR: !expand "{STMP}/RUNDIRS/{doc.case.experiment_name}"
   ARCDIR: !expand "{NOSCRUB}/archive/{doc.case.experiment_name}"
   ATARDIR: !expand "/NCEPDEV/{doc.accounting.hpss_project}/1year/{tools.env('USER')}/{doc.platform.name}/scratch/{doc.case.experiment_name}"

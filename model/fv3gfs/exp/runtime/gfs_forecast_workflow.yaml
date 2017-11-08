@@ -1,15 +1,19 @@
-cycled_workflow: !Cycle
+gfs_forecast_workflow: !Cycle
   Rocoto: *Rocoto
 
   Clock: *clock
 
   ics: !Family
     getics: !Task
-      Perform: *getics_action
+      Perform:
+        <<: *getics_action
+        CDUMP: gfs
       Rocoto: *task_template
 
     fv3ics: !Task
-      Perform: *getics_action
+      Perform: 
+        <<: *fv3ics_action
+        CDUMP: gfs
       Rocoto: *task_template
       Trigger: !Depend getics
 

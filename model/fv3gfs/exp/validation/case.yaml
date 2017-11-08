@@ -1,4 +1,4 @@
-case_template: &case_template
+case_template: !Template &case_template
   experiment_name: 
     type: string
     description: user-defined experiment name
@@ -34,7 +34,7 @@ case_template: &case_template
   master_grid:
     type: string
     default: "0p25deg"
-    allowed: [ "1deg" "0p5deg" "0p25deg" "0p125deg" ]
+    allowed: [ "1deg", "0p5deg", "0p25deg", "0p125deg" ]
     description: Original grid of the post
 
   DO_RELOCATE:
@@ -54,18 +54,4 @@ case_template: &case_template
     description: |
       User-defined experiment name; should be a-z followed by alphanumeric.
       Formerly known as PSLOT.
-
-  ics_from:
-    type: string
-    allowed: [ opsgfs, pargfs ]
-    default: opsgfs
-    if_present: !Template
-      parexp:
-        default: prnemsrn
-        type: string
-        description: Name of a GFS parallel experiment to pull from tape
-      HPSS_PAR_PATH:
-        default: !expand "/5year/NCEPDEV/emc-global/emc.glopara/WCOSS_C/{parexp}"
-        type: string
-        description: Path to HPSS tapes with GFS parallel data
 
