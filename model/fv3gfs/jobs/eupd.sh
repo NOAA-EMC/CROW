@@ -26,7 +26,7 @@ eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
 unset JOBNAME
 if [[ "${ACTUALLY_RUN:-NO}" == NO ]] ; then echo just testing ; exit 0 ; fi
-
+set +e
 ###############################################################
 # Set script and dependency variables
 export GDATE=$($NDATE -$assim_freq $CDATE)
@@ -48,6 +48,7 @@ if [ ${KEEPDATA:-"NO"} = "NO" ] ; then rm -rf $DATA ; fi
 
 ###############################################################
 # Run relevant exglobal script
+echo "RUN: $ENKFUPDSH"
 $ENKFUPDSH
 status=$?
 [[ $status -ne 0 ]] && exit $status

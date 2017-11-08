@@ -20,6 +20,7 @@ ecen: &ecen_action !Action
   # ----------------------------------------
   # From config.ecen
   ENKFRECENSH: !expand "{doc.places.BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_recenter_fv3gfs.sh.ecf"
+  CHGRESSH: !calc doc.places.CHGRESSH_ECEN
   APRUN_CHGRES: !FirstTrue
     - when: !calc doc.platform.name == "THEIA"
       do: "time"
@@ -27,7 +28,7 @@ ecen: &ecen_action !Action
         tools.command_without_exe(
           par,chgres_resources,"placeholder")
   APRUN_ECEN:  !calc tools.command_without_exe(par,resources,"placeholder")
-  NTHREADS_ECEN: ! nodes.omp_threads_for(resources[0])
+  NTHREADS_ECEN: !calc nodes.omp_threads_for(resources[0])
   APRUN_CHGRES: "time"
   CDUMP: gdas
   Inherit: !Inherit

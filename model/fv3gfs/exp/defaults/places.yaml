@@ -46,8 +46,10 @@ default_places: &default_places
   BASE_OZNMON: !calc BASE_GSI
   GFSDOWNSH: !expand "{BASE_WORKFLOW}/ush/fv3gfs_downstream_nems.sh"
   GFSDWNSH: !expand "{BASE_WORKFLOW}/ush/fv3gfs_dwn_nems.sh"
+  ENKFUPDSH: !expand "{BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_update_fv3gfs.sh.ecf"
 
   CHGRESSH: !expand "{BASE_POST}/ush/global_chgres_GSM.sh"
+  CHGRESSH_ECEN: !expand "{BASE_GSM}/ush/global_chgres_GSM.sh"
 
   vsdbhome: !calc BASE_VERIF
   vsdbsave: !expand "{PROJECT_DIR}/noscrub/{tools.env('USER')}/archive/vsdb_data"

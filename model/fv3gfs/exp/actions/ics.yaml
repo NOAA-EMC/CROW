@@ -4,7 +4,18 @@ fv3ics: &fv3ics_action !Action
   walltime: !timedelta 00:30:00
   resources: !calc run_fv3ic.resources
   memory: !calc run_fv3ic.memory
-  accounting: !calc doc.platform.transfer_accounting
+  CASE: !calc doc.fv3_settings.CASE
+
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "assim_freq", "sys_tp", "l.*4d.*" ]
+  Inherit: !Inherit
+    - [ doc.platform.general_env,  ".*" ]
+    - [ doc.fv3_gfs_settings, ".*" ]
+    - [ doc.data_assimilation, ".*" ]
+    - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
+    - [ doc.platform.mpi_tuning, '.*' ]
+    - [ doc.fv3_enkf_settings, "FHCYC" ]
+    - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
+    - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
 getics: &getics_action !Action
   <<: *action_base

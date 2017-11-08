@@ -20,6 +20,7 @@ eupd: &eupd_action !Action
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
   CDUMP: gdas
+  ENKFUPDSH: !calc doc.places.ENKFUPDSH
   CASE: !calc doc.fv3_enkf_settings.CASE
   NTHREADS_ENKF: 2
   NTHSTACK: 1024000000

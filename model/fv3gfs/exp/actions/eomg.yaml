@@ -3,7 +3,7 @@ eomg: &eomg_action !Action
   J_JOB: eomg
   ANALYSISSH: !expand "{doc.places.BASE_GSI}/scripts/exglobal_analysis_fv3gfs.sh.ecf"
   APRUN_GSI: !calc tools.command_without_exe(par,run_eomg.resources,'placeholder')
-  walltime: !timedelta 00:15:00
+  walltime: !timedelta 00:35:00
   resources: !calc run_eomg.resources
   memory: !calc run_eomg.memory
   shell_vars: [ "[A-Z][A-Z0-9_]*$", "assim_freq", "sys_tp", "l.*4d.*" ]
@@ -12,6 +12,7 @@ eomg: &eomg_action !Action
     - [ doc.gfs_output_settings, "^FH.*|OUTPUT_GRID" ]
     - [ doc.fv3_enkf_settings, "FHCYC" ]
     - [ doc.data_assimilation, ".*" ]
+    - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
   CDUMP: gdas

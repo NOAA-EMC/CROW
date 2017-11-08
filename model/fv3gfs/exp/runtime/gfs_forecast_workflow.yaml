@@ -19,19 +19,10 @@ gfs_forecast_workflow: !Cycle
 
   gfs: !Family
     Trigger: !Depend ics
-    prep: !Task
-      Perform: *prep_gfs_action
-      Rocoto: *task_template
-
-    anal: !Task
-      Perform: *anal_gfs_action
-      Rocoto: *task_template
-      Trigger: !Depend prep
 
     fcst: !Task
       Perform: *fcst_gfs_action
       Rocoto: *task_template
-      Trigger: !Depend anal
 
     post: !Task
       Perform: *post_gfs_action
