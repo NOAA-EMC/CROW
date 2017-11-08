@@ -1,0 +1,51 @@
+cycled_workflow: !Cycle
+  Rocoto: *Rocoto
+
+  Clock: *clock
+
+  ics: !Family
+    getics: !Task
+      Perform: *getics_action
+      Rocoto: *task_template
+
+    fv3ics: !Task
+      Perform: *getics_action
+      Rocoto: *task_template
+      Trigger: !Depend getics
+
+  gfs: !Family
+    Trigger: !Depend ics
+    prep: !Task
+      Perform: *prep_gfs_action
+      Rocoto: *task_template
+
+    anal: !Task
+      Perform: *anal_gfs_action
+      Rocoto: *task_template
+      Trigger: !Depend prep
+
+    fcst: !Task
+      Perform: *fcst_gfs_action
+      Rocoto: *task_template
+      Trigger: !Depend anal
+
+    post: !Task
+      Perform: *post_gfs_action
+      Rocoto: *task_template
+      Trigger: !Depend fcst
+    
+    vrfy: !Task
+      Perform: *vrfy_gfs_action
+      Rocoto: *task_template
+      Trigger: !Depend post
+
+  arch: !Task
+    Perform:
+      <<: *arch_gfs_action
+      CDUMP: gfs
+    Rocoto: *task_template
+    Trigger: !Depend gfs
+
+  final: !Task
+    Perform: *final_action
+    Rocoto: *task_template

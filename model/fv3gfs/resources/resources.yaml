@@ -176,3 +176,13 @@ resource_defaults: &resource_defaults
         mpi_ranks: 1
         max_ppn: 1
         OMP_NUM_THREADS: 2
+
+  run_fv3ic:
+    env: { }
+    memory: !FirstTrue
+      - when: !calc doc.platform.name=='WCOSS_C'
+        do: "3072M"
+      - otherwise: ""
+    resources:  !JobRequest
+      - exe: placeholder
+        mpi_ranks: 24
