@@ -10,10 +10,10 @@ from collections import OrderedDict
 class TestExampleConfig(unittest.TestCase):
 
     def setUp(self):
-        self.config=crow.config.from_file('./test_data/toy-yaml/test.yml',
-                                          './test_data/toy-yaml/platform.yml',
-                                          './test_data/toy-yaml/templates.yml',
-                                          './test_data/toy-yaml/actions.yml')
+        self.config=crow.config.from_file('../test_data/toy-yaml/test.yml',
+                                          '../test_data/toy-yaml/platform.yml',
+                                          '../test_data/toy-yaml/templates.yml',
+                                          '../test_data/toy-yaml/actions.yml')
         crow.config.validate(self.config.fcst)
         crow.config.validate(self.config.test)
         crow.config.validate(self.config.gfsfcst)
@@ -95,7 +95,7 @@ class TestExampleConfig(unittest.TestCase):
                               namelist".format(line, cmpline[lnum]))
 
     def test_file_namelist(self):
-        with open('test_data/toy-yaml/namelist.nl','rt') as fd:
+        with open('../test_data/toy-yaml/namelist.nl','rt') as fd:
             namelist_nl=fd.read()
 
         namelist2_for_test = crow.config.expand_text(namelist_nl,self.config.fcst)
