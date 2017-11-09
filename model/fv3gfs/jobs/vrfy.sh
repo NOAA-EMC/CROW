@@ -22,16 +22,11 @@ set -ex
 
 export LOGNAME=${LOGNAME:-${CDUMP:-fv3gfs}} # usually set at ecflow level
 
-JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
-( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:platform.general_env import:".*" )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH \
             apply:LOGNAME=\"$LOGNAME\" from:shell_vars )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH bool:.true.,.false. from:true_false_vars )
-( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
-unset JOBNAME
-if [[ "${ACTUALLY_RUN:-NO}" == NO ]] ; then echo just testing ; exit 0 ; fi
 
 export OZNDIR="${OZNDIR:-$NOSCRUB/$LOGNAME/ozone/stats/{doc.case.experiment_name}"
 
