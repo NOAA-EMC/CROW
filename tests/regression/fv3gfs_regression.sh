@@ -1,13 +1,15 @@
 #!/bin/bash
 
 usage () {
-   echo -e "\033[1mUSAGE:\033[0m\n $0 [[baseline_dir]] [[ compair_dir ]] [[--non-interactive]]"
-   echo -e "\tno arguments           : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_baseline  fv3gfs_exp_basline respectivly"
-   echo -e "\tone argument  (string) : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${string} respectivly"
-   echo -e "\tone argument  (dir)    : creates a test_run with sorc and exp dir in \$PWD named fvgfs_sorc_testrun   fv3gfs_exp_testrun respectivly"
-   echo -e "\ttwo arguments (dir) (str) : creates a test_run with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${srting} respectivly"
-   echo -e "\ttwo arguments (dir) (dir) : does a bitwise compair on the gfs files from the first dir to the second"
-   echo -e "\tthird optional argument is used when acctually running the script so no promps are given, otherwize the script will report on the settings."
+   echo -e "\033[1mUSAGE:\033[0m\n $0 [[baseline]] [[compair]] [[--non-interactive]]\n"
+   echo -e "\tno arguments           : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_baseline fv3gfs_exp_basline respectivly"
+   echo -e "\tone argument  (string) : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${string} respectivly\n\n"
+   echo -e "\tone argument  (dir)       : creates a test run with sorc and exp dir in \$PWD named fvgfs_sorc_test_run   fv3gfs_exp_test_run respectivly \n\t\t\t\t    and then compairs the resluts against the comrot found in the directory \${dir}"
+   echo -e "\ttwo arguments (dir) (str) : creates a test_run with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${srting} respectivly \n\t\t\t\t    and then compairs the resluts against the comrot found in the directory \${dir} "
+   echo -e "\ttwo arguments (dir) (dir) : does a bitwise compair on the gfs files from the first dir to the second\n"
+   echo -e "\tthird optional argument is used when acctually running the script so no promps are given, otherwize the script will report on the settings.\n\n"
+   echo -e "\033[1mEXAMPLE:\033[0m\n"
+   echo -e "\tnohup ./fv3gfs_regression.sh fv3gfs_regression_baseline --non-interactive > & fv3gfs_regression_test_run.log &\n"
    exit
 }
 
@@ -90,11 +92,9 @@ find_data_dir () {
 
 COMPAIR_BASE='FALSE'
 if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
- if [[ -z $1 ||  $1 == "--non-interactive" ]]; then
+ if [[ -z $1 || $1 == "--non-interactive" ]]; then
     regressionID='baseline'
     log_message "INFO" "No arguments given assuming to make new baseline with default ID: $regressionID"
- else 
-  log_message "INFO" "No baseline specifed, createing new baseline with regression ID: $regressionID"
  fi
 fi
 
@@ -105,21 +105,29 @@ pslot="${pslot_basename}_exp_${regressionID}"
 
 if [[ -d $1 ]]; then
   check_baseline_dir=`readlink -f $1`
-  if [[ ! -z "$2" ]] && [[ ! -d $2 ]] ; then
-   regressionID="$2"
-  else
+  if [[ -z $2 ]] && [[ ! -d $2 ]] ; then
    regressionID='test_run'
+  else
+   if [[ $2 == "--non-interactive" ]]; then
+     regressionID='test_run'
+   else
+     if [[ `echo $2  | cut -c1-2` == "--" ]]; then
+       log_message "CRITICAL" "an errounous option was given ($2), --non-interactive is the only allowable option"
+     else
+       regressionID=$2
+     fi
+   fi
   fi
   pslot_basename='fv3gfs'
   checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
   pslot="${pslot_basename}_exp_${regressionID}"
-  log_message "INFO" "Running test run ($regressionID) agaist regression baseline in directory $check_baseline_dir"
+  log_message "INFO" "running test run ($regressionID) agaist regression baseline in directory $check_baseline_dir"
   COMPAIR_BASE='TRUE'
 fi
 
 if [[ $COMPAIR_BASE == 'TRUE' ]]; then
  check_baseline_dir_get=$( find_data_dir $check_baseline_dir )
- if [[ $check_baseline_dir != $_check_baseline_dir_get ]]; then
+ if [[ $check_baseline_dir != $check_baseline_dir_get ]]; then
     check_baseline_dir=$check_baseline_dir_get
     log_message "WARNING" "given directory did not have gfs data, but a subsiquent subdirectory was found that did"
     log_message "INFO" "found baseline fv3gfs gfs data found in directory: $check_baseline_dir"
@@ -153,7 +161,7 @@ if [[ -d $1 ]] && [[ -d $2 ]]; then
 fi
 
 INTERACTIVE='TRUE'
-if [[ ! -z $1 && $1 == "--non-interactive" ]] || [[ -z $2 && $2 == "--non-interactive" ]] || [[ -z $3 && $3 == "--non-interactive" ]]; then
+if [[ $1 == "--non-interactive" ]] || [[ $2 == "--non-interactive" ]] || [[ $3 == "--non-interactive" ]]; then
    INTERACTIVE='FALSE'
 fi
 
@@ -180,10 +188,6 @@ if [[ $INTERACTIVE == "TRUE" ]]; then
     fi
     echo ""
    done
-#else
-  #if [[ -z $3 && $3 != "--non-interactive" ]]; then
-  # log_message "CRITICAL" "The third argument is only valid as --non-interactive, argument given was: $3"
-  #fi
 fi
 
 module load $load_rocoto
@@ -245,7 +249,8 @@ if [[ $CHECKOUT == 'TRUE' ]]; then
 
   else
 
-   log_message "INFO" "cloneing fvgfs from git with branch $fv3gfs_git_branch"
+   log_message "INFO" "cloning fvgfs from git with branch $fv3gfs_git_branch"
+   log_message "INFO" "git clone ssh://${username}@vlab.ncep.noaa.gov:29418/fv3gfs ${checkout_dir_basename}"
    git clone ssh://${username}@vlab.ncep.noaa.gov:29418/fv3gfs ${checkout_dir_basename}
 
    if [[ ! -z "${fv3gfs_git_branch}// }" ]]; then
@@ -263,13 +268,13 @@ EXP_FULLPATH=${CHECKOUT_DIR}/${pslot}
 
 if [[ $CREATE_EXP == 'TRUE' ]]; then
 
-    log_message "INFO" "setting up experment: ${setup_expt} ${exp_setup_string}"
+    log_message "INFO" "setting up experiment: ${setup_expt} ${exp_setup_string}"
     removed=''
     if [[ -d $EXP_FULLPATH ]]; then
      removed='it was present but now has been removed'
     fi
     rm -Rf $EXP_FULLPATH
-    log_message "INFO" "experment directory is $EXP_FULLPATH $removed"
+    log_message "INFO" "experiment directory is $EXP_FULLPATH $removed"
     removed=''
     if [[ -d ${comrot}/${pslot} ]]; then
      removed='it was present but now has been removed'
@@ -303,7 +308,7 @@ fi
 
 if [[ $RUNROCOTO == 'TRUE' ]]; then
     if [[ ! -d ${EXP_FULLPATH} ]]; then
-     log_message "CRITICAL" "experment directory $EXP_FULLPATH not found"
+     log_message "CRITICAL" "experiment directory $EXP_FULLPATH not found"
     fi
     log_message "INFO" "running regression script on host $HOST"
     log_message "INTO" "moving to PWD $EXP_FULLPATH to run cycleing in experiment directory"
@@ -346,7 +351,7 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
       fi
       $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml
       if [[ $? == "0" ]]; then
-       log_message "INFO" "Successfull: $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
+       log_message "INFO" "Successful: $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
       else 
        log_message "WARNING" "FAILED: $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
       fi
