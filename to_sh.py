@@ -22,6 +22,31 @@ SUCCESS=object()
 FAILURE=object()
 
 class EpicFail(Exception): pass
+class NotValidPosixShString: pass
+
+########################################################################
+
+def shstrok(s):
+    """!Returns True if the specified string can be expressed as a
+    POSIX sh string, and false otherwise.
+    @param s a string"""
+    # Only allow non-whitespace ASCII and space (chr(32)-chr(126)):
+    if re.search(r'\A[a-zA-Z0-9 !"#$%&?()*+,./:;<=>?@^_`{|}~\\\]\[\'-]*\Z',s):
+        return True
+    else:
+        return False
+
+def shbackslash(s):
+    """!Given a Python str, returns a backslashed POSIX sh string, or
+    raises NotValidPosixShString if that cannot be done.
+    @param s a string to backslash"""
+    if not shstrok(s):
+        raise NotValidPosixShString('String is not expressable in POSIX sh: %s'%(repr(s),))
+    if re.search(r'(?ms)[^a-zA-Z0-9_+.,/-]',s):
+        return '"' + re.sub(r'(["\\\\$])',r"\\\1",s) + '"'
+    return s
+
+########################################################################
 
 class ProcessArgs(object):
     def __init__(self,quiet,args):
@@ -156,7 +181,7 @@ class ProcessArgs(object):
             if value is UNSET_VARIABLE:
                 return f'unset {var}'
             else:
-                value=str(str_to_posix_sh(value),'ascii')
+                value=shbackslash(value)
                 return f'{export}{var}={value}'
         except ( NameError, AttributeError, LookupError, NameError,
                  ReferenceError, ValueError, TypeError, CROWException,
@@ -279,7 +304,7 @@ class ProcessArgs(object):
             logger.info(f'{var}={expr}: evaluates to null.  Unsetting the variable.')
             formatted=UNSET_VARIABLE
         else:
-            formatted=self.format_object(result)
+            formatted=str(self.format_object(result))
         if formatted is NotImplemented:
             logger.error(
                 f'{var}={expr}: cannot convert a {type(result).__name__} '
@@ -287,14 +312,13 @@ class ProcessArgs(object):
             return var,UNSET_VARIABLE
         return var, formatted
 
-
 ########################################################################
 
 if __name__ == '__main__':
     try:
         verbose=sys.argv[1]=='-v'
         pa=ProcessArgs(not verbose,sys.argv[verbose+1:])
-        writeme=' ; '.join(pa.process_args())
+        writeme=' ; '.join([str(s) for s in pa.process_args()])
         sys.stdout.write(writeme)
     except EpicFail:
         sys.stdout.write('/bin/false failure- see prior errors.')

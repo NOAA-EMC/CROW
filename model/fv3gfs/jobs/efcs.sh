@@ -1,10 +1,10 @@
-#!/bin/bash
+#! /bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
-# $Date: 2017-08-16 21:42:24 +0000 (Wed, 16 Aug 2017) $
-# $Revision: 96658 $
+# $Date: 2017-10-23 21:23:33 +0000 (Mon, 23 Oct 2017) $
+# $Revision: 98608 $
 # $Author: fanglin.yang@noaa.gov $
-# $Id: efcs.sh 96658 2017-08-16 21:42:24Z fanglin.yang@noaa.gov $
+# $Id: efcs.sh 98608 2017-10-23 21:23:33Z fanglin.yang@noaa.gov $
 ###############################################################
 
 ###############################################################
@@ -21,8 +21,8 @@
 set -ex
 JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
-eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:platform.general_env import:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH bool:.true.,.false. from:true_false_vars )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
@@ -36,20 +36,24 @@ export DATA=$RUNDIR/$CDATE/$CDUMP/efcs.grp$ENSGRP
 [[ -d $DATA ]] && rm -rf $DATA
 
 # Get ENSBEG/ENSEND from ENSGRP and NMEM_EFCSGRP
-ENSEND=$(echo "$NMEM_EFCSGRP * $ENSGRP" | bc)
-ENSBEG=$(echo "$ENSEND - $NMEM_EFCSGRP + 1" | bc)
+ENSEND=$((NMEM_EFCSGRP * ENSGRP))
+ENSBEG=$((ENSEND - NMEM_EFCSGRP + 1))
 export ENSBEG=$ENSBEG
 export ENSEND=$ENSEND
 
 cymd=$(echo $CDATE | cut -c1-8)
 chh=$(echo  $CDATE | cut -c9-10)
 
+export GDATE=$($NDATE -$assim_freq $CDATE)
+gymd=$(echo $GDATE | cut -c1-8)
+ghh=$(echo  $GDATE | cut -c9-10)
+
 # Default warm_start is OFF
 export warm_start=".false."
 
 # If RESTART conditions exist; warm start the model
-memchar="mem"`printf %03i $ENSBEG`
-if [ -f $ROTDIR/enkf.${CDUMP}.$cymd/$chh/$memchar/RESTART/${cymd}.${chh}0000.coupler.res ]; then
+memchar="mem"$(printf %03i $ENSBEG)
+if [ -f $ROTDIR/enkf.${CDUMP}.$gymd/$ghh/$memchar/RESTART/${cymd}.${chh}0000.coupler.res ]; then
     export warm_start=".true."
     if [ -f $ROTDIR/enkf.${CDUMP}.$cymd/$chh/$memchar/${CDUMP}.t${chh}z.atminc.nc ]; then
         export read_increment=".true."

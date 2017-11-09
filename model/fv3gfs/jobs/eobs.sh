@@ -1,10 +1,10 @@
-#!/bin/bash
+#! /bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
-# $Date: 2017-08-16 21:42:24 +0000 (Wed, 16 Aug 2017) $
-# $Revision: 96658 $
+# $Date: 2017-10-30 18:48:54 +0000 (Mon, 30 Oct 2017) $
+# $Revision: 98721 $
 # $Author: fanglin.yang@noaa.gov $
-# $Id: eobs.sh 96658 2017-08-16 21:42:24Z fanglin.yang@noaa.gov $
+# $Id: eobs.sh 98721 2017-10-30 18:48:54Z fanglin.yang@noaa.gov $
 ###############################################################
 
 ###############################################################
@@ -20,12 +20,14 @@
 set -ex
 JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
-eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:platform.general_env import:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH bool:.true.,.false. from:true_false_vars )
 unset JOBNAME
 if [[ "${ACTUALLY_RUN:-NO}" == NO ]] ; then echo just testing ; exit 0 ; fi
+unset DELTIM
 
 ###############################################################
 # Set script and dependency variables
@@ -42,7 +44,6 @@ export ASUFFIX=".nemsio"
 export GPREFIX="${CDUMP}.t${ghh}z."
 export GSUFFIX=".nemsio"
 
-export COMIN_OBS="$DMPDIR/$CDATE/$CDUMP"
 export COMIN_GES="$ROTDIR/$CDUMP.$gymd/$ghh"
 export COMIN_ANL="$ROTDIR/$CDUMP.$cymd/$chh"
 export COMIN_GES_ENS="$ROTDIR/enkf.$CDUMP.$gymd/$ghh"
@@ -97,6 +98,9 @@ COMIN_GES_SAVE=$COMIN_GES
 GSUFFIX_SAVE=$GSUFFIX
 export COMIN_GES=$COMIN_GES_ENS
 export GSUFFIX=".ensmean$GSUFFIX"
+
+# Do not run global_cycle for ensemble mean
+export DOGCYCLE="NO"
 
 ###############################################################
 # Ensure clean stat tarballs for ensemble mean

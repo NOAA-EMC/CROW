@@ -1,10 +1,10 @@
-#!/bin/bash
+#! /bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
-# $Date: 2017-08-24 22:05:14 +0000 (Thu, 24 Aug 2017) $
-# $Revision: 96869 $
+# $Date: 2017-10-30 18:48:54 +0000 (Mon, 30 Oct 2017) $
+# $Revision: 98721 $
 # $Author: fanglin.yang@noaa.gov $
-# $Id: arch.sh 96869 2017-08-24 22:05:14Z fanglin.yang@noaa.gov $
+# $Id: arch.sh 98721 2017-10-30 18:48:54Z fanglin.yang@noaa.gov $
 ###############################################################
 
 ###############################################################
@@ -17,26 +17,27 @@
 ## CDUMP  : cycle name (gdas / gfs)
 ###############################################################
 
-set -ex
 JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
-eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:platform.general_env import:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
 unset JOBNAME
 if [[ "${ACTUALLY_RUN:-NO}" == NO ]] ; then echo just testing ; exit 0 ; fi
 
+set -x
+
 ###############################################################
 # Run relevant tasks
 
 # CURRENT CYCLE
-cymd=$(echo $CDATE | cut -c1-8)
-chh=$(echo  $CDATE | cut -c9-10)
-APREFIX="${CDUMP}.t${chh}z."
+PDY=$(echo $CDATE | cut -c1-8)
+cyc=$(echo  $CDATE | cut -c9-10)
+APREFIX="${CDUMP}.t${cyc}z."
 ASUFFIX=".nemsio"
 
-COMIN="$ROTDIR/$CDUMP.$cymd/$chh"
+COMIN="$ROTDIR/$CDUMP.$PDY/$cyc"
 
 DATA="$RUNDIR/$CDATE/$CDUMP/arch"
 [[ -d $DATA ]] && rm -rf $DATA
@@ -65,9 +66,9 @@ for file in $files; do
     $NCP $COMIN/${APREFIX}$file .
 done
 
-cd $DATA
+cd $DATA/${CDUMP}restart
 
-htar -P -cvf $ATARDIR/$CDATE/${CDUMP}restart.tar ${CDUMP}restart
+htar -P -cvf $ATARDIR/$CDATE/${CDUMP}restart.tar .
 status=$?
 if [ $status -ne 0 ]; then
     echo "HTAR $CDATE ${CDUMP}restart.tar failed"
@@ -81,6 +82,7 @@ if [ $status -ne 0 ]; then
     exit $status
 fi
 
+cd $DATA
 rm -rf ${CDUMP}restart
 
 ###############################################################
@@ -124,13 +126,13 @@ $NCP ${APREFIX}gsistat $ARCDIR/gsistat.${CDUMP}.${CDATE}
 $NCP ${APREFIX}pgrbanl $ARCDIR/pgbanl.${CDUMP}.${CDATE}
 
 # Archive 1 degree forecast GRIB1 files for verification
-if [ $CDUMP = "gfs" ]; then
+if [[ "$CDUMP" == "gfs" ]] ; then
     for fname in ${APREFIX}pgrbf*; do
         fhr=$(echo $fname | cut -d. -f3 | cut -c 6-)
         $NCP $fname $ARCDIR/pgbf${fhr}.${CDUMP}.${CDATE}
     done
 fi
-if [ $CDUMP = "gdas" ]; then
+if [[ "$CDUMP" = "gdas" ]] ; then
     flist="00 03 06 09"
     for fhr in $flist; do
         fname=${APREFIX}pgrbf${fhr}
@@ -138,15 +140,16 @@ if [ $CDUMP = "gdas" ]; then
     done
 fi
 
-# Temporary archive quarter degree GRIB1 files for precip verification
-# and atmospheric nemsio gfs forecast files for fit2obs
+# Archive
+# 1. quarter degree GRIB1 files for precip verification
+# 2. atmospheric nemsio gfs forecast files for fit2obs
 VFYARC=$ROTDIR/vrfyarch
 [[ ! -d $VFYARC ]] && mkdir -p $VFYARC
 if [ $CDUMP = "gfs" ]; then
-    $NCP ${APREFIX}pgrbqnl $VFYARC/pgbqnl.${CDUMP}.${CDATE}
-    for fname in ${APREFIX}pgrbq*; do
-        fhr=$(echo $fname | cut -d. -f3 | cut -c 6-)
-        $NCP $fname $VFYARC/pgbq${fhr}.${CDUMP}.${CDATE}
+
+    for fname in pgbq*${CDUMP}.${CDATE}.grib1; do
+       fileout=$(echo $fname | cut -d. -f1-3)  # strip off ".grib1" suffix
+       $NCP $fname $ARCDIR/$fileout
     done
 
     mkdir -p $VFYARC/${CDUMP}.$PDY/$cyc
@@ -181,20 +184,39 @@ COMIN="$RUNDIR/$GDATE"
 COMIN="$ROTDIR/$CDUMP.$gymd/$ghh"
 [[ -d $COMIN ]] && rm -rf $COMIN
 
-# PREVIOUS 00Z day; remove the whole day
-GDATE=$($NDATE -48 $CDATE)
-gymd=$(echo $GDATE | cut -c1-8)
-ghh=$(echo  $GDATE | cut -c9-10)
+# Step back every assim_freq hours
+# and remove old rotating directories for successfull cycles
+# defaults from 24h to 120h
+GDATEEND=$($NDATE -${RMOLDEND:-24}  $CDATE)
+GDATE=$(   $NDATE -${RMOLDSTD:-120} $CDATE)
+while [ $GDATE -le $GDATEEND ]; do
+    gymd=$(echo $GDATE | cut -c1-8)
+    ghh=$(echo  $GDATE | cut -c9-10)
+    COMIN="$ROTDIR/$CDUMP.$gymd/$ghh"
+    if [ -d $COMIN ]; then
+        rocotolog="$EXPDIR/logs/${GDATE}.log"
+        testend=$(tail -n 1 $rocotolog | grep "This cycle is complete: Success" | wc -l)
+        rc=$?
+        [[ $rc -eq 0 ]] && rm -rf $COMIN
+    fi
+    # Remove any empty directories
+    COMIN="$ROTDIR/$CDUMP.$gymd"
+    if [ -d $COMIN ]; then
+        [[ ! "$(ls -A $COMIN)" ]] && rm -rf $COMIN
+    fi
+    GDATE=$($NDATE +$assim_freq $GDATE)
+done
 
-COMIN="$ROTDIR/$CDUMP.$gymd"
-[[ -d $COMIN ]] && rm -rf $COMIN
-
-# Remove archived quarter degree GRIB1 files that are (48+$FHMAX_GFS) hrs behind
+# Remove archived stuff in $VFYARC that are (48+$FHMAX_GFS) hrs behind
+# 1. atmospheric nemsio files used for fit2obs
 if [ $CDUMP = "gfs" ]; then
     GDATE=$($NDATE -$FHMAX_GFS $GDATE)
-    rm -f $VFYARC/pgbq*.${CDUMP}.${GDATE}
+    gymd=$(echo $GDATE | cut -c1-8)
+    COMIN="$VFYARC/$CDUMP.$gymd"
+    [[ -d $COMIN ]] && rm -rf $COMIN
 fi
 
 ###############################################################
 # Exit out cleanly
+if [ ${KEEPDATA:-"NO"} = "NO" ] ; then rm -rf $DATA ; fi
 exit 0

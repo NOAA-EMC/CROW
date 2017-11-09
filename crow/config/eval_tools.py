@@ -213,6 +213,7 @@ class dict_eval(MutableMapping):
         if 'Template' in self:
             tmpl=self.Template
             if not tmpl: return
+            if not isinstance(tmpl,Mapping): return
             if not hasattr(tmpl,'_check_scope'):
                 tmpl=Template(tmpl,self._path+'.Template',self.__globals)
             tmpl._check_scope(self,stage)
