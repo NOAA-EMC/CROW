@@ -56,6 +56,9 @@ vrfy_gfs_action: &vrfy_gfs_action !Action
   vsdbsave: !calc doc.places.vsdbsave
   VDUMP: !calc CDUMP
 
+  # Variables to import in shell:
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", "v.*", "ftyplist", "envir", ".*syndir", "HOME.*", "COM.*", ".*TANK.*", ".*typlist", ".*vrfy.*", "fitdir" ]
+
 vrfy_gdas_action: &vrfy_gdas_action !Action
   <<: *vrfy_base
   CDUMP: gdas
