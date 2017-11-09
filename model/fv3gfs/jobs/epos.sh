@@ -1,10 +1,10 @@
-#!/bin/bash
+#! /bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
-# $Date: 2017-08-16 21:42:24 +0000 (Wed, 16 Aug 2017) $
-# $Revision: 96658 $
+# $Date: 2017-09-23 02:48:49 +0000 (Sat, 23 Sep 2017) $
+# $Revision: 97753 $
 # $Author: fanglin.yang@noaa.gov $
-# $Id: epos.sh 96658 2017-08-16 21:42:24Z fanglin.yang@noaa.gov $
+# $Id: epos.sh 97753 2017-09-23 02:48:49Z fanglin.yang@noaa.gov $
 ###############################################################
 
 ###############################################################
@@ -20,8 +20,8 @@
 set -ex
 JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
-eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:platform.general_env import:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
 unset JOBNAME
@@ -38,7 +38,9 @@ export SUFFIX=".nemsio"
 export COMIN="$ROTDIR/enkf.$CDUMP.$cymd/$chh"
 export COMOUT="$ROTDIR/enkf.$CDUMP.$cymd/$chh"
 export DATA="$RUNDIR/$CDATE/$CDUMP/epos"
-[[ -d $DATA ]] && rm -rf $DATA
+if [ ${KEEPDATA:-"NO"} = "NO" ] ; then rm -rf $DATA ; fi
+
+export LEVS=$((LEVS-1))
 
 ###############################################################
 # Run relevant exglobal script

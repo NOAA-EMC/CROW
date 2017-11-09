@@ -1,14 +1,15 @@
-#!/bin/bash
+#! /bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
-# $Date: 2017-07-26 15:16:25 +0000 (Wed, 26 Jul 2017) $
-# $Revision: 96049 $
+# $Date: 2017-10-08 16:02:04 +0000 (Sun, 08 Oct 2017) $
+# $Revision: 98185 $
 # $Author: fanglin.yang@noaa.gov $
-# $Id: fcst.sh 96049 2017-07-26 15:16:25Z fanglin.yang@noaa.gov $
+# $Id: fcst.sh 98185 2017-10-08 16:02:04Z fanglin.yang@noaa.gov $
 ###############################################################
 
 ###############################################################
-## Author: Rahul Mahajan  Org: NCEP/EMC  Date: April 2017
+## Author: Fanglin Yang   Org: NCEP/EMC  Date: October 2016
+##         Rahul Mahajan  Org: NCEP/EMC  Date: April 2017
 
 ## Abstract:
 ## Model forecast driver script
@@ -20,8 +21,8 @@
 set -ex
 JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
-eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:platform.general_env import:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH bool:.true.,.false. from:true_false_vars )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
@@ -36,21 +37,20 @@ export DATA=$RUNDIR/$CDATE/$CDUMP/fcst
 cymd=$(echo $CDATE | cut -c1-8)
 chh=$(echo  $CDATE | cut -c9-10)
 
+export GDATE=$($NDATE -$assim_freq $CDATE)
+gymd=$(echo $GDATE | cut -c1-8)
+ghh=$(echo  $GDATE | cut -c9-10)
+
 # Default warm_start is OFF
 export warm_start=".false."
 
 # If RESTART conditions exist; warm start the model
 # Restart conditions for GFS cycle come from GDAS
 rCDUMP=$CDUMP
-[[ $CDUMP = "gfs" ]] && rCDUMP="gdas"
+[[ $CDUMP = "gfs" ]] && export rCDUMP="gdas"
 
-if [ -f $ROTDIR/${rCDUMP}.$cymd/$chh/RESTART/${cymd}.${chh}0000.coupler.res ]; then
+if [ -f $ROTDIR/${rCDUMP}.$gymd/$ghh/RESTART/${cymd}.${chh}0000.coupler.res ]; then
     export warm_start=".true."
-    if [ $CDUMP = "gfs" ]; then
-        mkdir -p $ROTDIR/${CDUMP}.$cymd/$chh/RESTART
-        cd $ROTDIR/${CDUMP}.$cymd/$chh/RESTART
-        $NCP $ROTDIR/${rCDUMP}.$cymd/$chh/RESTART/${cymd}.${chh}0000.* .
-    fi
     if [ -f $ROTDIR/${CDUMP}.$cymd/$chh/${CDUMP}.t${chh}z.atminc.nc ]; then
         export read_increment=".true."
     else
@@ -63,6 +63,8 @@ if [ $CDUMP = "gfs" ]; then
     export FHMIN=$FHMIN_GFS
     export FHOUT=$FHOUT_GFS
     export FHMAX=$FHMAX_GFS
+    export FHMAX_HF=$FHMAX_HF_GFS
+    export FHOUT_HF=$FHOUT_HF_GFS
 fi
 
 ###############################################################
@@ -78,22 +80,28 @@ export DATA=$ROTDIR/${CDUMP}.$cymd/$chh
 
 if [ $CDUMP = "gdas" ]; then
 
-    # Regrid 6-tile output to global array in NEMSIO gaussian grid for DA
-    $REGRID_NEMSIO_SH
-    status=$?
-    [[ $status -ne 0 ]] && exit $status
+   if [ $OUTPUT_GRID = 'cubed_sphere_grid' -o $QUILTING = ".false." ]; then
+       # Regrid 6-tile output to global array in NEMSIO gaussian grid for DA
+       $REGRID_NEMSIO_SH
+       status=$?
+       [[ $status -ne 0 ]] && exit $status
+   fi
 
 elif [ $CDUMP = "gfs" ]; then
 
-    # Remap 6-tile output to global array in NetCDF latlon
-    $REMAPSH
-    status=$?
-    [[ $status -ne 0 ]] && exit $status
+   if [ $OUTPUT_GRID = 'cubed_sphere_grid' -o $QUILTING = ".false." ]; then
+       # Remap 6-tile output to global array in NetCDF latlon
+       $REMAPSH
+       status=$?
+       [[ $status -ne 0 ]] && exit $status
+   fi
 
-    # Convert NetCDF to nemsio
-    $NC2NEMSIOSH
-    status=$?
-    [[ $status -ne 0 ]] && exit $status
+   if [ $WRITE_NEMSIOFILE = ".false." -o $QUILTING = ".false." ]; then
+       # Convert NetCDF to nemsio
+       $NC2NEMSIOSH
+       status=$?
+       [[ $status -ne 0 ]] && exit $status
+   fi
 
 fi
 

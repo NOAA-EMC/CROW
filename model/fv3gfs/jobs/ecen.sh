@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
 # $Date: 2017-08-16 21:42:24 +0000 (Wed, 16 Aug 2017) $
@@ -20,8 +20,8 @@
 set -ex
 JOBNAME=$( echo "$PBS_JOBNAME" | sed 's,/,.,g' )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%before-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%before-to-sh )
-eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:platform.general_env import:".*" )
+eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:Inherit )
 eval $( $HOMEcrow/to_sh.py $CONFIG_YAML export:y scope:workflow.$TASK_PATH from:shell_vars )
 ( set -ue ; set -o posix ; set > $HOME/env-scan/$CDATE%$JOBNAME%set%after-to-sh ; env > $HOME/env-scan/$CDATE%$JOBNAME%env%after-to-sh )
 unset JOBNAME
@@ -45,7 +45,7 @@ export COMIN="$ROTDIR/$CDUMP.$cymd/$chh"
 export COMIN_ENS="$ROTDIR/enkf.$CDUMP.$cymd/$chh"
 export COMIN_GES_ENS="$ROTDIR/enkf.$CDUMP.$gymd/$ghh"
 export DATA="$RUNDIR/$CDATE/$CDUMP/ecen"
-[[ -d $DATA ]] && rm -rf $DATA
+if [ ${KEEPDATA:-"NO"} = "NO" ] ; then rm -rf $DATA ; fi
 
 ###############################################################
 # Run relevant exglobal script

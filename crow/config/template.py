@@ -36,6 +36,11 @@ class Inherit(list_eval):
                     if key not in IGNORE_WHILE_INHERITING  and \
                        re.search(regex,key) and key not in target:
                         target._raw_child()[key]=scope._raw_child()[key]
+            # except (IndexError,AttributeError,TypeError,ValueError) as pye:
+            #     msg=f'{target._path}: when including {scope._path}:'\
+            #          f'{type(pye).__name__}: {pye}'
+            #     errors.append(msg)
+            #     _logger.debug(msg,exc_info=True)
             except TemplateErrors as te:
                 errors.append(f'{target._path}: when including {scope._path}')
                 errors.extend(te.template_errors)
@@ -80,14 +85,17 @@ class Template(dict_eval):
                 
                     validate_var(scope._path,scheme,var,scope[var])
                     if 'if_present' in scheme:
-                        _logger.debug(f'{scope._path}.{var}: evaluate if_present {scheme._raw("if_present")._path}')
+                        _logger.debug(f'{scope._path}.{var}: evaluate if_present '
+                                      f'{scheme._raw("if_present")._path}')
                         ip=from_config(
                             var,scheme._raw('if_present'),self._globals(),scope,
                             f'{scope._path}.{var}')
                         _logger.debug(f'{scope._path}.{var}: result = {ip!r}')
                         if not ip: continue
                         if hasattr(ip,'_path'):
-                            _logger.debug(f'{scope._path}.{var}: present ({scope._raw(var)!r}); add {ip._path} to validation')
+                            _logger.debug(
+                                f'{scope._path}.{var}: present ({scope._raw(var)!r}); '
+                                f'add {ip._path} to validation')
                         if not isinstance(ip,Mapping): continue
                         new_template=Template(ip._raw_child())
                         new_template.update(template)

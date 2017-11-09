@@ -1,10 +1,10 @@
-#!/bin/bash
+#! /bin/bash
 ###############################################################
 # < next few lines under version control, D O  N O T  E D I T >
-# $Date: 2017-08-16 21:42:24 +0000 (Wed, 16 Aug 2017) $
-# $Revision: 96658 $
+# $Date: 2017-10-30 18:48:54 +0000 (Mon, 30 Oct 2017) $
+# $Revision: 98721 $
 # $Author: fanglin.yang@noaa.gov $
-# $Id: anal.sh 96658 2017-08-16 21:42:24Z fanglin.yang@noaa.gov $
+# $Id: anal.sh 98721 2017-10-30 18:48:54Z fanglin.yang@noaa.gov $
 ###############################################################
 
 ###############################################################
@@ -42,7 +42,6 @@ export GSUFFIX=".nemsio"
 export APREFIX="${CDUMP}.t${chh}z."
 export ASUFFIX=".nemsio"
 
-export COMIN_OBS="$DMPDIR/$CDATE/$CDUMP"
 export COMIN_GES="$ROTDIR/gdas.$gymd/$ghh"
 export COMIN_GES_ENS="$ROTDIR/enkf.gdas.$gymd/$ghh"
 export COMOUT="$ROTDIR/$CDUMP.$cymd/$chh"
@@ -90,7 +89,7 @@ if [ $DOHYBVAR = "YES" ]; then
 fi
 
 # Analysis resolution
-if [ $DOHYBVAR == "YES" ]; then
+if [ $DOHYBVAR = "YES" ]; then
     export JCAP_A=$JCAP_ENKF
     export LONA=$LONB_ENKF
     export LATA=$LATB_ENKF
@@ -101,8 +100,9 @@ else
 fi
 
 # Link observational data
-export PREPQC=${COMOUT}/${OPREFIX}prepbufr
-export PREPQCPF=${COMOUT}/${OPREFIX}prepbufr.acft_profiles
+export PREPQC="${COMOUT}/${OPREFIX}prepbufr"
+export PREPQCPF="${COMOUT}/${OPREFIX}prepbufr.acft_profiles"
+[[ $DONST = "YES" ]] && export NSSTBF="${COMOUT}/${OPREFIX}nsstbufr"
 
 ###############################################################
 # Run relevant exglobal script

@@ -1,0 +1,12 @@
+places: &places
+  <<: *default_places
+  PROJECT_DIR: !error Please select a project directory.
+    # ie. /scratch4/NCEPDEV/ocean
+  HOMEgfs: !error Where is your fv3gfs checkout?
+    # ie. /scratch4/NCEPDEV/nems/noscrub/Samuel.Trahan/fv3gfs-fcst-post/EXP-cyc-try2/
+
+accounting: &accounting
+  # Project for CPU accounting.
+  Template: *accounting_template
+  cpu_project: !error What accounting code do I use to submit jobs? # ie.: global
+  hpss_project: !error Where do I put data on HPSS?   # ie.: emc-global
