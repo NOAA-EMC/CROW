@@ -1,9 +1,11 @@
 places: &places
   <<: *default_places
+
   PROJECT_DIR: !error Please select a project directory.
     # ie. /scratch4/NCEPDEV/ocean
+
   HOMEgfs: !error Where is your fv3gfs checkout?
-    # ie. /scratch4/NCEPDEV/nems/noscrub/Samuel.Trahan/fv3gfs-fcst-post/EXP-cyc-try2/
+  # NOTE: Use this: /scratch4/NCEPDEV/nems/noscrub/Samuel.Trahan/fv3gfs-fcst-post/fv3gfs
 
 accounting: &accounting
   # Project for CPU accounting.
