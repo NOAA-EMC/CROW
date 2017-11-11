@@ -10,7 +10,7 @@ import crow.config
 config=crow.config.from_file('test.yml','platform.yml','templates.yml',
                              'actions.yml')
 
-logging.basicConfig(stream=sys.stderr,level=logging.INFO)
+logging.basicConfig(stream=sys.stderr,level=logging.DEBUG)
 
 crow.config.validate(config.fcst)
 crow.config.validate(config.test)
