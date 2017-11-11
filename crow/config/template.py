@@ -50,63 +50,63 @@ class Template(dict_eval):
     """!Internal implementation of the YAML Template type.  Validates a
     dict_eval, inserting defaults and reporting errors via the
     TemplateErrors exception.    """
-    def _check_scope(self,scope,stage):
-        _logger.debug(f'{scope._path}: validate')
+    def __init__(self,child,path='',globals=None):
+        self.__my_id=id(child)
+        super().__init__(child,path,globals)
+
+    def _check_scope(self,scope,stage,memo):
+        if self.__my_id in memo:
+            _logger.debug(f'{scope._path}: do not re-validate with {self._path}')
+            return
+        memo.add(self.__my_id)
+
+        _logger.debug(f'{scope._path}: validate with {self._path}')
+
         checked=set()
         errors=list()
         template=copy(self)
         did_something=True
+        child_templates=list()
 
         # Main validation loop.  Iteratively validate, adding new
         # Templates as they become available via is_present.
-        while did_something:
-            did_something=False
-            assert(hasattr(template,'_check_scope'))
-
-            # Inner validation loop.  Validate based on all Templates
-            # found thus far.  Add new templates if found via
-            # is_present.  Run prechecks if present
-            for var in set(scope)-checked:
-                assert(isinstance(template,Template))
-                if var not in template: continue
-                try:
-                    did_something=True
-                    checked.add(var)
-                    scheme=template[var]
-                    if not isinstance(scheme,Mapping): continue # not a template
-                    if stage and 'stages' in scheme:
-                        if stage not in scheme.stages:
-                            continue # skip validation; wrong stage
+        for var in template:
+            try:
+                scheme=template[var]
+                if not isinstance(scheme,Mapping): continue # not a template
+                if stage and 'stages' in scheme:
+                    if stage not in scheme.stages:
+                        continue # skip validation; wrong stage
                     elif 'stages' in scheme:
                         continue # skip validation of stage-specific schemes
 
-                    if 'precheck' in scheme:
-                        scope[var]=scheme.precheck
-                
-                    validate_var(scope._path,scheme,var,scope[var])
-                    if 'if_present' in scheme:
-                        _logger.debug(f'{scope._path}.{var}: evaluate if_present '
-                                      f'{scheme._raw("if_present")._path}')
-                        ip=from_config(
-                            var,scheme._raw('if_present'),self._globals(),scope,
-                            f'{scope._path}.{var}')
-                        _logger.debug(f'{scope._path}.{var}: result = {ip!r}')
-                        if not ip: continue
-                        if hasattr(ip,'_path'):
-                            _logger.debug(
-                                f'{scope._path}.{var}: present ({scope._raw(var)!r}); '
-                                f'add {ip._path} to validation')
+                if 'precheck' in scheme:
+                    scope[var]=scheme.precheck
+                    
+                if var not in scope: continue
+
+                validate_var(scope._path,scheme,var,scope[var])
+                if 'if_present' in scheme:
+                    _logger.debug(f'{scope._path}.{var}: evaluate if_present '
+                                  f'{scheme._raw("if_present")._path}')
+                    ip=from_config(
+                        var,scheme._raw('if_present'),self._globals(),scope,
+                        f'{scope._path}.{var}')
+                    _logger.debug(f'{scope._path}.{var}: result = {ip!r}')
+                    if not ip: continue
+                    if not isinstance(ip,Template):
                         if not isinstance(ip,Mapping): continue
-                        new_template=Template(ip._raw_child())
-                        new_template.update(template)
-                        template=new_template
-                        assert(isinstance(template,Template))
-                except (IndexError,AttributeError,TypeError,ValueError) as pye:
-                    errors.append(f'{scope._path}.{var}: {type(pye).__name__}: {pye}')
-                    _logger.debug(f'{scope._path}.{var}: {pye}',exc_info=True)
-                except ConfigError as ce:
-                    errors.append(str(ce))
-                    _logger.debug(f'{scope._path}.{var}: {type(ce).__name__}: {ce}',exc_info=True)
+                        ip=Template(ip._raw_child(),ip._path,ip._get_globals())
+                    _logger.debug(
+                        f'{scope._path}.{var}: present ({scope._raw(var)!r}); '
+                        f'add {ip._path} to validation')
+                    child_templates.append(ip)
+            except (IndexError,AttributeError,TypeError,ValueError) as pye:
+                errors.append(f'{scope._path}.{var}: {type(pye).__name__}: {pye}')
+                _logger.debug(f'{scope._path}.{var}: {pye}',exc_info=True)
+            except ConfigError as ce:
+                errors.append(str(ce))
+                _logger.debug(f'{scope._path}.{var}: {type(ce).__name__}: {ce}',exc_info=True)
 
         # Insert default values for all templates found thus far and
         # detect any missing, non-optional, variables
@@ -137,6 +137,10 @@ class Template(dict_eval):
                     scope._globals(),scope,
                     f'{scope._path}.Template.{var}.override')
                 if override is not None: scope[var]=override
+
+        # Handle child templates
+        for child in child_templates:
+            child._check_scope(scope,stage,memo)
 
         # Check for variables that evaluate to an error
         for key,expr in scope._raw_child().items():

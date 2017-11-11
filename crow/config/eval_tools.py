@@ -216,7 +216,7 @@ class dict_eval(MutableMapping):
             if not isinstance(tmpl,Mapping): return
             if not hasattr(tmpl,'_check_scope'):
                 tmpl=Template(tmpl,self._path+'.Template',self.__globals)
-            tmpl._check_scope(self,stage)
+            tmpl._check_scope(self,stage,memo)
     def __getitem__(self,key):
         if key not in self.__cache:
             self.__cache[key]=self.__child[key]
