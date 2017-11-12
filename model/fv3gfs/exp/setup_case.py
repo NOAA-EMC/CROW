@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(
     os.path.dirname(__file__),'../../..')))
 
 from create_comrot import create_COMROT
-import crow.config, crow.metascheduler
+import crow.config, crow.metascheduler, crow.dataflow
 from crow.config import Platform
 
 logger=logging.getLogger("setup_case")
@@ -107,6 +107,7 @@ def main():
     EXPDIR=conf.places.EXPDIR
     logger.info(f'Run directory: {EXPDIR}')
     config_yaml=os.path.join(EXPDIR,'config.yaml')
+    dataflow_db=os.path.join(EXPDIR,'dataflow.db')
             
     try:
         os.makedirs(EXPDIR)
@@ -126,7 +127,7 @@ def main():
 
     suite=crow.config.Suite(conf[chosen_workflow])
     doc=crow.config.document_root(suite)
-    
+
     expname=conf.case.experiment_name
     logger.info(f'Experiment name: {expname}')
     
@@ -139,6 +140,9 @@ def main():
     with open(config_yaml,'wt') as fd:
         fd.write(yaml)
     
+    logger.info(f'Write the dataflow sqlite3 file: {dataflow_db}')
+    df=crow.dataflow.from_suite(suite,dataflow_db)
+
     rocoto_xml_file=os.path.join(EXPDIR,f'{expname}.xml')
     logger.info(f'Rocoto XML file: {rocoto_xml_file}')
     with open(rocoto_xml_file,'wt') as fd:

@@ -1,4 +1,4 @@
-gfs_output_settings_template: &gfs_output_settings_template
+gfs_output_settings_template: !Template &gfs_output_settings_template
   FHOUT_GFS:
     type: int
     default: 3

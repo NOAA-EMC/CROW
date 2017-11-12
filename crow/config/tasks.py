@@ -17,7 +17,7 @@ from collections import namedtuple, OrderedDict, Sequence
 from collections.abc import Mapping, Sequence
 from copy import copy, deepcopy
 from crow.config.exceptions import *
-from crow.config.eval_tools import dict_eval, strcalc, multidict
+from crow.config.eval_tools import dict_eval, strcalc, multidict, from_config
 from crow.tools import to_timedelta, typecheck
 
 __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
@@ -84,6 +84,12 @@ class SuiteView(Mapping):
         self.path=SuitePath(path)
         self.parent=parent
         self.__cache={}
+        if isinstance(self.viewed,Slot):
+            locals=multidict(self.parent,self.viewed)
+            globals=self.viewed._get_globals()
+            for k,v in self.viewed._raw_child().items():
+                if hasattr(v,'_as_dependency'): continue
+                self.viewed[k]=from_config(k,v,globals,locals,self.viewed._path)
 
     def _globals(self):
         return self.viewed._globals()
@@ -211,7 +217,7 @@ class SuiteView(Mapping):
 
 class SlotView(SuiteView):
     def __init__(self,suite,viewed,path,parent,search=MISSING):
-        super().__init__(suite,viewed,path,parent)
+        super().__init__(suite,copy(viewed),path,parent)
         assert(isinstance(path,Sequence))
         if search is MISSING: 
             self.__search={}

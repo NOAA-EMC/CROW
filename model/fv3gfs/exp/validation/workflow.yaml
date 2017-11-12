@@ -1,7 +1,8 @@
-known_workflows: &known_workflows
+known_workflows: !Template &known_workflows
   workflow:
     type: string
-    allowed: [ cycled_workflow, gfs_forecast_workflow ]
+    allowed: [ cycled_workflow, gfs_forecast_workflow, crow_sh_fcst_workflow,
+               crow_sh_df_fcst_workflow ]
     if_present: !FirstTrue
       - when: !calc workflow=="cycled_workflow"
         do: !Template
@@ -13,8 +14,7 @@ known_workflows: &known_workflows
           IC_DIR:
             type: string
             description: Disk location of initial conditions for cycled workflow
-      - when: !calc workflow=="gfs_forecast_workflow"
-        do: !Template
+      - otherwise: !Template
           ics_from:
             type: string
             allowed: [ opsgfs, pargfs ]
@@ -28,4 +28,3 @@ known_workflows: &known_workflows
                 default: !expand "/5year/NCEPDEV/emc-global/emc.glopara/WCOSS_C/{parexp}"
                 type: string
                 description: Path to HPSS tapes with GFS parallel data
-      - otherwise: null

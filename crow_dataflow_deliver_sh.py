@@ -8,7 +8,7 @@ from datetime import datetime
 from crow.tools import shell_to_python_type
 
 ALLOWED_DATE_FORMATS=[ '%Y-%m-%dt%H:%M:%S', '%Y-%m-%dT%H:%M:%S',
-                       '%Y-%m-%d %H:%M:%S' ]
+                       '%Y-%m-%d %H:%M:%S', '%Y%m%d%H', '%Y%m%d%H%M' ]
 
 USAGE='''Format: crow_dataflow_sh.py [-v] [-m] ( -i input | -o output ) \\
   dataflow.db cycle actor var=value [var=value [...]]

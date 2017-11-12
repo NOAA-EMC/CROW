@@ -108,6 +108,8 @@ DT_REGEX={
 
 def to_timedelta(s):
     if isinstance(s,timedelta): return s
+    if isinstance(s,int): return timedelta(seconds=s)
+    if isinstance(s,float): return timedelta(seconds=round(s))
     if not isinstance(s,str):
         raise TypeError('Argument to to_timedelta must be a str not a %s'%(
             type(s).__name__,))

@@ -48,6 +48,10 @@ default_places: &default_places
   GFSDWNSH: !expand "{BASE_WORKFLOW}/ush/fv3gfs_dwn_nems.sh"
   ENKFUPDSH: !expand "{BASE_GSI}/scripts/EnKF/scripts_ncep/exglobal_enkf_update_fv3gfs.sh.ecf"
 
+  FIX_DIR: !expand "{BASE_GSM}/fix"
+  FIX_AM: !expand "{FIX_DIR}/fix_am"
+  FIX_FV3: !expand "{FIX_DIR}/fix_fv3"
+
   CHGRESSH: !expand "{BASE_POST}/ush/global_chgres_GSM.sh"
   CHGRESSH_ECEN: !expand "{BASE_GSM}/ush/global_chgres_GSM.sh"
 
@@ -71,10 +75,11 @@ default_places: &default_places
   FORECASTSH: !expand "{BASE_GSM}/scripts/exglobal_fcst_nemsfv3gfs.sh"
   POSTGPSH: !expand "{BASE_POST}/ush/global_nceppost.sh"
   POSTGPEXEC: !expand "{BASE_POST}/exec/ncep_post"
-  FIELD_TABLE: !expand "{BASE_GSM}/parm/parm_fv3diag/field_table_ncld1"
+  PARM_FV3DIAG: !expand "{BASE_GSM}/parm/parm_fv3diag"
+  FIELD_TABLE: !expand "{PARM_FV3DIAG}/field_table_ncld1"
 
   REGRID_NEMSIO_SH: !expand "{BASE_GSM}/ush/fv3gfs_regrid_nemsio.sh"
-  REGRID_NEMSIO_TBL: !expand "{BASE_GSM}/parm/parm_fv3diag/variable_table_da_nonsst.txt"
+  REGRID_NEMSIO_TBL: !expand "{PARM_FV3DIAG}/variable_table_da_nonsst.txt"
   NC2NEMSIOSH: !expand "{BASE_GSM}/ush/fv3gfs_nc2nemsio.sh"
   REMAPSH: !expand "{BASE_GSM}/ush/fv3gfs_remap.sh"
 

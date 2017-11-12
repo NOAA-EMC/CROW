@@ -77,8 +77,8 @@ class Template(dict_eval):
                 if stage and 'stages' in scheme:
                     if stage not in scheme.stages:
                         continue # skip validation; wrong stage
-                    elif 'stages' in scheme:
-                        continue # skip validation of stage-specific schemes
+                elif 'stages' in scheme:
+                    continue # skip validation of stage-specific schemes
 
                 if 'precheck' in scheme:
                     scope[var]=scheme.precheck
@@ -118,15 +118,11 @@ class Template(dict_eval):
                     raise TypeError(f'{self._path}.{var}: All entries in a !Template must be maps not {type(tmpl).__name__}')
                 if 'default' in tmpl:
                     try:
-                        did_something=True
                         scope[var]=tmpl._raw('default')
                     except AttributeError:
                         scope[var]=tmpl['default']
                 elif not tmpl.get('optional',False):
                     missing.append(var)
-        if missing:
-            raise VariableMissing(f'{scope._path}: missing: '+
-                                  ', '.join(missing))
 
         # Override any variables if requested via "override" clauses.
         for var in template:
@@ -137,6 +133,16 @@ class Template(dict_eval):
                     scope._globals(),scope,
                     f'{scope._path}.Template.{var}.override')
                 if override is not None: scope[var]=override
+
+        # Second pass checking for required variables that have no
+        # values.  This second pass deals with variables that were
+        # updated by an "override" clause.
+        still_missing=list()
+        for var in missing:
+            if var not in scope: missing.append(var)
+        if still_missing:
+            raise VariableMissing(f'{scope._path}: missing: '+
+                                  ', '.join(still_missing))
 
         # Handle child templates
         for child in child_templates:

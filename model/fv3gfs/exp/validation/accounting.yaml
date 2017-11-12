@@ -1,4 +1,4 @@
-accounting_template: &accounting_template
+accounting_template: !Template &accounting_template
   cpu_project:
     type: string
     description: Which project or accounting code to use for cpu time in the batch queue
