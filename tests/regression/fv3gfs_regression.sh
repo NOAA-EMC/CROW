@@ -156,8 +156,13 @@ if [[ -d $1 ]] && [[ -d $2 ]]; then
  RUNROCOTO='FALSE'
  check_baseline_dir_with_this_dir=`readlink -f $2`
  check_baseline_dir_with_this_dir=$( find_data_dir $check_baseline_dir_with_this_dir )
- log_message "INFO" "Simply doing a diff on these two directories:\n  $check_baseline_dir \n  $check_baseline_dir_with_this_dir"
+ log_message "INFO" "simply doing a diff on these two directories:\n  $check_baseline_dir \n  $check_baseline_dir_with_this_dir"
  JUST_COMPAIR_TWO_DIRS='TRUE'
+ if [[ -z $3 ]]; then
+  regressionID='compair'
+ else
+  regressionID=$3
+ fi
 fi
 
 INTERACTIVE='TRUE'
@@ -379,7 +384,7 @@ if [[ $COMPAIR_BASE == 'TRUE' ]]; then
    fi
    check_baseline_dir_basename=`basename $check_baseline_dir`
    comrot_test_dir_basename=`basename $comrot_test_dir`
-   log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\"  $check_baseline_dir_basename $comrot_test_dir_basename >& $$diff_file_name" 
+   log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\"  $check_baseline_dir_basename $comrot_test_dir_basename >& $diff_file_name" 
    diff --brief -Nr --exclude "*.log*" $check_baseline_dir_basename $comrot_test_dir_basename >  ${diff_file_name} 2>&1
    log_message "INFO" "completed runing diff for fv3gfs regression test ($regressionID) resluts in file: $diff_file_name"
 fi
