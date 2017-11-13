@@ -13,6 +13,7 @@ following intermediate Python concepts:
 
 import re, sys, logging
 from copy import copy
+from collections import OrderedDict
 from datetime import timedelta, datetime
 from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config
@@ -51,6 +52,7 @@ class Template(dict_eval):
     dict_eval, inserting defaults and reporting errors via the
     TemplateErrors exception.    """
     def __init__(self,child,path='',globals=None):
+        assert(isinstance(child,OrderedDict))
         self.__my_id=id(child)
         super().__init__(child,path,globals)
 
@@ -66,11 +68,11 @@ class Template(dict_eval):
         errors=list()
         template=copy(self)
         did_something=True
-        child_templates=list()
 
         # Main validation loop.  Iteratively validate, adding new
         # Templates as they become available via is_present.
         for var in template:
+            _logger.debug(f'{scope._path}.{var}: validate...')
             try:
                 scheme=template[var]
                 if not isinstance(scheme,Mapping): continue # not a template
@@ -83,10 +85,16 @@ class Template(dict_eval):
                 if 'precheck' in scheme:
                     scope[var]=scheme.precheck
                     
-                if var not in scope: continue
-
-                validate_var(scope._path,scheme,var,scope[var])
-                if 'if_present' in scheme:
+                if var in scope:
+                    validate_var(scope._path,scheme,var,scope[var])
+                elif 'default' in scheme:
+                    scope[var]=from_config(
+                        var,scheme._raw('default'),self._globals(),scope,
+                        f'{scope._path}.{var}')
+                    _logger.debug(f'{scope._path}.{var}: insert default {scope._raw(var)}')
+                if var not in scope and 'if_present' in scheme:
+                    _logger.debug(f'{scope._path}.{var}: not present; skip if_present')
+                if var in scope and 'if_present' in scheme:
                     _logger.debug(f'{scope._path}.{var}: evaluate if_present '
                                   f'{scheme._raw("if_present")._path}')
                     ip=from_config(
@@ -100,7 +108,15 @@ class Template(dict_eval):
                     _logger.debug(
                         f'{scope._path}.{var}: present ({scope._raw(var)!r}); '
                         f'add {ip._path} to validation')
-                    child_templates.append(ip)
+                    ip._check_scope(scope,stage,memo)
+
+                if 'override' in scheme:
+                    override=from_config(
+                        'override',template[var]._raw('override'),
+                        scope._globals(),scope,
+                        f'{scope._path}.Template.{var}.override')
+                    if override is not None: scope[var]=override
+
             except (IndexError,AttributeError,TypeError,ValueError) as pye:
                 errors.append(f'{scope._path}.{var}: {type(pye).__name__}: {pye}')
                 _logger.debug(f'{scope._path}.{var}: {pye}',exc_info=True)
@@ -116,37 +132,18 @@ class Template(dict_eval):
                 tmpl=template[var]
                 if not hasattr(tmpl,'__getitem__') or not hasattr(tmpl,'update'):
                     raise TypeError(f'{self._path}.{var}: All entries in a !Template must be maps not {type(tmpl).__name__}')
-                if 'default' in tmpl:
-                    try:
-                        scope[var]=tmpl._raw('default')
-                    except AttributeError:
-                        scope[var]=tmpl['default']
-                elif not tmpl.get('optional',False):
+                if 'default' not in tmpl and not tmpl.get('optional',False):
                     missing.append(var)
-
-        # Override any variables if requested via "override" clauses.
-        for var in template:
-            if var in scope and isinstance(template[var],Mapping) and \
-               'override' in template[var]:
-                override=from_config(
-                    'override',template[var]._raw('override'),
-                    scope._globals(),scope,
-                    f'{scope._path}.Template.{var}.override')
-                if override is not None: scope[var]=override
 
         # Second pass checking for required variables that have no
         # values.  This second pass deals with variables that were
         # updated by an "override" clause.
         still_missing=list()
         for var in missing:
-            if var not in scope: missing.append(var)
+            if var not in scope: still_missing.append(var)
         if still_missing:
             raise VariableMissing(f'{scope._path}: missing: '+
                                   ', '.join(still_missing))
-
-        # Handle child templates
-        for child in child_templates:
-            child._check_scope(scope,stage,memo)
 
         # Check for variables that evaluate to an error
         for key,expr in scope._raw_child().items():

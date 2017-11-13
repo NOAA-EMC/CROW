@@ -1,9 +1,6 @@
 fv3_forecast_template: !Template &fv3_forecast_template
-
   # Required variables with no defaults:
   QUILTING: { type: bool }
-  dt_atmos: { type: int }
-  hypterthread: { type: bool }
   cores_per_node: { type: int }
   OUTPUT_GRID: { type: string }
 
@@ -12,11 +9,12 @@ fv3_forecast_template: !Template &fv3_forecast_template
   ENS_NUM: { type: int, default: 1 }
   ntiles: { type: int, default: 6 }
   NUM_FILES: { type: int, default: 2 }
+  hyperthread: { type: bool, default: false }
 
   filename_base:
     type: string
     stages: [ execution ]
-    default: "'{CDUMP}.t${CDUMP[8:]}z.atm' '{CDUMP}.t${CDUMP[8:]}z.sfc'"
+    default: !expand "'{CDUMP}.t{CDUMP[8:]}z.atm' '{CDUMP}.t{CDUMP[8:]}z.sfc'"
 
   rCDUMP:
     type: string
@@ -28,15 +26,15 @@ fv3_forecast_template: !Template &fv3_forecast_template
 
   FIELD_TABLE: 
     type: string
-    default: !expand "{doc.places.PARM_FV3DIAG/field_table}"
+    default: !expand "{doc.places.PARM_FV3DIAG}/field_table"
 
   DIAG_TABLE: 
     type: string
-    default: !expand "{doc.places.PARM_FV3DIAG/diag_table}"
+    default: !expand "{doc.places.PARM_FV3DIAG}/diag_table"
 
   DATA_TABLE: 
     type: string
-    default: !expand "{doc.places.PARM_FV3DIAG/data_table}"
+    default: !expand "{doc.places.PARM_FV3DIAG}/data_table"
 
   domains_stack_size: { type: int, default: 3000000 }
   print_memory_usage:
@@ -58,58 +56,67 @@ fv3_forecast_template: !Template &fv3_forecast_template
   npy:       { type: int, default: !calc res+1 }
   npz:       { type: int, default: !calc LEVS-1 }
 
-  FNGLAC:  { type: string, default: !expand "{FIX_AM}/global_glacier.2x2.grb" }
-  FNMXIC:  { type: string, default: !expand "{FIX_AM}/global_maxice.2x2.grb"}
-  FNTSFC:  { type: string, default: !expand "{FIX_AM}/RTGSST.1982.2012.monthly.clim.grb"}
-  FNSNOC:  { type: string, default: !expand "{FIX_AM}/global_snoclim.1.875.grb"}
+  FNGLAC:  { type: string, default: !expand "{doc.places.FIX_AM}/global_glacier.2x2.grb" }
+  FNMXIC:  { type: string, default: !expand "{doc.places.FIX_AM}/global_maxice.2x2.grb"}
+  FNTSFC:  { type: string, default: !expand "{doc.places.FIX_AM}/RTGSST.1982.2012.monthly.clim.grb"}
+  FNSNOC:  { type: string, default: !expand "{doc.places.FIX_AM}/global_snoclim.1.875.grb"}
   FNZORC:  { type: string, default: "igbp"}
-  FNALBC2: { type: string, default: !expand "{FIX_AM}/global_albedo4.1x1.grb"}
-  FNAISC:  { type: string, default: !expand "{FIX_AM}/CFSR.SEAICE.1982.2012.monthly.clim.grb"}
-  FNTG3C:  { type: string, default: !expand "{FIX_AM}/global_tg3clim.2.6x1.5.grb"}
-  FNVEGC:  { type: string, default: !expand "{FIX_AM}/global_vegfrac.0.144.decpercent.grb"}
-  FNMSKH:  { type: string, default: !expand "{FIX_AM}/seaice_newland.grb"}
-  FNVMNC:  { type: string, default: !expand "{FIX_AM}/global_shdmin.0.144x0.144.grb"}
-  FNVMXC:  { type: string, default: !expand "{FIX_AM}/global_shdmax.0.144x0.144.grb"}
-  FNSLPC:  { type: string, default: !expand "{FIX_AM}/global_slope.1x1.grb"}
+  FNALBC2: { type: string, default: !expand "{doc.places.FIX_AM}/global_albedo4.1x1.grb"}
+  FNAISC:  { type: string, default: !expand "{doc.places.FIX_AM}/CFSR.SEAICE.1982.2012.monthly.clim.grb"}
+  FNTG3C:  { type: string, default: !expand "{doc.places.FIX_AM}/global_tg3clim.2.6x1.5.grb"}
+  FNVEGC:  { type: string, default: !expand "{doc.places.FIX_AM}/global_vegfrac.0.144.decpercent.grb"}
+  FNMSKH:  { type: string, default: !expand "{doc.places.FIX_AM}/seaice_newland.grb"}
+  FNVMNC:  { type: string, default: !expand "{doc.places.FIX_AM}/global_shdmin.0.144x0.144.grb"}
+  FNVMXC:  { type: string, default: !expand "{doc.places.FIX_AM}/global_shdmax.0.144x0.144.grb"}
+  FNSLPC:  { type: string, default: !expand "{doc.places.FIX_AM}/global_slope.1x1.grb"}
 
   FNALBC:
     type: string
-    default: !FirstTrue
-      - do: !expand "{FIX_AM}/global_snowfree_albedo.bosu.t{JCAP}.{LONB}.{LATB}.rg.grb"
-        when: !calc tools.isfile(do)
-      - otherwise: "{FIX_AM}/global_snowfree_albedo.bosu.t1534.3072.1536.rg.grb"
+    default: !expand "{doc.places.FIX_AM}/global_snowfree_albedo.bosu.t{JCAP}.{LONB}.{LATB}.rg.grb"
+    override: !FirstTrue
+      - when: !calc not tools.isfile(FNALBC)
+        do: "{doc.places.FIX_AM}/global_snowfree_albedo.bosu.t1534.3072.1536.rg.grb"
+      - otherwise: null
       
   FNVETC:
     type: string
-    default: !FirstTrue
-      - do: !expand "{FIX_AM}/global_vegtype.igbp.t{JCAP}.{LONB}.{LATB}.rg.grb"
-        when: !calc tools.isfile(do)
-      - otherwise: "{FIX_AM}/global_vegtype.igbp.t1534.3072.1536.rg.grb"
+    default: !expand "{doc.places.FIX_AM}/global_vegtype.igbp.t{JCAP}.{LONB}.{LATB}.rg.grb"
+    override: !FirstTrue
+      - when: !calc not tools.isfile(FNVETC)
+        do: "{doc.places.FIX_AM}/global_vegtype.igbp.t1534.3072.1536.rg.grb"
+      - otherwise: null
 
   FNSOTC:
     type: string
-    default: !FirstTrue
-      - do: !expand "{FIX_AM}/global_soiltype.statsgo.t{JCAP}.{LONB}.{LATB}.rg.grb"
-        when: !calc tools.isfile(do)
-      - otherwise: "{FIX_AM}/global_soiltype.statsgo.t1534.3072.1536.rg.grb"
+    default: !expand "{doc.places.FIX_AM}/global_soiltype.statsgo.t{JCAP}.{LONB}.{LATB}.rg.grb"
+    otherwise: !FirstTrue
+      - when: !calc tools.isfile(FNSOTC)
+        do: "{doc.places.FIX_AM}/global_soiltype.statsgo.t1534.3072.1536.rg.grb"
+      - otherwise: null
 
   FNABSC:
     type: string
-    default: !FirstTrue
-      - do: !expand "{FIX_AM}/global_mxsnoalb.uariz.t{JCAP}.{LONB}.{LATB}.rg.grb"
-        when: !calc tools.isfile(do)
-      - otherwise: "{FIX_AM}/global_mxsnoalb.uariz.t1534.3072.1536.rg.grb"
+    default: !expand "{doc.places.FIX_AM}/global_mxsnoalb.uariz.t{JCAP}.{LONB}.{LATB}.rg.grb"
+    otherwise: !FirstTrue
+      - when: !calc tools.isfile(FNABSC)
+        do: "{doc.places.FIX_AM}/global_mxsnoalb.uariz.t1534.3072.1536.rg.grb"
+      - otherwise: null
+
+  FNTSFA: { type: string, default: "" }
+  FNACNA: { type: string, default: "" }
+  FNSNOA: { type: string, default: "" }
 
   FNSMCC:
     type: string
-    default: !FirstTrue
-      - do: !expand "{FIX_AM}/global_soilmgldas.t{JCAP}.{LONB}.{LATB}.grb"
-        when: !calc tools.isfile(do)
-      - otherwise: "{FIX_AM}/global_soilmgldas.t1534.3072.1536.grb"
+    default: !expand "{doc.places.FIX_AM}/global_soilmgldas.t{JCAP}.{LONB}.{LATB}.grb"
+    otherwise: !FirstTrue
+      - when: !calc tools.isfile(FNSMCC)
+        do: "{doc.places.FIX_AM}/global_soilmgldas.t1534.3072.1536.grb"
+      - otherwise: null
 
   nstf_name: 
     type: string
-    defauilt: "0,0,0,0,0"
+    default: "0,0,0,0,0"
     description: |
       nstf_name contains the NSST related parameters
       nstf_name(1) : 0 = NSSTM off, 1 = NSSTM on but uncoupled, 2 = NSSTM on and coupled
@@ -140,7 +147,7 @@ fv3_forecast_template: !Template &fv3_forecast_template
       True = warm start from restart file
       False = CHGRES GFS analyses
     if_present: !FirstTrue
-      - when: warm_start==".true."
+      - when: !calc warm_start==".true."
         do: !Template
           na_init: { type: int, default: 0 }
           nggps_ic:
@@ -167,9 +174,8 @@ fv3_forecast_template: !Template &fv3_forecast_template
               - when: !calc read_increment == ".true."
                 do: "fv3_increment.nc"
               - otherwise: ""
-      - otherwise:
-        do: !Template
-          na_init: { type: int, default: 0 }
+      - otherwise: !Template
+          na_init: { type: int, default: 1 }
 
           nggps_ic:
             type: string
@@ -225,6 +231,11 @@ fv3_forecast_template: !Template &fv3_forecast_template
     allowed: [ ".true.", ".false." ]
     default: ".false."
 
+  gfs_phys_debug:
+    type: string
+    allowed: [ ".true.", ".false." ]
+    default: ".false."
+
   print_esmf: { type: bool, default: true }
   RUN_CONTINUE: { type: bool, default: false }
   ENS_SPS: { type: bool, default: false }
@@ -233,8 +244,7 @@ fv3_forecast_template: !Template &fv3_forecast_template
   
 
   print_freq:
-    type: string
-    allowed: [ ".true.", ".false." ]
+    type: int
     default: 6
     
 
@@ -257,12 +267,10 @@ fv3_forecast_template: !Template &fv3_forecast_template
   hord_xx_hydro_nonmono: { type: int, default: 10 }
   vtdm4_hydro_nonmono:   { type: float, default: 0.05 }
 
-  vtdm4_nh_nonmono: { type: float, default: 0.06 }
-
   nh_type: 
     type: string
     default: "nh"
-    if_present:
+    if_present: !FirstTrue
       - when: !calc nh_type == "nh"
         do: !Template
           hord_mt_mono: { type: int, default: !calc hord_mt_nh_mono }
@@ -322,22 +330,22 @@ fv3_forecast_template: !Template &fv3_forecast_template
     type: string
     default: "non-mono"
     allowed: [ mono, non-mono ]
-    if_present:
+    if_present: !FirstTrue
       - when: !calc MONO == "mono"
         do: !Template
           d_con_mono: { type: float, default: 0. }
           d_con: { type: float, override: !calc d_con_mono }
           do_vort_damp: { type: string, override: ".false." }
-          hord_mt: !calc hord_mt_mono
-          hord_xx: !calc hord_xx_mono
-          vtdm: !calc vtdm_mono
-      - otherwise:
+          hord_mt: { type: int, override: !calc hord_mt_mono }
+          hord_xx: { type: int, override: !calc hord_xx_mono }
+          vtdm4: { type: float, override: !calc vtdm4_mono }
+      - otherwise: !Template
           d_con_nonmono: { type: float, default: 1. }
           d_con: { type: float, override: !calc d_con_nonmono }
           do_vort_damp: { type: string, override: ".true." }
-          hord_mt: !calc hord_mt_nonmono
-          hord_xx: !calc hord_xx_nonmono
-          vtdm: !calc vtdm_nonmono
+          hord_mt: { type: int, override: !calc hord_mt_nonmono }
+          hord_xx: { type: int, override: !calc hord_xx_nonmono }
+          vtdm4: { type: float, override: !calc vtdm4_nonmono }
 
 
 
@@ -363,7 +371,7 @@ fv3_forecast_template: !Template &fv3_forecast_template
     default: ".false."
 
   tau: { type: float, default: 10. }
-  rf_cutoff: { type: float, default: 7.5e2 }
+  rf_cutoff: { type: float, default: 7.5e+2 }
   d2_bg_k1: { type: float, default: 0.15 }
   d2_bg_k2: { type: float, default: 0.02 }
   kord_tm: { type: int, default: -9 }
@@ -413,11 +421,8 @@ fv3_forecast_template: !Template &fv3_forecast_template
     allowed: [ ".true.", ".false." ]
     default: ".false."
   ncld:
+    type: int
     default: 1
-  zhao_mic:
-    type: string
-    allowed: [ ".true.", ".false." ]
-    default: ".true."
   pdfcld:
     type: string
     allowed: [ ".true.", ".false." ]

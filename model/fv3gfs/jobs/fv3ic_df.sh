@@ -41,6 +41,9 @@ fi
 export OUTDIR="$DATA/outdir"
 mkdir -p "$OUTDIR"
 
+$HOMEcrow/crow_dataflow_cycle_sh.py "$CROW_DATAFLOW_DB" add "$CDATE"
+$HOMEcrow/crow_dataflow_cycle_sh.py "$CROW_DATAFLOW_DB" add "$CDATE"
+
 export OMP_NUM_THREADS_CH=$NTHREADS_CHGRES
 export APRUNC=$APRUN_CHGRES
 
@@ -54,19 +57,21 @@ fi
 
 set -xue
 
-$HOMEcrow/crow_dataflow_deliver_sh.py -i "$OUTDIR/gfs_cntrl.nc" \
-    "$CROW_DATAFLOW_DB" "$CDATE" "$TASK_PATH" slot=gfs_cntrl_nc
+ACTOR=$( echo "$TASK_PATH" | sed 's,\.[^.]*$,,g' )
 
-$HOMEcrow/crow_dataflow_deliver_sh.py -i "$OUTDIR/{kind}.tile{tile}.nc" \
-    "$CROW_DATAFLOW_DB" "$CDATE" "$TASK_PATH" slot=output_data_tiles
+$HOMEcrow/crow_dataflow_deliver_sh.py -i "$OUTDIR/gfs_ctrl.nc" \
+    "$CROW_DATAFLOW_DB" "$CDATE" "$ACTOR" slot=gfs_ctrl_nc
+
+$HOMEcrow/crow_dataflow_deliver_sh.py -m -i "$OUTDIR/{kind}.tile{tile}.nc" \
+    "$CROW_DATAFLOW_DB" "$CDATE" "$ACTOR" slot=output_data_tiles
 
 # $HOMEcrow/crow_dataflow_deliver_sh.py \
 #     -i "$OUTDIR/RESTART/{cycle:%Y%m%d.%H%M%S}0000.{kind}.tile{tile:%d}.nc" \
-#     "$crow_db" "$CDATE" "$TASK_PATH" "slot=end_time_tiles"
+#     "$crow_db" "$CDATE" "$ACTOR" "slot=end_time_tiles"
 
 # $HOMEcrow/crow_dataflow_deliver_sh.py \
 #     -i "$OUTDIR/RESTART/{kind}.tile{tile:%d}.nc" \
-#     "$crow_db" "$CDATE" "$TASK_PATH" "slot=end_time_tiles"
+#     "$crow_db" "$CDATE" "$ACTOR" "slot=end_time_tiles"
 
 # $HOMEcrow/crow_dataflow_deliver_sh.py \
 #     -i "$OUTDIR/RESTART/{cycle:%Y%m%d" \

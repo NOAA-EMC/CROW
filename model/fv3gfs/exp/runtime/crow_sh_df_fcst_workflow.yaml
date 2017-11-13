@@ -21,7 +21,7 @@ crow_sh_df_fcst_workflow: !Cycle
       Trigger: !Depend getics
 
 
-      gfs_cntrl_nc: !OutputSlot { Loc: !calc suite.ICSDIR_CYC+"gfs_cntrl.nc" }
+      gfs_ctrl_nc: !OutputSlot { Loc: !calc suite.ICSDIR_CYC+"gfs_ctrl.nc" }
       output_data_tiles: !OutputSlot
         tile: [ 1, 2, 3, 4, 5, 6 ]
         kind: [ sfc_data, gfs_data ]
@@ -31,15 +31,15 @@ crow_sh_df_fcst_workflow: !Cycle
     Trigger: !Depend ics
 
     fcst: !Task
-      Perform: *crow_sh_fcst_gfs_action
+      Perform: *crow_sh_df_fcst_gfs_action
       Rocoto: *task_template
 
       COMOUT: !calc |
         doc.places.ROTDIR+"/gfs.{cycle:%Y%m%d}/{cycle:%H}/"
 
       # Inputs from fv3ic
-      gfs_cntrl_nc: !InputSlot
-        Out: !Message up.up.ics.fv3ics.gfs_cntrl_nc
+      gfs_ctrl_nc: !InputSlot
+        Out: !Message up.up.ics.fv3ics.gfs_ctrl_nc
       input_data_tiles: !InputSlot
         Out: !Message up.up.ics.fv3ics.output_data_tiles(tile=tile)
         tile: [ 1, 2, 3, 4, 5, 6 ]
@@ -62,7 +62,7 @@ crow_sh_df_fcst_workflow: !Cycle
           - fv_tracer.res
           - phy_data
           - sfc_data
-        Loc: !calc COMOUT+"RESTART/"+"{cycle+dt_end:%Y%m%d.%H%M%S}.{kind}.tile{tile:%d}.nc"
+        Loc: !calc COMOUT+"RESTART/"+"{cycle+dt_end:%Y%m%d.%H%M%S}.{kind}.tile{tile}.nc"
 
       untimed_tiles: !OutputSlot
         tile: [ 1, 2, 3, 4, 5, 6 ]
@@ -72,7 +72,7 @@ crow_sh_df_fcst_workflow: !Cycle
           - grid_spec
           - nggps2d
           - nggps3d
-        Loc: !calc COMOUT+"{kind}.tile{tile:%d}.nc"
+        Loc: !calc COMOUT+"{kind}.tile{tile}.nc"
 
     post: !Task
       Perform: *post_gfs_action

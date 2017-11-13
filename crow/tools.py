@@ -24,8 +24,10 @@ def deliver_file(from_file: str,to_file: str,*,blocksize: int=1048576,
             with tempfile.NamedTemporaryFile(
                     prefix=f"_tmp_{to_base}.part.",
                     delete=False,dir=to_dir) as out_fd:
-                shutil.copyfileobj(in_fd,out_fd,length=blocksize)
                 temppath=out_fd.name
+                shutil.copyfileobj(in_fd,out_fd,length=blocksize)
+        assert(temppath)
+        assert(os.path.exists(temppath))
         if preserve_perms:
             os.chmod(temppath,istat.st_mode&~permmask)
         if preserve_times:
@@ -38,7 +40,7 @@ def deliver_file(from_file: str,to_file: str,*,blocksize: int=1048576,
         _logger.warning(f'{to_file}: {e}')
         raise
     finally: # Delete file on error
-        if temppath: os.unlink(temppath)
+        if temppath and os.path.exists(temppath): os.unlink(temppath)
 
 def panasas_gb(dir,pan_df='pan_df'):
     rdir=os.path.realpath(dir)

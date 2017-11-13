@@ -47,9 +47,9 @@ crow_sh_fcst_base: &crow_sh_fcst_base !Action
   true_false_vars: [ 'QUILTING', 'WRITE_NEMSIOFILE', 'nst_anl', 'zhao_mic' ]
 
   # Variables to import in shell:
-  shell_vars: [ "[A-Z][A-Z0-9_]*$", 'restart_interval' ]
+  shell_vars: [ "[A-Z][A-Z0-9_]*$", 'restart_interval', 'ntiles' ]
 
-  cores_per_node: 24
+  cores_per_node: !calc nodes.cores_per_node
   restart_interval: 6
 
   USE_COUPLER_RES: NO
@@ -60,6 +60,8 @@ crow_sh_fcst_base: &crow_sh_fcst_base !Action
     - otherwise: 0
 
   master_grid: !calc doc.case.master_grid
+
+  CDATE: !calc doc.clock.now
 
   diag_table_header: !expand |
     FV3 Forecast
@@ -74,7 +76,7 @@ crow_sh_fcst_base: &crow_sh_fcst_base !Action
 
   model_configure: !expand |
     total_member:            {ENS_NUM}
-    print_esmf:              {print_esmf}
+    print_esmf:              {tools.fort(print_esmf)}
     PE_MEMBER01:             {NTASKS_FV3}
     start_year:              {CDATE:%Y}
     start_month:             {CDATE:%m}
@@ -83,25 +85,25 @@ crow_sh_fcst_base: &crow_sh_fcst_base !Action
     start_minute:            0
     start_second:            0
     nhours_fcst:             {FHMAX}
-    RUN_CONTINUE:            {RUN_CONTINUE}
-    ENS_SPS:                 {ENS_SPS}
+    RUN_CONTINUE:            {tools.fort(RUN_CONTINUE)}
+    ENS_SPS:                 {tools.fort(ENS_SPS)}
 
     dt_atmos:                {DELTIM}
-    calendar:                {calendar}
-    memuse_verbose:          {memuse_verbose}
+    calendar:                {tools.fort(calendar)}
+    memuse_verbose:          {tools.fort(memuse_verbose)}
     atmos_nthreads:          {NTHREADS_FV3}
-    use_hyper_thread:        {hyperthread}
+    use_hyper_thread:        {tools.fort(hyperthread)}
     ncores_per_node:         {cores_per_node}
     restart_interval:        {restart_interval}
 
-    quilting:                {QUILTING}
+    quilting:                {tools.fort(QUILTING)}
     write_groups:            {WRITE_GROUP}
     write_tasks_per_group:   {WRTTASK_PER_GROUP}
     num_files:               {NUM_FILES}
     filename_base:           {filename_base}
-    output_grid:             {OUTPUT_GRID}
-    write_nemsiofile:        {WRITE_NEMSIOFILE}
-    write_nemsioflip:        {WRITE_NEMSIOFLIP}
+    output_grid:             {tools.fort(OUTPUT_GRID)}
+    write_nemsiofile:        {tools.fort(WRITE_NEMSIOFILE)}
+    write_nemsioflip:        {tools.fort(WRITE_NEMSIOFLIP)}
     imo:                     {LONB}
     jmo:                     {LATB}
 
@@ -130,7 +132,7 @@ crow_sh_fcst_base: &crow_sh_fcst_base !Action
 
     &diag_manager_nml
       prepend_date = .false.
-      $diag_manager_nml
+      {diag_manager_nml}
     /
 
     &fms_io_nml
@@ -215,7 +217,7 @@ crow_sh_fcst_base: &crow_sh_fcst_base !Action
       z_tracer = .true.
       agrid_vel_rst = {agrid_vel_rst}
       read_increment = {read_increment}
-      res_latlon_dynamics = {res_latlon_dynamics}
+      res_latlon_dynamics = {tools.fort(res_latlon_dynamics)}
       {fv_core_nml}
     /
 
@@ -235,7 +237,7 @@ crow_sh_fcst_base: &crow_sh_fcst_base !Action
       use_ufo     = {use_ufo}
       pre_rad     = {pre_rad}
       ncld        = {ncld}
-      zhao_mic    = {zhao_mic}
+      zhao_mic    = {tools.fort(zhao_mic)}
       pdfcld      = {pdfcld}
       fhswr       = {FHSWR}
       fhlwr       = {FHLWR}
@@ -265,7 +267,7 @@ crow_sh_fcst_base: &crow_sh_fcst_base !Action
       isot        = {isot}
       debug       = {gfs_phys_debug}
       nstf_name   = {nstf_name}
-      nst_anl     = {nst_anl}
+      nst_anl     = {tools.fort(nst_anl)}
       psautco     = {psautco}
       prautco     = {prautco}
       {gfs_physics_nml}
@@ -332,31 +334,31 @@ crow_sh_fcst_base: &crow_sh_fcst_base !Action
     /
 
     &namsfc
-      FNGLAC   = !calc "{tools.fort(FNGLAC)}"
-      FNMXIC   = !calc "{tools.fort(FNMXIC)}"
-      FNTSFC   = !calc "{tools.fort(FNTSFC)}"
-      FNSNOC   = !calc "{tools.fort(FNSNOC)}"
-      FNZORC   = !calc "{tools.fort(FNZORC)}"
-      FNALBC   = !calc "{tools.fort(FNALBC)}"
-      FNALBC2  = !calc "{tools.fort(FNALBC2)}"
-      FNAISC   = !calc "{tools.fort(FNAISC)}"
-      FNTG3C   = !calc "{tools.fort(FNTG3C)}"
-      FNVEGC   = !calc "{tools.fort(FNVEGC)}"
-      FNVETC   = !calc "{tools.fort(FNVETC)}"
-      FNSOTC   = !calc "{tools.fort(FNSOTC)}"
-      FNSMCC   = !calc "{tools.fort(FNSMCC)}"
-      FNMSKH   = !calc "{tools.fort(FNMSKH)}"
-      FNTSFA   = !calc "{tools.fort(FNTSFA)}"
-      FNACNA   = !calc "{tools.fort(FNACNA)}"
-      FNSNOA   = !calc "{tools.fort(FNSNOA)}"
-      FNVMNC   = !calc "{tools.fort(FNVMNC)}"
-      FNVMXC   = !calc "{tools.fort(FNVMXC)}"
-      FNSLPC   = !calc "{tools.fort(FNSLPC)}"
-      FNABSC   = !calc "{tools.fort(FNABSC)}"
+      FNGLAC   = {tools.fort(FNGLAC)}
+      FNMXIC   = {tools.fort(FNMXIC)}
+      FNTSFC   = {tools.fort(FNTSFC)}
+      FNSNOC   = {tools.fort(FNSNOC)}
+      FNZORC   = {tools.fort(FNZORC)}
+      FNALBC   = {tools.fort(FNALBC)}
+      FNALBC2  = {tools.fort(FNALBC2)}
+      FNAISC   = {tools.fort(FNAISC)}
+      FNTG3C   = {tools.fort(FNTG3C)}
+      FNVEGC   = {tools.fort(FNVEGC)}
+      FNVETC   = {tools.fort(FNVETC)}
+      FNSOTC   = {tools.fort(FNSOTC)}
+      FNSMCC   = {tools.fort(FNSMCC)}
+      FNMSKH   = {tools.fort(FNMSKH)}
+      FNTSFA   = {tools.fort(FNTSFA)}
+      FNACNA   = {tools.fort(FNACNA)}
+      FNSNOA   = {tools.fort(FNSNOA)}
+      FNVMNC   = {tools.fort(FNVMNC)}
+      FNVMXC   = {tools.fort(FNVMXC)}
+      FNSLPC   = {tools.fort(FNSLPC)}
+      FNABSC   = {tools.fort(FNABSC)}
       LDEBUG   = {LDEBUG}
-      FSMCL(2) = ${FSMCL2}
-      FSMCL(3) = ${FSMCL3}
-      FSMCL(4) = ${FSMCL4}
+      FSMCL(2) = {FSMCL2}
+      FSMCL(3) = {FSMCL3}
+      FSMCL(4) = {FSMCL4}
       FTSFS = {FTSFS}
       FAISL = {FAISL}
       FAISS = {FAISS}
@@ -419,12 +421,12 @@ crow_sh_fcst_base: &crow_sh_fcst_base !Action
   input_nml_stochy_sppt: !FirstTrue
     - when: !calc MEMBER>0 and DO_SPPT
       do: !expand |
-        sppt = $SPPT
-        iseed_sppt = ${ISEED_SPPT:-$ISEED}
-        sppt_tau = ${SPPT_TAU:-"-999."}
-        sppt_lscale = ${SPPT_LSCALE:-"-999."}
-        sppt_logit = ${SPPT_LOGIT:-".true."}
-        sppt_sfclimit = ${SPPT_SFCLIMIT:-".true."}
+        sppt = SPPT
+        iseed_sppt = {ISEED_SPPT}
+        sppt_tau = {SPPT_TAU}
+        sppt_lscale = {SPPT_LSCALE}
+        sppt_logit = {SPPT_LOGIT}
+        sppt_sfclimit = {SPPT_SFCLIMIT}
     - otherwise: ""
 
 crow_sh_fcst_gdas: &crow_sh_fcst_gdas_action !Action
@@ -441,6 +443,8 @@ crow_sh_fcst_gdas: &crow_sh_fcst_gdas_action !Action
   FHOUT: !calc doc.gfs_output_settings.FHOUT_GDAS
   FHMAX: !calc doc.gfs_output_settings.FHMAX_GDAS
   FHMIN: !calc doc.gfs_output_settings.FHMIN_GDAS
+  FHMAX_HF: 6
+  FHOUT_HF: 1
 
 crow_sh_fcst_gfs: &crow_sh_fcst_gfs_action !Action
   <<: [ *fv3_gfs_settings, *data_assimilation, *crow_sh_fcst_base ]
@@ -452,7 +456,19 @@ crow_sh_fcst_gfs: &crow_sh_fcst_gfs_action !Action
     - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
   CDUMP: gfs
-  walltime: !timedelta 02:35:00
+  walltime: !timedelta 00:10:00
+#  walltime: !timedelta 02:35:00
   FHOUT: !calc doc.gfs_output_settings.FHOUT_GFS
   FHMAX: !calc doc.gfs_output_settings.FHMAX_GFS
   FHMIN: !calc doc.gfs_output_settings.FHMIN_GFS
+
+  FHMAX_HF: !calc doc.gfs_output_settings.FHMAX_HF_GFS
+  FHOUT_HF: !calc doc.gfs_output_settings.FHOUT_HF_GFS
+
+crow_sh_df_fcst_gdas: &crow_sh_df_fcst_gdas_action !Action
+  <<: *crow_sh_fcst_gdas_action
+  J_JOB: fcst_df
+
+crow_sh_df_fcst_gfs: &crow_sh_df_fcst_gfs_action !Action
+  <<: *crow_sh_fcst_gfs_action
+  J_JOB: fcst_df

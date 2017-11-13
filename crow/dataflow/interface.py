@@ -101,12 +101,12 @@ class Dataflow(object):
 
     def add_output_slot(self,actor: str,slot: str,defloc: str,
                         meta: Dict[str,Any]=None) -> None:
-        pid=add_slot(self._con,actor,slot,'O',defloc,meta)
+        pid=add_slots(self._con,actor,slot,'O',defloc,meta)
         return OutputSlot(self._con,pid,actor,slot,'O',defloc,meta)
 
     def add_input_slot(self,actor: str,slot: str,
                        meta: Dict[str,Any]=None) -> InputSlot:
-        pid=add_slot(self._con,actor,slot,'I',None,meta)
+        pid=add_slots(self._con,actor,slot,'I',None,meta)
         return InputSlot(self._con,pid,actor,slot,'I',None,meta)
 
     def find_input_slot(self,actor: str=None,slot: str=None,

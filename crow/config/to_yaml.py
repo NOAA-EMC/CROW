@@ -68,7 +68,6 @@ def add_yaml_dict_eval(key,cls):
 add_yaml_dict_eval(None,GenericDict)
 add_yaml_dict_eval(u'!Platform',Platform)
 add_yaml_dict_eval(u'!Action',Action)
-add_yaml_dict_eval(u'!Template',Template)
 add_yaml_dict_eval(u'!Eval',Eval)
 add_yaml_dict_eval(u'!InputSlot',InputSlot)
 add_yaml_dict_eval(u'!OutputSlot',OutputSlot)
@@ -119,6 +118,7 @@ def add_yaml_taskable(key,cls):
 add_yaml_taskable(u'!Task',Task)
 add_yaml_taskable(u'!Family',Family)
 add_yaml_taskable(u'!Cycle',Cycle)
+add_yaml_taskable(u'!Template',Template)
 
 ########################################################################
 

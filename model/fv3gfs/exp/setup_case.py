@@ -140,8 +140,10 @@ def main():
     with open(config_yaml,'wt') as fd:
         fd.write(yaml)
     
-    logger.info(f'Write the dataflow sqlite3 file: {dataflow_db}')
-    df=crow.dataflow.from_suite(suite,dataflow_db)
+    if not os.path.exists(dataflow_db):
+        logger.info(f'Write the dataflow sqlite3 file: {dataflow_db}')
+        df=crow.dataflow.from_suite(suite,dataflow_db)
+        #Uncomment to dump database to stdout: df.dump(sys.stdout)
 
     rocoto_xml_file=os.path.join(EXPDIR,f'{expname}.xml')
     logger.info(f'Rocoto XML file: {rocoto_xml_file}')

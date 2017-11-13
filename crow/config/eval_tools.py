@@ -63,12 +63,13 @@ def from_config(key,val,globals,locals,path):
     Other types are returned unmodified."""
     try:
         if hasattr(val,'_result'):
+            #_logger.debug(f'{path}: expand {key} with locals {list(locals.keys())}')
             result=val._result(globals,locals)
             return from_config(key,result,globals,locals,path)
         return val
     except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:40]} - '
-                           f'{type(ke).__name__} {str(ke)}')
+                           f'{type(ke).__name__} {str(ke)} - scope keys: {list(locals.keys())}')
     except RecursionError as re:
         raise CalcRecursionTooDeep('%s: !%s %s'%(
             str(key),type(val).__name__,str(val)))
@@ -183,7 +184,7 @@ class dict_eval(MutableMapping):
         #self.__globals=deepcopy(other.__globals,memo)
     def __deepcopy__(self,memo):
         cls=type(self)
-        r=cls({})
+        r=cls(type(self.__child)())
         memo[id(self)]=r
         r.__child=self._deepcopy_child(memo)
         r._deepcopy_privates_from(memo,self)
@@ -213,12 +214,20 @@ class dict_eval(MutableMapping):
         if 'Template' in self:
             tmpl=self.Template
             if not tmpl: return
-            if not isinstance(tmpl,Mapping): return
-            if not hasattr(tmpl,'_check_scope'):
-                tmpl=Template(tmpl,self._path+'.Template',self.__globals)
-            tmpl._check_scope(self,stage,memo)
+            if isinstance(tmpl,str): return
+            if isinstance(tmpl,Sequence):
+                templates=tmpl
+            else:
+                templates=[ tmpl ]
+            for tmpl in templates:
+                if not isinstance(tmpl,Mapping): continue
+                if not hasattr(tmpl,'_check_scope'):
+                    tmpl=Template(tmpl,self._path+'.Template',self.__globals)
+                tmpl._check_scope(self,stage,memo)
     def __getitem__(self,key):
         if key not in self.__cache:
+            if key not in self.__child:
+                raise KeyError(f'{self._path}: no {key} in {list(self.keys())}')
             self.__cache[key]=self.__child[key]
         val=self.__cache[key]
         if hasattr(val,'_result'):
@@ -231,7 +240,7 @@ class dict_eval(MutableMapping):
         return val
     def __getattr__(self,name):
         if name in self: return self[name]
-        raise AttributeError(name)
+        raise AttributeError(f'{self._path}: no {name} in {list(self.keys())}')
     def __setattr__(self,name,value):
         if name.startswith('_'):
             object.__setattr__(self,name,value)

@@ -89,68 +89,18 @@ gmemdir=$ROTDIR/${rprefix}.$gymd/$ghh/$memchar
 
 #-------------------------------------------------------
 # initial conditions
+set -ue
 increment_file=${increment_file:-$memdir/${CDUMP}.t${chh}z.atminc.nc}
 
-if [ $warm_start = ".false." ]; then
-  if [ -d $ICSDIR/$CDATE/$CDUMP/$CASE/INPUT ]; then
-    $NCP $ICSDIR/$CDATE/$CDUMP/$CASE/INPUT/* $DATA/INPUT/.
-  else
-    for file in $memdir/INPUT/*.nc; do
-      file2=$(echo $(basename $file))
-      fsuf=$(echo $file2 | cut -c1-3)
-      if [ $fsuf = "gfs" -o $fsuf = "sfc" ]; then
-        $NLN $file $DATA/INPUT/$file2
-      fi
-    done
-  fi
-else
-  if [ ${restart_test:-"NO"} = "YES" ]; then
-    # start from the end of last forecast run
-    $NLN $gmemdir/RESTART/* $DATA/INPUT/.
-  else
+ACTOR=$( echo "$TASK_PATH" | sed 's,\.[^.]*$,,g' )
 
-    # Link all (except sfc_data) restart files from $gmemdir
-    for file in $gmemdir/RESTART/${cymd}.${chh}0000.*.nc; do
-      file2=$(echo $(basename $file))
-      file2=$(echo $file2 | cut -d. -f3-) # remove the date from file
-      fsuf=$(echo $file2 | cut -d. -f1)
-      if [ $fsuf != "sfc_data" ]; then
-         $NLN $file $DATA/INPUT/$file2
-      fi
-    done
+$HOMEcrow/crow_dataflow_deliver_sh.py -v -o "$DATA/INPUT/gfs_ctrl.nc" \
+    "$CROW_DATAFLOW_DB" "$CDATE" "$ACTOR" slot=gfs_ctrl_nc
 
-    # Link sfcanl_data restart files from $memdir
-    for file in $memdir/RESTART/${cymd}.${chh}0000.*.nc; do
-      file2=$(echo $(basename $file))
-      file2=$(echo $file2 | cut -d. -f3-) # remove the date from file
-      fsufanl=$(echo $file2 | cut -d. -f1)
-      if [ $fsufanl = "sfcanl_data" ]; then
-        file2=$(echo $file2 | sed -e "s/sfcanl_data/sfc_data/g")
-        $NLN $file $DATA/INPUT/$file2
-      fi
-    done
+$HOMEcrow/crow_dataflow_deliver_sh.py -v -m -o "$DATA/INPUT/{kind}.tile{tile}.nc" \
+    "$CROW_DATAFLOW_DB" "$CDATE" "$ACTOR" slot=input_data_tiles
+set +ue
 
-    # Handle coupler.res file for DA cycling
-    if [ ${USE_COUPLER_RES:-"YES"} = "YES" ]; then
-      # In DA, this is not really a "true restart",
-      # and the model start time is the analysis time
-      # The alternative is to replace
-      # model start time with current model time in coupler.res
-      file=$gmemdir/RESTART/${cymd}.${chh}0000.coupler.res
-      file2=$(echo $(basename $file))
-      file2=$(echo $file2 | cut -d. -f3-) # remove the date from file
-      $NLN $file $DATA/INPUT/$file2
-    fi
-
-    if [ $read_increment = ".true." ]; then
-      if [ -f $increment_file ]; then
-        $NLN $increment_file $DATA/INPUT/fv3_increment.nc
-      else
-        read_increment=".false."
-      fi
-    fi
-  fi
-fi
 nfiles=$(ls -1 $DATA/INPUT/* | wc -l)
 if [ $nfiles -le 0 ]; then
   echo "Initial conditions must exist in $DATA/INPUT, ABORT!"

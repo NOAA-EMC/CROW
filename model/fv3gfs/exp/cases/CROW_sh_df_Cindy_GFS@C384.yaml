@@ -19,7 +19,7 @@ fv3_gdas_settings: &fv3_gdas_settings
 gfs_output_settings: &gfs_output_settings
   Template: *gfs_output_settings_template
 
-  FHMAX_GFS: 120 # Last GFS forecast hour (mandatory)
+  FHMAX_GFS: 24 # Last GFS forecast hour (mandatory)
   FHOUT_GFS: 6 # GFS output frequency (optional)
 
   OUTPUT_GRID: "gaussian_grid"
@@ -34,8 +34,14 @@ prepbufr: &prepbufr
 
 ########################################################################
 
+places: &places
+  <<: *user_places
+  FORECASTSH: !expand "{HOMEcrow}/model/fv3gfs/scripts/exglobal_fcst_crow_df.sh"
+  
+########################################################################
+
 case:
-  Template: !Template { <<: [ *case_template, *known_workflows ] }
+  Template: [ *case_template, *known_workflows ]
   SDATE: 2017-06-19t18:00:00
   EDATE: 2017-06-22t12:00:00
 

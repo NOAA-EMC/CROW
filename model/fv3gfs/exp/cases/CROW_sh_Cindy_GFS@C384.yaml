@@ -34,8 +34,12 @@ prepbufr: &prepbufr
 
 ########################################################################
 
+places: &places
+  <<: *user_places
+  FORECASTSH: !expand "{HOMEcrow}/model/fv3gfs/scripts/exglobal_fcst_crow.sh"
+
 case:
-  Template: !Template { <<: [ *case_template, *known_workflows ] }
+  Template: [ *case_template, *known_workflows ]
   SDATE: 2017-06-19t18:00:00
   EDATE: 2017-06-22t12:00:00
 

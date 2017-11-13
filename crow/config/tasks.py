@@ -163,7 +163,7 @@ class SuiteView(Mapping):
     def __getattr__(self,key):
         if key in SuiteView.LOCALS: raise AttributeError(key)
         if key in self: return self[key]
-        raise AttributeError(key)
+        raise AttributeError(f'{self.viewed._path}: no {key} in {list(self.keys())}')
 
     def __getitem__(self,key):
         assert(isinstance(key,str))
@@ -284,7 +284,12 @@ class CycleView(SuiteView): pass
 class TaskView(SuiteView): pass
 class FamilyView(SuiteView): pass
 class InputSlotView(SlotView):
-    def get_output_slot(self): return self.Out
+    def get_output_slot(self,meta):
+        result=self.viewed._raw('Out')
+        if not isinstance(result,Message):
+            raise TypeError(f'{self.viewed._path}.Out: Must be a Message, not a {type(result).__name__}')
+        return result._as_dependency(self._globals(),multidict(self.parent,meta),
+                                     f'{self.viewed._path}.Out')
     def get_flow_name(self): return 'I'
 class OutputSlotView(SlotView):
     def get_flow_name(self): return 'O'
