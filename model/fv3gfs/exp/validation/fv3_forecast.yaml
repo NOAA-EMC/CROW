@@ -14,7 +14,8 @@ fv3_forecast_template: !Template &fv3_forecast_template
   filename_base:
     type: string
     stages: [ execution ]
-    default: !expand "'{CDUMP}.t{CDUMP[8:]}z.atm' '{CDUMP}.t{CDUMP[8:]}z.sfc'"
+    default: !expand |
+      '{CDUMP}.t{doc.clock.now:%H}z.atm' '{CDUMP}.t{doc.clock.now:%H}z.sfc'
 
   rCDUMP:
     type: string

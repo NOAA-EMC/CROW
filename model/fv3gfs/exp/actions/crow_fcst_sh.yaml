@@ -450,7 +450,7 @@ crow_sh_fcst_gfs: &crow_sh_fcst_gfs_action !Action
   <<: [ *fv3_gfs_settings, *data_assimilation, *crow_sh_fcst_base ]
   Template: [ *fv3_settings_template, *fv3_forecast_template ]
   Inherit: !Inherit
-    - [ doc.fv3_gdas_settings, ".*" ]
+    - [ doc.fv3_gfs_settings, ".*" ]
     - [ doc.data_assimilation, ".*" ]
     - [ doc.gfs_output_settings, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]
@@ -464,6 +464,8 @@ crow_sh_fcst_gfs: &crow_sh_fcst_gfs_action !Action
 
   FHMAX_HF: !calc doc.gfs_output_settings.FHMAX_HF_GFS
   FHOUT_HF: !calc doc.gfs_output_settings.FHOUT_HF_GFS
+
+  KEEPDATA: YES
 
 crow_sh_df_fcst_gdas: &crow_sh_df_fcst_gdas_action !Action
   <<: *crow_sh_fcst_gdas_action
