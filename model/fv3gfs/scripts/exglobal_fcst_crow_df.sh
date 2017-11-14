@@ -61,10 +61,12 @@ KEEPDATA=${KEEPDATA:-"NO"}
 NTASKS_FV3=${NTASKS_FV3:-$npe_fv3}
 
 #-------------------------------------------------------
+set -ue
 if [ ! -d $ROTDIR ]; then mkdir -p $ROTDIR; fi
 if [ ! -d $DATA ]; then mkdir -p $DATA ;fi
 mkdir -p $DATA/RESTART $DATA/INPUT
-cd $DATA || exit 8
+cd $DATA
+set +ue
 
 #-------------------------------------------------------
 # member directory
@@ -156,6 +158,9 @@ eval $( $CROW_TO_SH DIAG_TABLE=DIAG_TABLE )
 $CROW_TO_SH expand:diag_table_header > diag_table
 cat diag_table
 cat $DIAG_TABLE >> diag_table
+
+$NCP $DATA_TABLE  data_table
+$NCP $FIELD_TABLE field_table
 
 # NEMS and FV3 namelists:
 $CROW_TO_SH expand:input_nml > input.nml

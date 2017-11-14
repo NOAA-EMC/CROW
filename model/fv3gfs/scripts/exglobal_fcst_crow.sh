@@ -55,16 +55,18 @@ fi
 
 # Directories.
 pwd=$(pwd)
-DATA=${DATA:-$pwd/fv3tmp$$}    # temporary running directory
+DATA=${DATA:-$( pwd -P )/fv3tmp$$}    # temporary running directory
 SEND=${SEND:-"YES"}   #move final result to rotating directory
 KEEPDATA=${KEEPDATA:-"NO"}
 NTASKS_FV3=${NTASKS_FV3:-$npe_fv3}
 
 #-------------------------------------------------------
+set -ue
 if [ ! -d $ROTDIR ]; then mkdir -p $ROTDIR; fi
 if [ ! -d $DATA ]; then mkdir -p $DATA ;fi
 mkdir -p $DATA/RESTART $DATA/INPUT
-cd $DATA || exit 8
+cd $DATA
+set +ue
 
 #-------------------------------------------------------
 # member directory
@@ -202,17 +204,22 @@ fi
 set -eu
 
 # Build the FMS diag_table with the experiment name and date stamp:
+pwd
+ls -ld .
 eval $( $CROW_TO_SH DIAG_TABLE=DIAG_TABLE )
-$CROW_TO_SH expand:diag_table_header > diag_table
+$CROW_TO_SH expand:diag_table_header > ./diag_table
 cat diag_table
-cat $DIAG_TABLE >> diag_table
+cat $DIAG_TABLE >> ./diag_table
+
+$NCP $DATA_TABLE  data_table
+$NCP $FIELD_TABLE field_table
 
 # NEMS and FV3 namelists:
-$CROW_TO_SH expand:input_nml > input.nml
+$CROW_TO_SH expand:input_nml > ./input.nml
 cat input.nml
-$CROW_TO_SH expand:nems_configure > nems.configure
+$CROW_TO_SH expand:nems_configure > ./nems.configure
 cat nems.configure
-$CROW_TO_SH expand:model_configure > model_configure
+$CROW_TO_SH expand:model_configure > ./model_configure
 cat model_configure
 
 set +eu

@@ -10,7 +10,7 @@ following basic Python concepts:
 """
 
 from functools import reduce
-import operator, io
+import operator, io, logging
 from datetime import timedelta
 from abc import abstractmethod
 from collections import namedtuple, OrderedDict, Sequence
@@ -36,7 +36,7 @@ class StateConstant(object):
 RUNNING=StateConstant('RUNNING')
 COMPLETED=StateConstant('COMPLETED')
 FAILED=StateConstant('FAILED')
-
+_logger=logging.getLogger('crow.config')
 MISSING=object()
 VALID_STATES=[ 'RUNNING', 'FAILED', 'COMPLETED' ]
 ZERO_DT=timedelta()
@@ -301,6 +301,7 @@ class Suite(SuiteView):
             raise TypeError('The top level of a suite must be a Cycle not '
                             'a %s.'%(type(suite).__name__,))
         viewed=deepcopy(suite)
+        old_doc=suite._get_globals()['doc']
         globals=dict(viewed._globals())
         assert(globals['tools'] is not None)
         globals.update(suite=self,

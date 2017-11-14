@@ -1,6 +1,7 @@
 import sys
 from datetime import timedelta, datetime
 from io import StringIO
+from copy import copy
 from crow.tools import typecheck
 from collections import namedtuple
 from collections.abc import Sequence, Mapping
@@ -119,7 +120,7 @@ class ToRocoto(object):
         self.__families_with_completes=set()
 
     def make_time_xml(self,indent=1):
-        clock=self.suite.Clock
+        clock=copy(self.suite.Clock)
         start_time=clock.start.strftime('%Y%m%d%H%M')
         end_time=clock.end.strftime('%Y%m%d%H%M')
         step=to_timedelta(clock.step) # convert to python timedelta

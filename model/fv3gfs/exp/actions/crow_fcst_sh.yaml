@@ -456,7 +456,7 @@ crow_sh_fcst_gfs: &crow_sh_fcst_gfs_action !Action
     - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
   CDUMP: gfs
-  walltime: !timedelta 00:10:00
+  walltime: !timedelta 02:35:00
 #  walltime: !timedelta 02:35:00
   FHOUT: !calc doc.gfs_output_settings.FHOUT_GFS
   FHMAX: !calc doc.gfs_output_settings.FHMAX_GFS

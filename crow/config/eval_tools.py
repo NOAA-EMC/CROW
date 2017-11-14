@@ -48,7 +48,15 @@ class user_error_message(str):
 class expand(str):
     """!Represents a literal format string."""
     def _result(self,globals,locals):
-        return eval("f'''"+self+"'''",globals,locals)
+        if "'''" in self:
+            raise ValueError("!expand strings cannot include three single "
+                             f"quotes in a row ('''): {self[:80]}")
+        cmd=self
+        if cmd[-1] == "'":
+            cmd=cmd[:-1] + "\\" + cmd[-1]
+        return eval("f'''"+cmd+"'''",globals,locals)
+
+#f''''blah bla'h \''''
 
 class strcalc(str):
     """Represents a string that should be run through eval()"""
@@ -68,8 +76,8 @@ def from_config(key,val,globals,locals,path):
             return from_config(key,result,globals,locals,path)
         return val
     except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
-        raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:40]} - '
-                           f'{type(ke).__name__} {str(ke)} - scope keys: {list(locals.keys())}')
+        raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
+                           f'{type(ke).__name__} {str(ke)}')
     except RecursionError as re:
         raise CalcRecursionTooDeep('%s: !%s %s'%(
             str(key),type(val).__name__,str(val)))

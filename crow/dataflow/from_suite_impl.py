@@ -95,8 +95,7 @@ def from_suite(suite,filename):
 
             oslot=None
             for oslot in df.find_output_slot(
-                    odata.get_actor_path(),odata.get_slot_name(),
-                    odata.get_meta()):
+                    odata.get_actor_path(),odata.get_slot_name(),ometa):
                 break
 
             islot=None

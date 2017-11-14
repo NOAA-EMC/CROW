@@ -1,7 +1,7 @@
 import yaml
 import sys, logging
 from yaml.nodes import MappingNode, ScalarNode, SequenceNode
-
+from copy import copy
 from collections import OrderedDict
 from collections.abc import Mapping
 from crow.tools import Clock
@@ -23,7 +23,7 @@ _logger=logging.getLogger('crow.config')
 
 def to_yaml(yml):
     if hasattr(yml,'_raw_cache'):
-        yml=yml._raw_cache().copy()
+        yml=copy(yml._raw_child())
     return yaml.dump(yml)
 
 ########################################################################
@@ -182,5 +182,7 @@ def represent_Clock(dumper,data):
 yaml.add_representer(Clock,represent_Clock)
 
 def represent_ClockMaker(dumper,data):
-    return dumper.represent_mapping('!Clock',data._raw_child())
+    while hasattr(data,'_raw_child'):
+        data=data._raw_child()
+    return dumper.represent_mapping('!Clock',data)
 yaml.add_representer(ClockMaker,represent_ClockMaker)
