@@ -16,7 +16,7 @@ usage () {
 
 # Traps that only allow the above inputs
 
-if [[ "$#" -gt "3" ]] || [[ $1 == '--help' ]]; then
+if [[ "$#" -gt "4" ]] || [[ $1 == '--help' ]]; then
  usage
 fi
 
@@ -95,6 +95,9 @@ if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
  if [[ -z $1 || $1 == "--non-interactive" ]]; then
     regressionID='baseline'
     log_message "INFO" "No arguments given assuming to make new baseline with default ID: $regressionID"
+ else 
+    regressionID=$1
+    log_message "INFO" "only the baseline will be created with ID: $regressionID"
  fi
 fi
 
@@ -145,7 +148,6 @@ elif [[ -d /gpfs/hps3 ]]; then
   system="cray"
 else
   log_message "CRITICAL" "Unknown machine $system, not supported"
-  exit -1
 fi
 
 JUST_COMPAIR_TWO_DIRS='FALSE'
@@ -156,15 +158,24 @@ if [[ -d $1 ]] && [[ -d $2 ]]; then
  RUNROCOTO='FALSE'
  check_baseline_dir_with_this_dir=`readlink -f $2`
  check_baseline_dir_with_this_dir=$( find_data_dir $check_baseline_dir_with_this_dir )
- log_message "INFO" "Simply doing a diff on these two directories:\n  $check_baseline_dir \n  $check_baseline_dir_with_this_dir"
+ log_message "INFO" "simply doing a diff on these two directories:\n  $check_baseline_dir \n  $check_baseline_dir_with_this_dir"
  JUST_COMPAIR_TWO_DIRS='TRUE'
+  if [[ -z $3 ]]; then
+   regressionID='compair'
+  else
+   regressionID=$3
+  fi
 fi
 
 INTERACTIVE='TRUE'
-if [[ $1 == "--non-interactive" ]] || [[ $2 == "--non-interactive" ]] || [[ $3 == "--non-interactive" ]]; then
+while test $# -gt 0
+do
+ if [[ $1 == "--non-interactive" ]]; then
    INTERACTIVE='FALSE'
-fi
-
+   break
+ fi
+ shift
+done
 
 if [[ $INTERACTIVE == "TRUE" ]]; then
    echo -e "Current Settings are:\n"
@@ -184,6 +195,7 @@ if [[ $INTERACTIVE == "TRUE" ]]; then
      exit
     fi 
     if [[ $answer == "y" ]]; then
+     echo -e "\n"
      break 
     fi
     echo ""
@@ -235,7 +247,6 @@ username=`echo ${USER} | tr '[:upper:]' '[:lower:]'`
 setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/gfs_workflow.${fv3gfs_ver}/ush/setup_expt.py
 setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/gfs_workflow.${fv3gfs_ver}/ush/setup_workflow.py
 config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/gfs_workflow.${fv3gfs_ver}/config
-comrot_test_dir=$comrot/$pslot
 
 if [[ $CHECKOUT == 'TRUE' ]]; then
   cd ${CHECKOUT_DIR}
@@ -265,6 +276,7 @@ fi
 
 exp_setup_string="--pslot ${pslot} --icsdir $ICS_dir --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR}"
 EXP_FULLPATH=${CHECKOUT_DIR}/${pslot}
+comrot_test_dir=${comrot}/RUNDIRS/${pslot}
 
 if [[ $CREATE_EXP == 'TRUE' ]]; then
 
@@ -276,11 +288,11 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     rm -Rf $EXP_FULLPATH
     log_message "INFO" "experiment directory is $EXP_FULLPATH $removed"
     removed=''
-    if [[ -d ${comrot}/${pslot} ]]; then
+    if [[ -d $comrot_test_dir ]]; then
      removed='it was present but now has been removed'
     fi
-    rm -Rf ${comrot}/${pslot}
-    log_message "INFO" "comrot directory is ${comrot}/${pslot} $removed"
+    rm -Rf $comrot_test_dir
+    log_message "INFO" "comrot directory is $comrot_test_dir $removed"
 
     ${setup_expt} ${exp_setup_string}
     log_message "INFO" "setting up workflow: ${setup_workflow} --expdir $EXP_FULLPATH"
@@ -314,7 +326,7 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
     log_message "INTO" "moving to PWD $EXP_FULLPATH to run cycleing in experiment directory"
     cd ${EXP_FULLPATH}
 
-    log_message "INFO" "Starting to run fv3gfs cycling regression test run using $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
+    log_message "INFO" "starting to run fv3gfs cycling regression test run using $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
     log_message "INFO" "running $rocotoruncmd from $PWD"
 
     $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml
@@ -347,7 +359,7 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
       fi
       deadcycles=`$rocotostatcmd -d ${pslot}.db -w ${pslot}.xml -c $lastcycle -s | awk '$2 == "Dead" {print $1}'`
       if [[ ! -z $deadcycles ]]; then
-       log_message "CRITICAL" "the following cycles are not dead: $deadcycles"
+       log_message "CRITICAL" "the following cycles are dead: $deadcycles"
       fi
       $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml
       if [[ $? == "0" ]]; then
@@ -358,12 +370,20 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
       sleep 5m
     done
 
-    log_message "INFO" "Rocotorun completed successfully"
+    log_message "INFO" "rocotorun completed successfully"
 
 fi
 
 diff_file_name="${CHECKOUT_DIR}/diff_file_list_${regressionID}.txt"
 if [[ $COMPAIR_BASE == 'TRUE' ]]; then
+   total_number_files=`find $check_baseline_dir -type f | wc -l`
+   if [[ $system == "theia" ]]; then
+    module load nccmp
+    NCCMP=`which nccmp`
+   else
+    NCCMP=/gpfs/hps3/emc/nems/noscrub/emc.nemspara/FV3GFS_V0_RELEASE/util/nccmp
+   fi
+
    if [[ $JUST_COMPAIR_TWO_DIRS=='TRUE' ]]; then
     comrot_test_dir=$check_baseline_dir_with_this_dir
    fi
@@ -371,15 +391,83 @@ if [[ $COMPAIR_BASE == 'TRUE' ]]; then
    if [[ ! -d $check_baseline_dir ]] || [[ ! -d $comrot_test_dir ]]; then
      log_message "CRITICAL" "One of the target directories does not exist"
    fi
-   log_message "INFO" "Moving to direcotry $comrot to do the compare"
-   if [[ -d $comrot ]]; then
-     cd $comrot
+   log_message "INFO" "moving to directory $comrot_test_dir to do the compare"
+   if [[ -d $comrot_test_dir ]]; then
+     cd $comrot_test_dir/..
    else
-     log_message "CRITICAL" "The directory $comrot does not exsist"
+     log_message "CRITICAL" "The directory $comrot_test_dir does not exsist"
    fi
    check_baseline_dir_basename=`basename $check_baseline_dir`
    comrot_test_dir_basename=`basename $comrot_test_dir`
-   log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\"  $check_baseline_dir_basename $comrot_test_dir_basename >& $$diff_file_name" 
-   diff --brief -Nr --exclude "*.log*" $check_baseline_dir_basename $comrot_test_dir_basename >  ${diff_file_name} 2>&1
-   log_message "INFO" "completed runing diff for fv3gfs regression test ($regressionID) resluts in file: $diff_file_name"
+   log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\" --exclude \"*.nc\" --exclude \"*.nc?\"  $check_baseline_dir_basename $comrot_test_dir_basename >& $diff_file_name" 
+   diff --brief -Nr --exclude "*.log*" --exclude "*.nc" --exclude "*.nc?" $check_baseline_dir_basename $comrot_test_dir_basename >  ${diff_file_name} 2>&1
+
+   num_different_files=`wc -l < $diff_file_name`
+   log_message "INFO" "checking if of the $num_different_files differing files which ones are tar and/or compressed files for differences"
+   rm -f ${diff_file_name}_diff
+   counter_diffed=0
+   counter_regularfiles=0
+   counter_compressed=0
+   while read line; do
+    set -- $line;
+    file1=$2;
+    file2=$4;
+
+       if ( tar --exclude '*' -tfz $file1 >& /dev/null ) ; then
+        #log_message "INFO" "$file1 is an compressed tar file"
+        counter_compressed=$((counter_compressed+1))
+        if [[ $( tar -xzf $file1 -O | md5sum ) != $( tar -xzf $file2 -O | md5sum ) ]] ; then
+           #log_message "INFO" "found $file1 and $file2 gzipped tar files DO differ" 
+           counter_diffed=$((counter_diffed+1))
+           echo $line >> ${diff_file_name}_diff
+        fi
+       elif ( tar --exclude '*' -tf  $file1 >& /dev/null ) ; then
+         counter_compressed=$((counter_compressed+1))
+         #log_message "INFO" "$file1 is an uncompressed tar file"
+         if [[ $( tar -xf $file1 -O | md5sum ) != $( tar -xf $file2 -O | md5sum ) ]] ; then
+           #log_message "INFO" "found $file1 and $file2 tar files DO differ" 
+           counter_diffed=$((counter_diffed+1))
+           echo $line >> ${diff_file_name}_diff
+         fi
+       else
+         #log_message "INFO" "$file1 is not tar or tar.gz and still then differs" 
+         counter_regularfiles=$((counter_regularfiles+1))
+         echo $line >> ${diff_file_name}_diff
+       fi
+
+   done < $diff_file_name
+
+   log_message "INFO" "out of $num_different_files differing files $counter_compressed where tar or compressed and $counter_diffed of those differed"
+
+   if [[ -f ${diff_file_name}_diff ]]; then
+    mv  ${diff_file_name}_diff ${diff_file_name}
+   fi
+
+   log_message "INFO" "comparing NetCDF files ..."
+   find . -type f \( -name "*.nc?" -o -name "*.nc" \)  > netcdf_filelist.txt
+   num_cdf_files=`wc -l < netcdf_filelist.txt`
+   counter_identical=0
+   counter_differed_nccmp=0
+   counter_header_identical=0
+   while IFS=/ read netcdf_file; do
+     comp_base=`basename $netcdf_file`
+     dir_name=`dirname $netcdf_file`
+     just_dir=`echo "$dir_name" | sed 's,^[^/]*/,,'`
+     diff $just_dir/$comp_base $just_dir/$comp_base
+     if [[ $? != 0 ]]; then
+         NCCMP -d  $just_dir/$comp_base $just_dir/$comp_base >> ${diff_file_name} 2>&1
+         if [[ $? != 0 ]]; then
+          counter_not_identicali_nccmp=$((counter_differed_nccmp+1))
+         else 
+          counter_header_identical=$((counter_header_identical+1))
+         fi
+     else
+       counter_identical=$((counter_header_identical+1))
+     fi
+   done < netcdf_filelist.txt
+   log_message "INFO" "out off $num_cdf_files NetCDF files $counter_identical where completly identical $counter_header_identical where identical but not in the header $counter_differed_nccmp differed in the data"
+   number_diff=`wc -l < $diff_file_name`
+   log_message "INFO" "completed runing diff for fv3gfs regression test ($regressionID) and found resluts in file: $diff_file_name"
+   log_message "INFO" "out of $total_number_files files, there where $number_diff that differed"
+   rm netcdf_filelist.txt
 fi
