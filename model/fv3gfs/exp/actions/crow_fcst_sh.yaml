@@ -474,3 +474,22 @@ crow_sh_df_fcst_gdas: &crow_sh_df_fcst_gdas_action !Action
 crow_sh_df_fcst_gfs: &crow_sh_df_fcst_gfs_action !Action
   <<: *crow_sh_fcst_gfs_action
   J_JOB: fcst_df
+
+
+crow_exe_fcst_gdas: &crow_exe_fcst_gdas_action !Action
+  <<: *crow_sh_df_fcst_gdas_action
+  J_JOB: fcst_df
+  actual_fcst_resources: !JobRequest
+    - exe: !expand "{doc.places.FCSTEXECDIR}/fv3_gfs_nh.prod.32bit.x"
+      mpi_ranks: !calc "layout_x*layout_y*6"
+      OMP_NUM_THREADS: 2
+  FCSTEXEC: !calc tools.basename(fcst_resources[0].exe)
+
+crow_exe_fcst_gfs: &crow_exe_fcst_gfs_action !Action
+  <<: *crow_sh_df_fcst_gfs_action
+  J_JOB: fcst_df
+  actual_fcst_resources: !JobRequest
+    - exe: !expand "{doc.places.FCSTEXECDIR}/fv3_gfs_nh.prod.32bit.x"
+      mpi_ranks: !calc "layout_x*layout_y*6"
+      OMP_NUM_THREADS: 2
+  FCSTEXEC: !calc tools.basename(fcst_resources[0].exe)

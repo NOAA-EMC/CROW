@@ -507,6 +507,13 @@ fv3_forecast_template: !Template &fv3_forecast_template
     allowed: [ ".true.", ".false." ]
     default: ".true."
 
+  restart_dt:
+    type: timedelta
+    default: !FirstTrue
+      - when: !calc restart_interval > 0
+        do: !calc tools.to_timedelta(restart_interval*3600)
+      - otherwise: !calc tools.to_timedelta(FHMAX*3600)
+
   amip_interp_nml:    { type: string, default: "" }
   atmos_model_nml:    { type: string, default: "" }
   diag_manager_nml:   { type: string, default: "" }
@@ -520,3 +527,4 @@ fv3_forecast_template: !Template &fv3_forecast_template
   namsfc_nml:         { type: string, default: "" }
   fv_grid_nml:        { type: string, default: "" }
   nam_stochy_nml:     { type: string, default: "" }
+

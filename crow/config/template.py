@@ -52,7 +52,6 @@ class Template(dict_eval):
     dict_eval, inserting defaults and reporting errors via the
     TemplateErrors exception.    """
     def __init__(self,child,path='',globals=None):
-        assert(isinstance(child,OrderedDict))
         self.__my_id=id(child)
         super().__init__(child,path,globals)
 

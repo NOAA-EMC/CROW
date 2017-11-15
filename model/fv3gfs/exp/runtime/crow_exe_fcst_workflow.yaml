@@ -1,4 +1,4 @@
-crow_sh_df_fcst_workflow: !Cycle
+crow_exe_fcst_workflow: !Cycle
   Rocoto: *Rocoto
 
   Clock: *clock
@@ -31,7 +31,7 @@ crow_sh_df_fcst_workflow: !Cycle
     Trigger: !Depend ics
 
     fcst: !Task
-      Perform: *crow_sh_df_fcst_gfs_action
+      Perform: *crow_exe_fcst_gfs_action
       Rocoto: *task_template
 
       COMOUT: !calc |

@@ -169,9 +169,8 @@ def main():
         logger.error('Single match but -m was specified.  Abort.')
         exit(1)
 
-    deliver = deliver_by_format if multi else deliver_by_name
     for slot in slots:
-        deliver(logger,flow,local,slot.at(cycle),'-c' in options)
+        deliver_by_format(logger,flow,local,slot.at(cycle),'-c' in options)
 
 
 if __name__ == '__main__':

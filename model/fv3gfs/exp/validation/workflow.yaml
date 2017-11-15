@@ -2,7 +2,7 @@ known_workflows: !Template &known_workflows
   workflow:
     type: string
     allowed: [ cycled_workflow, gfs_forecast_workflow, crow_sh_fcst_workflow,
-               crow_sh_df_fcst_workflow ]
+               crow_sh_df_fcst_workflow, crow_exe_fcst_workflow ]
     if_present: !FirstTrue
       - when: !calc workflow=="cycled_workflow"
         do: !Template
