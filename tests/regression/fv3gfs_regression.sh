@@ -95,6 +95,9 @@ if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
  if [[ -z $1 || $1 == "--non-interactive" ]]; then
     regressionID='baseline'
     log_message "INFO" "No arguments given assuming to make new baseline with default ID: $regressionID"
+ else 
+    regressionID=$1
+    log_message "INFO" "only the baseline will be created with ID: $regressionID"
  fi
 fi
 
@@ -134,8 +137,7 @@ if [[ $COMPAIR_BASE == 'TRUE' ]]; then
  fi
 fi
 
-#fv3gfs_git_branch='master'
-fv3gfs_git_branch='hardcode_execs'
+fv3gfs_git_branch='master'
 # Leave fv3gfs_svn_url blank to use git branch in fv3gfs_git_branch
 fv3gfs_svn_url=''
 load_rocoto='rocoto/1.2.4'
@@ -146,7 +148,6 @@ elif [[ -d /gpfs/hps3 ]]; then
   system="cray"
 else
   log_message "CRITICAL" "Unknown machine $system, not supported"
-  exit -1
 fi
 
 JUST_COMPAIR_TWO_DIRS='FALSE'
@@ -358,7 +359,7 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
       fi
       deadcycles=`$rocotostatcmd -d ${pslot}.db -w ${pslot}.xml -c $lastcycle -s | awk '$2 == "Dead" {print $1}'`
       if [[ ! -z $deadcycles ]]; then
-       log_message "CRITICAL" "the following cycles are not dead: $deadcycles"
+       log_message "CRITICAL" "the following cycles are dead: $deadcycles"
       fi
       $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml
       if [[ $? == "0" ]]; then
@@ -398,22 +399,74 @@ if [[ $COMPAIR_BASE == 'TRUE' ]]; then
    fi
    check_baseline_dir_basename=`basename $check_baseline_dir`
    comrot_test_dir_basename=`basename $comrot_test_dir`
-   log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\" --exclude \"*.nc\" $check_baseline_dir_basename $comrot_test_dir_basename >& $diff_file_name" 
-   diff --brief -Nr --exclude "*.log*" --exclude "*.nc" $check_baseline_dir_basename $comrot_test_dir_basename >  ${diff_file_name} 2>&1
+   log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\" --exclude \"*.nc\" --exclude \"*.nc?\"  $check_baseline_dir_basename $comrot_test_dir_basename >& $diff_file_name" 
+   diff --brief -Nr --exclude "*.log*" --exclude "*.nc" --exclude "*.nc?" $check_baseline_dir_basename $comrot_test_dir_basename >  ${diff_file_name} 2>&1
+
+   num_different_files=`wc -l < $diff_file_name`
+   log_message "INFO" "checking if of the $num_different_files differing files which ones are tar and/or compressed files for differences"
+   rm -f ${diff_file_name}_diff
+   counter_diffed=0
+   counter_regularfiles=0
+   counter_compressed=0
+   while read line; do
+    set -- $line;
+    file1=$2;
+    file2=$4;
+
+       if ( tar --exclude '*' -tfz $file1 >& /dev/null ) ; then
+        #log_message "INFO" "$file1 is an compressed tar file"
+        counter_compressed=$((counter_compressed+1))
+        if [[ $( tar -xzf $file1 -O | md5sum ) != $( tar -xzf $file2 -O | md5sum ) ]] ; then
+           #log_message "INFO" "found $file1 and $file2 gzipped tar files DO differ" 
+           counter_diffed=$((counter_diffed+1))
+           echo $line >> ${diff_file_name}_diff
+        fi
+       elif ( tar --exclude '*' -tf  $file1 >& /dev/null ) ; then
+         counter_compressed=$((counter_compressed+1))
+         #log_message "INFO" "$file1 is an uncompressed tar file"
+         if [[ $( tar -xf $file1 -O | md5sum ) != $( tar -xf $file2 -O | md5sum ) ]] ; then
+           #log_message "INFO" "found $file1 and $file2 tar files DO differ" 
+           counter_diffed=$((counter_diffed+1))
+           echo $line >> ${diff_file_name}_diff
+         fi
+       else
+         #log_message "INFO" "$file1 is not tar or tar.gz and still then differs" 
+         counter_regularfiles=$((counter_regularfiles+1))
+         echo $line >> ${diff_file_name}_diff
+       fi
+
+   done < $diff_file_name
+
+   log_message "INFO" "out of $num_different_files differing files $counter_compressed where tar or compressed and $counter_diffed of those differed"
+
+   if [[ -f ${diff_file_name}_diff ]]; then
+    mv  ${diff_file_name}_diff ${diff_file_name}
+   fi
 
    log_message "INFO" "comparing NetCDF files ..."
-   find . -name "*.nc" > netcdf_filelist.txt
+   find . -type f \( -name "*.nc?" -o -name "*.nc" \)  > netcdf_filelist.txt
+   num_cdf_files=`wc -l < netcdf_filelist.txt`
+   counter_identical=0
+   counter_differed_nccmp=0
+   counter_header_identical=0
    while IFS=/ read netcdf_file; do
      comp_base=`basename $netcdf_file`
      dir_name=`dirname $netcdf_file`
      just_dir=`echo "$dir_name" | sed 's,^[^/]*/,,'`
-     #echo "$just_dir/$comp_base $netcdf_file"
      diff $just_dir/$comp_base $just_dir/$comp_base
      if [[ $? != 0 ]]; then
-         $NCCMP -d  $just_dir/$comp_base $just_dir/$comp_base >> ${diff_file_name} 2>&1
+         NCCMP -d  $just_dir/$comp_base $just_dir/$comp_base >> ${diff_file_name} 2>&1
+         if [[ $? != 0 ]]; then
+          counter_not_identicali_nccmp=$((counter_differed_nccmp+1))
+         else 
+          counter_header_identical=$((counter_header_identical+1))
+         fi
+     else
+       counter_identical=$((counter_header_identical+1))
      fi
    done < netcdf_filelist.txt
-   number_diff=`wc -l $diff_file_name | cut -d" " -f1`
+   log_message "INFO" "out off $num_cdf_files NetCDF files $counter_identical where completly identical $counter_header_identical where identical but not in the header $counter_differed_nccmp differed in the data"
+   number_diff=`wc -l < $diff_file_name`
    log_message "INFO" "completed runing diff for fv3gfs regression test ($regressionID) and found resluts in file: $diff_file_name"
    log_message "INFO" "out of $total_number_files files, there where $number_diff that differed"
    rm netcdf_filelist.txt
