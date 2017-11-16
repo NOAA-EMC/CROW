@@ -13,15 +13,23 @@ usage () {
    exit
 }
 
+INTERACTIVE='TRUE'
+for arg
+ do
+  if [[ $arg == "--non-interactive" ]]; then
+   INTERACTIVE='FALSE'
+   break
+  fi
+done
 
-# Traps that only allow the above inputs
+# Traps that only allow the above inputs specified in the usage
 
 if [[ "$#" -gt "4" ]] || [[ $1 == '--help' ]]; then
  usage
 fi
 
-if [[ "$#" == "2" ]] || [[ "$#" == "3" ]]; then
- if [[ ! -d $1 ]] && [[ ! -d $2 ]]; then
+if [[ "$#" -ge "3" ]]; then  
+ if [[ ! -d $1 ]]; then
   usage
  fi
 fi
@@ -34,7 +42,6 @@ log_message () {
  logtime=`date`
  echo -e "LOG : $logtime : $1 : $2"
  if [[ $1 == "CRITICAL" ]]; then
-  exit -1
   exit -1
  fi
 }
@@ -53,6 +60,11 @@ RUNROCOTO='TRUE'
 regressionID='baseline'
 idate='2017073118'
 edate='2017080106'
+
+fv3gfs_git_branch='master'
+# Leave fv3gfs_svn_url blank to use git branch in fv3gfs_git_branch
+fv3gfs_svn_url=''
+load_rocoto='rocoto/1.2.4'
 
 ICS_dir_cray='/gpfs/hps3/emc/global/noscrub/emc.glopara/ICS'
 PTMP_cray='/gpfs/hps3/ptmp'
@@ -75,18 +87,15 @@ find_data_dir () {
           fi
        fi
        if [[ $(($ENDTIME - $STARTTIME)) > 20 ]]; then
-         log_message "CRITICAL" "looking for valid baseline directory put then gave up after a minute"
+         #log_message "CRITICAL" "looking for valid baseline directory put then gave up after a minute"
+         exit -1
        fi
     done < <(find $_check_baseline_dir -print0 )
 
     if [[ -z $real_base_dir ]]; then
-      log_message "CRITICAL" "$_check_baseline_dir is not a directory with a baseline to test in it"
+      exit -1
     fi
-    #if [[ $real_base_dir != $_check_baseline_dir ]]; then
-    #log_message "WARNING" "given directory did not have gfs data, but a subsiquent subdirectory was found that did"
-    #fi
     _check_baseline_dir=`dirname $file`
-    #log_message "INFO" "found baseline fv3gfs gfs data found in directory: $_check_baseline_dir"
     echo $_check_baseline_dir
 }
 
@@ -103,12 +112,41 @@ fi
 
 log_message "INFO" "running regression script on host $HOST"
 
-checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
-pslot="${pslot_basename}_exp_${regressionID}"
-
-if [[ -d $1 ]]; then
+COMPAIR_BASE='FALSE'
+JUST_COMPAIR_TWO_DIRS='FALSE'
+if [[ -d $1 ]] && [[ -d $2 ]]; then
+ CHECKOUT='FALSE'
+ BUILD='FALSE'
+ CREATE_EXP='FALSE'
+ RUNROCOTO='FALSE'
+ check_baseline_dir=`readlink -f $1`
+ check_baseline_dir_get=$( find_data_dir $check_baseline_dir )
+ if [[ -z $check_baseline_dir_get ]]; then
+   log_message "CRITICAL" "$check_baseline_dir_get is not a directory with a baseline to test in it"
+ fi
+ if [[ $check_baseline_dir != $check_baseline_dir_get ]]; then
+   check_baseline_dir=$check_baseline_dir_get
+   log_message "WARNING" "given directory did not have gfs data, but a subsequent subdirectory was found that did:\n$check_baseline_dir"
+ fi  
+ check_baseline_dir_with_this_dir=`readlink -f $2`
+ check_baseline_dir_with_this_dir_get=$( find_data_dir $check_baseline_dir_with_this_dir )
+ if [[ -z $check_baseline_dir_with_this_dir_get ]]; then
+   log_message "CRITICAL" "$check_baseline_dir_with_this_get is not a directory with a baseline to test in it"
+ fi
+ if [[ $check_baseline_dir_with_this_dir_get != $check_baseline_dir_with_this_dir ]]; then
+   check_baseline_dir_with_this_dir=$check_baseline_dir_with_this_get
+   log_message "WARNING" "given directory did not have gfs data, but a subsequent subdirectory was found that did:\n$check_baseline_dir_with_this_dir"
+ fi  
+ log_message "INFO" "simply doing a diff on these two directories:\n  $check_baseline_dir \n  $check_baseline_dir_with_this_dir"
+ JUST_COMPAIR_TWO_DIRS='TRUE'
+ if [[ -z $3 ]]; then
+   regressionID='compair'
+ else
+   regressionID=$3
+ fi
+elif [[ -d $1 && ! -d $2 ]]; then
   check_baseline_dir=`readlink -f $1`
-  if [[ -z $2 ]] && [[ ! -d $2 ]] ; then
+  if [[ -z $2 ]]; then
    regressionID='test_run'
   else
    if [[ $2 == "--non-interactive" ]]; then
@@ -121,26 +159,18 @@ if [[ -d $1 ]]; then
      fi
    fi
   fi
-  pslot_basename='fv3gfs'
-  checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
-  pslot="${pslot_basename}_exp_${regressionID}"
   log_message "INFO" "running test run ($regressionID) agaist regression baseline in directory $check_baseline_dir"
   COMPAIR_BASE='TRUE'
-fi
-
-if [[ $COMPAIR_BASE == 'TRUE' ]]; then
- check_baseline_dir_get=$( find_data_dir $check_baseline_dir )
- if [[ $check_baseline_dir != $check_baseline_dir_get ]]; then
+  check_baseline_dir_get=$( find_data_dir $check_baseline_dir )
+  if [[ -z $check_baseline_dir_get ]]; then
+   log_message "CRITICAL" "$check_baseline_dir_get is not a directory with a baseline to test in it"
+  fi
+  if [[ $check_baseline_dir != $check_baseline_dir_get ]]; then
     check_baseline_dir=$check_baseline_dir_get
-    log_message "WARNING" "given directory did not have gfs data, but a subsiquent subdirectory was found that did"
-    log_message "INFO" "found baseline fv3gfs gfs data found in directory: $check_baseline_dir"
- fi
+    log_message "WARNING" "given directory did not have gfs data, but a subsequent subdirectory was found that did:\n$check_baseline_dir"
+  fi
+ log_message "INFO" "found baseline fv3gfs gfs data found in directory: $check_baseline_dir"
 fi
-
-fv3gfs_git_branch='master'
-# Leave fv3gfs_svn_url blank to use git branch in fv3gfs_git_branch
-fv3gfs_svn_url=''
-load_rocoto='rocoto/1.2.4'
 
 if [[ -d /scratch4/NCEPDEV ]]; then
   system="theia"
@@ -150,36 +180,10 @@ else
   log_message "CRITICAL" "Unknown machine $system, not supported"
 fi
 
-JUST_COMPAIR_TWO_DIRS='FALSE'
-if [[ -d $1 ]] && [[ -d $2 ]]; then
- CHECKOUT='FALSE'
- BUILD='FALSE'
- CREATE_EXP='FALSE'
- RUNROCOTO='FALSE'
- check_baseline_dir_with_this_dir=`readlink -f $2`
- check_baseline_dir_with_this_dir=$( find_data_dir $check_baseline_dir_with_this_dir )
- log_message "INFO" "simply doing a diff on these two directories:\n  $check_baseline_dir \n  $check_baseline_dir_with_this_dir"
- JUST_COMPAIR_TWO_DIRS='TRUE'
-  if [[ -z $3 ]]; then
-   regressionID='compair'
-  else
-   regressionID=$3
-  fi
-fi
-
-INTERACTIVE='TRUE'
-while test $# -gt 0
-do
- if [[ $1 == "--non-interactive" ]]; then
-   INTERACTIVE='FALSE'
-   break
- fi
- shift
-done
-
 if [[ $INTERACTIVE == "TRUE" ]]; then
    echo -e "Current Settings are:\n"
    echo "regressionID = $regressionID"
+   echo "get branch   = $fv3gfs_git_branch"
    echo "idate        = $idate"
    echo "edate        = $edate"
    echo "CHECKOUT_DIR = $CHECKOUT_DIR"
@@ -221,15 +225,6 @@ if [[ $system == "cray" ]]; then
 else
  ICS_dir=$ICS_dir_theia
  PTMP=$PTMP_theia
-fi
-
-comrot="$PTMP/$USER/fv3gfs_regression_tests"
-if [[ -z $comrot ]]; then
-  log_message "INFO" "createing directory $comrot"
-  mkdir -p $comrot
-  if [[ $? == 0 ]]; then
-    log_message "CRITICAL" "comrot directory base directory did not exsist and could not be crated at: $comrot"
-  fi
 fi
 
 rocotover=`$rocotoruncmd --version`
@@ -274,19 +269,20 @@ if [[ $CHECKOUT == 'TRUE' ]]; then
   fi
 fi
 
+comrot=${CHECKOUT_DIR}/fv3gfs_regression_tests
+comrot_test_dir=${comrot}/${pslot}
+exp_dir_fullpath=${CHECKOUT_DIR}/${pslot}
 exp_setup_string="--pslot ${pslot} --icsdir $ICS_dir --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR}"
-EXP_FULLPATH=${CHECKOUT_DIR}/${pslot}
-comrot_test_dir=${comrot}/RUNDIRS/${pslot}
 
 if [[ $CREATE_EXP == 'TRUE' ]]; then
 
     log_message "INFO" "setting up experiment: ${setup_expt} ${exp_setup_string}"
     removed=''
-    if [[ -d $EXP_FULLPATH ]]; then
+    if [[ -d $exp_dir_fullpath ]]; then
      removed='it was present but now has been removed'
     fi
-    rm -Rf $EXP_FULLPATH
-    log_message "INFO" "experiment directory is $EXP_FULLPATH $removed"
+    rm -Rf $exp_dir_fullpath
+    log_message "INFO" "experiment directory is $exp_dir_fullpath $removed"
     removed=''
     if [[ -d $comrot_test_dir ]]; then
      removed='it was present but now has been removed'
@@ -294,9 +290,9 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     rm -Rf $comrot_test_dir
     log_message "INFO" "comrot directory is $comrot_test_dir $removed"
 
-    ${setup_expt} ${exp_setup_string}
-    log_message "INFO" "setting up workflow: ${setup_workflow} --expdir $EXP_FULLPATH"
-    ${setup_workflow} --expdir $EXP_FULLPATH
+    yes | ${setup_expt} ${exp_setup_string}
+    log_message "INFO" "setting up workflow: ${setup_workflow} --expdir $exp_dir_fullpath"
+    yes | ${setup_workflow} --expdir $exp_dir_fullpath
 
 fi
 
@@ -319,12 +315,12 @@ if [[ $BUILD == 'TRUE' ]]; then
 fi
 
 if [[ $RUNROCOTO == 'TRUE' ]]; then
-    if [[ ! -d ${EXP_FULLPATH} ]]; then
-     log_message "CRITICAL" "experiment directory $EXP_FULLPATH not found"
+    if [[ ! -d ${exp_dir_fullpath} ]]; then
+     log_message "CRITICAL" "experiment directory $exp_dir_fullpath not found"
     fi
     log_message "INFO" "running regression script on host $HOST"
-    log_message "INTO" "moving to PWD $EXP_FULLPATH to run cycleing in experiment directory"
-    cd ${EXP_FULLPATH}
+    log_message "INTO" "moving to PWD $exp_dir_fullpath to run cycleing in experiment directory"
+    cd ${exp_dir_fullpath}
 
     log_message "INFO" "starting to run fv3gfs cycling regression test run using $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
     log_message "INFO" "running $rocotoruncmd from $PWD"
