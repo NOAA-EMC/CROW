@@ -1,4 +1,4 @@
-chgres_template: &chgres_template
+chgres_template: !Template &chgres_template
   CHGRESVARS_ENKF:
     type: string
     default: "use_ufo=.true.,nopdpvv=.true."

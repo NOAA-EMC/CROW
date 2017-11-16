@@ -70,13 +70,13 @@ fcst_gdas: &fcst_gdas_action !Action
     - [ doc.platform.mpi_tuning, ".*" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc|DO_RELOCATE|DO_MAKEPREPBUFR" ]
   CDUMP: gdas
-  walltime: !timedelta 00:10:00
+  walltime: !timedelta 00:25:00
 
 fcst_gfs: &fcst_gfs_action !Action
   <<: [ *fv3_gfs_settings, *data_assimilation, *fcst_base ]
   Template: *fv3_settings_template
   Inherit: !Inherit
-    - [ doc.fv3_gdas_settings, ".*" ]
+    - [ doc.fv3_gfs_settings, ".*" ]
     - [ doc.data_assimilation, ".*" ]
     - [ doc.gfs_output_settings, ".*" ]
     - [ doc.platform.mpi_tuning, ".*" ]

@@ -1,4 +1,4 @@
-fv3_settings_template: &fv3_settings_template
+fv3_settings_template: !Template &fv3_settings_template
 
   do_vort_damp:
     type: string
@@ -67,6 +67,10 @@ fv3_settings_template: &fv3_settings_template
     type: bool
     default: YES
     description: Should nemsio output be used (yes/true) instead of netcdf (no/false)?
+
+  WRITE_NEMSIOFLIP:
+    type: bool
+    default: YES
 
   nst_anl:
     type: bool

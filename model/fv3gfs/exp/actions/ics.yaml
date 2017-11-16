@@ -17,6 +17,10 @@ fv3ics: &fv3ics_action !Action
     - [ doc.fv3_settings, "LEVS|QUILTING|WRITE_NEMSIOFILE|nst_anl" ]
     - [ doc.case, "EDATE|SDATE|gfs_cyc" ]
 
+fv3ics_df: &fv3ics_df_action !Action
+  <<: *fv3ics_action
+  J_JOB: fv3ic_df
+
 getics: &getics_action !Action
   <<: *action_base
   J_JOB: getic

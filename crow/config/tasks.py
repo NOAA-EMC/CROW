@@ -10,14 +10,14 @@ following basic Python concepts:
 """
 
 from functools import reduce
-import operator, io
+import operator, io, logging
 from datetime import timedelta
 from abc import abstractmethod
 from collections import namedtuple, OrderedDict, Sequence
 from collections.abc import Mapping, Sequence
 from copy import copy, deepcopy
 from crow.config.exceptions import *
-from crow.config.eval_tools import dict_eval, strcalc, multidict
+from crow.config.eval_tools import dict_eval, strcalc, multidict, from_config
 from crow.tools import to_timedelta, typecheck
 
 __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
@@ -36,7 +36,7 @@ class StateConstant(object):
 RUNNING=StateConstant('RUNNING')
 COMPLETED=StateConstant('COMPLETED')
 FAILED=StateConstant('FAILED')
-
+_logger=logging.getLogger('crow.config')
 MISSING=object()
 VALID_STATES=[ 'RUNNING', 'FAILED', 'COMPLETED' ]
 ZERO_DT=timedelta()
@@ -84,6 +84,12 @@ class SuiteView(Mapping):
         self.path=SuitePath(path)
         self.parent=parent
         self.__cache={}
+        if isinstance(self.viewed,Slot):
+            locals=multidict(self.parent,self.viewed)
+            globals=self.viewed._get_globals()
+            for k,v in self.viewed._raw_child().items():
+                if hasattr(v,'_as_dependency'): continue
+                self.viewed[k]=from_config(k,v,globals,locals,self.viewed._path)
 
     def _globals(self):
         return self.viewed._globals()
@@ -157,7 +163,7 @@ class SuiteView(Mapping):
     def __getattr__(self,key):
         if key in SuiteView.LOCALS: raise AttributeError(key)
         if key in self: return self[key]
-        raise AttributeError(key)
+        raise AttributeError(f'{self.viewed._path}: no {key} in {list(self.keys())}')
 
     def __getitem__(self,key):
         assert(isinstance(key,str))
@@ -211,7 +217,7 @@ class SuiteView(Mapping):
 
 class SlotView(SuiteView):
     def __init__(self,suite,viewed,path,parent,search=MISSING):
-        super().__init__(suite,viewed,path,parent)
+        super().__init__(suite,copy(viewed),path,parent)
         assert(isinstance(path,Sequence))
         if search is MISSING: 
             self.__search={}
@@ -278,7 +284,12 @@ class CycleView(SuiteView): pass
 class TaskView(SuiteView): pass
 class FamilyView(SuiteView): pass
 class InputSlotView(SlotView):
-    def get_output_slot(self): return self.Out
+    def get_output_slot(self,meta):
+        result=self.viewed._raw('Out')
+        if not isinstance(result,Message):
+            raise TypeError(f'{self.viewed._path}.Out: Must be a Message, not a {type(result).__name__}')
+        return result._as_dependency(self._globals(),multidict(self.parent,meta),
+                                     f'{self.viewed._path}.Out')
     def get_flow_name(self): return 'I'
 class OutputSlotView(SlotView):
     def get_flow_name(self): return 'O'
@@ -290,6 +301,7 @@ class Suite(SuiteView):
             raise TypeError('The top level of a suite must be a Cycle not '
                             'a %s.'%(type(suite).__name__,))
         viewed=deepcopy(suite)
+        old_doc=suite._get_globals()['doc']
         globals=dict(viewed._globals())
         assert(globals['tools'] is not None)
         globals.update(suite=self,

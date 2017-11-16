@@ -1,8 +1,7 @@
 
 vrfy_base: &vrfy_base !Action
   <<: *action_base
-  Template: !Template
-    <<: [ *CYC_TRACK_VARS, *CYC_GEN_VARS, *MIN_VARS, *RAD_VARS, *OZN_VARS, *MIN_RAD_OZN_VARS, *VRFY_CDUMP_GFS_VARS, *vrfy_template ]
+  Template: [ *CYC_TRACK_VARS, *CYC_GEN_VARS, *MIN_VARS, *RAD_VARS, *OZN_VARS, *MIN_RAD_OZN_VARS, *VRFY_CDUMP_GFS_VARS, *vrfy_template ]
   J_JOB: vrfy
   walltime: !timedelta 01:00:00
   resources: !calc run_vrfy.resources

@@ -28,7 +28,7 @@ __all__=['ConvertFromYAML']
 # YAML representation objects:
 class PlatformYAML(YAMLObject):   yaml_tag=u'!Platform'
 class ActionYAML(YAMLObject):     yaml_tag=u'!Action'
-class TemplateYAML(YAMLObject):   yaml_tag=u'!Template'
+#class TemplateYAML(YAMLObject):   yaml_tag=u'!Template'
 
 class FirstMaxYAML(list):         yaml_tag=u'!FirstMax'
 class FirstMinYAML(list):         yaml_tag=u'!FirstMin'
@@ -43,6 +43,7 @@ class ShellCommandYAML(dict): pass
 class TaskYAML(OrderedDict): pass
 class FamilyYAML(OrderedDict): pass
 class CycleYAML(OrderedDict): pass
+class TemplateYAML(OrderedDict): pass
 class InputSlotYAML(dict): pass
 class OutputSlotYAML(dict): pass
 class JobResourceSpecMakerYAML(list): pass
@@ -51,7 +52,7 @@ class JobResourceSpecMakerYAML(list): pass
 # * internal representation class
 # * python core class for intermediate conversion
 TYPE_MAP={ PlatformYAML:     [ Platform,     dict,       None ], 
-           TemplateYAML:     [ Template,     dict,       None ],
+           TemplateYAML:     [ Template,     OrderedDict, None ],
            ActionYAML:       [ Action,       dict,       None  ],
            ShellCommandYAML: [ ShellCommand, OrderedDict, None ],
            TaskYAML:         [ Task,         OrderedDict, None ],
@@ -167,11 +168,13 @@ add_yaml_ordered_dict(u'!InputSlot',InputSlotYAML)
 add_yaml_ordered_dict(u'!OutputSlot',OutputSlotYAML)
 add_yaml_ordered_dict(u'!Clock',ClockYAML)
 add_yaml_ordered_dict(u'!Cycle',CycleYAML)
+add_yaml_ordered_dict(u'!Template',TemplateYAML)
 add_yaml_ordered_dict(u'!Task',TaskYAML)
 add_yaml_ordered_dict(u'!Family',FamilyYAML)
 
 SUITE={ EvalYAML: Eval,
         CycleYAML: Cycle,
+        TemplateYAML: Template,
         TaskYAML: Task,
         FamilyYAML: Family,
         ClockYAML:ClockMaker,

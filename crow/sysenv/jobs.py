@@ -45,6 +45,9 @@ class JobRankSpec(Mapping):
             raise TypeError('exe must be a string, not a %s'%(
                 type(exe).__name__,))
 
+    def getexe(self): return self.__spec['exe']
+    exe=property(getexe,None,None,None)
+
     def is_exclusive(self):
         """!Trinary accessor - True, False, None (unset).  None indicates 
         no request was made for or against exclusive."""

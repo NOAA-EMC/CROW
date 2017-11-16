@@ -8,7 +8,7 @@ from crow.dataflow import Dataflow
 from datetime import datetime
 
 ALLOWED_DATE_FORMATS=[ '%Y-%m-%dt%H:%M:%S', '%Y-%m-%dT%H:%M:%S',
-                       '%Y-%m-%d %H:%M:%S' ]
+                       '%Y-%m-%d %H:%M:%S', '%Y%m%d%H', '%Y%m%d%H%M' ]
 def usage(why):
     sys.stderr.write('''Format: crow_dataflow_cycle_sh.py [-v] file.db (add|del) cycle
 -v = be verbose

@@ -67,6 +67,10 @@ Rocoto: &Rocoto
       <value>{doc.places.EXPDIR}/config.yaml</value>
     </envar>
     <envar>
+      <name>CROW_DATAFLOW_DB</name>
+      <value>{doc.places.EXPDIR}/dataflow.db</value>
+    </envar>
+    <envar>
       <name>HOMEcrow</name>
       <value>{doc.places.HOMEcrow}</value>
     </envar>

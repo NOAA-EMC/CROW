@@ -6,9 +6,9 @@ from sqlite3 import Cursor, Connection
 from typing import Generator, Callable, List, Tuple, Any, Union, Dict, IO
 from contextlib import contextmanager
 
-__all__=['from_datetime','transaction','add_slot','itercur','create_tables',
+__all__=['from_datetime','transaction','add_slots','itercur','create_tables',
          'get_meta','add_message','set_data','get_location','select_slot',
-         'del_cycle','add_cycle']
+         'del_cycle','add_cycle','add_one_slot']
 
 _logger=logging.getLogger('crow.dataflow')
 _ZERO_DT=timedelta(seconds=0)
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS Meta (
   ityp INTEGER,
   ival INTEGER,
   sval VARCHAR,
-  CONSTRAINT pid_name UNIQUE (pid,name)
+  CONSTRAINT pid_name UNIQUE (pid,name,ival,sval)
 );
 
 CREATE TEMP TABLE IF NOT EXISTS Row(n INTEGER,pid INTEGER);
@@ -129,22 +129,51 @@ def _dump_prod_info(con: Connection,proditer) -> None:
 def create_tables(con: Connection) -> None:
     con.executescript(_CREATE_TABLES)
 
-def add_slot(con: Connection,actor: str,slot: str,flow: str,defloc: str,meta: Dict=None) -> int:
+def add_one_slot(con: Connection,actor: str,slot: str,flow: str,defloc: str,meta: Dict=None) -> int:
     assert(flow in [ 'O', 'I' ])
+    _logger.debug(f'{actor}.{slot}: add slot with flow={flow} defloc={defloc} meta={meta}')
     with transaction(con):
-        _conex(con,'INSERT INTO Slot(actor,slot,flow,defloc) VALUES (?,?,?,?);',
-               [actor,slot,flow,defloc])
-        _conex(con,'DELETE FROM Row;')
-        _conex(con,'INSERT INTO Row (n,pid) VALUES (1,last_insert_rowid());')
+        pid=None
+        if pid is None:
+            _conex(con,'INSERT INTO Slot(actor,slot,flow,defloc) VALUES (?,?,?,?);',
+                   [actor,slot,flow,defloc])
+            _conex(con,'DELETE FROM Row;')
+            _conex(con,'INSERT INTO Row (n,pid) VALUES (1,last_insert_rowid());')
+            pid=_conget(con,'SELECT pid FROM Row WHERE n=1')
+            _logger.debug(f'{actor}.{slot}: added with pid {pid}')
+        else:
+            _logger.debug(f'{actor}.{slot}: already has pid {pid}')
+            _conex(con,'DELETE FROM Row;')
+            _conex(con,'INSERT INTO Row (n,pid) VALUES (1,?);',pid)
         if meta:
             for k,v in meta.items():
                 ityp,cls,fld,cmp2,back,fore = _ityp_info(v)
+                _logger.debug(f'{actor}.{slot}: pid {pid} meta val {k} {fld}={fore(v)}')
                 _conex(con,
-                       f'INSERT INTO Meta (pid,name,ityp,{fld}) VALUES'\
+                       f'REPLACE INTO Meta (pid,name,ityp,{fld}) VALUES'\
                        '((SELECT pid FROM Row WHERE n=1),?,?,?);',[
                        k,ityp,fore(v)])
-        pid=_conget(con,'SELECT pid FROM Row WHERE n=1')
     return pid[0]
+
+def add_slots(con: Connection,actor: str,slot: str,flow: str,defloc: str,meta: Dict=None) -> int:
+    if not meta:
+        add_one_slot(con,actor,slot,flow,defloc,meta)
+        return
+    for k,v in meta.items():
+        if isinstance(v,list):
+            # Array of meta returned.  Replace the array with one item
+            # in that array, for each item in the array.  This allows
+            # us to check all multi-dimensional combinations when
+            # there are multiple arrays of metadata.
+            _logger.debug(f'{actor}.{slot} loop over meta {k}={v}')
+            for item in v:
+                submeta=dict(meta)
+                submeta[k]=item
+                add_slots(con,actor,slot,flow,defloc,submeta)
+            return
+    # If we get here, then no arrays remain in the metadata, and we
+    # can simply add the slot
+    add_one_slot(con,actor,slot,flow,defloc,meta)
 
 def get_meta(con: Connection,pid: int) -> Dict:
     meta=dict()
@@ -153,18 +182,25 @@ def get_meta(con: Connection,pid: int) -> Dict:
         for name,pval in itercur(_conex(con,
               f'SELECT name,{fld} FROM Meta WHERE pid==? AND ityp=?',
               [pid,ityp])):
-            meta[name]=back(pval)
+            pyval=back(pval)
+            if name in meta:
+                if isinstance(meta[name],list) and pyval not in meta[name]:
+                    meta[name].append(pyval)
+                elif not isinstance(meta[name],list) and meta[name]!=pyval:
+                    meta[name]=[ meta[name], pyval ]
+            else:
+                meta[name]=pyval
     return meta
 
 def add_message(con: Connection,send: int,recv: int,
                 rel_time: timedelta=None) -> None:
     if rel_time is None: rel_time=_ZERO_DT
-    _conex(con,'INSERT INTO Mess (pid_recv,pid_send,rel_time) '
+    _conex(con,'REPLACE INTO Mess (pid_recv,pid_send,rel_time) '
            'VALUES (?,?,?)',[ recv,send,rel_time.total_seconds() ])
 
 def set_data(con: Connection,pid: int,cycle: datetime,
              loc: str,avail:int=0) -> None:
-    _conex(con,'INSERT OR REPLACE INTO Data (pid,cycle,avail,loc) '
+    _conex(con,'REPLACE INTO Data (pid,cycle,avail,loc) '
            'VALUES (?,?,?,?)',[ 
                pid,from_datetime(cycle),avail,str(loc)])
 
@@ -251,5 +287,5 @@ def add_cycle(con,cycle: datetime) -> None:
         _logger.debug(f'loc {loc} for cycle={cycle:%Y%m%d%H%M} actor={actor} slot={slot} meta={meta}')
         args.extend([pid,scycle,loc])
     if not args: return
-    _conex(con,'INSERT INTO Data(pid,cycle,loc) VALUES ' + \
+    _conex(con,'INSERT OR IGNORE INTO Data(pid,cycle,loc) VALUES ' + \
                '(?,?,?), '*(len(args)//3-1) + '(?,?,?);',args)

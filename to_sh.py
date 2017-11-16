@@ -15,7 +15,7 @@ from collections import Mapping
 from datetime import datetime
 
 logger=logging.getLogger('CROW')
-logging.basicConfig(level=logging.DEBUG,stream=sys.stderr)
+logging.basicConfig(level=logging.INFO,stream=sys.stderr)
 
 UNSET_VARIABLE=object()
 SUCCESS=object()

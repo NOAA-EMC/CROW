@@ -1,4 +1,4 @@
-places: &places
+user_places: &user_places
   <<: *default_places
 
   PROJECT_DIR: !error Please select a project directory.

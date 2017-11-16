@@ -1,4 +1,4 @@
-obsproc_template: &obsproc_template
+obsproc_template: !Template &obsproc_template
   SYNDATA:
     type: bool
     default: YES

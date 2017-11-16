@@ -34,14 +34,16 @@ prepbufr: &prepbufr
 
 ########################################################################
 
-places: &places { <<: *user_places }
+places: &places
+  <<: *user_places
+  FORECASTSH: !expand "{HOMEcrow}/model/fv3gfs/scripts/exglobal_fcst_crow.sh"
 
 case:
   Template: [ *case_template, *known_workflows ]
   SDATE: 2017-06-19t18:00:00
   EDATE: 2017-06-22t12:00:00
 
-  workflow: gfs_forecast_workflow
+  workflow: crow_sh_fcst_workflow
 
   ics_from: pargfs
   parexp: prnemsrn

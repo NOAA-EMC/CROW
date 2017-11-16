@@ -1,4 +1,4 @@
-data_assimilation_template: &data_assimilation_template
+data_assimilation_template: !Template &data_assimilation_template
   DOHYBVAR:
     type: bool
     default: YES

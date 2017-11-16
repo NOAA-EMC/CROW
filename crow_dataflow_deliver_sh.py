@@ -8,7 +8,7 @@ from datetime import datetime
 from crow.tools import shell_to_python_type
 
 ALLOWED_DATE_FORMATS=[ '%Y-%m-%dt%H:%M:%S', '%Y-%m-%dT%H:%M:%S',
-                       '%Y-%m-%d %H:%M:%S' ]
+                       '%Y-%m-%d %H:%M:%S', '%Y%m%d%H', '%Y%m%d%H%M' ]
 
 USAGE='''Format: crow_dataflow_sh.py [-v] [-m] ( -i input | -o output ) \\
   dataflow.db cycle actor var=value [var=value [...]]
@@ -30,6 +30,7 @@ def usage(why):
     exit(1)
 
 def deliver_by_name(logger,flow,local,message,check):
+    logger.debug(f'{message.actor}.{message.slot} (meta={locals}): deliver by name from {local}')
     if check:
         strloc=local
         if local == '-' and flow=='O': strloc='(stdin)'
@@ -61,15 +62,34 @@ def deliver_by_name(logger,flow,local,message,check):
             #shutil.copyfileobj(sys.stdin.buffer,out_fd)
             out_fd.write(data)
 
+def slot_meta_iter(slot,meta):
+    for k,v in meta.items():
+        if isinstance(v,list):
+            for item in v:
+                newmeta=dict(meta)
+                newmeta[k]=item
+                for s,m in slot_meta_iter(slot,newmeta):
+                    yield s,m
+            return
+    yield slot,meta
+
 def deliver_by_format(logger,flow,format,message,check):
     if "'''" in format:
         raise ValueError(f"{format}: cannot contain three single quotes "
                          "in a row '''")
     globals={ 'actor':message.actor, 'slot':message.slot, 'flow':message.flow, 
               'cycle':message.cycle }
-    locals=message.get_meta()
-    local_file=eval("f'''"+format+"'''",globals,locals)
-    deliver_by_name(logger,flow,local_file,message,check)
+    for slot,meta in slot_meta_iter(message,message.get_meta()):
+        logger.debug(f'{message.actor}.{message.slot} (meta={meta}): filename format {format}')
+        local_file=eval("f'''"+format+"'''",globals,meta)
+        logger.debug(f'{message.actor}.{message.slot} (meta={meta}): deliver by format from {local_file}')
+        deliver_by_name(logger,flow,local_file,message,check)
+
+def has_meta_lists(slot):
+    meta=slot.get_meta()
+    for k,v in meta.items():
+        if isinstance(v,list): return True
+    return False
 
 def main():
     (optval, args) = getopt(sys.argv[1:],'o:i:vmc')
@@ -124,27 +144,34 @@ def main():
         matches=iter(db.find_output_slot(actor,slot,meta))
         local=options['-i']
 
+    slots = [ slot for slot in matches ]
+    any_have_meta_lists=False
+    for slot in slots:
+        logger.info(str(slot))
+        if has_meta_lists(slot):
+            any_have_meta_lists=True
+            logger.info('... has metadata lists')
+    #any_have_meta_lists = any([ has_meta_lists(slot) for slot in slots ])
+    multi = len(slots)>1 or any_have_meta_lists
+   
     slot1, slot2 = None, None
     with suppress(StopIteration):
         slot1=next(matches)
         slot2=next(matches)
 
-    if slot1 is None:
+    if not slots:
         logger.error('No match for query.  Such a slot does not exist.')
         exit(1)
-
-    if slot2 is not None and '-m' not in options:
+    elif multi and '-m' not in options:
         logger.error('Multiple matches, and -m not specified.  Abort.')
         exit(1)
+    elif not multi and '-m' in options:
+        logger.error('Single match but -m was specified.  Abort.')
+        exit(1)
 
-    if '-m' in options:   deliver = deliver_by_format
-    else:                 deliver = deliver_by_name
+    for slot in slots:
+        deliver_by_format(logger,flow,local,slot.at(cycle),'-c' in options)
 
-    for slot in [ slot1, slot2 ]:
-        if slot is not None:
-            deliver(logger,flow,local,slot.at(cycle),'-c' in options)
-    for slot in matches:
-        deliver(logger,flow,local,slot.at(cycle),'-c' in options)
 
 if __name__ == '__main__':
     main()
