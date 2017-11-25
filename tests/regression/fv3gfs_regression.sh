@@ -1,12 +1,12 @@
 #!/bin/bash
 
 usage () {
-   echo -e "\033[1mUSAGE:\033[0m\n $0 [[baseline]] [[compair]] [[--non-interactive]]\n"
+   echo -e "\033[1mUSAGE:\033[0m\n $0 [[baseline]] [[compare]] [[--non-interactive]]\n"
    echo -e "\tno arguments           : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_baseline fv3gfs_exp_basline respectivly"
    echo -e "\tone argument  (string) : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${string} respectivly\n\n"
-   echo -e "\tone argument  (dir)       : creates a test run with sorc and exp dir in \$PWD named fvgfs_sorc_test_run   fv3gfs_exp_test_run respectivly \n\t\t\t\t    and then compairs the resluts against the comrot found in the directory \${dir}"
-   echo -e "\ttwo arguments (dir) (str) : creates a test_run with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${srting} respectivly \n\t\t\t\t    and then compairs the resluts against the comrot found in the directory \${dir} "
-   echo -e "\ttwo arguments (dir) (dir) : does a bitwise compair on the gfs files from the first dir to the second\n"
+   echo -e "\tone argument  (dir)       : creates a test run with sorc and exp dir in \$PWD named fvgfs_sorc_test_run   fv3gfs_exp_test_run respectivly \n\t\t\t\t    and then compares the resluts against the comrot found in the directory \${dir}"
+   echo -e "\ttwo arguments (dir) (str) : creates a test_run with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${srting} respectivly \n\t\t\t\t    and then compares the resluts against the comrot found in the directory \${dir} "
+   echo -e "\ttwo arguments (dir) (dir) : does a bitwise compare on the gfs files from the first dir to the second\n"
    echo -e "\tthird optional argument is used when acctually running the script so no promps are given, otherwize the script will report on the settings.\n\n"
    echo -e "\033[1mEXAMPLE:\033[0m\n"
    echo -e "\tnohup ./fv3gfs_regression.sh fv3gfs_regression_baseline --non-interactive > & fv3gfs_regression_test_run.log &\n"
@@ -99,7 +99,7 @@ find_data_dir () {
     echo $_check_baseline_dir
 }
 
-COMPAIR_BASE='FALSE'
+COMPARE_BASE='FALSE'
 if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
  if [[ -z $1 || $1 == "--non-interactive" ]]; then
     regressionID='baseline'
@@ -112,8 +112,8 @@ fi
 
 log_message "INFO" "running regression script on host $HOST"
 
-COMPAIR_BASE='FALSE'
-JUST_COMPAIR_TWO_DIRS='FALSE'
+COMPARE_BASE='FALSE'
+JUST_COMPARE_TWO_DIRS='FALSE'
 if [[ -d $1 ]] && [[ -d $2 ]]; then
  CHECKOUT='FALSE'
  BUILD='FALSE'
@@ -138,11 +138,16 @@ if [[ -d $1 ]] && [[ -d $2 ]]; then
    log_message "WARNING" "given directory did not have gfs data, but a subsequent subdirectory was found that did:\n$check_baseline_dir_with_this_dir"
  fi  
  log_message "INFO" "simply doing a diff on these two directories:\n  $check_baseline_dir \n  $check_baseline_dir_with_this_dir"
- JUST_COMPAIR_TWO_DIRS='TRUE'
+ JUST_COMPARE_TWO_DIRS='TRUE'
+ COMPARE_BASE='TRUE'
  if [[ -z $3 ]]; then
-   regressionID='compair'
+   regressionID='compare'
  else
-   regressionID=$3
+   if [[ $3 != "--non-interactive" ]]; then
+     regressionID=$3
+   else
+     regressionID='compare'
+   fi
  fi
 elif [[ -d $1 && ! -d $2 ]]; then
   check_baseline_dir=`readlink -f $1`
@@ -160,7 +165,7 @@ elif [[ -d $1 && ! -d $2 ]]; then
    fi
   fi
   log_message "INFO" "running test run ($regressionID) agaist regression baseline in directory $check_baseline_dir"
-  COMPAIR_BASE='TRUE'
+  COMPARE_BASE='TRUE'
   check_baseline_dir_get=$( find_data_dir $check_baseline_dir )
   if [[ -z $check_baseline_dir_get ]]; then
    log_message "CRITICAL" "$check_baseline_dir_get is not a directory with a baseline to test in it"
@@ -190,7 +195,7 @@ if [[ $INTERACTIVE == "TRUE" ]]; then
    echo "CHECKOUT     = $CHECKOUT"
    echo "BUILD        = $BUILD"
    echo "CREATE_EXP   = $CREATE_EXP"
-   echo "COMPAIR_BASE = $COMPAIR_BASE"
+   echo "COMPARE_BASE = $COMPARE_BASE"
    echo -e "RUNROCOTO    = $RUNROCOTO\n"
    while read -n1 -r -p "Are these the correct settings (y/n): " answer
     do
@@ -370,8 +375,8 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
 
 fi
 
-diff_file_name="${CHECKOUT_DIR}/diff_file_list_${regressionID}.txt"
-if [[ $COMPAIR_BASE == 'TRUE' ]]; then
+if [[ $COMPARE_BASE == 'TRUE' ]]; then
+   diff_file_name="${CHECKOUT_DIR}/diff_file_list_${regressionID}.txt"
    total_number_files=`find $check_baseline_dir -type f | wc -l`
    if [[ $system == "theia" ]]; then
     module load nccmp
@@ -380,10 +385,10 @@ if [[ $COMPAIR_BASE == 'TRUE' ]]; then
     NCCMP=/gpfs/hps3/emc/nems/noscrub/emc.nemspara/FV3GFS_V0_RELEASE/util/nccmp
    fi
 
-   if [[ $JUST_COMPAIR_TWO_DIRS=='TRUE' ]]; then
+   if [[ $JUST_COMPARE_TWO_DIRS=='TRUE' ]]; then
     comrot_test_dir=$check_baseline_dir_with_this_dir
    fi
-   log_message "INFO" "doing the diff compair in $check_baseline_dir against $comrot_test_dir"
+   log_message "INFO" "doing the diff compare in $check_baseline_dir against $comrot_test_dir"
    if [[ ! -d $check_baseline_dir ]] || [[ ! -d $comrot_test_dir ]]; then
      log_message "CRITICAL" "One of the target directories does not exist"
    fi
@@ -396,7 +401,7 @@ if [[ $COMPAIR_BASE == 'TRUE' ]]; then
    check_baseline_dir_basename=`basename $check_baseline_dir`
    comrot_test_dir_basename=`basename $comrot_test_dir`
    log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\" --exclude \"*.nc\" --exclude \"*.nc?\"  $check_baseline_dir_basename $comrot_test_dir_basename >& $diff_file_name" 
-   diff --brief -Nr --exclude "*.log*" --exclude "*.nc" --exclude "*.nc?" $check_baseline_dir_basename $comrot_test_dir_basename >  ${diff_file_name} 2>&1
+   diff --brief -Nr --exclude "*.log*" --exclude "*.nc" --exclude "*.nc?" $check_baseline_dir_basename $comrot_test_dir_basename > ${diff_file_name} 2>&1
 
    num_different_files=`wc -l < $diff_file_name`
    log_message "INFO" "checking if of the $num_different_files differing files which ones are tar and/or compressed files for differences"
@@ -458,7 +463,7 @@ if [[ $COMPAIR_BASE == 'TRUE' ]]; then
           counter_header_identical=$((counter_header_identical+1))
          fi
      else
-       counter_identical=$((counter_header_identical+1))
+       counter_identical=$((counter_identical+1))
      fi
    done < netcdf_filelist.txt
    log_message "INFO" "out off $num_cdf_files NetCDF files $counter_identical where completly identical $counter_header_identical where identical but not in the header $counter_differed_nccmp differed in the data"
