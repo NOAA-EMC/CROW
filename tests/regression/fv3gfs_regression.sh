@@ -4,8 +4,8 @@ usage () {
    echo -e "\033[1mUSAGE:\033[0m\n $0 [[baseline]] [[compare]] [[--non-interactive]]\n"
    echo -e "\tno arguments           : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_baseline fv3gfs_exp_basline respectivly"
    echo -e "\tone argument  (string) : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${string} respectivly\n\n"
-   echo -e "\tone argument  (dir)       : creates a test run with sorc and exp dir in \$PWD named fvgfs_sorc_test_run   fv3gfs_exp_test_run respectivly \n\t\t\t\t    and then compares the resluts against the comrot found in the directory \${dir}"
-   echo -e "\ttwo arguments (dir) (str) : creates a test_run with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${srting} respectivly \n\t\t\t\t    and then compares the resluts against the comrot found in the directory \${dir} "
+   echo -e "\tone argument  (dir)       : creates a test run with sorc and exp dir in \$PWD named fvgfs_sorc_test_run   fv3gfs_exp_test_run respectivly \n\t\t\t\t    and then compares the results against the comrot found in the directory \${dir}"
+   echo -e "\ttwo arguments (dir) (str) : creates a test_run with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${srting} respectivly \n\t\t\t\t    and then compares the results against the comrot found in the directory \${dir} "
    echo -e "\ttwo arguments (dir) (dir) : does a bitwise compare on the gfs files from the first dir to the second\n"
    echo -e "\tthird optional argument is used when acctually running the script so no promps are given, otherwize the script will report on the settings.\n\n"
    echo -e "\033[1mEXAMPLE:\033[0m\n"
@@ -456,7 +456,7 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
      just_dir=`echo "$dir_name" | sed 's,^[^/]*/,,'`
      diff $just_dir/$comp_base $just_dir/$comp_base
      if [[ $? != 0 ]]; then
-         NCCMP -d  $just_dir/$comp_base $just_dir/$comp_base >> ${diff_file_name} 2>&1
+         $NCCMP -d  $just_dir/$comp_base $just_dir/$comp_base >> ${diff_file_name} 2>&1
          if [[ $? != 0 ]]; then
           counter_not_identicali_nccmp=$((counter_differed_nccmp+1))
          else 
@@ -466,9 +466,9 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
        counter_identical=$((counter_identical+1))
      fi
    done < netcdf_filelist.txt
-   log_message "INFO" "out off $num_cdf_files NetCDF files $counter_identical where completly identical $counter_header_identical where identical but not in the header $counter_differed_nccmp differed in the data"
+   log_message "INFO" "out off $num_cdf_files NetCDF files $counter_identical where completely identicali, $counter_header_identical identical data but differed in the header, and  $counter_differed_nccmp differed in the data"
    number_diff=`wc -l < $diff_file_name`
-   log_message "INFO" "completed runing diff for fv3gfs regression test ($regressionID) and found resluts in file: $diff_file_name"
+   log_message "INFO" "completed running diff for fv3gfs regression test ($regressionID) and found results in file: $diff_file_name"
    log_message "INFO" "out of $total_number_files files, there where $number_diff that differed"
    rm netcdf_filelist.txt
 fi
