@@ -298,7 +298,10 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     yes | ${setup_expt} ${exp_setup_string}
     log_message "INFO" "setting up workflow: ${setup_workflow} --expdir $exp_dir_fullpath"
     yes | ${setup_workflow} --expdir $exp_dir_fullpath
-
+    sed -i 's/^export VRFYGENESIS=.*/export VRFYGENESIS=\"NO\"          \# WARNING changed by regression script/' $exp_dir_fullpath/config.vrfy
+    log_message "WARNING" "modified config.vrfy with VRFYGENESIS=NO because geneses tracker is currently failing"
+    sed -i 's/^export VRFYG2OBS=.*/export VRFYG2OBS=\"NO\"          \# WARNING changed by regression script/' $exp_dir_fullpath/config.vrfy
+    log_message "WARNING" "modified config.vrfy with VRFYG2OBS=NO because it do not make sense for it to be on for only one cycle"
 fi
 
 if [[ $BUILD == 'TRUE' ]]; then
@@ -400,8 +403,43 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
    fi
    check_baseline_dir_basename=`basename $check_baseline_dir`
    comrot_test_dir_basename=`basename $comrot_test_dir`
+   
+   log_message "INFO" "checking if test case has correct number of files"
+
+   baseline_tempfile=${check_baseline_dir_basename}_files.txt
+   comrot_tempfile=${comrot_test_dir_basename}_files.txt
+   cd $check_baseline_dir_basename
+   rm -f ../$baseline_tempfile
+   find * -type f > ../$baseline_tempfile
+   cd ../$comrot_test_dir_basename
+   rm -f ../$comrot_tempfile
+   find * -type f > ../$comrot_tempfile
+   cd ..
+   diff ${baseline_tempfile} ${comrot_tempfile} > /dev/null 2>&1
+   if [[ $? != 0 ]]; then
+     num_missing_files=0
+     while read line; do
+      ls ${comrot_test_dir_basename}/$line > /dev/null 2>&1
+      if [[ $? != 0 ]]; then
+        echo "file $line is in ${check_baseline_dir_basename} but is missing in ${comrot_test_dir_basename}" >> ${diff_file_name}
+        num_missing_files=$((num_missing_files+1))
+      fi  
+     done < $baseline_tempfile
+     while read line; do
+      ls ${check_baseline_dir_basename}/$line > /dev/null 2>&1
+      if [[ $? != 0 ]]; then
+        echo "file $line is in ${comrot_test_dir_basename} but is missing in $check_baseline_dir_basename" >> ${diff_file_name}
+        num_missing_files=$((num_missing_files+1))
+      fi  
+     done < $comrot_tempfile
+     log_message "INFO" "$num_missing_files files where either  missing or where unexpected in the test direcotry."
+   else
+     log_message "INFO" "all the files are accounted for are all the names match in the test directory"
+   fi
+   rm -f $baseline_tempfile
+   rm -f $comrot_tempfile
    log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\" --exclude \"*.nc\" --exclude \"*.nc?\"  $check_baseline_dir_basename $comrot_test_dir_basename >& $diff_file_name" 
-   diff --brief -Nr --exclude "*.log*" --exclude "*.nc" --exclude "*.nc?" $check_baseline_dir_basename $comrot_test_dir_basename > ${diff_file_name} 2>&1
+   diff --brief -Nr --exclude "*.log*" --exclude "*.nc" --exclude "*.nc?" $check_baseline_dir_basename $comrot_test_dir_basename >> ${diff_file_name} 2>&1
 
    num_different_files=`wc -l < $diff_file_name`
    log_message "INFO" "checking if of the $num_different_files differing files which ones are tar and/or compressed files for differences"
@@ -471,4 +509,12 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
    log_message "INFO" "completed running diff for fv3gfs regression test ($regressionID) and found results in file: $diff_file_name"
    log_message "INFO" "out of $total_number_files files, there where $number_diff that differed"
    rm netcdf_filelist.txt
+
+
+
+
 fi
+
+DATE=`date`
+
+log_message "INFO" "regression tests script completed successfully at $DATE"
