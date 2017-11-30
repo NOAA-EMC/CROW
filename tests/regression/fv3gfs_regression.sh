@@ -355,7 +355,7 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
       if [[ $lastcycle_state == "Done" ]]; then
        break
       fi
-      log_message "INFO" "running: $rocotostatcmd -d ${pslot}.db -w ${pslot}.xml -c all"
+      #log_message "INFO" "running: $rocotostatcmd -d ${pslot}.db -w ${pslot}.xml -c all"
       deadjobs=`$rocotostatcmd -d ${pslot}.db -w ${pslot}.xml -c all | awk '$4 == "DEAD" {print $2}'`
       if [[ ! -z $deadjobs ]]; then
          deadjobs=`echo $deadjobs | tr '\n' ' '`
@@ -367,7 +367,7 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
       fi
       $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml
       if [[ $? == "0" ]]; then
-       log_message "INFO" "Successful: $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
+       log_message "INFO" "Successfully ran: $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
       else 
        log_message "WARNING" "FAILED: $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
       fi
@@ -476,7 +476,11 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
         num_missing_files=$((num_missing_files+1))
       fi  
      done < $comrot_tempfile
-     log_message "INFO" "$num_missing_files files where either  missing or where unexpected in the test direcotry."
+     if [[ $num_missing_files != 0 ]]; then
+       log_message "INFO" "$num_missing_files files where either  missing or where unexpected in the test direcotry."
+     else
+       log_message "INFO" "all the files are accounted for are all the names match in the test directory"
+     fi
    else
      log_message "INFO" "all the files are accounted for are all the names match in the test directory"
    fi
@@ -508,7 +512,7 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
        counter_identical=$((counter_identical+1))
      fi
    done < netcdf_filelist.txt
-   log_message "INFO" "out off $num_cdf_files NetCDF files $counter_identical where completely identical, $counter_header_identical identical data but differed in the header, and  $counter_differed_nccmp differed in the data"
+   log_message "INFO" "out off $num_cdf_files NetCDF files $counter_identical where completely identical, $counter_header_identical identical data but differed in the header, and $counter_differed_nccmp differed in the data"
    number_diff=`wc -l < $diff_file_name`
    log_message "INFO" "completed running diff for fv3gfs regression test ($regressionID) and found results in file: $diff_file_name"
    log_message "INFO" "out of $total_number_files files, there where $number_diff that differed"
