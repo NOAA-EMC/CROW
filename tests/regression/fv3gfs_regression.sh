@@ -388,12 +388,12 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
     NCCMP=/gpfs/hps3/emc/nems/noscrub/emc.nemspara/FV3GFS_V0_RELEASE/util/nccmp
    fi
 
-   if [[ $JUST_COMPARE_TWO_DIRS=='TRUE' ]]; then
+   if [[ $JUST_COMPARE_TWO_DIRS == 'TRUE' ]]; then
     comrot_test_dir=$check_baseline_dir_with_this_dir
    fi
    log_message "INFO" "doing the diff compare in $check_baseline_dir against $comrot_test_dir"
    if [[ ! -d $check_baseline_dir ]] || [[ ! -d $comrot_test_dir ]]; then
-     log_message "CRITICAL" "One of the target directories does not exist"
+     log_message "CRITICAL" "one of the target directories does not exist"
    fi
    log_message "INFO" "moving to directory $comrot_test_dir to do the compare"
    if [[ -d $comrot_test_dir ]]; then
@@ -403,7 +403,51 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
    fi
    check_baseline_dir_basename=`basename $check_baseline_dir`
    comrot_test_dir_basename=`basename $comrot_test_dir`
-   
+
+   log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\" --exclude \"*.nc\" --exclude \"*.nc?\"  $check_baseline_dir_basename $comrot_test_dir_basename >& $diff_file_name" 
+   diff --brief -Nr --exclude "*.log*" --exclude "*.nc" --exclude "*.nc?" $check_baseline_dir_basename $comrot_test_dir_basename >> ${diff_file_name} 2>&1
+
+   num_different_files=`wc -l < $diff_file_name`
+   log_message "INFO" "checking of the $num_different_files differing files (not including NetCDF) for which ones are tar and/or compressed files for differences"
+   rm -f ${diff_file_name}_diff
+   counter_diffed=0
+   counter_regularfiles=0
+   counter_compressed=0
+   while read line; do
+    set -- $line;
+    file1=$2;
+    file2=$4;
+
+       if ( tar --exclude '*' -tfz $file1 >& /dev/null ) ; then
+        #log_message "INFO" "$file1 is an compressed tar file"
+        counter_compressed=$((counter_compressed+1))
+        if [[ $( tar -xzf $file1 -O | md5sum ) != $( tar -xzf $file2 -O | md5sum ) ]] ; then
+           #log_message "INFO" "found $file1 and $file2 gzipped tar files DO differ" 
+           counter_diffed=$((counter_diffed+1))
+           echo "compressed tar $line" >> ${diff_file_name}_diff
+        fi
+       elif ( tar --exclude '*' -tf  $file1 >& /dev/null ) ; then
+         counter_compressed=$((counter_compressed+1))
+         #log_message "INFO" "$file1 is an uncompressed tar file"
+         if [[ $( tar -xf $file1 -O | md5sum ) != $( tar -xf $file2 -O | md5sum ) ]] ; then
+           #log_message "INFO" "found $file1 and $file2 tar files DO differ" 
+           counter_diffed=$((counter_diffed+1))
+           echo "tar $line" >> ${diff_file_name}_diff
+         fi
+       else
+         #log_message "INFO" "$file1 is not tar or tar.gz and still then differs" 
+         counter_regularfiles=$((counter_regularfiles+1))
+         echo $line >> ${diff_file_name}_diff
+       fi
+
+   done < $diff_file_name
+
+   log_message "INFO" "out of $num_different_files differing files $counter_compressed where tar or compressed and $counter_diffed of those differed"
+
+   if [[ -f ${diff_file_name}_diff ]]; then
+    mv  ${diff_file_name}_diff ${diff_file_name}
+   fi
+
    log_message "INFO" "checking if test case has correct number of files"
 
    baseline_tempfile=${check_baseline_dir_basename}_files.txt
@@ -438,52 +482,9 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
    fi
    rm -f $baseline_tempfile
    rm -f $comrot_tempfile
-   log_message "INFO" "running command: diff --brief -Nr --exclude \"*.log*\" --exclude \"*.nc\" --exclude \"*.nc?\"  $check_baseline_dir_basename $comrot_test_dir_basename >& $diff_file_name" 
-   diff --brief -Nr --exclude "*.log*" --exclude "*.nc" --exclude "*.nc?" $check_baseline_dir_basename $comrot_test_dir_basename >> ${diff_file_name} 2>&1
-
-   num_different_files=`wc -l < $diff_file_name`
-   log_message "INFO" "checking if of the $num_different_files differing files which ones are tar and/or compressed files for differences"
-   rm -f ${diff_file_name}_diff
-   counter_diffed=0
-   counter_regularfiles=0
-   counter_compressed=0
-   while read line; do
-    set -- $line;
-    file1=$2;
-    file2=$4;
-
-       if ( tar --exclude '*' -tfz $file1 >& /dev/null ) ; then
-        #log_message "INFO" "$file1 is an compressed tar file"
-        counter_compressed=$((counter_compressed+1))
-        if [[ $( tar -xzf $file1 -O | md5sum ) != $( tar -xzf $file2 -O | md5sum ) ]] ; then
-           #log_message "INFO" "found $file1 and $file2 gzipped tar files DO differ" 
-           counter_diffed=$((counter_diffed+1))
-           echo $line >> ${diff_file_name}_diff
-        fi
-       elif ( tar --exclude '*' -tf  $file1 >& /dev/null ) ; then
-         counter_compressed=$((counter_compressed+1))
-         #log_message "INFO" "$file1 is an uncompressed tar file"
-         if [[ $( tar -xf $file1 -O | md5sum ) != $( tar -xf $file2 -O | md5sum ) ]] ; then
-           #log_message "INFO" "found $file1 and $file2 tar files DO differ" 
-           counter_diffed=$((counter_diffed+1))
-           echo $line >> ${diff_file_name}_diff
-         fi
-       else
-         #log_message "INFO" "$file1 is not tar or tar.gz and still then differs" 
-         counter_regularfiles=$((counter_regularfiles+1))
-         echo $line >> ${diff_file_name}_diff
-       fi
-
-   done < $diff_file_name
-
-   log_message "INFO" "out of $num_different_files differing files $counter_compressed where tar or compressed and $counter_diffed of those differed"
-
-   if [[ -f ${diff_file_name}_diff ]]; then
-    mv  ${diff_file_name}_diff ${diff_file_name}
-   fi
 
    log_message "INFO" "comparing NetCDF files ..."
-   find . -type f \( -name "*.nc?" -o -name "*.nc" \)  > netcdf_filelist.txt
+   find $check_baseline_dir_basename -type f \( -name "*.nc?" -o -name "*.nc" \) > netcdf_filelist.txt
    num_cdf_files=`wc -l < netcdf_filelist.txt`
    counter_identical=0
    counter_differed_nccmp=0
@@ -492,11 +493,14 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
      comp_base=`basename $netcdf_file`
      dir_name=`dirname $netcdf_file`
      just_dir=`echo "$dir_name" | sed 's,^[^/]*/,,'`
-     diff $just_dir/$comp_base $just_dir/$comp_base
+     file1=$check_baseline_dir_basename/$just_dir/$comp_base ; file2=$comrot_test_dir_basename/$just_dir/$comp_base
+     diff $file1 $file2 > /dev/null 2>&1
      if [[ $? != 0 ]]; then
-         $NCCMP -d  $just_dir/$comp_base $just_dir/$comp_base >> ${diff_file_name} 2>&1
+         # echo "$NCCMP --diff-count=4 --threads=4 --data $file1 $file2"
+         nccmp_result=$( { $NCCMP --diff-count=4 --threads=4 --data $file1 $file2; } 2>&1) 
          if [[ $? != 0 ]]; then
-          counter_not_identicali_nccmp=$((counter_differed_nccmp+1))
+          counter_differed_nccmp=$((counter_differed_nccmp+1))
+          echo "NetCDF file $file1 differs: $nccmp_result" >> $diff_file_name
          else 
           counter_header_identical=$((counter_header_identical+1))
          fi
@@ -504,17 +508,29 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
        counter_identical=$((counter_identical+1))
      fi
    done < netcdf_filelist.txt
-   log_message "INFO" "out off $num_cdf_files NetCDF files $counter_identical where completely identicali, $counter_header_identical identical data but differed in the header, and  $counter_differed_nccmp differed in the data"
+   log_message "INFO" "out off $num_cdf_files NetCDF files $counter_identical where completely identical, $counter_header_identical identical data but differed in the header, and  $counter_differed_nccmp differed in the data"
    number_diff=`wc -l < $diff_file_name`
    log_message "INFO" "completed running diff for fv3gfs regression test ($regressionID) and found results in file: $diff_file_name"
    log_message "INFO" "out of $total_number_files files, there where $number_diff that differed"
    rm netcdf_filelist.txt
 
+   if [[ $number_diff > 1000 ]]; then
+    some="many"
+   elif [[ $number_diff < 200 ]]; then
+    some="some"
+   else
+    some="several"
+   fi
 
-
-
+   DATE=`date`
+   if [[ $number_diff == 0 ]]; then
+    log_message "INFO" "regression tests script completed successfully on $DATE with no file differences"
+    exit 0
+   else
+    log_message "INFO" "regression tests script completed successfully on $DATE with $some file differences"
+    exit 1
+   fi 
 fi
 
 DATE=`date`
-
-log_message "INFO" "regression tests script completed successfully at $DATE"
+log_message "INFO" "regression tests script completed successfully on $DATE"
