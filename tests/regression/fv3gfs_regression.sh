@@ -188,7 +188,7 @@ fi
 if [[ $INTERACTIVE == "TRUE" ]]; then
    echo -e "Current Settings are:\n"
    echo "regressionID = $regressionID"
-   echo "get branch   = $fv3gfs_git_branch"
+   echo "git branch   = $fv3gfs_git_branch"
    echo "idate        = $idate"
    echo "edate        = $edate"
    echo "CHECKOUT_DIR = $CHECKOUT_DIR"
