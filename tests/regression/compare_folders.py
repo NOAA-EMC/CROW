@@ -1,7 +1,9 @@
 #!/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/python/3.6.1-emc/bin/python3
 
 import filecmp
+import collections
 import os,sys
+from pathlib import Path
 
 def compare(folder1, folder2 ):
     return _recursive_dircmp(folder1, folder2)
@@ -130,11 +132,20 @@ def print_diff_files(dcmp):
     import subprocess
     from subprocess import run
 
-    global diff_file
-
     NCCMP='/gpfs/hps3/emc/nems/noscrub/emc.nemspara/FV3GFS_V0_RELEASE/util/nccmp'
+    NCCMP_path = Path(NCCMP)
+    if not NCCMP_path.is_file():
+        try:
+            NCCMP=run(['which','nccmp'],stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+        except subprocess.CalledProcessError:
+            logger.critical(logger_hdr+'nccmp tool not found')
+            sys.exit(1)
+        if len(NCCMP)==0:
+            logger.critical(logger_hdr+'nccmp tool not found')
+            sys.exit(1)
 
-    global cwd; global fixed_dir_experment_name; global verbose
+    global diff_file; global cwd; global verbose
+    global fixed_dir_experment_name
     for name in dcmp.diff_files:
         if '.log' in name:
             continue
@@ -167,13 +178,31 @@ def print_diff_files(dcmp):
     for sub_dcmp in dcmp.subdirs.values():
             print_diff_files(sub_dcmp)
 
-if __name__ == '__main__':
+def capture_files_dir( input_dir ):
 
-    import datetime
-    import time
-    import logging
+    #current_file_list = collections.defaultdict(list)
+    current_file_list = []
+    for path, subdirs, files in os.walk(input_dir):
+        for name in files:
+            current_file_list.append( os.path.join(path, name) )
+    return current_file_list
+
+def get_args():
     import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--cmp_dirs',nargs=2,metavar=('dir1','dir2'),required=True)
+    parser.add_argument('-n','--nameID',dest="nameID",help='tag name for compare (used in output filename)')
+    parser.add_argument('-vt','--verbose_tar', help='include names of differing files witin tar files', action='store_true',default=False)
+    parser.add_argument('-gjf','--get_job_files',nargs=2,metavar=('job','yml_file'),help='capture job level file lists and save in yml_file', required=False)
+    args = parser.parse_args()
+    for dirs in args.cmp_dirs:
+        if not Path(dirs).is_dir():
+            logger.critical('directory %s does not exsist'%dirs)
+            sys.exit(-1)
+    return args
 
+def get_logger():
+    import logging
     logger = logging.getLogger('python'); logger_hdr = 'LOG : '
     logger.setLevel(level=logging.INFO)
     ch = logging.StreamHandler()
@@ -181,20 +210,28 @@ if __name__ == '__main__':
     formatter = logging.Formatter('%(levelname)s : %(name)s : %(asctime)s : %(message)s','%Y-%m-%d %H:%M:%S')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
+    return logger,logger_hdr
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("directory1")
-    parser.add_argument("directory2")
-    parser.add_argument("-n","--nameID" , help="tag name for compare (used in output filename)")
-    parser.add_argument("-v","--verbose", help="include names of differing files witin tar files", action="store_true",default=False)
-    args = parser.parse_args()
+if __name__ == '__main__':
+
+    import datetime
+    import time
+    import yaml
+
+    logger,logger_hdr = get_logger()
+    args = get_args()
 
     process_time = time.process_time()
-    elapsed_time = time.process_time() - process_time 
 
-    folder1 = os.path.realpath( args.directory1 )
-    folder2 = os.path.realpath( args.directory2 )
-    verbose = args.verbose
+    folder1 = os.path.realpath( args.cmp_dirs[0] )
+    folder2 = os.path.realpath( args.cmp_dirs[1] )
+    verbose = args.verbose_tar
+
+    if args.get_job_files is not None:
+        current_file_list = collections.defaultdict(list)
+        current_file_list[args.get_job_files[0]] = capture_files_dir( folder1 )
+        with open(args.get_job_files[1], 'w') as outfile:
+            yaml.dump(current_file_list, outfile, default_flow_style=False)
 
     if args.nameID:
         now_date_time  = ''; nameID = args.nameID
@@ -218,6 +255,7 @@ if __name__ == '__main__':
 
     logger.info(logger_hdr+'comparing folders:\n   %s\n   %s'%(folder1,folder2))
     logger.info(logger_hdr+'checking for matching file counts in directories')
+
     results = compare(folder1, folder2)
     left_right = ('left','right')
     for each_side in left_right:

@@ -357,7 +357,7 @@ run_file_compare_python () {
    fi
 
    log_message "INFO" "running: compare_folders.py $check_baseline_dir $comrot_test_dir -n $regressionID"
-   compare_folders.py $check_baseline_dir $comrot_test_dir -n $regressionID
+   compare_folders.py --cmp_dirs $check_baseline_dir $comrot_test_dir -n $regressionID
 
 }
 
