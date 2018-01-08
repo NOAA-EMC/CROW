@@ -182,7 +182,7 @@ VRFY_CDUMP_GFS_VARS: &VRFY_CDUMP_GFS_VARS !Template
     type: string
     default: "pgbq"
 
-vrfy_template_gfs: &vrfy_template_gfs !Template
+vrfy_template_gfs: &vrfy_template_gfs !Template # for "CDUMP = gfs"
   VRFY_CDUMP_GFS:
     type: bool
     default: !FirstTrue
