@@ -17,10 +17,10 @@ vrfy_base: &vrfy_base !Action
   VRFYG2OBS: NO
   VRFYGENESIS: NO
   VRFYGMPK: NO
-  VRFYMINMON: NO
+  VRFYMINMON: YES
   VRFYOZN: NO
   VRFYPRCP: YES
-  VRFYRAD: NO
+  VRFYRAD: YES
   VRFYTRAK: NO
   VSDB_STEP1: YES
   VSDB_STEP2: NO
@@ -32,6 +32,7 @@ vrfy_base: &vrfy_base !Action
 
 vrfy_gfs_action: &vrfy_gfs_action !Action
   <<: *vrfy_base
+  Template: [ *vrfy_template_gfs ]
   CDUMP: gfs
   CASE: !calc doc.fv3_gfs_settings.CASE
   Inherit: !Inherit

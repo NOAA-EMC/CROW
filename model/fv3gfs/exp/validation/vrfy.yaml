@@ -182,6 +182,19 @@ VRFY_CDUMP_GFS_VARS: &VRFY_CDUMP_GFS_VARS !Template
     type: string
     default: "pgbq"
 
+vrfy_template_gfs: &vrfy_template_gfs !Template
+  VRFY_CDUMP_GFS:
+    type: bool
+    default: !FirstTrue
+      - when: !calc ( VSDB_STEP1 or VRFYPRCP or VRFYG2OBS )
+        do: YES
+      - otherwise: NO
+    if_present: !FirstTrue
+      - when: !calc ( VSDB_STEP1 or VRFYPRCP or VRFYG2OBS )
+        do: *VRFY_CDUMP_GFS_VARS
+        message: "VRFY_CDUMP_GFS_VARS loaded!"
+      - otherwise: null
+
 vrfy_template: &vrfy_template !Template
   # verifying dump
   VDUMP:
@@ -229,7 +242,7 @@ vrfy_template: &vrfy_template !Template
       - when: !calc VRFYMINMON
         do: *MIN_VARS
       - otherwise: null
-        message: !expand "WARNING: Minimization monitoring is not enabled on {doc.platform.name}!"
+        message: !expand "WARNING: Minimization monitoring is turned off!"
 
   VRFYRAD:
     description: Radiance data assimilation monitoring
@@ -295,17 +308,17 @@ vrfy_template: &vrfy_template !Template
         do: "/dev/null"
       - otherwise: !error "Do not know subfits file (PREPQFITSH) for {doc.platform.name}"
 
-  VRFY_CDUMP_GFS:
-    type: bool
-    default: !FirstTrue
-      - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1 or VRFYPRCP or VRFYG2OBS ) )
-        do: YES
-      - otherwise: NO
-    if_present: !FirstTrue
-      - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1 or VRFYPRCP or VRFYG2OBS ) )
-        do: *VRFY_CDUMP_GFS_VARS
-        message: VRFY_CDUMP_GFS_VARS
-      - otherwise: null
+#  VRFY_CDUMP_GFS:
+#    type: bool
+#    default: !FirstTrue
+#      - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1 or VRFYPRCP or VRFYG2OBS ) )
+#        do: YES
+#      - otherwise: NO
+#    if_present: !FirstTrue
+#      - when: !calc ( CDUMP=="gfs" and ( VSDB_STEP1 or VRFYPRCP or VRFYG2OBS ) )
+#        do: *VRFY_CDUMP_GFS_VARS
+#        message: "VRFY_CDUMP_GFS_VARS unavailable!"
+#      - otherwise: null
 
   NO_VRFYMINSH:
     type: bool
@@ -337,4 +350,4 @@ vrfy_template: &vrfy_template !Template
       - when: !calc ( VRFYRAD and CDUMP==CDFNL )
         do: *RAD_VARS
       - otherwise: null
-        message: !expand "WARNING: Radiance monitoring is not enabled on {doc.platform.name}!"
+        message: !expand "WARNING: Radiance monitoring is turned off!"
