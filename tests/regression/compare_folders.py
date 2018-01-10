@@ -189,16 +189,19 @@ def capture_files_dir( input_dir ):
 
 def get_args():
     import argparse
+    import json
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cmp_dirs',nargs=2,metavar=('dir1','dir2'),required=True)
+    #group  = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument('--cmp_dirs',nargs=2,metavar=('dir1','dir2'),help='compare COMROT foloders')
+    parser.add_argument('--cmp_jobs',nargs=3,metavar=('job_name','ROTDIR','file_list.yml'),help='compare files at the job level (uses file_list.yml to track)')
     parser.add_argument('-n','--nameID',dest="nameID",help='tag name for compare (used in output filename)')
     parser.add_argument('-vt','--verbose_tar', help='include names of differing files witin tar files', action='store_true',default=False)
-    parser.add_argument('-gjf','--get_job_files',nargs=2,metavar=('job','yml_file'),help='capture job level file lists and save in yml_file', required=False)
     args = parser.parse_args()
-    for dirs in args.cmp_dirs:
-        if not Path(dirs).is_dir():
-            logger.critical('directory %s does not exsist'%dirs)
-            sys.exit(-1)
+    if args.cmp_dirs is not None:
+        for dirs in args.cmp_dirs:
+            if not Path(dirs).is_dir():
+                logger.critical('directory %s does not exsist'%dirs)
+                sys.exit(-1)
     return args
 
 def get_logger():
@@ -223,15 +226,46 @@ if __name__ == '__main__':
 
     process_time = time.process_time()
 
+    verbose = args.verbose_tar
+    file_dic_list = collections.defaultdict(list)
+
+    if args.cmp_jobs is not None:
+
+        job_name = args.cmp_jobs[0]
+        ROTDIR =  args.cmp_jobs[1]
+        ROTDIR_Path = Path( args.cmp_jobs[1] )
+        if not ROTDIR_Path.is_dir():
+            logger.critical(logger_hdr+'ROTDIR %s is not a directory')
+            sys.exit(-1)
+        yaml_files_filename =  os.path.realpath( args.cmp_jobs[2] )
+        logger.info(logger_hdr+'determining job level files for job %s in file %s'%(job_name, os.path.basename(yaml_files_filename)))
+        file_list_current = capture_files_dir( ROTDIR )
+        yaml_files_filename_Path = Path(yaml_files_filename)
+        if yaml_files_filename_Path.is_file():
+            yaml_files_fptr = open(  yaml_files_filename )
+            file_dic_list = yaml.load( yaml_files_fptr  )
+            yaml_files_fptr.close()
+
+        if 'prior_ROTDIR' in file_dic_list:
+            result = []
+            for file in file_list_current:
+                if file not in file_dic_list['prior_ROTDIR']:
+                    result.append(file)
+            file_dic_list[job_name] = result
+        else:
+            file_dic_list[job_name] = file_list_current
+            
+        file_dic_list['prior_ROTDIR'] = file_list_current
+        logger.info(logger_hdr+'write out file %s'%yaml_files_filename )
+        with open(yaml_files_filename, 'w') as outfile:
+            yaml.dump(file_dic_list, outfile, default_flow_style=False)
+
+    if  args.cmp_dirs is None:
+        logger.info( logger_hdr+'compare_folders script is being used to capture job level files only and is quitting')
+        sys.exit(0)
+
     folder1 = os.path.realpath( args.cmp_dirs[0] )
     folder2 = os.path.realpath( args.cmp_dirs[1] )
-    verbose = args.verbose_tar
-
-    if args.get_job_files is not None:
-        current_file_list = collections.defaultdict(list)
-        current_file_list[args.get_job_files[0]] = capture_files_dir( folder1 )
-        with open(args.get_job_files[1], 'w') as outfile:
-            yaml.dump(current_file_list, outfile, default_flow_style=False)
 
     if args.nameID:
         now_date_time  = ''; nameID = args.nameID
@@ -264,9 +298,9 @@ if __name__ == '__main__':
                 foldera = folder1; folderb = folder2
             else:
                 folderb = folder1; foldera = folder2
-            loggin.info('list of files found in %s and not in %s:'%(os.path.basename(foldera),os.path.basename(folderb)))
+            logger.info('list of files found in %s and not in %s:'%(os.path.basename(foldera),os.path.basename(folderb)))
             for file in results[each_side]:
-                loggin.info('  %s'%file)
+                logger.info('  %s'%file)
 
     compare_files = filecmp.dircmp(folder1, folder2)
     logger.info(logger_hdr+'checking tar and NetCDF files differences')
