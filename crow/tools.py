@@ -131,6 +131,19 @@ def to_timedelta(s):
 
 ########################################################################
 
+def memory_in_bytes(s):
+    """!Converts 1kb, 3G, 9m, etc. to a number of bytes.  Understands
+    k, M, G, P, E (caseless) with optional "b" suffix.  Uses powers of
+    1024 for scaling (kibibytes, mibibytes, etc.)"""
+    scale = { 'k':1, 'K':1, 'm':2, 'M':2, 'g':3, 'G':3,
+              'p':4, 'P':4, 'e':5, 'E':5 }
+    if s[-1]=='b': s=s[:-1]
+    multiplier=1
+    if s[-1] in scale:
+        multiplier=1024**scale[s[-1]]
+        s=s[:-1]
+    return float(s)*multiplier
+
 def to_printf_octal(match):
     """!Intended to be sent to re.sub to replace a single byte match with
     a printf-style octal representation of that byte"""
@@ -188,6 +201,18 @@ class Clock(object):
         if self.end<self.start:
             raise ValueError('End time must be at or after start time.')
         self.now=now
+
+    def __contains__(self,when):
+        if isinstance(when,datetime.timedelta):
+            return not dt%self.step
+        elif isinstance(when,datetime.datetime):
+            if self.end and when>self.end: return False
+            if when<self.start: return False
+            dt=when-self.start
+            if not dt: return True
+            if dt%self.step: return False # does not lie on a time step
+            return True
+        raise TypeError(f'{type(self).__name__}.__contains__ only understands datetime and timedelta objects.  You passed a f{type(when).__name__}.')
 
     def __iter__(self):
         time=self.start

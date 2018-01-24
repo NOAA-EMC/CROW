@@ -138,8 +138,9 @@ class SuiteView(Mapping):
                 yield val
 
     def walk_task_tree(self):
-        """!Iterates over the entire tree of descendants below this SuiteView,
-        yielding a SuiteView of each."""
+        """!Iterates over the entire tree of descendants below this
+        SuiteView in a depth-first manner, yielding a SuiteView of
+        each."""
         for val in self.child_iter():
             yield val
             if isinstance(val,SuiteView):
@@ -150,6 +151,7 @@ class SuiteView(Mapping):
         return key in self.viewed
 
     def is_task(self): return isinstance(self.viewed,Task)
+    def is_family(self): return isinstance(self.viewed,Family)
     def is_input_slot(self): return isinstance(self.viewed,InputSlot)
     def is_output_slot(self): return isinstance(self.viewed,OutputSlot)
 
