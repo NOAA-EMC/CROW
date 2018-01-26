@@ -5,6 +5,25 @@ import collections
 import os,sys
 from pathlib import Path
 
+def get_args():
+    import argparse
+    import json
+    parser = argparse.ArgumentParser()
+    #group  = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument('--cmp_dirs',nargs=2,metavar=('ROTDIR_baseline','ROTDIR_testrun'),help='compare COMROT foloders')
+    parser.add_argument('--cmp_dirs_joblevel', nargs=1, metavar=('file_list.yml'), help='use stored job level file list when comparing ROTDIRs')
+    parser.add_argument('--cmp_jobs',nargs=3,metavar=('job_name','ROTDIR','file_list.yml'),help='compare files at the job level (uses file_list.yml to track)')
+    parser.add_argument('-n','--nameID',dest="nameID",help='tag name for compare (used in output filename)')
+    parser.add_argument('-vt','--verbose_tar', help='include names of differing files witin tar files', action='store_true',default=False)
+    args = parser.parse_args()
+    if args.cmp_dirs is not None:
+        for dirs in args.cmp_dirs:
+            if not Path(dirs).is_dir():
+                logger.critical('directory %s does not exsist'%dirs)
+                sys.exit(-1)
+    return args
+
+
 def compare(folder1, folder2 ):
     return _recursive_dircmp(folder1, folder2)
 
@@ -132,26 +151,27 @@ def print_diff_files(dcmp):
     import subprocess
     from subprocess import run
 
-    NCCMP='/gpfs/hps3/emc/nems/noscrub/emc.nemspara/FV3GFS_V0_RELEASE/util/nccmp'
-    NCCMP_path = Path(NCCMP)
-    if not NCCMP_path.is_file():
-        try:
-            NCCMP=run(['which','nccmp'],stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
-        except subprocess.CalledProcessError:
-            logger.critical(logger_hdr+'nccmp tool not found')
-            sys.exit(1)
-        if len(NCCMP)==0:
-            logger.critical(logger_hdr+'nccmp tool not found')
-            sys.exit(1)
-
     global diff_file; global cwd; global verbose
     global fixed_dir_experment_name
+    if len(dcmp.common_dirs) != 0:
+        logger.info(logger_hdr+'checking directories: %s'%' '.join(dcmp.common_dirs))
+    if len( dcmp.diff_files ) == 0 and len(dcmp.common_files) != 0:
+        logger.info(logger_hdr+'out of %d common files no differences found'%len(dcmp.common_files))
+    file1_shortpath = '/'+dcmp.left.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
+    if verbose:
+        logger.info(logger_hdr+'checked in directory %s'%(file1_shortpath))
+    if len( dcmp.diff_files) != 0 and verbose:
+        number_netcdf_files = len([s for s in dcmp.diff_files if '.nc' in s])
+        logger.info(logger_hdr+'checking %d differing files of which %d are NetCDF and some may be tar files'%(len(dcmp.diff_files),number_netcdf_files))
+    num_netcdf_differing_files = 0
+    num_netcdf_differing_files_onlyheader = 0
+    num_tar_differing_files = 0
+    num_identified_tar_files = 0
+    num_differing_files = 0
     for name in dcmp.diff_files:
-        if '.log' in name:
-            continue
         file1 = os.path.join(dcmp.left,name); file2 = os.path.join(dcmp.right,name)
-        file1_shortpath = dcmp.left.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
-        file2_shortpath = dcmp.right.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
+        file1_shortpath = '/'+dcmp.left.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
+        file2_shortpath = '/'+dcmp.right.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
         if '.nc' in name:
             net_cdf_type = netcdfver(file1)
             if net_cdf_type is not None:
@@ -161,22 +181,41 @@ def print_diff_files(dcmp):
                     netcdf_diff_output = run([NCCMP, "--diff-count=3", "--threads=4", "--data", file1, file2], stderr=subprocess.PIPE).stderr.decode('utf-8').strip()
                 if len(netcdf_diff_output) == 0:
                     diff_file.write('NetCDF file %s of type: %s differs only in the header in directories %s and %s\n'%(name,net_cdf_type,file1_shortpath,file2_shortpath))
+                    num_netcdf_differing_files_onlyheader += 1
                 else: 
                     diff_file.write( 'NetCDF file %s of type: %s differs %s in directories %s and %s\n'%(name,net_cdf_type,netcdf_diff_output,file1_shortpath,file2_shortpath))
+                    num_netcdf_differing_files += 1
         elif tarfile.is_tarfile(file1):
+            num_identified_tar_files += 1
             if verbose:
                 diff_tar_members = tarcmp_verbose( file1, file2 )
                 if len(diff_tar_members) != 0:
-                    for diff_file in diff_tar_members:
-                        diff_file.write('tar member file %s differs in tar file %s from directories %s and %s\n' % (diff_file, name, file1_shortpath, file2_shortpath))
+                    for tar_file in diff_tar_members:
+                        diff_file.write('tar member file %s differs in tar file %s from directories %s and %s\n' % (tar_file, name, file1_shortpath, file2_shortpath))
             if not tarcmp( file1, file2 ):
                 diff_file.write('tar file %s differs in directories %s and %s\n' % (name, file1_shortpath, file2_shortpath))
+                num_tar_differing_files += 1
         else:
             diff_file.write('file %s differs in directories %s and %s\n'% (name, file1_shortpath, file2_shortpath))
+            num_differing_files += 1
         diff_file.flush()
+    if num_netcdf_differing_files != 0:
+        logger.info(logger_hdr+'%d NetCDF files differed'%num_netcdf_differing_files)
+    if num_tar_differing_files != 0:
+        logger.info(logger_hdr+'%d tar files differed'%num_tar_differing_files)
+    if num_differing_files != 0:
+        logger.info(logger_hdr+'%d files differed that was not NetCDF nor tar files'%num_differing_files)
+    if verbose:
+        if num_netcdf_differing_files == 0 and num_tar_differing_files == 0 and num_differing_files == 0 and len(dcmp.diff_files) != 0:
+            if num_identified_tar_files == len(dcmp.diff_files):
+                logger.info(logger_hdr+'all of the %d potentially differeing files where acctually non-differing tar files'%len(dcmp.diff_files))
+            elif len(dcmp.diff_files) == num_netcdf_differing_files_onlyheader:
+                logger.info(logger_hdr+'all of the %d potentially differeing files where acctually non-differing NetCDF files (only headers differed)'%len(dcmp.diff_files))
+            else:
+                logger.info(logger_hdr+'of the %d potentially differeing %d NetCDF differed %d tar files differedl, and %d differed that where not NetCDF or tar'%(len(dcmp.diff_files),num_netcdf_differing_files,num_tar_differing_files,num_differing_files))
 
     for sub_dcmp in dcmp.subdirs.values():
-            print_diff_files(sub_dcmp)
+        print_diff_files(sub_dcmp)
 
 def capture_files_dir( input_dir ):
 
@@ -187,22 +226,7 @@ def capture_files_dir( input_dir ):
             current_file_list.append( os.path.join(path, name) )
     return current_file_list
 
-def get_args():
-    import argparse
-    import json
-    parser = argparse.ArgumentParser()
-    #group  = parser.add_mutually_exclusive_group(required=True)
-    parser.add_argument('--cmp_dirs',nargs=2,metavar=('dir1','dir2'),help='compare COMROT foloders')
-    parser.add_argument('--cmp_jobs',nargs=3,metavar=('job_name','ROTDIR','file_list.yml'),help='compare files at the job level (uses file_list.yml to track)')
-    parser.add_argument('-n','--nameID',dest="nameID",help='tag name for compare (used in output filename)')
-    parser.add_argument('-vt','--verbose_tar', help='include names of differing files witin tar files', action='store_true',default=False)
-    args = parser.parse_args()
-    if args.cmp_dirs is not None:
-        for dirs in args.cmp_dirs:
-            if not Path(dirs).is_dir():
-                logger.critical('directory %s does not exsist'%dirs)
-                sys.exit(-1)
-    return args
+
 
 def get_logger():
     import logging
@@ -220,6 +244,20 @@ if __name__ == '__main__':
     import datetime
     import time
     import yaml
+
+    fixed_dir_experment_name = 'fv3gfs_regression_experments'
+
+    NCCMP='/gpfs/hps3/emc/nems/noscrub/emc.nemspara/FV3GFS_V0_RELEASE/util/nccmp'
+    NCCMP_path = Path(NCCMP)
+    if not NCCMP_path.is_file():
+        try:
+            NCCMP=run(['which','nccmp'],stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+        except subprocess.CalledProcessError:
+            logger.critical(logger_hdr+'nccmp tool not found')
+            sys.exit(1)
+        if len(NCCMP)==0:
+            logger.critical(logger_hdr+'nccmp tool not found')
+            sys.exit(1)
 
     logger,logger_hdr = get_logger()
     args = get_args()
@@ -284,7 +322,6 @@ if __name__ == '__main__':
             logger.critical(logger_hdr+'directory %s does not exsist'%folder)
             sys.exit(-1)
 
-    fixed_dir_experment_name = 'fv3gfs_regression_experments'
     cwd = os.getcwd()
 
     logger.info(logger_hdr+'comparing folders:\n   %s\n   %s'%(folder1,folder2))
@@ -293,19 +330,24 @@ if __name__ == '__main__':
     results = compare(folder1, folder2)
     left_right = ('left','right')
     for each_side in left_right:
-        if len(results[each_side]) != 0:
-            if each_side == 'left':
-                foldera = folder1; folderb = folder2
-            else:
-                folderb = folder1; foldera = folder2
-            logger.info('list of files found in %s and not in %s:'%(os.path.basename(foldera),os.path.basename(folderb)))
-            for file in results[each_side]:
-                logger.info('  %s'%file)
-
-    compare_files = filecmp.dircmp(folder1, folder2)
-    logger.info(logger_hdr+'checking tar and NetCDF files differences')
+        if each_side == 'left':
+            foldera = folder1
+            folderb = folder2
+        else:
+            folderb = folder1
+            foldera = folder2
+        num_missmatched_files = len(results[each_side])
+        if num_missmatched_files != 0:
+            if verbose:
+                diff_file.write('%d files found in %s that are not in %s:'%(num_missmatched_files,os.path.basename(foldera),os.path.basename(folderb)))
+                for file in results[each_side]:
+                    diff_file.write('   %s'%file)
+            logger.info('%d files found in %s that are not in %s:'%(num_missmatched_files,os.path.basename(foldera),os.path.basename(folderb)))
+    logger.info(logger_hdr+'checking for file differences...')
+    egnore_file_list = ['*.log','INPUT','RESTART','logs']
+    compare_files = filecmp.dircmp(folder1, folder2, egnore_file_list)
     diff_file = open( diff_file_name, 'w')
     print_diff_files( compare_files )
     elapsed_time = time.process_time() - process_time 
-    logger.ingo(logger_hdr+'comparing fv3gfs output directories completed. Time to process(%.4f seconds)'%elapsed_time)
+    logger.info(logger_hdr+'comparing fv3gfs output directories completed. Time to process(%.4f seconds)'%elapsed_time)
     diff_file.close()
