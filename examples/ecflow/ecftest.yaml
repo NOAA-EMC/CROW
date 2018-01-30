@@ -1,0 +1,87 @@
+some_resources: !JobRequest
+  - exe: placeholder # madatory, ignored, argument
+    mpi_ranks: 48
+    OMP_NUM_THREADS: 2
+
+scheduler_settings:
+  name: LSFAlps
+  physical_cores_per_node: 24
+  logical_cpus_per_core: 2
+  hyperthreading_allowed: true
+  
+scheduler: !calc |
+  tools.get_scheduler(doc.scheduler_settings.name,
+                      doc.scheduler_settings)
+
+accounting:
+  queue: debug
+  project: GFS-T2O
+
+ecf_file_template: &ecf_file_template !expand |
+  #! /bin/sh
+  {sched.batch_resources(doc.some_resources)}
+  {sched.batch_accounting(doc.accounting)}
+  %include head.h
+  cd /somewhere
+  $JOBgfs/{J_JOB}
+  %include tail.h
+
+suite: !Cycle
+  Clock: !Clock
+    start: 2018-01-01T00:00:00
+    end: 2018-01-01T18:00:00
+    step: !timedelta "6:00:00"
+
+  ecFlow:
+    suite_def_filename: "prod%H.def"
+    suite_name: "prod%H"
+    scheduler: !calc doc.scheduler
+
+  ecflow_def: !expand |
+    repeat day 1
+    edit ECF_TRIES '1'
+    edit ECF_SOME_OTHER_VAR 'abcd'
+
+  family1: !Family
+    ecflow_def: |
+      edit SOMEVAR '1'
+      edit ANOTHERVAR '2'
+    Trigger: !Depend "up.family2.at('-6:00:00').task21"
+    Time: !timedelta +3:00:00
+
+    task11: !Task
+      ecf_file: *ecf_file_template
+      J_JOB: JGFS_TASK11
+
+    task12: !Task
+      ecf_file: *ecf_file_template
+      J_JOB: JGFS_TASK12
+      Trigger: !Depend task11
+
+  family2: !Family
+    Time: !timedelta +4:20:00
+    Trigger: !Depend family1.task11
+
+    task21: !Task
+      ecf_file: *ecf_file_template
+      Trigger: !Depend up.family1.task12
+      J_JOB: JGFS_TASK21
+
+    family3: !Family 
+      task3: !Task
+        ecf_file: *ecf_file_template
+        Trigger: !Depend up.task21
+        J_JOB: JGFS_TASK3
+
+    task22: !Task
+      Time: !timedelta +5:00:00
+      Trigger: !Depend task21
+      ecf_file: *ecf_file_template
+      J_JOB: JGFS_TASK22
+
+    task23: !Task
+      Time: !timedelta +6:30:00
+      Complete: !Depend task22
+      Trigger: !Depend task21
+      ecf_file: *ecf_file_template
+      J_JOB: JGFS_TASK23

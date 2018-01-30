@@ -1,11 +1,17 @@
+import collections, datetime
+
 from io import StringIO
+
+import crow.tools
+from copy import copy
+from crow.tools import to_timedelta, typecheck
 from crow.metascheduler.simplify import simplify
 from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           AndDependency, OrDependency, NotDependency, \
           StateDependency, Dependable, Taskable, Task, \
           Family, Cycle, RUNNING, COMPLETED, FAILED, \
           TRUE_DEPENDENCY, FALSE_DEPENDENCY, SuitePath, \
-          CycleExistsDependency
+          CycleExistsDependency, invalidate_cache
 __all__=['to_ecflow','ToEcflow']
 
 f'This module requires python 3.6 or newer.'
@@ -30,8 +36,11 @@ def relative_path(start,dest):
         return f'./{dest[-1]}'
     if i==0:
         # No commonality.  Use absolute path.
-        return '/'+'/'.join(dest)
-    return '../'*max(0,len(start)-i-1) + '/'.join(dest[i:])
+        return '/' + '/'.join(dest)
+    if len(start)-i-1>0:
+        return '../'*(len(start)-i-1) + '/'.join(dest[i:])
+    else:
+        return './'+'/'.join(dest[i:])
     
 def undate_path(relative_time,format,suite_path):
     """!In dependencies within crow.config, the task paths have a
@@ -39,11 +48,12 @@ def undate_path(relative_time,format,suite_path):
     dependency.  This creates a new path, replacing the timedelta with
     a time string.  The format is sent to datetime.strftime."""
     if suite_path and hasattr(suite_path[0],'total_seconds'):
-        return [(suite_path[0]+relative_time).strftime(format)] + \
-            suite_path[1:]
+        when=relative_time+suite_path[0]
+        return [when.strftime(format)] + suite_path[1:]
     return suite_path
 
 def remove_cyc_exist(task,dep,clock):
+    typecheck('dep',dep,LogicalDependency)
     if isinstance(dep,CycleExistsDependency):
         if dep.dt in clock:
             return TRUE_DEPENDENCY
@@ -55,42 +65,38 @@ def remove_cyc_exist(task,dep,clock):
         return NotDependency(remove_cyc_exist(task,dep.depend,clock))
     return dep
 
-def convert_state_dep(sio,task,dep,clock,time_format,negate):
+def convert_state_dep(fd,task,dep,clock,time_format,negate):
+    typecheck('clock',clock,crow.tools.Clock)
     task_path=undate_path(clock.now,time_format,task.path)
     dep_path=undate_path(clock.now,time_format,dep.view.path)
     rel_path=relative_path(task_path,dep_path)
-    if len(rel_path)==1:
-        path='./'+rel_path[0]
-    else:
-        path=rel_path.join('/')
     state=ECFLOW_STATE_MAP[dep.state]
-    sio.write(f'{path} {"!=" if negate else "=="} {state}')
+    fd.write(f'{rel_path} {"!=" if negate else "=="} {state}')
 
-def convert_dep(sio,task,dep,clock,time_format):
+def _convert_dep(fd,task,dep,clock,time_format):
     first=True
     if isinstance(dep,OrDependency):
         for subdep in dep:
             if not first:
-                sio.write(' or ')
+                fd.write(' or ')
             first=False
-            convert_dep(sio,task,subdep,clock,time_format)
+            convert_dep(fd,task,subdep,clock,time_format)
     elif isinstance(dep,AndDependency):
         for subdep in dep:
             if not first:
-                sio.write(' and ')
+                fd.write(' and ')
             first=False
-            convert_dep(sio,task,subdep,clock,time_format)
+            convert_dep(fd,task,subdep,clock,time_format)
     elif isinstance(dep,NotDependency):
-        sio.write('not ')
+        fd.write('not ')
         if isinstance(dep.depend,StateDependency):
-            convert_state_dep(sio,task,dep.depend,clock,time_format,True)
+            convert_state_dep(fd,task,dep.depend,clock,time_format,True)
         else:
-            convert_dep(sio,task,dep.depend)
+            convert_dep(fd,task,dep.depend)
     elif isinstance(dep,StateDependency):
-        convert_state_dep(sio,task,dep.depend,clock,time_format,False)
+        convert_state_dep(fd,task,dep,clock,time_format,False)
 
-
-def dep_to_ecflow(task,dep,clock):
+def dep_to_ecflow(fd,task,dep,clock,time_format):
     # Walk the tree, removing CycleExistsDependency objects:
     dep=remove_cyc_exist(task,dep,clock)
 
@@ -98,11 +104,7 @@ def dep_to_ecflow(task,dep,clock):
     # remove the true/false dependencies added by remove_cyc_exist.
     dep=simplify(dep)
 
-    sio=StringIO()
-    _convert_dep(sio,task,dep)
-    ret=sio.getvalue()
-    sio.close()
-    return ret
+    _convert_dep(fd,task,dep,clock,time_format)
 
 class ToEcflow(object):
     def __init__(self,suite):
@@ -111,52 +113,146 @@ class ToEcflow(object):
                             'not a '+type(suite).__name__)
 
         try:
-            suite_path=suite.ecFlow.suite_path
             scheduler=suite.ecFlow.scheduler
-            parallelism=suite.ecFlow.parallelism
-            def_cycles=suite.ecFlow.def_cycles
+            clock=copy(suite.Clock)
         except(AttributeError,IndexError,TypeError,ValueError) as e:
             raise ValueError(
-                'A Suite must define an ecFlow section containing: '
-                'parallelism, scheduler, def_cycles, and suite_path')
+                'A Suite must define an ecFlow section containing '
+                'scheduler, and suite_name; and the suite must have a Clock')
+
+        update_globals={ 'sched':scheduler, 'to_ecflow':self, 'clock':clock }
+
+        if 'parallelism' in suite.ecFlow:
+            update_globals['parallelism']=suite.ecFlow.parallelism
 
         self.suite=suite
-        self.suite.update_globals(sched=scheduler,to_ecflow=self,
-                                  runner=parallelism)
+        self.suite.update_globals(**update_globals)
         self.settings=self.suite.ecFlow
         self.indent=self.settings.get('indent','  ')
         self.sched=scheduler
+        self.clock=None
 
-    def _add_ecflow_def_meat(self,sio,task_or_family,indent):
-        if 'ecflow_def' not in task_or_family:
-            raise KeyError(
-                f'{task_or_family.task_path_var}: In an ecFlow suite '
-                'definition, all tasks and families must have an "ecflow_'
-                'def" key whose value evaluates to the ecflow suite '
-                'definition entry for that task or family.')
-        for line in str(task_or_family.ecflow_def).splitlines():
-            sio.write(f'{indent}{line.rstrip()}\n')
+    ####################################################################
+        
+    # ecflow suite definition generation
 
-    def _make_task_def(self,sio,task):
-        indent=max(0,len(family.path)-2)*self.indent
-        sio.write(f'{indent}task {task.path[-1]}\n')
-        self._add_ecflow_def_meat(sio,task,indent+self.indent)
-        sio.write(f'{indent}end task\n')
+    def _add_ecflow_def_meat(self,fd,node,indent):
+        ecflow_def_more=node.get('ecflow_def','')
+        if ecflow_def_more:
+            for line in str(node.get('ecflow_def','')).splitlines():
+                fd.write(f'{indent}{line.rstrip()}\n')
+        if 'Trigger' in node:
+            typecheck(node.task_path_var+'.Trigger',node.Trigger,
+                      LogicalDependency,'!Depend')
+            fd.write(f'{indent}trigger ')
+            ecdep=dep_to_ecflow(
+                fd,node,node.Trigger,
+                self.suite.Clock,self.suite.ecFlow.suite_name)
+            fd.write('\n')
+        if 'Complete' in node:
+            typecheck(node.task_path_var+'.Complete',node.Complete,
+                      LogicalDependency,'!Depend')
+            fd.write(f'{indent}complete ')
+            ecdep=dep_to_ecflow(
+                fd,node,node.Complete,
+                self.suite.Clock,self.suite.ecFlow.suite_name)
+            fd.write('\n')
+        if 'Time' in node:
+            typecheck(node.task_path_var+'.Time',node.Time,
+                      datetime.timedelta,'!timedelta')
+            dt=to_timedelta(node.Time)
+            when=self.suite.Clock.now+dt
+            #ecdate=when.strftime('%d.%m.%Y')
+            ectime=when.strftime('%H:%M:%S')
+            fd.write(f'{indent}time {ectime}\n')
+            #fd.write(f'{indent}date {ecdate}\n{indent}time {ectime}\n')
+            
+    def _make_task_def(self,fd,task):
+        indent=max(0,len(task.path)-1)*self.indent
+        fd.write(f'{indent}task {task.path[-1]}\n')
+        self._add_ecflow_def_meat(fd,task,indent+self.indent)
+        fd.write(f'{indent}end task\n')
 
-    def _make_family_def(self,sio,family):
-        indent=max(0,len(family.path)-2)*self.indent
-        sio.write(f'{indent}family {family.path[-1]}\n')
-        self._add_ecflow_def_meat(sio,family,indent+self.indent)
-        for t in self.suite:
-            if t.is_task(): self._make_task_def(sio,t)
-            elif t.is_family(): self._make_family_def(sio,t)
-        sio.write(f'{indent}end family\n')
+    def _make_family_def(self,fd,family):
+        indent=max(0,len(family.path)-1)*self.indent
+        fd.write(f'{indent}family {family.path[-1]}\n')
+        self._add_ecflow_def_meat(fd,family,indent+self.indent)
+        for item in family.child_iter():
+            if item.is_task():
+                self._make_task_def(fd,item)
+            elif item.is_family():
+                self._make_family_def(fd,item)
+        fd.write(f'{indent}end family\n')
     
-    def make_suite_def(self):
-        sio=StringIO()
+    def _make_suite_def_for_one_cycle(self,fd):
+        fd.write(f'suite {self.suite_name}\n')
+        if 'ecflow_def' in self.suite:
+            for line in self.suite.ecflow_def.splitlines():
+                fd.write(f'{self.indent}{line.rstrip()}\n')
+        for item in self.suite.child_iter():
+            if item.is_task():
+                self._make_task_def(fd,item)
+            elif item.is_family():
+                self._make_family_def(fd,item)
+        fd.write('end suite\n')
+
+    ####################################################################
+
+    # ecf file generation
+
+    def _make_task_ecf_files(self,ecf_files,ecf_file_set,
+                               ecf_file_path,task):
+        ecf_file_set=task.get('ecf_file_set',ecf_file_set)
+        ecf_file_path=ecf_file_path+[task.path[-1]]
+        path_string='/'.join(ecf_file_path)
+        print(f'task@{task.task_path_var} ecf file set {ecf_file_set} file {path_string}')
+        if path_string in ecf_files[ecf_file_set]:
+            return # This ecf file is already generated
+        ecf_files[ecf_file_set][path_string]=task.ecf_file
+
+    def _make_family_ecf_files(self,ecf_files,ecf_file_set,
+                               ecf_file_path,family):
+        ecf_file_set=family.get('ecf_file_set',ecf_file_set)
+        ecf_file_path=ecf_file_path+[family.path[-1]]
+        print(f'family@{family.task_path_var} ecf file set {ecf_file_set} file {ecf_file_path}')
+        for t in family.child_iter():
+            if t.is_task():
+                self._make_task_ecf_files(
+                    ecf_files,ecf_file_set,ecf_file_path,t)
+            elif t.is_family():
+                self._make_family_ecf_files(
+                    ecf_files,ecf_file_set,ecf_file_path,t)
+
+    def _make_ecf_files_for_one_cycle(self,ecf_files):
+        ecf_file_set=self.settings.get('ecf_file_set','ecf_files')
         for t in self.suite.child_iter():
-            if t.is_task(): self._make_task_def(sio,t)
-            elif t.is_family(): self._make_family_def(sio,t)
-        ret=sio.getvalue()
-        sio.close()
-        return ret
+            if t.is_task():
+                self._make_task_ecf_files(ecf_files,ecf_file_set,list(),t)
+            elif t.is_family():
+                self._make_family_ecf_files(ecf_files,ecf_file_set,list(),t)
+        return ecf_files
+
+    ####################################################################
+
+    def to_ecflow(self):
+        suite_def_files=dict()
+        ecf_files=collections.defaultdict(dict)
+        for clock in self.suite.Clock.iternow():
+            invalidate_cache(self.suite,recurse=True)
+            # Figure our where we are making the suite definition file:
+            filename=clock.now.strftime(self.suite.ecFlow.suite_def_filename)
+            if filename in suite_def_files:
+                # We already processed a cycle whose suite definition
+                # is the same as this one's.  Skip.
+                continue
+            self.suite_name=clock.now.strftime(self.suite.ecFlow.suite_name)
+            with StringIO() as sio:
+                self._make_suite_def_for_one_cycle(sio)
+                suite_def_files[filename]=sio.getvalue()
+            self._make_ecf_files_for_one_cycle(ecf_files)
+        del self.suite
+        return suite_def_files,ecf_files
+
+def to_ecflow(suite):
+    typecheck('suite',suite,Suite)
+    return ToEcflow(suite).to_ecflow()

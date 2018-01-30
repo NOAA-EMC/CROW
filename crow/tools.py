@@ -239,6 +239,15 @@ class Clock(object):
         return self.__now
     now=property(getnow,setnow,None,'Current time on this clock.')
 
+    def iternow(self):
+        """!Sents the current time (self.now) to the start time, and
+        iterates it over each possible time, yielding this object."""
+        now=self.start
+        while now<=self.end:
+            self.now=now
+            yield self
+            now+=self.step
+
     def next(self,mul=1):
         return self.__now+self.step*mul
 

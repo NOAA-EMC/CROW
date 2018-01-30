@@ -31,7 +31,7 @@ class Scheduler(BaseScheduler):
         if 'queue' in spec:
             sio.write(f'#BSUB -q {spec["queue"]!s}\n')
         if 'project' in spec:
-            sio.write(f'#PBS -P {spec["project"]!s}\n')
+            sio.write(f'#BSUB -P {spec["project"]!s}\n')
         if 'account' in spec:
             sio.write(f'#BSUB -P {spec["account"]!s}\n')
         ret=sio.getvalue()

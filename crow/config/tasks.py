@@ -83,6 +83,7 @@ class SuiteView(Mapping):
             self.viewed.up=parent
         self.path=SuitePath(path)
         self.parent=parent
+        self._is_suite_view=True
         self.__cache={}
         if isinstance(self.viewed,Slot):
             locals=multidict(self.parent,self.viewed)
@@ -90,6 +91,7 @@ class SuiteView(Mapping):
             for k,v in self.viewed._raw_child().items():
                 if hasattr(v,'_as_dependency'): continue
                 self.viewed[k]=from_config(k,v,globals,locals,self.viewed._path)
+        assert(isinstance(viewed,Cycle) or self.viewed.task_path_var != parent.task_path_var)
 
     def _globals(self):
         return self.viewed._globals()
@@ -134,8 +136,13 @@ class SuiteView(Mapping):
             if var=='up': continue
             if hasattr(rawval,'_as_dependency'): continue
             val=self[var]
-            if isinstance(val,SuiteView):
-                yield val
+            #print(f'Yield {type(val).__name__} for child {var}')
+            try:
+                if hasattr(val,'_is_suite_view'):
+                    yield val
+            except RecursionError as re:
+                print(f'isinstance({type(val).__name__} {val!r},SuiteView): {re}')
+                raise
 
     def walk_task_tree(self):
         """!Iterates over the entire tree of descendants below this
@@ -143,7 +150,7 @@ class SuiteView(Mapping):
         each."""
         for val in self.child_iter():
             yield val
-            if isinstance(val,SuiteView):
+            if hasattr(val,'_is_suite_view'):
                 for t in val.walk_task_tree():
                     yield t
 
@@ -159,7 +166,7 @@ class SuiteView(Mapping):
         dt=to_timedelta(dt)
         cls=type(self)
         ret=cls(self.suite,self.viewed,
-                         [self.path[0]+dt]+self.path[1:],self)
+                         [self.path[0]+dt]+self.path[1:],self.parent)
         return ret
 
     def __getattr__(self,key):
@@ -173,7 +180,7 @@ class SuiteView(Mapping):
         if key not in self.viewed: raise KeyError(key)
         val=self.viewed[key]
 
-        if isinstance(val,SuiteView):
+        if hasattr(val,'_is_suite_view'):
             return val
         elif type(val) in SUITE_CLASS_MAP:
             val=self.__wrap(key,val)
@@ -340,12 +347,14 @@ class Depend(str):
             result=as_dependency(result,path)
             return result
         except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
+            if 'up' in locals:
+                print(f'{locals["task_path_var"]} up => {locals["up"]["task_path_var"]}')
             raise DependError(f'!Depend {self}: {ke}')
 
 def as_dependency(obj,path=MISSING,state=COMPLETED):
     """!Converts the containing object to a State.  Action objects are
     compared to the "complete" state."""
-    if isinstance(obj,SuiteView) and not isinstance(obj,SlotView):
+    if hasattr(obj,'_is_suite_view') and not isinstance(obj,SlotView):
          return StateDependency(obj,state)
     if isinstance(obj,LogicalDependency): return obj
     raise TypeError(
