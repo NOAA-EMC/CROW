@@ -1,4 +1,5 @@
 import collections, datetime
+from collections import OrderedDict
 
 from io import StringIO
 
@@ -42,17 +43,20 @@ def relative_path(start,dest):
     else:
         return './'+'/'.join(dest[i:])
     
-def undate_path(relative_time,format,suite_path):
+def undate_path(relative_time,format,suite_path,undated):
     """!In dependencies within crow.config, the task paths have a
     timedelta at element 0 to indicate the relative time of the
     dependency.  This creates a new path, replacing the timedelta with
     a time string.  The format is sent to datetime.strftime."""
+    assert(isinstance(undated,OrderedDict))
     if suite_path and hasattr(suite_path[0],'total_seconds'):
         when=relative_time+suite_path[0]
-        return [when.strftime(format)] + suite_path[1:]
-    return suite_path
+        result=[when.strftime(format)] + suite_path[1:]
+        return result,True
+    return suite_path,False
 
-def remove_cyc_exist(task,dep,clock):
+def remove_cyc_exist(task,dep,clock,undated):
+    assert(isinstance(undated,OrderedDict))
     typecheck('dep',dep,LogicalDependency)
     if isinstance(dep,CycleExistsDependency):
         if dep.dt in clock:
@@ -60,64 +64,74 @@ def remove_cyc_exist(task,dep,clock):
         return FALSE_DEPENDENCY
     if isinstance(dep,AndDependency) or isinstance(dep,OrDependency):
         return type(dep)( *[
-            remove_cyc_exist(task,d,clock) for d in dep ])
+            remove_cyc_exist(task,d,clock,undated) for d in dep ])
     if isinstance(dep,NotDependency):
-        return NotDependency(remove_cyc_exist(task,dep.depend,clock))
+        return NotDependency(remove_cyc_exist(task,dep.depend,clock,undated))
     return dep
 
-def convert_state_dep(fd,task,dep,clock,time_format,negate):
+def convert_state_dep(fd,task,dep,clock,time_format,negate,undated):
+    assert(isinstance(undated,OrderedDict))
     typecheck('clock',clock,crow.tools.Clock)
-    task_path=undate_path(clock.now,time_format,task.path)
-    dep_path=undate_path(clock.now,time_format,dep.view.path)
+    task_path,did_undated=undate_path(clock.now,time_format,task.path,undated)
+    dep_path,did_undated=undate_path(clock.now,time_format,dep.view.path,undated)
     rel_path=relative_path(task_path,dep_path)
+    if did_undated and rel_path[0]=='/':
+        undated[rel_path]=1
     state=ECFLOW_STATE_MAP[dep.state]
     fd.write(f'{rel_path} {"!=" if negate else "=="} {state}')
 
-def convert_event_dep(fd,task,dep_path,event_name,clock,time_format,negate):
+def convert_event_dep(fd,task,dep_path,event_name,clock,time_format,negate,undated):
+    assert(isinstance(undated,OrderedDict))
     typecheck('clock',clock,crow.tools.Clock)
-    task_path=undate_path(clock.now,time_format,task.path)
-    dep_path=undate_path(clock.now,time_format,dep_path)
+    task_path,did_undated=undate_path(clock.now,time_format,task.path,undated)
+    dep_path,did_undated=undate_path(clock.now,time_format,dep_path,undated)
     rel_path=relative_path(task_path,dep_path)
-    fd.write(f'{rel_path}:{event_name} is {"clear" if negate else "set"}')
+    if did_undated and rel_path[0]=='/':
+        undated[rel_path]=1
+    fd.write(f'{rel_path}:{event_name}{" is clear" if negate else ""}')
 
-def _convert_dep(fd,task,dep,clock,time_format):
+def _convert_dep(fd,task,dep,clock,time_format,undated):
+    assert(isinstance(undated,OrderedDict))
     first=True
     if isinstance(dep,OrDependency):
         for subdep in dep:
             if not first:
                 fd.write(' or ')
             first=False
-            _convert_dep(fd,task,subdep,clock,time_format)
+            _convert_dep(fd,task,subdep,clock,time_format,undated)
     elif isinstance(dep,AndDependency):
         for subdep in dep:
             if not first:
                 fd.write(' and ')
             first=False
-            _convert_dep(fd,task,subdep,clock,time_format)
+            _convert_dep(fd,task,subdep,clock,time_format,undated)
     elif isinstance(dep,NotDependency):
         fd.write('not ')
         if isinstance(dep.depend,StateDependency):
-            convert_state_dep(fd,task,dep.depend,clock,time_format,True)
+            convert_state_dep(fd,task,dep.depend,clock,time_format,True,
+                              undated)
         elif isinstance(dep.depend,EventDependency):
             convert_event_dep(fd,task,dep.event.path[:-1],
-                              dep.event.path[-1],clock,time_format,True)
+                              dep.event.path[-1],clock,time_format,True,
+                              undated)
         else:
-            convert_dep(fd,task,dep.depend)
+            _convert_dep(fd,task,dep.depend,undated)
     elif isinstance(dep,StateDependency):
-        convert_state_dep(fd,task,dep,clock,time_format,False)
+        convert_state_dep(fd,task,dep,clock,time_format,False,undated)
     elif isinstance(dep,EventDependency):
         convert_event_dep(fd,task,dep.event.path[:-1],
-                          dep.event.path[-1],clock,time_format,False)
+                          dep.event.path[-1],clock,time_format,False,undated)
 
-def dep_to_ecflow(fd,task,dep,clock,time_format):
+def dep_to_ecflow(fd,task,dep,clock,time_format,undated):
+    assert(isinstance(undated,OrderedDict))
     # Walk the tree, removing CycleExistsDependency objects:
-    dep=remove_cyc_exist(task,dep,clock)
+    dep=remove_cyc_exist(task,dep,clock,undated)
 
     # Apply boolean algebra simplification algorithms.  This will
     # remove the true/false dependencies added by remove_cyc_exist.
     dep=simplify(dep)
 
-    _convert_dep(fd,task,dep,clock,time_format)
+    _convert_dep(fd,task,dep,clock,time_format,undated)
 
 class ToEcflow(object):
     def __init__(self,suite):
@@ -144,6 +158,7 @@ class ToEcflow(object):
         self.indent=self.settings.get('indent','  ')
         self.sched=scheduler
         self.clock=None
+        self.undated=OrderedDict()
 
     ####################################################################
         
@@ -160,7 +175,7 @@ class ToEcflow(object):
             fd.write(f'{indent}trigger ')
             ecdep=dep_to_ecflow(
                 fd,node,node.Trigger,
-                self.suite.Clock,self.suite.ecFlow.suite_name)
+                self.suite.Clock,self.suite.ecFlow.suite_name,self.undated)
             fd.write('\n')
         if 'Complete' in node:
             typecheck(node.task_path_var+'.Complete',node.Complete,
@@ -168,7 +183,7 @@ class ToEcflow(object):
             fd.write(f'{indent}complete ')
             ecdep=dep_to_ecflow(
                 fd,node,node.Complete,
-                self.suite.Clock,self.suite.ecFlow.suite_name)
+                self.suite.Clock,self.suite.ecFlow.suite_name,self.undated)
             fd.write('\n')
         if 'Time' in node:
             typecheck(node.task_path_var+'.Time',node.Time,
@@ -176,7 +191,7 @@ class ToEcflow(object):
             dt=to_timedelta(node.Time)
             when=self.suite.Clock.now+dt
             #ecdate=when.strftime('%d.%m.%Y')
-            ectime=when.strftime('%H:%M:%S')
+            ectime=when.strftime('%H:%M')
             fd.write(f'{indent}time {ectime}\n')
             #fd.write(f'{indent}date {ecdate}\n{indent}time {ectime}\n')
             
@@ -189,7 +204,7 @@ class ToEcflow(object):
                 fd.write(f'{indent} event {event_number} {item.path[-1]}\n')
                 event_number+=1
         self._add_ecflow_def_meat(fd,task,indent+self.indent)
-        fd.write(f'{indent}end task\n')
+        fd.write(f'{indent}endtask\n')
 
     def _make_family_def(self,fd,family):
         indent=max(0,len(family.path)-1)*self.indent
@@ -200,7 +215,7 @@ class ToEcflow(object):
                 self._make_task_def(fd,item)
             elif item.is_family():
                 self._make_family_def(fd,item)
-        fd.write(f'{indent}end family\n')
+        fd.write(f'{indent}endfamily\n')
     
     def _make_suite_def_for_one_cycle(self,fd):
         fd.write(f'suite {self.suite_name}\n')
@@ -212,7 +227,11 @@ class ToEcflow(object):
                 self._make_task_def(fd,item)
             elif item.is_family():
                 self._make_family_def(fd,item)
-        fd.write('end suite\n')
+        fd.write('endsuite\n')
+
+    def _make_externs(self,fd):
+        for d in self.undated.keys():
+            fd.write(f'extern {d}\n')
 
     ####################################################################
 
@@ -267,6 +286,9 @@ class ToEcflow(object):
             with StringIO() as sio:
                 self._make_suite_def_for_one_cycle(sio)
                 suite_def_files[filename]=sio.getvalue()
+            with StringIO() as sio:
+                self._make_externs(sio)
+                suite_def_files[filename]=sio.getvalue()+suite_def_files[filename]
             self._make_ecf_files_for_one_cycle(ecf_files)
         del self.suite
         return suite_def_files,ecf_files

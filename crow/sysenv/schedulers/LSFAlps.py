@@ -51,7 +51,7 @@ class Scheduler(BaseScheduler):
             hours=int(dt//3600)
             minutes=int((dt%3600)//60)
             seconds=int(math.floor(dt%60))
-            sio.write(f'#BSUB -W walltime={hours}:{minutes:02d}\n')
+            sio.write(f'#BSUB -W {hours}:{minutes:02d}\n')
        
         if spec[0].get('memory',''):
             memory=spec[0]['memory']
@@ -85,10 +85,13 @@ class Scheduler(BaseScheduler):
             nodes_ranks=self.nodes.to_nodes_ppn(spec)
             requested_nodes=sum([ n for n,p in nodes_ranks ])
         sio.write('#BSUB -extsched CRAYLINUX[]\n')
-        sio.write("#BSUB -R '1*{select[craylinux && !vnode]} + ")
-        sio.write('%d'%requested_nodes)
-        sio.write("*{select[craylinux && vnode]span[")
-        sio.write(f"ptile={nodesize}] cu[type=cabinet]}}'")
+        if self.settings.get('use_export_nodes',True):
+            sio.write(f'export NODES={requested_nodes}')
+        else:
+            sio.write("#BSUB -R '1*{select[craylinux && !vnode]} + ")
+            sio.write('%d'%requested_nodes)
+            sio.write("*{select[craylinux && vnode]span[")
+            sio.write(f"ptile={nodesize}] cu[type=cabinet]}}'")
         
         ret=sio.getvalue()
         sio.close()
