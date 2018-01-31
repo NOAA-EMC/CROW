@@ -43,8 +43,7 @@ accounting:
 
 ecf_file_template: &ecf_file_template !expand |
   #! /bin/sh
-  {sched.batch_accounting(doc.accounting)}
-  {sched.batch_resources(resources)}
+  {sched.batch_accounting(doc.accounting)}{sched.batch_resources(resources)}
   %include <head.h>
   echo ${{JOBgfs}}/{J_JOB}
   %include <tail.h>

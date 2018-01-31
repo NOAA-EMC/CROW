@@ -51,7 +51,7 @@ class Scheduler(BaseScheduler):
             hours=int(dt//3600)
             minutes=int((dt%3600)//60)
             seconds=int(math.floor(dt%60))
-            sio.write(f'#BSUB -W walltime={hours}:{minutes:02d}\n')
+            sio.write(f'#BSUB -W {hours}:{minutes:02d}\n')
        
         if spec[0].get('memory',''):
             memory=spec[0]['memory']
