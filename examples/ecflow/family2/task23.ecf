@@ -1,7 +1,8 @@
 #! /bin/sh
-#BSUB -q debug
+#BSUB -q %QUEUE%
 #BSUB -P GFS-T2O
 #BSUB -J family2.task23
+#BSUB -o /ptmp/%U/family2.task23
 #BSUB -W 0:05
 #BSUB -R rusage[mem=2000]
 #BSUB -extsched CRAYLINUX[]

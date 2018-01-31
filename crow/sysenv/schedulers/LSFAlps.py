@@ -39,6 +39,13 @@ class Scheduler(BaseScheduler):
             sio.write(f'#BSUB -P {spec["account"]!s}\n')
         if 'jobname' in spec:
             sio.write(f'#BSUB -J {spec["jobname"]!s}\n')
+        if 'outerr' in spec:
+            sio.write(f'#BSUB -o {spec["outerr"]}\n')
+        else:
+            if 'stdout' in spec:
+                sio.write('#BSUB -o {spec["stdout"]}\n')
+            if 'stderr' in spec:
+                sio.write('#BSUB -e {spec["stderr"]}\n')
         ret=sio.getvalue()
         sio.close()
         return ret

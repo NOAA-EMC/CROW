@@ -5,6 +5,7 @@ suite prod12
   repeat day 1
   edit ECF_TRIES '1'
   edit ECF_SOME_OTHER_VAR 'abcd'
+  edit QUEUE 'debug'
   task task0
     time 14:00
   endtask
