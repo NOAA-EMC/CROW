@@ -85,10 +85,13 @@ class Scheduler(BaseScheduler):
             nodes_ranks=self.nodes.to_nodes_ppn(spec)
             requested_nodes=sum([ n for n,p in nodes_ranks ])
         sio.write('#BSUB -extsched CRAYLINUX[]\n')
-        sio.write("#BSUB -R '1*{select[craylinux && !vnode]} + ")
-        sio.write('%d'%requested_nodes)
-        sio.write("*{select[craylinux && vnode]span[")
-        sio.write(f"ptile={nodesize}] cu[type=cabinet]}}'")
+        if self.settings.get('use_export_nodes',True):
+            sio.write(f'export NODES={requested_nodes}')
+        else:
+            sio.write("#BSUB -R '1*{select[craylinux && !vnode]} + ")
+            sio.write('%d'%requested_nodes)
+            sio.write("*{select[craylinux && vnode]span[")
+            sio.write(f"ptile={nodesize}] cu[type=cabinet]}}'")
         
         ret=sio.getvalue()
         sio.close()

@@ -38,11 +38,12 @@ accounting:
 
 ecf_file_template: &ecf_file_template !expand |
   #! /bin/sh
-  {sched.batch_resources(resources)}
   {sched.batch_accounting(doc.accounting)}
+  {sched.batch_resources(resources)}
   %include head.h
-  cd /somewhere
-  $JOBgfs/{J_JOB}
+  ... other ecf file things ...
+  ${{JOBgfs}}/{J_JOB}
+  ... other ecf file things ...
   %include tail.h
 
 suite: !Cycle
@@ -75,6 +76,9 @@ suite: !Cycle
     Time: !timedelta +3:00:00
 
     task11: !Task
+      ecflow_def: |
+        edit WHATEVER '333'
+        event manually_written_event
       ecf_file: *ecf_file_template
       J_JOB: JGFS_TASK11
       resources: *sample_serial
