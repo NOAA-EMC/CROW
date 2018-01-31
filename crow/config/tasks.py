@@ -26,7 +26,12 @@ __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'Family', 'Cycle', 'RUNNING', 'COMPLETED', 'FAILED',
           'TRUE_DEPENDENCY', 'FALSE_DEPENDENCY', 'SuitePath',
           'CycleExistsDependency', 'FamilyView', 'TaskView',
-          'CycleView', 'Slot', 'InputSlot', 'OutputSlot', 'Message' ]
+          'CycleView', 'Slot', 'InputSlot', 'OutputSlot', 'Message',
+          'Event', 'DataEvent', 'ShellEvent', 'EventDependency' ]
+
+class Event(dict_eval): pass
+class DataEvent(Event): pass
+class ShellEvent(Event): pass
 
 class StateConstant(object):
     def __init__(self,name):
@@ -161,6 +166,9 @@ class SuiteView(Mapping):
     def is_family(self): return isinstance(self.viewed,Family)
     def is_input_slot(self): return isinstance(self.viewed,InputSlot)
     def is_output_slot(self): return isinstance(self.viewed,OutputSlot)
+    def is_shell_event(self): return isinstance(self.viewed,ShellEvent)
+    def is_data_event(self): return isinstance(self.viewed,DataEvent)
+    def is_event(self): return isinstance(self.viewed,Event)
 
     def at(self,dt):
         dt=to_timedelta(dt)
@@ -223,6 +231,8 @@ class SuiteView(Mapping):
         return StateDependency(self,FAILED)
     def is_completed(self):
         return StateDependency(self,COMPLETED)
+
+class EventView(SuiteView): pass
 
 class SlotView(SuiteView):
     def __init__(self,suite,viewed,path,parent,search=MISSING):
@@ -354,12 +364,17 @@ class Depend(str):
 def as_dependency(obj,path=MISSING,state=COMPLETED):
     """!Converts the containing object to a State.  Action objects are
     compared to the "complete" state."""
-    if hasattr(obj,'_is_suite_view') and not isinstance(obj,SlotView):
-         return StateDependency(obj,state)
-    if isinstance(obj,LogicalDependency): return obj
+    if isinstance(obj,EventView):
+        return EventDependency(obj)
+    elif isinstance(obj,SlotView):
+        raise TypeError(f'Dependencies are not connected to the dataflow '
+                        'subsystem yet.  Use Event dependencies instead.')
+    elif isinstance(obj,SuiteView):
+        return StateDependency(obj,state)
+    elif isinstance(obj,LogicalDependency):
+        return obj
     raise TypeError(
         f'{type(obj).__name__} is not a valid type for a dependency')
-    return NotImplemented
 
 class LogicalDependency(object):
     def __invert__(self):          return NotDependency(self)
@@ -386,7 +401,7 @@ class AndDependency(LogicalDependency):
         if not args: raise ValueError('Tried to create an empty AndDependency')
         self.depends=list(args)
         for dep in self.depends:
-            typecheck('Dependencies',dep,LogicalDependency)
+            typecheck(f'Dependencies',dep,LogicalDependency)
     def __len__(self):     return len(self.depends)
     def __str__(self):     return '( '+' & '.join([str(r) for r in self])+' )'
     def __repr__(self):    return f'AndDependency({repr(self.depends)})'
@@ -494,6 +509,25 @@ class StateDependency(LogicalDependency):
             and other.state==self.state \
             and other.view.path==self.view.path
 
+class EventDependency(LogicalDependency):
+    def __init__(self,event):
+        typecheck('event',event,EventView)
+        self.event=event
+    @property
+    def path(self):              return self.event.path
+    def is_task(self):           return self.event.is_task()
+    def __hash__(self):          return hash(self.event.path)
+    def copy_dependencies(self): return EventDependency(self.event)
+    def add_time(self,dt):
+        self.event=copy(self.event)
+        self.event.path[0]+=dt
+    def __repr__(self):
+        return f'/{"/".join([str(s) for s in self.event.path])}'\
+               f'= {self.state}'
+    def __eq__(self,other):
+        return isinstance(other,EventDependency) \
+            and other.event.path==self.event.path
+
 class TrueDependency(LogicalDependency):
     def __and__(self,other):     return other
     def __or__(self,other):      return self
@@ -584,7 +618,6 @@ class TaskArray(Taskable):
         the_copy=Family(self._raw_child())
         the_copy[varname]=key
 
-
-
-SUITE_CLASS_MAP={ Task:TaskView, Family: FamilyView, 
+SUITE_CLASS_MAP={ Task:TaskView, Family: FamilyView, Event: EventView,
+                  DataEvent: EventView, ShellEvent: EventView,
                   OutputSlot: OutputSlotView, InputSlot:InputSlotView }

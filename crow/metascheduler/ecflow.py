@@ -11,7 +11,7 @@ from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           StateDependency, Dependable, Taskable, Task, \
           Family, Cycle, RUNNING, COMPLETED, FAILED, \
           TRUE_DEPENDENCY, FALSE_DEPENDENCY, SuitePath, \
-          CycleExistsDependency, invalidate_cache
+          CycleExistsDependency, invalidate_cache, EventDependency
 __all__=['to_ecflow','ToEcflow']
 
 f'This module requires python 3.6 or newer.'
@@ -59,7 +59,7 @@ def remove_cyc_exist(task,dep,clock):
             return TRUE_DEPENDENCY
         return FALSE_DEPENDENCY
     if isinstance(dep,AndDependency) or isinstance(dep,OrDependency):
-        return type(dep)( [
+        return type(dep)( *[
             remove_cyc_exist(task,d,clock) for d in dep ])
     if isinstance(dep,NotDependency):
         return NotDependency(remove_cyc_exist(task,dep.depend,clock))
@@ -73,6 +73,13 @@ def convert_state_dep(fd,task,dep,clock,time_format,negate):
     state=ECFLOW_STATE_MAP[dep.state]
     fd.write(f'{rel_path} {"!=" if negate else "=="} {state}')
 
+def convert_event_dep(fd,task,dep_path,event_name,clock,time_format,negate):
+    typecheck('clock',clock,crow.tools.Clock)
+    task_path=undate_path(clock.now,time_format,task.path)
+    dep_path=undate_path(clock.now,time_format,dep_path)
+    rel_path=relative_path(task_path,dep_path)
+    fd.write(f'{rel_path}:{event_name} is {"clear" if negate else "set"}')
+
 def _convert_dep(fd,task,dep,clock,time_format):
     first=True
     if isinstance(dep,OrDependency):
@@ -80,21 +87,27 @@ def _convert_dep(fd,task,dep,clock,time_format):
             if not first:
                 fd.write(' or ')
             first=False
-            convert_dep(fd,task,subdep,clock,time_format)
+            _convert_dep(fd,task,subdep,clock,time_format)
     elif isinstance(dep,AndDependency):
         for subdep in dep:
             if not first:
                 fd.write(' and ')
             first=False
-            convert_dep(fd,task,subdep,clock,time_format)
+            _convert_dep(fd,task,subdep,clock,time_format)
     elif isinstance(dep,NotDependency):
         fd.write('not ')
         if isinstance(dep.depend,StateDependency):
             convert_state_dep(fd,task,dep.depend,clock,time_format,True)
+        elif isinstance(dep.depend,EventDependency):
+            convert_event_dep(fd,task,dep.event.path[:-1],
+                              dep.event.path[-1],clock,time_format,True)
         else:
             convert_dep(fd,task,dep.depend)
     elif isinstance(dep,StateDependency):
         convert_state_dep(fd,task,dep,clock,time_format,False)
+    elif isinstance(dep,EventDependency):
+        convert_event_dep(fd,task,dep.event.path[:-1],
+                          dep.event.path[-1],clock,time_format,False)
 
 def dep_to_ecflow(fd,task,dep,clock,time_format):
     # Walk the tree, removing CycleExistsDependency objects:
@@ -170,6 +183,11 @@ class ToEcflow(object):
     def _make_task_def(self,fd,task):
         indent=max(0,len(task.path)-1)*self.indent
         fd.write(f'{indent}task {task.path[-1]}\n')
+        event_number=1
+        for item in task.child_iter():
+            if item.is_event():
+                fd.write(f'{indent} event {event_number} {item.path[-1]}\n')
+                event_number+=1
         self._add_ecflow_def_meat(fd,task,indent+self.indent)
         fd.write(f'{indent}end task\n')
 
