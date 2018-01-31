@@ -168,6 +168,9 @@ class dict_eval(MutableMapping):
             self.__cache[key]=self.__child[key]
     def _raw_child(self):       return self.__child
     def _has_raw(self,key):     return key in self.__child
+    def _iter_raw(self):
+        for v in self.__child.itervalues():
+            yield v
     def _set_globals(self,g):   self.__globals=g
     def _get_globals(self):     return self.__globals
     def _raw_cache(self):       return self.__cache
@@ -306,6 +309,9 @@ class list_eval(MutableSequence):
     def _get_globals(self):     return self.__globals
     def _set_globals(self,g):   self.__globals=g
     def _get_locals(self):      return self.__locals
+    def _iter_raw(self):
+        for v in self.__child:
+            yield v
     def _raw_child(self):       return self.__child
     def _raw(self,i):           
         """!Returns the value at index i without calling eval() on it"""
@@ -382,11 +388,23 @@ class Eval(dict_eval):
             raise EvalMissingCalc('"!Eval" block lacks a "result: !calc"')
         return self.result
 
-
-def invalidate_cache(obj,key=None):
+def _invalidate_cache_one_obj(obj,key=None):
     if hasattr(obj,'_invalidate_cache'):
         obj._invalidate_cache(key)
 
+def _recursively_invalidate_cache(obj,memo):
+    if id(obj) in memo: return
+    memo.add(id(obj))
+    _invalidate_cache_one_obj(obj)
+    if '_iter_raw' in obj:
+        for r in obj._iter_raw():
+            _recursively_invalidate_cache(r,memo)
+
+def invalidate_cache(obj,key=None,recurse=False):
+    _invalidate_cache_one_obj(obj,key)
+    if recurse:
+        if key is not None: obj=obj[key]
+        _recursively_invalidate_cache(obj,set())
 
 def evaluate_one(obj,key,val,memo):
     if hasattr(val,'_is_immediate'):

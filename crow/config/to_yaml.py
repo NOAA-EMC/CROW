@@ -115,6 +115,8 @@ def add_yaml_taskable(key,cls):
         return rep
     yaml.add_representer(cls,representer)
 
+add_yaml_taskable(u'!DataEvent',DataEvent)
+add_yaml_taskable(u'!ShellEvent',ShellEvent)
 add_yaml_taskable(u'!Task',Task)
 add_yaml_taskable(u'!Family',Family)
 add_yaml_taskable(u'!Cycle',Cycle)

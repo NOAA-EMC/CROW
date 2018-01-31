@@ -1,6 +1,7 @@
-import itertools
+import itertools, math
 from io import StringIO
 
+import crow.tools as tools
 from crow.sysenv.exceptions import *
 from crow.sysenv.util import ranks_to_nodes_ppn
 from crow.sysenv.jobs import JobResourceSpec
@@ -22,7 +23,80 @@ class Scheduler(BaseScheduler):
 
     ####################################################################
 
-    # Public methods
+    # Generation of batch cards
+
+    def batch_accounting(self,spec):
+        space=self.indent_text
+        sio=StringIO()
+        if 'queue' in spec:
+            sio.write(f'#BSUB -q {spec["queue"]!s}\n')
+        if 'project' in spec:
+            sio.write(f'#BSUB -P {spec["project"]!s}\n')
+        if 'account' in spec:
+            sio.write(f'#BSUB -P {spec["account"]!s}\n')
+        ret=sio.getvalue()
+        sio.close()
+        return ret
+
+    def batch_resources(self,spec):
+        space=self.indent_text
+        sio=StringIO()
+        if not isinstance(spec,JobResourceSpec):
+            spec=JobResourceSpec(spec)
+            
+        result=''
+        if spec[0].get('walltime',''):
+            dt=tools.to_timedelta(spec[0]['walltime'])
+            dt=dt.total_seconds()
+            hours=int(dt//3600)
+            minutes=int((dt%3600)//60)
+            seconds=int(math.floor(dt%60))
+            sio.write(f'#BSUB -W walltime={hours}:{minutes:02d}\n')
+       
+        if spec[0].get('memory',''):
+            memory=spec[0]['memory']
+            bytes=tools.memory_in_bytes(memory)
+            megabytes=int(math.ceil(bytes/1048576.))
+            sio.write(f'#BSUB -R rusage[mem={megabytes:d}]\n')
+        else:
+            sio.write(f'#BSUB -R rusage[mem=2000]\n')
+
+        if spec[0].get('outerr',''):
+            sio.write(f'#BSUB -o {spec[0]["outerr"]}\n')
+        else:
+            if spec[0].get('stdout',''):
+                sio.write('#BSUB -o {spec[0]["stdout"]}\n')
+            if spec[0].get('stderr',''):
+                sio.write('#BSUB -e {spec[0]["stderr"]}\n')
+        if spec[0].get('jobname'):
+            sio.write('#BSUB -N {spec[0]["jobname"]}\n')
+        # --------------------------------------------------------------
+
+        # With LSF+ALPS on WCOSS Cray, to my knowledge, you can only
+        # request one node size for all ranks.  This code calculates
+        # the largest node size required (hyperthreading vs. non)
+
+        requested_nodes=1
+
+        nodesize=max([ self.nodes.node_size(r) for r in spec ])
+
+        if not spec.is_pure_serial() and not spec.is_pure_openmp():
+            # This is an MPI program.
+            nodes_ranks=self.nodes.to_nodes_ppn(spec)
+            requested_nodes=sum([ n for n,p in nodes_ranks ])
+        sio.write('#BSUB -extsched CRAYLINUX[]\n')
+        sio.write("#BSUB -R '1*{select[craylinux && !vnode]} + ")
+        sio.write('%d'%requested_nodes)
+        sio.write("*{select[craylinux && vnode]span[")
+        sio.write(f"ptile={nodesize}] cu[type=cabinet]}}'")
+        
+        ret=sio.getvalue()
+        sio.close()
+        return ret
+
+    ####################################################################
+
+    # Generation of Rocoto XML
 
     def rocoto_accounting(self,spec,indent=0):
         space=self.indent_text

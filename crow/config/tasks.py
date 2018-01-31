@@ -26,7 +26,12 @@ __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'Family', 'Cycle', 'RUNNING', 'COMPLETED', 'FAILED',
           'TRUE_DEPENDENCY', 'FALSE_DEPENDENCY', 'SuitePath',
           'CycleExistsDependency', 'FamilyView', 'TaskView',
-          'CycleView', 'Slot', 'InputSlot', 'OutputSlot', 'Message' ]
+          'CycleView', 'Slot', 'InputSlot', 'OutputSlot', 'Message',
+          'Event', 'DataEvent', 'ShellEvent', 'EventDependency' ]
+
+class Event(dict_eval): pass
+class DataEvent(Event): pass
+class ShellEvent(Event): pass
 
 class StateConstant(object):
     def __init__(self,name):
@@ -83,6 +88,7 @@ class SuiteView(Mapping):
             self.viewed.up=parent
         self.path=SuitePath(path)
         self.parent=parent
+        self._is_suite_view=True
         self.__cache={}
         if isinstance(self.viewed,Slot):
             locals=multidict(self.parent,self.viewed)
@@ -90,6 +96,7 @@ class SuiteView(Mapping):
             for k,v in self.viewed._raw_child().items():
                 if hasattr(v,'_as_dependency'): continue
                 self.viewed[k]=from_config(k,v,globals,locals,self.viewed._path)
+        assert(isinstance(viewed,Cycle) or self.viewed.task_path_var != parent.task_path_var)
 
     def _globals(self):
         return self.viewed._globals()
@@ -134,15 +141,21 @@ class SuiteView(Mapping):
             if var=='up': continue
             if hasattr(rawval,'_as_dependency'): continue
             val=self[var]
-            if isinstance(val,SuiteView):
-                yield val
+            #print(f'Yield {type(val).__name__} for child {var}')
+            try:
+                if hasattr(val,'_is_suite_view'):
+                    yield val
+            except RecursionError as re:
+                print(f'isinstance({type(val).__name__} {val!r},SuiteView): {re}')
+                raise
 
     def walk_task_tree(self):
-        """!Iterates over the entire tree of descendants below this SuiteView,
-        yielding a SuiteView of each."""
+        """!Iterates over the entire tree of descendants below this
+        SuiteView in a depth-first manner, yielding a SuiteView of
+        each."""
         for val in self.child_iter():
             yield val
-            if isinstance(val,SuiteView):
+            if hasattr(val,'_is_suite_view'):
                 for t in val.walk_task_tree():
                     yield t
 
@@ -150,14 +163,18 @@ class SuiteView(Mapping):
         return key in self.viewed
 
     def is_task(self): return isinstance(self.viewed,Task)
+    def is_family(self): return isinstance(self.viewed,Family)
     def is_input_slot(self): return isinstance(self.viewed,InputSlot)
     def is_output_slot(self): return isinstance(self.viewed,OutputSlot)
+    def is_shell_event(self): return isinstance(self.viewed,ShellEvent)
+    def is_data_event(self): return isinstance(self.viewed,DataEvent)
+    def is_event(self): return isinstance(self.viewed,Event)
 
     def at(self,dt):
         dt=to_timedelta(dt)
         cls=type(self)
         ret=cls(self.suite,self.viewed,
-                         [self.path[0]+dt]+self.path[1:],self)
+                         [self.path[0]+dt]+self.path[1:],self.parent)
         return ret
 
     def __getattr__(self,key):
@@ -171,7 +188,7 @@ class SuiteView(Mapping):
         if key not in self.viewed: raise KeyError(key)
         val=self.viewed[key]
 
-        if isinstance(val,SuiteView):
+        if hasattr(val,'_is_suite_view'):
             return val
         elif type(val) in SUITE_CLASS_MAP:
             val=self.__wrap(key,val)
@@ -214,6 +231,8 @@ class SuiteView(Mapping):
         return StateDependency(self,FAILED)
     def is_completed(self):
         return StateDependency(self,COMPLETED)
+
+class EventView(SuiteView): pass
 
 class SlotView(SuiteView):
     def __init__(self,suite,viewed,path,parent,search=MISSING):
@@ -338,17 +357,24 @@ class Depend(str):
             result=as_dependency(result,path)
             return result
         except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
+            if 'up' in locals:
+                print(f'{locals["task_path_var"]} up => {locals["up"]["task_path_var"]}')
             raise DependError(f'!Depend {self}: {ke}')
 
 def as_dependency(obj,path=MISSING,state=COMPLETED):
     """!Converts the containing object to a State.  Action objects are
     compared to the "complete" state."""
-    if isinstance(obj,SuiteView) and not isinstance(obj,SlotView):
-         return StateDependency(obj,state)
-    if isinstance(obj,LogicalDependency): return obj
+    if isinstance(obj,EventView):
+        return EventDependency(obj)
+    elif isinstance(obj,SlotView):
+        raise TypeError(f'Dependencies are not connected to the dataflow '
+                        'subsystem yet.  Use Event dependencies instead.')
+    elif isinstance(obj,SuiteView):
+        return StateDependency(obj,state)
+    elif isinstance(obj,LogicalDependency):
+        return obj
     raise TypeError(
         f'{type(obj).__name__} is not a valid type for a dependency')
-    return NotImplemented
 
 class LogicalDependency(object):
     def __invert__(self):          return NotDependency(self)
@@ -375,7 +401,7 @@ class AndDependency(LogicalDependency):
         if not args: raise ValueError('Tried to create an empty AndDependency')
         self.depends=list(args)
         for dep in self.depends:
-            typecheck('Dependencies',dep,LogicalDependency)
+            typecheck(f'Dependencies',dep,LogicalDependency)
     def __len__(self):     return len(self.depends)
     def __str__(self):     return '( '+' & '.join([str(r) for r in self])+' )'
     def __repr__(self):    return f'AndDependency({repr(self.depends)})'
@@ -483,6 +509,25 @@ class StateDependency(LogicalDependency):
             and other.state==self.state \
             and other.view.path==self.view.path
 
+class EventDependency(LogicalDependency):
+    def __init__(self,event):
+        typecheck('event',event,EventView)
+        self.event=event
+    @property
+    def path(self):              return self.event.path
+    def is_task(self):           return self.event.is_task()
+    def __hash__(self):          return hash(self.event.path)
+    def copy_dependencies(self): return EventDependency(self.event)
+    def add_time(self,dt):
+        self.event=copy(self.event)
+        self.event.path[0]+=dt
+    def __repr__(self):
+        return f'/{"/".join([str(s) for s in self.event.path])}'\
+               f'= {self.state}'
+    def __eq__(self,other):
+        return isinstance(other,EventDependency) \
+            and other.event.path==self.event.path
+
 class TrueDependency(LogicalDependency):
     def __and__(self,other):     return other
     def __or__(self,other):      return self
@@ -573,7 +618,6 @@ class TaskArray(Taskable):
         the_copy=Family(self._raw_child())
         the_copy[varname]=key
 
-
-
-SUITE_CLASS_MAP={ Task:TaskView, Family: FamilyView, 
+SUITE_CLASS_MAP={ Task:TaskView, Family: FamilyView, Event: EventView,
+                  DataEvent: EventView, ShellEvent: EventView,
                   OutputSlot: OutputSlotView, InputSlot:InputSlotView }

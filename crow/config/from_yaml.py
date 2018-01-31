@@ -40,6 +40,8 @@ class InheritYAML(list):          yaml_tag=u'!Inherit'
 class ClockYAML(dict):            yaml_tag=u'!Clock'
 class EvalYAML(dict): pass
 class ShellCommandYAML(dict): pass
+class DataEventYAML(dict): pass
+class ShellEventYAML(dict): pass
 class TaskYAML(OrderedDict): pass
 class FamilyYAML(OrderedDict): pass
 class CycleYAML(OrderedDict): pass
@@ -51,13 +53,15 @@ class JobResourceSpecMakerYAML(list): pass
 # Mapping from YAML representation class to a pair:
 # * internal representation class
 # * python core class for intermediate conversion
-TYPE_MAP={ PlatformYAML:     [ Platform,     dict,       None ], 
+TYPE_MAP={ PlatformYAML:     [ Platform,     dict,        None ], 
            TemplateYAML:     [ Template,     OrderedDict, None ],
-           ActionYAML:       [ Action,       dict,       None  ],
+           ActionYAML:       [ Action,       dict,        None ],
            ShellCommandYAML: [ ShellCommand, OrderedDict, None ],
            TaskYAML:         [ Task,         OrderedDict, None ],
            CycleYAML:        [ Cycle,        OrderedDict, None ],
-           FamilyYAML:       [ Family,       OrderedDict, None ]
+           FamilyYAML:       [ Family,       OrderedDict, None ],
+           DataEventYAML:    [ DataEvent,    dict,        None ],
+           ShellEventYAML:   [ ShellEvent,   dict,        None ]
          }
 
 def type_for(t,path):
@@ -122,6 +126,8 @@ def add_yaml_mapping(key,cls):
     yaml.add_constructor(key,constructor)
 
 add_yaml_mapping(u'!ShellCommand',ShellCommandYAML)
+add_yaml_mapping(u'!DataEvent',DataEventYAML)
+add_yaml_mapping(u'!ShellEvent',ShellEventYAML)
 
 ########################################################################
 
@@ -176,6 +182,8 @@ SUITE={ EvalYAML: Eval,
         CycleYAML: Cycle,
         TemplateYAML: Template,
         TaskYAML: Task,
+        DataEventYAML: DataEvent,
+        ShellEventYAML: ShellEvent,
         FamilyYAML: Family,
         ClockYAML:ClockMaker,
         OutputSlotYAML: OutputSlot,

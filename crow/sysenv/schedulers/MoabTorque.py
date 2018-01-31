@@ -1,11 +1,11 @@
-import itertools
+import itertools, math
 from io import StringIO
 
+import crow.tools as tools
 from crow.sysenv.exceptions import *
 from crow.sysenv.util import ranks_to_nodes_ppn
 from crow.sysenv.jobs import JobResourceSpec
 from crow.sysenv.nodes import GenericNodeSpec
-
 from crow.sysenv.schedulers.base import Scheduler as BaseScheduler
 
 from collections import Sequence
@@ -22,7 +22,80 @@ class Scheduler(BaseScheduler):
 
     ####################################################################
 
-    # Public methods
+    # Batch card generation
+
+    def batch_accounting(self,spec):
+        space=self.indent_text
+        sio=StringIO()
+        if 'queue' in spec:
+            sio.write(f'#PBS -q {spec["queue"]!s}\n')
+        if 'project' in spec:
+            sio.write(f'#PBS -A {spec["project"]!s}\n')
+        if 'partition' in spec:
+            sio.write(f'#PBS -l partition={spec["partition"]!s}\n')
+        if 'account' in spec:
+            sio.write(f'#PBS -A {spec["account"]!s}\n')
+        ret=sio.getvalue()
+        sio.close()
+        return ret
+
+    def batch_resources(self,spec):
+        space=self.indent_text
+        sio=StringIO()
+        if not isinstance(spec,JobResourceSpec):
+            spec=JobResourceSpec(spec)
+            
+        result=''
+        if spec[0].get('walltime',''):
+            dt=tools.to_timedelta(spec[0]['walltime'])
+            dt=dt.total_seconds()
+            hours=int(dt//3600)
+            minutes=int((dt%3600)//60)
+            seconds=int(math.floor(dt%60))
+            sio.write(f'#PBS -l walltime={hours:d}:{minutes:02d}'
+                      f':{seconds:02d}\n')
+        if spec[0].get('memory',''):
+            memory=spec[0]['memory']
+            bytes=tools.memory_in_bytes(memory)
+            megabytes=int(math.ceil(bytes/1048576.))
+            sio.write(f'#PBS -l vmem={megabytes:d}M\n')
+        if spec[0].get('outerr',''):
+            sio.write(f'#PBS -j oe -o {spec[0]["outerr"]}\n')
+        else:
+            if spec[0].get('stdout',''):
+                sio.write('#PBS -o {spec[0]["stdout"]}\n')
+            if spec[0].get('stderr',''):
+                sio.write('#PBS -e {spec[0]["stderr"]}\n')
+        if spec[0].get('jobname'):
+            sio.write('#PBS -J {spec[0]["jobname"]}\n')
+        # --------------------------------------------------------------
+        # Request processors.
+        if spec.is_pure_serial():
+            if spec[0].is_exclusive() in [True,None]:
+                sio.write('#PBS -l nodes=1:ppn=2\n')
+            else:
+                sio.write('#PBS -l procs=1\n')
+        elif spec.is_pure_openmp():
+            # Pure threaded.  Treat as exclusive serial.
+            sio.write('#PBS -l nodes=1:ppn=2\n')
+        else:
+            # This is an MPI program.
+
+            # Split into (nodes,ranks_per_node) pairs.  Ignore
+            # differing executables between ranks while merging them
+            # (del_exe):
+            nodes_ranks=self.nodes.to_nodes_ppn(
+                spec,can_merge_ranks=self.nodes.same_except_exe)
+            sio.write('#PBS -l nodes=')
+            sio.write('+'.join([f'{n}:ppn={p}' for n,p in nodes_ranks ]))
+            sio.write('\n')
+        ret=sio.getvalue()
+        sio.close()
+        return ret
+
+    ####################################################################
+    
+    # Rocoto XML generation
 
     def rocoto_accounting(self,spec,indent=0):
         space=self.indent_text

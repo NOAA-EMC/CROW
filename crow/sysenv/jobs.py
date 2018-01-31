@@ -18,6 +18,9 @@ MAXIMUM_THREADS=sys.maxsize
 ########################################################################
 
 class JobRankSpec(Mapping):
+    OPTIONAL_ATTRIBUTES=[
+        'walltime', 'memory', 'outer', 'stdout', 'stderr', 'jobname' ]
+
     def __init__(self,OMP_NUM_THREADS=0,mpi_ranks=0,
                  exe=MISSING,args=MISSING,exclusive=True,
                  separate_node=False,hyperthreads=1,max_ppn=MISSING,
@@ -37,9 +40,11 @@ class JobRankSpec(Mapping):
             self.__spec['max_ppn']=int(max_ppn)
 
         for key,value in kwargs.items():
-            if not key.endswith('_extra'):
+            if not key in JobRankSpec.OPTIONAL_ATTRIBUTES \
+                    and not key.endswith('_extra'):
                 raise TypeError(f'Unknown argument {key}')
             self.__spec[key]=value
+
         if not isinstance(exe,str) and exe is not MISSING and \
            exe is not None:
             raise TypeError('exe must be a string, not a %s'%(

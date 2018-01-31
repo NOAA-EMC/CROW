@@ -37,6 +37,11 @@ class NodeSpec(object):
     def same_except_exe(rank_spec_1,rank_spec_2):
         """!Same as can_merge_ranks, but ignores executables and arguments."""
 
+    @abstractmethod
+    def node_size(rank_spec):
+        """!Returns the maximum possible number of ranks per node.
+        The rank_spec is used to check if hyperthreading is requested."""
+
     # ----------------------------------------------------------------
     # Utility functions.
     # ----------------------------------------------------------------
@@ -160,3 +165,11 @@ class GenericNodeSpec(NodeSpec):
                R1.get('max_ppn',0)==R2.get('max_ppn',0) and ( \
                  not self.hyperthreading_allowed or \
                  R1.get('hyperthreads',1) == R2.get('hyperthreads',1) )
+
+    def node_size(self,rank_spec):
+        typecheck('rank_spec',rank_spec,crow.sysenv.jobs.JobRankSpec)
+        can_hyper=self.hyperthreading_allowed
+        max_per_node=self.cores_per_node
+        if can_hyper and rank_spec.get('hyperthreading',False):
+            max_per_node*=self.cpus_per_core
+        return max_per_node
