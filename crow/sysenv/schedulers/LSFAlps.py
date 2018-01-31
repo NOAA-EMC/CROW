@@ -15,8 +15,9 @@ __all__=['Scheduler']
 
 class Scheduler(BaseScheduler):
 
-    def __init__(self,settings):
+    def __init__(self,settings,**kwargs):
         self.settings=dict(settings)
+        self.settings.update(kwargs)
         self.nodes=GenericNodeSpec(settings)
         self.rocoto_name='lsf'
         self.indent_text=str(settings.get('indent_text','  '))
@@ -25,7 +26,9 @@ class Scheduler(BaseScheduler):
 
     # Generation of batch cards
 
-    def batch_accounting(self,spec):
+    def batch_accounting(self,spec,**kwargs):
+        if kwargs:
+            spec=dict(spec,**kwargs)
         space=self.indent_text
         sio=StringIO()
         if 'queue' in spec:
@@ -34,11 +37,15 @@ class Scheduler(BaseScheduler):
             sio.write(f'#BSUB -P {spec["project"]!s}\n')
         if 'account' in spec:
             sio.write(f'#BSUB -P {spec["account"]!s}\n')
+        if 'jobname' in spec:
+            sio.write(f'#BSUB -J {spec["jobname"]!s}\n')
         ret=sio.getvalue()
         sio.close()
         return ret
 
-    def batch_resources(self,spec):
+    def batch_resources(self,spec,**kwargs):
+        if kwargs:
+            spec=dict(spec,**kwargs)
         space=self.indent_text
         sio=StringIO()
         if not isinstance(spec,JobResourceSpec):
@@ -68,8 +75,6 @@ class Scheduler(BaseScheduler):
                 sio.write('#BSUB -o {spec[0]["stdout"]}\n')
             if spec[0].get('stderr',''):
                 sio.write('#BSUB -e {spec[0]["stderr"]}\n')
-        if spec[0].get('jobname'):
-            sio.write('#BSUB -N {spec[0]["jobname"]}\n')
         # --------------------------------------------------------------
 
         # With LSF+ALPS on WCOSS Cray, to my knowledge, you can only

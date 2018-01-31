@@ -43,7 +43,7 @@ accounting:
 
 ecf_file_template: &ecf_file_template !expand |
   #! /bin/sh
-  {sched.batch_accounting(doc.accounting)}{sched.batch_resources(resources)}
+  {sched.batch_accounting(doc.accounting,jobname=jobname)}{sched.batch_resources(resources)}
   %include <head.h>
   echo ${{JOBgfs}}/{J_JOB}
   %include <tail.h>
@@ -69,6 +69,7 @@ suite: !Cycle
     resources: *sample_serial
     J_JOB: JGFS_TASK0
     ecf_file: *ecf_file_template
+    jobname: !calc task_path_var
 
   family1: !Family
     ecflow_def: |
@@ -84,6 +85,7 @@ suite: !Cycle
       ecf_file: *ecf_file_template
       J_JOB: JGFS_TASK11
       resources: *sample_serial
+      jobname: !calc task_path_var
 
       # NOTE: in the below !DataEvent maps, the file= is required, but
       # is just a placeholder for Rocoto support.  It is not used at
@@ -97,6 +99,7 @@ suite: !Cycle
       resources: *sample_mpi
       J_JOB: JGFS_TASK12
       Trigger: !Depend task11.some_event
+      jobname: !calc task_path_var
 
   family2: !Family
     Time: !timedelta +4:20:00
@@ -107,6 +110,7 @@ suite: !Cycle
       Trigger: !Depend up.family1.task12
       resources: *sample_mpi_mpmd
       J_JOB: JGFS_TASK21
+      jobname: !calc task_path_var
 
     family3: !Family 
       task3: !Task
@@ -114,6 +118,7 @@ suite: !Cycle
         resources: *sample_openmp
         Trigger: !Depend up.task21
         J_JOB: JGFS_TASK3
+        jobname: !calc task_path_var
 
     task22: !Task
       Time: !timedelta +5:00:00
@@ -121,6 +126,7 @@ suite: !Cycle
       resources: *sample_mpi_omp
       ecf_file: *ecf_file_template
       J_JOB: JGFS_TASK22
+      jobname: !calc task_path_var
 
     task23: !Task
       Time: !timedelta +6:30:00
@@ -129,3 +135,4 @@ suite: !Cycle
       Trigger: !Depend task21
       ecf_file: *ecf_file_template
       J_JOB: JGFS_TASK23
+      jobname: !calc task_path_var

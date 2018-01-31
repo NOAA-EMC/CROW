@@ -14,8 +14,9 @@ __all__=['Scheduler']
 
 class Scheduler(BaseScheduler):
 
-    def __init__(self,settings):
+    def __init__(self,settings,**kwargs):
         self.settings=dict(settings)
+        self.settings.update(kwargs)
         self.nodes=GenericNodeSpec(settings)
         self.rocoto_name='MoabTorque'
         self.indent_text=str(settings.get('indent_text','  '))
@@ -24,7 +25,9 @@ class Scheduler(BaseScheduler):
 
     # Batch card generation
 
-    def batch_accounting(self,spec):
+    def batch_accounting(self,spec,**kwargs):
+        if kwargs:
+            spec=dict(spec,**kwargs)
         space=self.indent_text
         sio=StringIO()
         if 'queue' in spec:
@@ -39,7 +42,9 @@ class Scheduler(BaseScheduler):
         sio.close()
         return ret
 
-    def batch_resources(self,spec):
+    def batch_resources(self,spec,**kwargs):
+        if kwargs:
+            spec=dict(spec,**kwargs)
         space=self.indent_text
         sio=StringIO()
         if not isinstance(spec,JobResourceSpec):

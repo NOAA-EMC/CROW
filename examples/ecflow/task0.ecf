@@ -1,6 +1,7 @@
 #! /bin/sh
 #BSUB -q debug
 #BSUB -P GFS-T2O
+#BSUB -J task0
 #BSUB -W 0:05
 #BSUB -R rusage[mem=2000]
 #BSUB -extsched CRAYLINUX[]
