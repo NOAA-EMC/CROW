@@ -2,11 +2,13 @@ sample_mpi_omp: &sample_mpi_omp !JobRequest
   - exe: placeholder
     mpi_ranks: 24
     OMP_NUM_THREADS: 2
+    walltime: 00:05:00
 
 sample_mpi_mpmd: &sample_mpi_mpmd !JobRequest
   - exe: placeholder1
     mpi_ranks: 12
     OMP_NUM_THREADS: 2
+    walltime: 00:05:00
   - exe: placeholder2
     mpi_ranks: 48
     OMP_NUM_THREADS: 1
@@ -14,13 +16,16 @@ sample_mpi_mpmd: &sample_mpi_mpmd !JobRequest
 sample_openmp: &sample_openmp !JobRequest
   - exe: placeholder
     OMP_NUM_THREADS: 16
+    walltime: 00:05:00
 
 sample_mpi: &sample_mpi !JobRequest
   - exe: placeholder
     mpi_ranks: 48
+    walltime: 00:05:00
 
 sample_serial: &sample_serial !JobRequest
   - exe: placeholder
+    walltime: 00:05:00
 
 scheduler_settings:
   name: LSFAlps
@@ -40,11 +45,9 @@ ecf_file_template: &ecf_file_template !expand |
   #! /bin/sh
   {sched.batch_accounting(doc.accounting)}
   {sched.batch_resources(resources)}
-  %include head.h
-  ... other ecf file things ...
-  ${{JOBgfs}}/{J_JOB}
-  ... other ecf file things ...
-  %include tail.h
+  %include <head.h>
+  echo ${{JOBgfs}}/{J_JOB}
+  %include <tail.h>
 
 suite: !Cycle
   Clock: !Clock

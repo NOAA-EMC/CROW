@@ -27,7 +27,7 @@ for setname in ecf_files:
         dirname=os.path.dirname(filename)
         if dirname and not os.path.exists(dirname):
             os.makedirs(os.path.dirname(filename))
-        with open(filename,'wt') as fd:
+        with open(filename+".ecf",'wt') as fd:
             fd.write(ecf_files[setname][filename])
         
         #for line in ecf_files[setname][filename].splitlines():
