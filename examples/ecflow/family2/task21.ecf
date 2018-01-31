@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q debug
+#BSUB -P GFS-T2O
+
+#BSUB -R rusage[mem=2000]
+#BSUB -extsched CRAYLINUX[]
+export NODES=3
+%include head.h
+... other ecf file things ...
+${JOBgfs}/JGFS_TASK21
+... other ecf file things ...
+%include tail.h
