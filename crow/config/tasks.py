@@ -142,12 +142,8 @@ class SuiteView(Mapping):
             if hasattr(rawval,'_as_dependency'): continue
             val=self[var]
             #print(f'Yield {type(val).__name__} for child {var}')
-            try:
-                if hasattr(val,'_is_suite_view'):
-                    yield val
-            except RecursionError as re:
-                print(f'isinstance({type(val).__name__} {val!r},SuiteView): {re}')
-                raise
+            if hasattr(val,'_is_suite_view'):
+                yield val
 
     def walk_task_tree(self):
         """!Iterates over the entire tree of descendants below this
@@ -357,8 +353,6 @@ class Depend(str):
             result=as_dependency(result,path)
             return result
         except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
-            if 'up' in locals:
-                print(f'{locals["task_path_var"]} up => {locals["up"]["task_path_var"]}')
             raise DependError(f'!Depend {self}: {ke}')
 
 def as_dependency(obj,path=MISSING,state=COMPLETED):
