@@ -7,7 +7,6 @@ from crow.config import from_file, Suite
 
 conf=from_file('ecftest.yaml')
 suite=Suite(conf.suite)
-print(f'Parent of suite.family2 is {suite.family2.up} = {suite.family2.up.path}')
 suite_defs, ecf_files = to_ecflow(suite)
 
 for defname in suite_defs:
