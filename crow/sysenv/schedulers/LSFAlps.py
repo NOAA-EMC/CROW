@@ -94,7 +94,8 @@ class Scheduler(BaseScheduler):
 
         if spec[0].is_exclusive() is False:
             # Shared program.  This requires a different batch card syntax            
-            sio.write(f'#BSUB -n {spec.total_ranks()}\n')
+            nranks=max(1,spec.total_ranks())
+            sio.write(f'#BSUB -n {nranks}\n')
         else:
             if not spec.is_pure_serial() and not spec.is_pure_openmp():
                 # This is an MPI program.

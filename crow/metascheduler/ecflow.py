@@ -228,6 +228,7 @@ class ToEcflow(object):
             elif item.is_family():
                 self._make_family_def(fd,item)
         fd.write('endsuite\n')
+        return self.suite_name
 
     def _make_externs(self,fd):
         for d in self.undated.keys():
@@ -282,11 +283,11 @@ class ToEcflow(object):
                 continue
             self.suite_name=clock.now.strftime(self.suite.ecFlow.suite_name)
             with StringIO() as sio:
-                self._make_suite_def_for_one_cycle(sio)
-                suite_def_files[filename]=sio.getvalue()
+                def_name = self._make_suite_def_for_one_cycle(sio)
+                suite_def_files[filename]=( def_name, sio.getvalue() )
             with StringIO() as sio:
                 self._make_externs(sio)
-                suite_def_files[filename]=sio.getvalue()+suite_def_files[filename]
+                suite_def_files[filename]=( def_name, sio.getvalue()+suite_def_files[filename][1] )
             self._make_ecf_files_for_one_cycle(ecf_files)
         del self.suite
         return suite_def_files,ecf_files

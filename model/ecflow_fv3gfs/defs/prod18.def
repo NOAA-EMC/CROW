@@ -10,6 +10,7 @@ suite prod18
   repeat day 1
   edit ECF_TRIES '1'
   edit QUEUE 'debug'
+  edit QUEUESERV 'dev_transfer'
   edit MACHINE 'xc40-dev'
   edit PROJECT 'HUR-T2O'
   edit ECF_HOME '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts/'
@@ -32,6 +33,18 @@ suite prod18
         trigger ./eobs == complete
         task grp1
         endtask
+        task grp2
+        endtask
+        task grp3
+        endtask
+        task grp4
+        endtask
+        task grp5
+        endtask
+        task grp6
+        endtask
+        task grp7
+        endtask
         task grp8
         endtask
       endfamily
@@ -44,6 +57,18 @@ suite prod18
       family efcs
         trigger ./ecen == complete
         task grp1
+        endtask
+        task grp2
+        endtask
+        task grp3
+        endtask
+        task grp4
+        endtask
+        task grp5
+        endtask
+        task grp6
+        endtask
+        task grp7
         endtask
         task grp8
         endtask
@@ -93,10 +118,20 @@ suite prod18
       trigger ../gdas/enkf/epos == complete
       task grp1
       endtask
+      task grp2
+      endtask
+      task grp3
+      endtask
+      task grp4
+      endtask
+      task grp5
+      endtask
+      task grp6
+      endtask
+      task grp7
+      endtask
       task grp8
       endtask
     endfamily
   endfamily
-  task final
-  endtask
 endsuite

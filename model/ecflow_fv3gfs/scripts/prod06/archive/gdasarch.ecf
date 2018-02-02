@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUESERV%
+#BSUB -P %PROJECT%
+#BSUB -J archive.gdasarch
+#BSUB -o %LOG%archive.gdasarch.log
+#BSUB -W 0:05
+#BSUB -R rusage[mem=3072]
+#BSUB -n 1
+
+%include <head.h>
+echo ${JOBgfs}/gdasarch
+%include <tail.h>
