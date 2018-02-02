@@ -47,7 +47,6 @@ suite: !Cycle
 
   gdas: !Family
     prep: !Task
-      Complete: !Depend ~ suite.has_cycle('-6:00:00') 
       Trigger: !Depend  up.gdas.post.at('-6:00:00')
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
@@ -55,7 +54,6 @@ suite: !Cycle
 
     enkf: !Family
       eobs: !Task
-        Complete: !Depend ~ suite.has_cycle('-6:00:00')
         Trigger: !Depend  ( up.prep & epos.at('-6:00:00') )
         ecf_file: *ecf_file_template
         resources: *sample_mpi_omp
@@ -63,7 +61,6 @@ suite: !Cycle
 
       eomg: !Family
         Trigger: !Depend eobs
-        Complete: !Depend ~ suite.has_cycle('-6:00:00')
         grp1: !Task
           ecf_file: *ecf_file_template
           resources: *sample_mpi_omp
@@ -126,14 +123,12 @@ suite: !Cycle
           - otherwise: null
 
       eupd: !Task
-        Complete: !Depend ~ suite.has_cycle('-6:00:00')
         Trigger: !Depend eomg
         ecf_file: *ecf_file_template
         resources: *sample_mpi_omp
         J_JOB: eupd
 
       ecen: !Task
-        Complete: !Depend ~ suite.has_cycle('-6:00:00')
         Trigger: !Depend ( eupd & up.anal )
         ecf_file: *ecf_file_template
         resources: *sample_mpi_omp
@@ -161,7 +156,7 @@ suite: !Cycle
 #            Rocoto: !expand "{task_template}{ens_more}"
 
       efcs: !Family
-        Trigger: !Depend ( ecen | ~ suite.has_cycle('-6:00:00') )
+        Trigger: !Depend ecen
         grp1: !Task
           ecf_file: *ecf_file_template
           resources: *sample_mpi_omp
@@ -231,14 +226,13 @@ suite: !Cycle
         J_JOB: epos
 
     anal: !Task
-      Complete: !Depend ~ suite.has_cycle('-6:00:00')
       Trigger: !Depend  ( prep & enkf.epos.at('-6:00:00') )
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
       J_JOB: anal
 
     fcst: !Task
-      Trigger: !Depend ( anal | ~ suite.has_cycle('-6:00:00') )
+      Trigger: !Depend anal
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
       J_JOB: fcst
@@ -256,7 +250,6 @@ suite: !Cycle
       J_JOB: vrfy
 
   gfs: !Family
-    Complete: !Depend ~ suite.has_cycle('-6:00:00')
     prep: !Task
       Trigger: !Depend  up.gdas.post.at('-6:00:00')
       ecf_file: *ecf_file_template
@@ -295,7 +288,6 @@ suite: !Cycle
       J_JOB: gdasarch
 
     gfsarch: !Task
-      Complete: !Depend ~ suite.has_cycle('-6:00:00')
       Trigger: !Depend up.gfs.vrfy
       ecf_file: *ecf_file_template
       resources: *sample_shared_serial

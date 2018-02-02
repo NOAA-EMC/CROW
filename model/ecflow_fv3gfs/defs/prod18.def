@@ -1,19 +1,22 @@
 extern /prod18/gdas/post
 extern /prod18/gdas/enkf/epos
-suite prod00
+extern /prod00/gdas/post
+extern /prod00/gdas/enkf/epos
+extern /prod06/gdas/post
+extern /prod06/gdas/enkf/epos
+extern /prod12/gdas/post
+extern /prod12/gdas/enkf/epos
+suite prod18
   family gdas
     task prep
-      trigger /prod18/gdas/post == complete
-      complete 
+      trigger /prod12/gdas/post == complete
     endtask
     family enkf
       task eobs
-        trigger ../prep == complete and /prod18/gdas/enkf/epos == complete
-        complete 
+        trigger ../prep == complete and /prod12/gdas/enkf/epos == complete
       endtask
       family eomg
         trigger ./eobs == complete
-        complete 
         task grp1
         endtask
         task grp8
@@ -21,11 +24,9 @@ suite prod00
       endfamily
       task eupd
         trigger ./eomg == complete
-        complete 
       endtask
       task ecen
         trigger ./eupd == complete and ../anal == complete
-        complete 
       endtask
       family efcs
         trigger ./ecen == complete
@@ -39,8 +40,7 @@ suite prod00
       endtask
     endfamily
     task anal
-      trigger ./prep == complete and /prod18/gdas/enkf/epos == complete
-      complete 
+      trigger ./prep == complete and /prod12/gdas/enkf/epos == complete
     endtask
     task fcst
       trigger ./anal == complete
@@ -53,12 +53,11 @@ suite prod00
     endtask
   endfamily
   family gfs
-    complete 
     task prep
-      trigger /prod18/gdas/post == complete
+      trigger /prod12/gdas/post == complete
     endtask
     task anal
-      trigger ./prep == complete and /prod18/gdas/enkf/epos == complete
+      trigger ./prep == complete and /prod12/gdas/enkf/epos == complete
     endtask
     task fcst
       trigger ./anal == complete
@@ -76,7 +75,6 @@ suite prod00
     endtask
     task gfsarch
       trigger ../gfs/vrfy == complete
-      complete 
     endtask
     family earc
       trigger ../gdas/enkf/epos == complete
