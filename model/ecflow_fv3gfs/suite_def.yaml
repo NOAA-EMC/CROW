@@ -35,7 +35,6 @@ suite: !Cycle
     suite_name: "prod%H"
     scheduler: !calc doc.scheduler
 
-
   ecflow_def: !expand |
     repeat day 1
     edit ECF_TRIES '1'
@@ -55,28 +54,28 @@ suite: !Cycle
     prep: !Task
       Trigger: !Depend  up.gdas.post.at('-6:00:00')
       ecf_file: *ecf_file_template
-      resources: *sample_mpi_omp
+      resources: !calc ( doc.resource_demo.run_prep )
       J_JOB: prep
 
     enkf: !Family
       eobs: !Task
         Trigger: !Depend  ( up.prep & epos.at('-6:00:00') )
         ecf_file: *ecf_file_template
-        resources: *sample_mpi_omp
+#        resources: *sample_mpi_omp
         J_JOB: eobs
 
       eomg: !Family
         Trigger: !Depend eobs
         grp1: !Task
           ecf_file: *ecf_file_template
-          resources: *sample_mpi_omp
+          resources: !calc ( doc.resource_demo.run_eomg )
           J_JOB: eomg
 
         grp2: !FirstTrue
           - when: !calc doc.settings.NMEM_ENKF==20
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_eomg ) 
               J_JOB: eomg
           - otherwise: null
 
@@ -84,7 +83,7 @@ suite: !Cycle
           - when: !calc doc.settings.NMEM_ENKF==30
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_eomg )
               J_JOB: eomg
           - otherwise: null
 
@@ -92,7 +91,7 @@ suite: !Cycle
           - when: !calc doc.settings.NMEM_ENKF==40
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_eomg )
               J_JOB: eomg
           - otherwise: null
 
@@ -100,7 +99,7 @@ suite: !Cycle
           - when: !calc doc.settings.NMEM_ENKF==50
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_eomg )
               J_JOB: eomg
           - otherwise: null
 
@@ -108,7 +107,7 @@ suite: !Cycle
           - when: !calc doc.settings.NMEM_ENKF==60
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_eomg )
               J_JOB: eomg
           - otherwise: null
 
@@ -116,7 +115,7 @@ suite: !Cycle
           - when: !calc doc.settings.NMEM_ENKF==70
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_eomg )
               J_JOB: eomg
           - otherwise: null
 
@@ -124,20 +123,20 @@ suite: !Cycle
           - when: !calc doc.settings.NMEM_ENKF==80
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_eomg )
               J_JOB: eomg
           - otherwise: null
 
       eupd: !Task
         Trigger: !Depend eomg
         ecf_file: *ecf_file_template
-        resources: *sample_mpi_omp
+        resources: !calc ( doc.resource_demo.run_eupd )
         J_JOB: eupd
 
       ecen: !Task
         Trigger: !Depend ( eupd & up.anal )
         ecf_file: *ecf_file_template
-        resources: *sample_mpi_omp
+        resources: !calc ( doc.resource_demo.run_ecen )
         J_JOB: ecen
 
 #      efcs: !TaskArray
@@ -165,7 +164,7 @@ suite: !Cycle
         Trigger: !Depend ecen
         grp1: !Task
           ecf_file: *ecf_file_template
-          resources: *sample_mpi_omp
+          resources: !calc ( doc.resource_demo.run_efcs )
           J_JOB: efcs
 
 
@@ -173,7 +172,7 @@ suite: !Cycle
           - when: !calc doc.settings.NMEM_ENKF==20
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_efcs )
               J_JOB: efcs
           - otherwise: null
 
@@ -181,7 +180,7 @@ suite: !Cycle
           - when: !calc doc.settings.NMEM_ENKF==30
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_efcs )
               J_JOB: efcs
           - otherwise: null
 
@@ -189,7 +188,7 @@ suite: !Cycle
           - when: !calc doc.settings.NMEM_ENKF==40
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_efcs )
               J_JOB: efcs
           - otherwise: null
 
@@ -198,7 +197,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               J_JOB: efcs
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_efcs )
           - otherwise: null
 
         grp6: !FirstTrue
@@ -206,7 +205,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               J_JOB: efcs
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_efcs )
           - otherwise: null
 
         grp7: !FirstTrue
@@ -214,102 +213,102 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               J_JOB: efcs
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_efcs )
           - otherwise: null
 
         grp8: !FirstTrue
           - when: !calc doc.settings.NMEM_ENKF==80
             do: !Task
               ecf_file: *ecf_file_template
-              resources: *sample_mpi_omp
+              resources: !calc ( doc.resource_demo.run_efcs )
               J_JOB: efcs
           - otherwise: null
 
       epos: !Task
         Trigger: !Depend efcs
         ecf_file: *ecf_file_template
-        resources: *sample_mpi_omp
+        resources: !calc ( doc.resource_demo.run_epos )
         J_JOB: epos
 
     anal: !Task
       Trigger: !Depend  ( prep & enkf.epos.at('-6:00:00') )
       ecf_file: *ecf_file_template
-      resources: *sample_mpi_omp
+      resources: !calc ( doc.resource_demo.run_anal )
       J_JOB: anal
 
     fcst: !Task
       Trigger: !Depend anal
       ecf_file: *ecf_file_template
-      resources: *sample_mpi_omp
+      resources: !calc ( doc.resource_demo.run_gdasfcst )
       J_JOB: fcst
 
     post: !Task
       Trigger: !Depend fcst
       ecf_file: *ecf_file_template
-      resources: *sample_mpi_omp
+      resources: !calc ( doc.resource_demo.run_gdaspost )
       J_JOB: post
 
     vrfy: !Task
       Trigger: !Depend post
       ecf_file: *ecf_file_template
-      resources: *sample_mpi_omp
+      resources: !calc ( doc.resource_demo.run_vrfy )
       J_JOB: vrfy
 
   gfs: !Family
     prep: !Task
       Trigger: !Depend  up.gdas.post.at('-6:00:00')
       ecf_file: *ecf_file_template
-      resources: *sample_mpi_omp
+      resources: !calc ( doc.resource_demo.run_prep )
       J_JOB: prep
     
     anal: !Task
       Trigger: !Depend  ( prep & up.gdas.enkf.epos.at('-6:00:00') )
       ecf_file: *ecf_file_template
-      resources: *sample_mpi_omp
+      resources: !calc ( doc.resource_demo.run_anal )
       J_JOB: anal
 
     fcst: !Task
       Trigger: !Depend anal
       ecf_file: *ecf_file_template
-      resources: *sample_mpi_omp
+      resources: !calc ( doc.resource_demo.run_gfsfcst )
       J_JOB: fcst
 
     post: !Task
       Trigger: !Depend fcst
       ecf_file: *ecf_file_template
-      resources: *sample_mpi_omp
+      resources: !calc ( doc.resource_demo.run_gfspost )
       J_JOB: post
     
     vrfy: !Task
       Trigger: !Depend post
       ecf_file: *ecf_file_template
-      resources: *sample_mpi_omp
+      resources: !calc ( doc.resource_demo.run_vrfy )
       J_JOB: vrfy
 
   archive: !Family
     gdasarch: !Task
       Trigger: !Depend up.gdas.vrfy
       ecf_file: *ecf_file_template
-      resources: *sample_shared_serial
+      resources: !calc ( doc.resource_demo.run_arch )
       J_JOB: gdasarch
 
     gfsarch: !Task
       Trigger: !Depend up.gfs.vrfy
       ecf_file: *ecf_file_template
-      resources: *sample_shared_serial
+      resources: !calc ( doc.resource_demo.run_arch )
       J_JOB: gfsarch
 
     earc: !Family
       Trigger: !Depend up.gdas.enkf.epos
       grp1: !Task
         ecf_file: *ecf_file_template
-        resources: *sample_shared_serial
+        resources: !calc ( doc.resource_demo.run_arch )
         J_JOB: earc
       grp2: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==20
           do: !Task
             ecf_file: *ecf_file_template
-            resources: *sample_shared_serial
+            resources: !calc ( doc.resource_demo.run_arch )
             J_JOB: earc
         - otherwise: null
       grp3: !FirstTrue
@@ -317,46 +316,46 @@ suite: !Cycle
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
-            resources: *sample_shared_serial
+            resources: !calc ( doc.resource_demo.run_arch )
         - otherwise: null
       grp4: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==40
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
-            resources: *sample_shared_serial
+            resources: !calc ( doc.resource_demo.run_arch )
         - otherwise: null
       grp5: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==50
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
-            resources: *sample_shared_serial
+            resources: !calc ( doc.resource_demo.run_arch )
         - otherwise: null
       grp6: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==60
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
-            resources: *sample_shared_serial
+            resources: !calc ( doc.resource_demo.run_arch )
         - otherwise: null
       grp7: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==70
-          do: !Task
+        do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
-            resources: *sample_shared_serial
+            resources: !calc ( doc.resource_demo.run_arch )
         - otherwise: null
       grp8: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==80
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
-            resources: *sample_shared_serial
+            resources: !calc ( doc.resource_demo.run_arch )
         - otherwise: null
 
   final: !Task
     ecf_file: *ecf_file_template
-    resources: *sample_shared_serial
+    resources: !calc ( doc.resource_demo.run_final )
     J_JOB: final
 
