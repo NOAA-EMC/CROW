@@ -4,6 +4,7 @@ suite prod00
   repeat day 1
   edit ECF_TRIES '1'
   edit QUEUE 'debug'
+  edit QUEUESERV 'dev_transfer'
   edit MACHINE 'xc40-dev'
   edit PROJECT 'HUR-T2O'
   edit ECF_HOME '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts/'
@@ -91,6 +92,4 @@ suite prod00
       endtask
     endfamily
   endfamily
-  task final
-  endtask
 endsuite

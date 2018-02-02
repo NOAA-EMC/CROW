@@ -1,11 +1,11 @@
 #! /bin/sh
-#BSUB -q %QUEUE%
+#BSUB -q %QUEUESERV%
 #BSUB -P %PROJECT%
 #BSUB -J archive.earc.grp8
 #BSUB -o %LOG%archive.earc.grp8.log
 #BSUB -W 0:05
 #BSUB -R rusage[mem=3072]
-#BSUB -n 0
+#BSUB -n 1
 
 %include <head.h>
 echo ${JOBgfs}/earc

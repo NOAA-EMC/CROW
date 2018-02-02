@@ -12,13 +12,17 @@ settings:
   NMEM_ENKF: 80
   ECF_HOME: '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts/'
 
-accounting:
+shared_accounting: &shared_accounting
+  queue: '%QUEUESERV%' 
+  project: '%PROJECT%'
+
+exclusive_accounting: &exclusive_accounting
   queue: '%QUEUE%'
   project: '%PROJECT%'
 
 ecf_file_template: &ecf_file_template !expand |
   #! /bin/sh
-  {sched.batch_accounting(doc.accounting,jobname=task_path_var,outerr="%LOG%"+task_path_var+".log")
+  {sched.batch_accounting(accounting,jobname=task_path_var,outerr="%LOG%"+task_path_var+".log")
   }{sched.batch_resources(resources)}
   %include <head.h>
   echo ${{JOBgfs}}/{J_JOB}
@@ -40,6 +44,7 @@ suite: !Cycle
     repeat day 1
     edit ECF_TRIES '1'
     edit QUEUE 'debug'
+    edit QUEUESERV 'dev_transfer'
     edit MACHINE 'xc40-dev'
     edit PROJECT 'HUR-T2O'
     edit ECF_HOME '{doc.settings.ECF_HOME}'
@@ -56,6 +61,7 @@ suite: !Cycle
       Trigger: !Depend  up.gdas.post.at('-6:00:00')
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
+      accounting: *exclusive_accounting
       J_JOB: prep
 
     enkf: !Family
@@ -63,6 +69,7 @@ suite: !Cycle
         Trigger: !Depend  ( up.prep & epos.at('-6:00:00') )
         ecf_file: *ecf_file_template
         resources: *sample_mpi_omp
+        accounting: *exclusive_accounting
         J_JOB: eobs
 
       eomg: !Family
@@ -70,6 +77,7 @@ suite: !Cycle
         grp1: !Task
           ecf_file: *ecf_file_template
           resources: *sample_mpi_omp
+          accounting: *exclusive_accounting
           J_JOB: eomg
 
         grp2: !FirstTrue
@@ -77,6 +85,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: eomg
           - otherwise: null
 
@@ -85,6 +94,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: eomg
           - otherwise: null
 
@@ -93,6 +103,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: eomg
           - otherwise: null
 
@@ -101,6 +112,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: eomg
           - otherwise: null
 
@@ -109,6 +121,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: eomg
           - otherwise: null
 
@@ -117,6 +130,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: eomg
           - otherwise: null
 
@@ -125,6 +139,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: eomg
           - otherwise: null
 
@@ -132,12 +147,14 @@ suite: !Cycle
         Trigger: !Depend eomg
         ecf_file: *ecf_file_template
         resources: *sample_mpi_omp
+        accounting: *exclusive_accounting
         J_JOB: eupd
 
       ecen: !Task
         Trigger: !Depend ( eupd & up.anal )
         ecf_file: *ecf_file_template
         resources: *sample_mpi_omp
+        accounting: *exclusive_accounting
         J_JOB: ecen
 
 #      efcs: !TaskArray
@@ -166,6 +183,7 @@ suite: !Cycle
         grp1: !Task
           ecf_file: *ecf_file_template
           resources: *sample_mpi_omp
+          accounting: *exclusive_accounting
           J_JOB: efcs
 
 
@@ -174,6 +192,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: efcs
           - otherwise: null
 
@@ -182,6 +201,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: efcs
           - otherwise: null
 
@@ -190,6 +210,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: efcs
           - otherwise: null
 
@@ -199,6 +220,7 @@ suite: !Cycle
               ecf_file: *ecf_file_template
               J_JOB: efcs
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
           - otherwise: null
 
         grp6: !FirstTrue
@@ -207,6 +229,7 @@ suite: !Cycle
               ecf_file: *ecf_file_template
               J_JOB: efcs
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
           - otherwise: null
 
         grp7: !FirstTrue
@@ -215,6 +238,7 @@ suite: !Cycle
               ecf_file: *ecf_file_template
               J_JOB: efcs
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
           - otherwise: null
 
         grp8: !FirstTrue
@@ -222,6 +246,7 @@ suite: !Cycle
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
+              accounting: *exclusive_accounting
               J_JOB: efcs
           - otherwise: null
 
@@ -229,30 +254,35 @@ suite: !Cycle
         Trigger: !Depend efcs
         ecf_file: *ecf_file_template
         resources: *sample_mpi_omp
+        accounting: *exclusive_accounting
         J_JOB: epos
 
     anal: !Task
       Trigger: !Depend  ( prep & enkf.epos.at('-6:00:00') )
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
+      accounting: *exclusive_accounting
       J_JOB: anal
 
     fcst: !Task
       Trigger: !Depend anal
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
+      accounting: *exclusive_accounting
       J_JOB: fcst
 
     post: !Task
       Trigger: !Depend fcst
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
+      accounting: *exclusive_accounting
       J_JOB: post
 
     vrfy: !Task
       Trigger: !Depend post
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
+      accounting: *exclusive_accounting
       J_JOB: vrfy
 
   gfs: !Family
@@ -260,42 +290,49 @@ suite: !Cycle
       Trigger: !Depend  up.gdas.post.at('-6:00:00')
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
+      accounting: *exclusive_accounting
       J_JOB: prep
     
     anal: !Task
       Trigger: !Depend  ( prep & up.gdas.enkf.epos.at('-6:00:00') )
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
+      accounting: *exclusive_accounting
       J_JOB: anal
 
     fcst: !Task
       Trigger: !Depend anal
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
+      accounting: *exclusive_accounting
       J_JOB: fcst
 
     post: !Task
       Trigger: !Depend fcst
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
+      accounting: *exclusive_accounting
       J_JOB: post
     
     vrfy: !Task
       Trigger: !Depend post
       ecf_file: *ecf_file_template
       resources: *sample_mpi_omp
+      accounting: *exclusive_accounting
       J_JOB: vrfy
 
   archive: !Family
     gdasarch: !Task
       Trigger: !Depend up.gdas.vrfy
       ecf_file: *ecf_file_template
+      accounting: *shared_accounting
       resources: *sample_shared_serial
       J_JOB: gdasarch
 
     gfsarch: !Task
       Trigger: !Depend up.gfs.vrfy
       ecf_file: *ecf_file_template
+      accounting: *shared_accounting
       resources: *sample_shared_serial
       J_JOB: gfsarch
 
@@ -303,6 +340,7 @@ suite: !Cycle
       Trigger: !Depend up.gdas.enkf.epos
       grp1: !Task
         ecf_file: *ecf_file_template
+        accounting: *shared_accounting
         resources: *sample_shared_serial
         J_JOB: earc
       grp2: !FirstTrue
@@ -310,6 +348,7 @@ suite: !Cycle
           do: !Task
             ecf_file: *ecf_file_template
             resources: *sample_shared_serial
+            accounting: *shared_accounting
             J_JOB: earc
         - otherwise: null
       grp3: !FirstTrue
@@ -318,6 +357,7 @@ suite: !Cycle
             ecf_file: *ecf_file_template
             J_JOB: earc
             resources: *sample_shared_serial
+            accounting: *shared_accounting
         - otherwise: null
       grp4: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==40
@@ -325,6 +365,7 @@ suite: !Cycle
             ecf_file: *ecf_file_template
             J_JOB: earc
             resources: *sample_shared_serial
+            accounting: *shared_accounting
         - otherwise: null
       grp5: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==50
@@ -332,6 +373,7 @@ suite: !Cycle
             ecf_file: *ecf_file_template
             J_JOB: earc
             resources: *sample_shared_serial
+            accounting: *shared_accounting
         - otherwise: null
       grp6: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==60
@@ -339,6 +381,7 @@ suite: !Cycle
             ecf_file: *ecf_file_template
             J_JOB: earc
             resources: *sample_shared_serial
+            accounting: *shared_accounting
         - otherwise: null
       grp7: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==70
@@ -346,6 +389,7 @@ suite: !Cycle
             ecf_file: *ecf_file_template
             J_JOB: earc
             resources: *sample_shared_serial
+            accounting: *shared_accounting
         - otherwise: null
       grp8: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==80
@@ -353,10 +397,12 @@ suite: !Cycle
             ecf_file: *ecf_file_template
             J_JOB: earc
             resources: *sample_shared_serial
+            accounting: *shared_accounting
         - otherwise: null
 
-  final: !Task
-    ecf_file: *ecf_file_template
-    resources: *sample_shared_serial
-    J_JOB: final
+  #final: !Task
+  #  ecf_file: *ecf_file_template
+  #  resources: *sample_shared_serial
+  #  accounting: *shared_accounting
+  #  J_JOB: final
 
