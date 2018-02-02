@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J final
+#BSUB -o %LOG%final.log
+#BSUB -W 0:05
+#BSUB -R rusage[mem=3072]
+#BSUB -n 0
+
+%include <head.h>
+echo ${JOBgfs}/final
+%include <tail.h>

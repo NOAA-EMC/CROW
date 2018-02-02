@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.post
+#BSUB -o %LOG%gdas.post.log
+#BSUB -W 0:05
+#BSUB -R rusage[mem=500]
+#BSUB -extsched CRAYLINUX[]
+export NODES=2
+%include <head.h>
+echo ${JOBgfs}/post
+%include <tail.h>

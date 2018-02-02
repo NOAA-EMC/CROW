@@ -14,23 +14,24 @@ def make_parent_dir(filename):
     if dirname and not os.path.exists(dirname):
         os.makedirs(os.path.dirname(filename))
 
-for defname in suite_defs:
+for deffile in suite_defs.keys():
+    defname,defcontents = suite_defs[deffile]
     #print(f'=== contents of suite def {defname}\n{suite_defs[defname]}')
-    filename=os.path.join('defs',defname)
+    filename=os.path.join('defs',deffile)
     make_parent_dir(filename)
     print(filename)
     dirname=os.path.dirname(filename)
     if dirname and not os.path.exists(dirname):
         os.makedirs(os.path.dirname(filename))
     with open(filename,'wt') as fd:
-        fd.write(suite_defs[defname])
+        fd.write(defcontents)
 
-for setname in ecf_files:
-    print(f'ecf file set {setname}:\n')
-    for filename in ecf_files[setname]:
-        full_fn=os.path.join('scripts',filename)+'.ecf'
-        print(f'  file {full_fn}')
-        make_parent_dir(full_fn)
-        with open(full_fn,'wt') as fd:
-            fd.write(ecf_files[setname][filename])
+    for setname in ecf_files:
+        print(f'ecf file set {setname}:\n')
+        for filename in ecf_files[setname]:
+            full_fn=os.path.join(defname,filename)+'.ecf'
+            print(f'  file {full_fn}')
+            make_parent_dir(full_fn)
+            with open(full_fn,'wt') as fd:
+                fd.write(ecf_files[setname][filename])
 

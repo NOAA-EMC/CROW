@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.enkf.eomg.grp8
+#BSUB -o %LOG%gdas.enkf.eomg.grp8.log
+#BSUB -W 0:05
+#BSUB -R rusage[mem=500]
+#BSUB -extsched CRAYLINUX[]
+export NODES=2
+%include <head.h>
+echo ${JOBgfs}/eomg
+%include <tail.h>
