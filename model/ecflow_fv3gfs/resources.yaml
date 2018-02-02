@@ -1,9 +1,8 @@
 resource_demo: &resource_demo
 
   run_test:
-    resources: !JobRequest
-      - exe: nothing
-        mpi_ranks: 1
+    - exe: nothing
+      mpi_ranks: 1
 
   # From if[[...ecen]] block in config.resources:
   run_ecen:
@@ -11,55 +10,50 @@ resource_demo: &resource_demo
       memory: "3072M" 
       walltime: 00:02:00
       mpi_ranks: 84
-      resources: !JobRequest
-        - exe: placeholder
+      exe: placeholder
           # max_ppn comes from THEIA.env: 84/12 = 7
-          max_ppn: 7
-          OMP_NUM_THREADS: 2
+      max_ppn: 7
+      OMP_NUM_THREADS: 2
 
   run_chgres:
     - env: { }
-      resources:  !JobRequest
-        - exe: time
-          OMP_NUM_THREADS: 12
-          args:
-            - placeholder
+      exe: time
+      OMP_NUM_THREADS: 12
+      args:
+        - placeholder
 
   run_nothing: # Special placeholder for "do nothing"
     - env: { }
       memory: "300M"
       resources:  !JobRequest
-        - exe: nothing
+      exe: nothing
 
   run_eobs:
     - env: { }
       memory: "3072M" 
       walltime: 00:02:00
       mpi_ranks: !calc 12*6
-      resources:  !JobRequest
-        - exe: placeholder
-          max_ppn: 6
-          OMP_NUM_THREADS: 4
+      exe: placeholder
+      max_ppn: 6
+      OMP_NUM_THREADS: 4
 
   run_eomg:
     - env: { }
       memory: "3072M"
       walltime: 00:02:00
       mpi_ranks: !calc 6*12
-      resources:  !JobRequest
-        - exe: placeholder
-          max_ppn: 6
-          OMP_NUM_THREADS: 2
+      exe: placeholder
+      max_ppn: 6
+      OMP_NUM_THREADS: 2
 
   run_eupd:
     - env: { }
       memory: "3072M" 
       walltime: 00:02:00
       mpi_ranks: !calc 10*12
-      resources:  !JobRequest
-        - exe: placeholder
-          max_ppn: 12
-          OMP_NUM_THREADS: 2
+      exe: placeholder
+      max_ppn: 12
+      OMP_NUM_THREADS: 2
 
 #  run_enkf:
 #    env: { }
@@ -80,30 +74,27 @@ resource_demo: &resource_demo
       memory: "254M"
       mpi_ranks: 84
       walltime: 00:02:00
-      resources:  !JobRequest
-        - exe: placeholder
-          max_ppn: 12
-          OMP_NUM_THREADS: 2
+      exe: placeholder
+      max_ppn: 12
+      OMP_NUM_THREADS: 2
 
   run_prep:
     - env: { }
       memory: "3072M"
       walltime: 00:02:00
       mpi_ranks: 12
-      resources:  !JobRequest
-        - exe: placeholder
-          max_ppn: 12
-          OMP_NUM_THREADS: max
+      exe: placeholder
+      max_ppn: 12
+      OMP_NUM_THREADS: max
 
   run_anal:
     - env: { }
       memory: "3072M" 
       mpi_ranks: 144
       walltime: 00:02:00
-      resources:  !JobRequest
-        - exe: placeholder
-          max_ppn: 6
-          OMP_NUM_THREADS: 2
+      exe: placeholder
+      max_ppn: 6
+      OMP_NUM_THREADS: 2
 
 #  run_gsi:
 #    env: { }
@@ -130,50 +121,46 @@ resource_demo: &resource_demo
       memory: "3072M"
       mpi_ranks: 72
       walltime: 00:02:00
-      resources:  !JobRequest
-        - exe: placeholder
-          max_ppn: 12
-          OMP_NUM_THREADS: 1
+      exe: placeholder
+      max_ppn: 12
+      OMP_NUM_THREADS: 1
 
   run_gfspost:
     - env: { }
       memory: "3072M"
       mpi_ranks: 72
       walltime: 00:02:00
-      resources:  !JobRequest
-       - exe: placeholder
-         max_ppn: 12
-         OMP_NUM_THREADS: 1
+      exe: placeholder
+      max_ppn: 12
+      OMP_NUM_THREADS: 1
 
   run_vrfy:
     - env: { }
       memory: "3072M" 
       mpi_ranks: 1
       walltime: 00:02:00
-      resources:  !JobRequest
-        - exe: placeholder
-          max_ppn: 1
-          OMP_NUM_THREADS: 2
+      exe: placeholder
+      max_ppn: 1
+      OMP_NUM_THREADS: 2
 
   run_arch:
     - env: { }
       memory: "3072M"
+      exclusive: false
       mpi_ranks: 1
       walltime: 00:02:00
-      resources:  !JobRequest
-        - exe: placeholder
-          max_ppn: 1
-          OMP_NUM_THREADS: 2
+      exe: placeholder
+      max_ppn: 1
+      OMP_NUM_THREADS: 2
 
   run_final:
     - env: { }
       memory: "2M"
       mpi_ranks: 1
       walltime: 00:01:00
-      resources:  !JobRequest
-        - exe: placeholder
-          max_ppn: 1
-          OMP_NUM_THREADS: 2
+      exe: placeholder
+      max_ppn: 1
+      OMP_NUM_THREADS: 2
 
 #  run_earc:
 #    env: { }
