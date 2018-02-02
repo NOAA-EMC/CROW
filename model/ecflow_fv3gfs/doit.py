@@ -29,7 +29,7 @@ for deffile in suite_defs.keys():
     for setname in ecf_files:
         print(f'ecf file set {setname}:\n')
         for filename in ecf_files[setname]:
-            full_fn=os.path.join(defname,filename)+'.ecf'
+            full_fn=os.path.join('scripts',defname,filename)+'.ecf'
             print(f'  file {full_fn}')
             make_parent_dir(full_fn)
             with open(full_fn,'wt') as fd:
