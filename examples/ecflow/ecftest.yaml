@@ -27,6 +27,11 @@ sample_serial: &sample_serial !JobRequest
   - exe: placeholder
     walltime: 00:05:00
 
+sample_shared_serial: &sample_serial !JobRequest
+  - exe: placeholder
+    walltime: 00:05:00
+    exclusive: false
+
 scheduler_settings:
   name: LSFAlps
   physical_cores_per_node: 24
@@ -68,7 +73,7 @@ suite: !Cycle
 
   task0: !Task
     # Time: !timedelta +2:00:00
-    resources: *sample_serial
+    resources: *sample_shared_serial
     J_JOB: JGFS_TASK0
     ecf_file: *ecf_file_template
     jobname: !calc task_path_var

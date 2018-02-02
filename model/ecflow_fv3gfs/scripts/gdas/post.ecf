@@ -4,7 +4,7 @@
 #BSUB -J gdas.post
 #BSUB -o %LOG%gdas.post.log
 #BSUB -W 0:05
-#BSUB -R rusage[mem=2000]
+#BSUB -R rusage[mem=500]
 #BSUB -extsched CRAYLINUX[]
 export NODES=2
 %include <head.h>

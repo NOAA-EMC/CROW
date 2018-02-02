@@ -8,19 +8,9 @@ scheduler: !calc |
   tools.get_scheduler(doc.scheduler_settings.name,
                       doc.scheduler_settings)
 
-sample_mpi_omp: &sample_mpi_omp !JobRequest
-  - exe: placeholder
-    mpi_ranks: 24
-    OMP_NUM_THREADS: 2
-    walltime: 00:05:00
-
-sample_shared_serial: &sample_shared_serial !JobRequest
-  - exe: placeholder
-    walltime: 00:05:00
-    exclusive: false
-
 settings:
   NMEM_ENKF: 80
+  ECF_HOME: '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts/'
 
 accounting:
   queue: '%QUEUE%'
@@ -51,7 +41,15 @@ suite: !Cycle
     edit ECF_TRIES '1'
     edit QUEUE 'debug'
     edit MACHINE 'xc40-dev'
-    edit PROJECT 'GFS-T2O'
+    edit PROJECT 'HUR-T2O'
+    edit ECF_HOME '{doc.settings.ECF_HOME}'
+    edit PROJENVIR 'HUR-T2O'
+    edit EMCPEN 'ecfgfsfv3'
+    edit COM '/gpfs/hps2/ptmp/emc.glopara/%EMCPEN%/com'
+    edit QUEUESERV 'dev_transfer'
+    edit DATAROOT '/gpfs/hps2/stmp/emc.glopara/%EMCPEN%'
+    edit ECF_OUT '{doc.settings.ECF_HOME}/output'
+    edit ECF_LOG '{doc.settings.ECF_HOME}/ecf.log'
 
   gdas: !Family
     prep: !Task

@@ -4,7 +4,7 @@
 #BSUB -J archive.gdasarch
 #BSUB -o %LOG%archive.gdasarch.log
 #BSUB -W 0:05
-#BSUB -R rusage[mem=2000]
+#BSUB -R rusage[mem=3072]
 #BSUB -n 0
 
 %include <head.h>

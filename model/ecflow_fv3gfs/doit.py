@@ -5,7 +5,7 @@ import os
 from crow.metascheduler import to_ecflow
 from crow.config import from_file, Suite
 
-conf=from_file('suite_def.yaml')
+conf=from_file('resources.yaml', 'suite_def.yaml')
 suite=Suite(conf.suite)
 suite_defs, ecf_files = to_ecflow(suite)
 
