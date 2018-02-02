@@ -9,9 +9,15 @@ conf=from_file('suite_def.yaml')
 suite=Suite(conf.suite)
 suite_defs, ecf_files = to_ecflow(suite)
 
+def make_parent_dir(filename):
+    dirname=os.path.dirname(filename)
+    if dirname and not os.path.exists(dirname):
+        os.makedirs(os.path.dirname(filename))
+
 for defname in suite_defs:
     #print(f'=== contents of suite def {defname}\n{suite_defs[defname]}')
-    filename=defname
+    filename=os.path.join('defs',defname)
+    make_parent_dir(filename)
     print(filename)
     dirname=os.path.dirname(filename)
     if dirname and not os.path.exists(dirname):
@@ -22,13 +28,9 @@ for defname in suite_defs:
 for setname in ecf_files:
     print(f'ecf file set {setname}:\n')
     for filename in ecf_files[setname]:
-        print(f'  file {filename}')
-        dirname=os.path.dirname(filename)
-        if dirname and not os.path.exists(dirname):
-            os.makedirs(os.path.dirname(filename))
-        with open(filename+".ecf",'wt') as fd:
+        full_fn=os.path.join('scripts',filename)+'.ecf'
+        print(f'  file {full_fn}')
+        make_parent_dir(full_fn)
+        with open(full_fn,'wt') as fd:
             fd.write(ecf_files[setname][filename])
-        
-        #for line in ecf_files[setname][filename].splitlines():
-            #print(f'    {line.rstrip()}')
 
