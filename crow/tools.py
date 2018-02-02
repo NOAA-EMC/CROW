@@ -204,7 +204,7 @@ class Clock(object):
 
     def __contains__(self,when):
         if isinstance(when,datetime.timedelta):
-            return not dt%self.step
+            return not when%self.step
         elif isinstance(when,datetime.datetime):
             if self.end and when>self.end: return False
             if when<self.start: return False

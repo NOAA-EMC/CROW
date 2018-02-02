@@ -57,7 +57,7 @@ class Scheduler(BaseScheduler):
         sio=StringIO()
         if not isinstance(spec,JobResourceSpec):
             spec=JobResourceSpec(spec)
-            
+
         result=''
         if spec[0].get('walltime',''):
             dt=tools.to_timedelta(spec[0]['walltime'])
@@ -92,18 +92,22 @@ class Scheduler(BaseScheduler):
 
         nodesize=max([ self.nodes.node_size(r) for r in spec ])
 
-        if not spec.is_pure_serial() and not spec.is_pure_openmp():
-            # This is an MPI program.
-            nodes_ranks=self.nodes.to_nodes_ppn(spec)
-            requested_nodes=sum([ n for n,p in nodes_ranks ])
-        sio.write('#BSUB -extsched CRAYLINUX[]\n')
-        if self.settings.get('use_export_nodes',True):
-            sio.write(f'export NODES={requested_nodes}')
+        if spec[0].is_exclusive() is False:
+            # Shared program.  This requires a different batch card syntax            
+            sio.write(f'#BSUB -n {spec.total_ranks()}\n')
         else:
-            sio.write("#BSUB -R '1*{select[craylinux && !vnode]} + ")
-            sio.write('%d'%requested_nodes)
-            sio.write("*{select[craylinux && vnode]span[")
-            sio.write(f"ptile={nodesize}] cu[type=cabinet]}}'")
+            if not spec.is_pure_serial() and not spec.is_pure_openmp():
+                # This is an MPI program.
+                nodes_ranks=self.nodes.to_nodes_ppn(spec)
+                requested_nodes=sum([ n for n,p in nodes_ranks ])
+            sio.write('#BSUB -extsched CRAYLINUX[]\n')
+            if self.settings.get('use_export_nodes',True):
+                sio.write(f'export NODES={requested_nodes}')
+            else:
+                sio.write("#BSUB -R '1*{select[craylinux && !vnode]} + ")
+                sio.write('%d'%requested_nodes)
+                sio.write("*{select[craylinux && vnode]span[")
+                sio.write(f"ptile={nodesize}] cu[type=cabinet]}}'")
         
         ret=sio.getvalue()
         sio.close()
