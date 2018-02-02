@@ -1,0 +1,13 @@
+
+sample_mpi_omp: &sample_mpi_omp !JobRequest
+  - exe: placeholder
+    mpi_ranks: 24
+    OMP_NUM_THREADS: 2
+    walltime: 00:05:00
+    memory: 500M
+
+sample_shared_serial: &sample_shared_serial !JobRequest
+  - exe: placeholder
+    walltime: 00:05:00
+    exclusive: false
+    memory: 3G

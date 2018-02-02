@@ -4,7 +4,7 @@
 #BSUB -J gfs.vrfy
 #BSUB -o %LOG%gfs.vrfy.log
 #BSUB -W 0:05
-#BSUB -R rusage[mem=2000]
+#BSUB -R rusage[mem=500]
 #BSUB -extsched CRAYLINUX[]
 export NODES=2
 %include <head.h>

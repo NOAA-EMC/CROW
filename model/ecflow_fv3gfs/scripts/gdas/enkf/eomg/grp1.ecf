@@ -4,7 +4,7 @@
 #BSUB -J gdas.enkf.eomg.grp1
 #BSUB -o %LOG%gdas.enkf.eomg.grp1.log
 #BSUB -W 0:05
-#BSUB -R rusage[mem=2000]
+#BSUB -R rusage[mem=500]
 #BSUB -extsched CRAYLINUX[]
 export NODES=2
 %include <head.h>
