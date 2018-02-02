@@ -380,6 +380,7 @@ suite: !Cycle
             ecf_file: *ecf_file_template
             J_JOB: earc
             resources: !calc ( doc.resource_demo.run_arch )
+            accounting: *shared_accounting
         - otherwise: null
       grp7: !FirstTrue
         - when: !calc doc.settings.NMEM_ENKF==70
@@ -402,6 +403,7 @@ suite: !Cycle
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
+            accounting: *shared_accounting
             resources: !calc ( doc.resource_demo.run_arch )
         - otherwise: null
 
@@ -410,5 +412,4 @@ suite: !Cycle
   #  resources: *sample_shared_serial
   #  accounting: *shared_accounting
   #  J_JOB: final
->>>>>>> 661cfe47190e6261505959267431e40bb9384734
 
