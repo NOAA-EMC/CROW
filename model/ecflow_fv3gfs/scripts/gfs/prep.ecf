@@ -1,6 +1,6 @@
 #! /bin/sh
 #BSUB -q %QUEUE%
-#BSUB -P GFS-T2O
+#BSUB -P %PROJECT%
 #BSUB -J gfs.prep
 #BSUB -o %LOG%gfs.prep.log
 #BSUB -W 0:05

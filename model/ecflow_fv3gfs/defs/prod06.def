@@ -3,6 +3,11 @@ extern /prod18/gdas/enkf/epos
 extern /prod00/gdas/post
 extern /prod00/gdas/enkf/epos
 suite prod06
+  repeat day 1
+  edit ECF_TRIES '1'
+  edit QUEUE 'debug'
+  edit MACHINE 'xc40-dev'
+  edit PROJECT 'GFS-T2O'
   family gdas
     task prep
       trigger /prod00/gdas/post == complete

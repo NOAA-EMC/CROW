@@ -1,6 +1,6 @@
 #! /bin/sh
 #BSUB -q %QUEUE%
-#BSUB -P GFS-T2O
+#BSUB -P %PROJECT%
 #BSUB -J gdas.enkf.efcs.grp8
 #BSUB -o %LOG%gdas.enkf.efcs.grp8.log
 #BSUB -W 0:05

@@ -1,6 +1,6 @@
 #! /bin/sh
 #BSUB -q %QUEUE%
-#BSUB -P GFS-T2O
+#BSUB -P %PROJECT%
 #BSUB -J gdas.prep
 #BSUB -o %LOG%gdas.prep.log
 #BSUB -W 0:05

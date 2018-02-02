@@ -24,7 +24,7 @@ settings:
 
 accounting:
   queue: '%QUEUE%'
-  project: GFS-T2O
+  project: '%PROJECT%'
 
 ecf_file_template: &ecf_file_template !expand |
   #! /bin/sh
@@ -44,6 +44,14 @@ suite: !Cycle
     suite_def_filename: "prod%H.def"
     suite_name: "prod%H"
     scheduler: !calc doc.scheduler
+
+
+  ecflow_def: !expand |
+    repeat day 1
+    edit ECF_TRIES '1'
+    edit QUEUE 'debug'
+    edit MACHINE 'xc40-dev'
+    edit PROJECT 'GFS-T2O'
 
   gdas: !Family
     prep: !Task
