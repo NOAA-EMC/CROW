@@ -7,15 +7,15 @@ resource_demo: &resource_demo
 
   # From if[[...ecen]] block in config.resources:
   run_ecen:
-    env: { } #*mpi_tuning
-    memory: "3072M" 
-    walltime: 00:02:00
-    mpi_ranks: 84
-    resources: !JobRequest
-      - exe: placeholder
-        # max_ppn comes from THEIA.env: 84/12 = 7
-        max_ppn: 7
-        OMP_NUM_THREADS: 2
+    - env: { } #*mpi_tuning
+      memory: "3072M" 
+      walltime: 00:02:00
+      mpi_ranks: 84
+      resources: !JobRequest
+        - exe: placeholder
+          # max_ppn comes from THEIA.env: 84/12 = 7
+          max_ppn: 7
+          OMP_NUM_THREADS: 2
 
   run_chgres:
     env: { }
