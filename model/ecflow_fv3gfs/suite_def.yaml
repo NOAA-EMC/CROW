@@ -81,7 +81,7 @@ suite: !Cycle
           J_JOB: eomg
 
         grp2: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==20
+          - when: !calc doc.settings.NMEM_ENKF>=20
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -90,7 +90,7 @@ suite: !Cycle
           - otherwise: null
 
         grp3: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==30
+          - when: !calc doc.settings.NMEM_ENKF>=30
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -99,7 +99,7 @@ suite: !Cycle
           - otherwise: null
 
         grp4: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==40
+          - when: !calc doc.settings.NMEM_ENKF>=40
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -108,7 +108,7 @@ suite: !Cycle
           - otherwise: null
 
         grp5: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==50
+          - when: !calc doc.settings.NMEM_ENKF>=50
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -117,7 +117,7 @@ suite: !Cycle
           - otherwise: null
 
         grp6: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==60
+          - when: !calc doc.settings.NMEM_ENKF>=60
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -126,7 +126,7 @@ suite: !Cycle
           - otherwise: null
 
         grp7: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==70
+          - when: !calc doc.settings.NMEM_ENKF>=70
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -135,7 +135,7 @@ suite: !Cycle
           - otherwise: null
 
         grp8: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==80
+          - when: !calc doc.settings.NMEM_ENKF>=80
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -188,7 +188,7 @@ suite: !Cycle
 
 
         grp2: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==20
+          - when: !calc doc.settings.NMEM_ENKF>=20
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -197,7 +197,7 @@ suite: !Cycle
           - otherwise: null
 
         grp3: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==30
+          - when: !calc doc.settings.NMEM_ENKF>=30
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -206,7 +206,7 @@ suite: !Cycle
           - otherwise: null
 
         grp4: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==40
+          - when: !calc doc.settings.NMEM_ENKF>=40
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -215,7 +215,7 @@ suite: !Cycle
           - otherwise: null
 
         grp5: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==50
+          - when: !calc doc.settings.NMEM_ENKF>=50
             do: !Task
               ecf_file: *ecf_file_template
               J_JOB: efcs
@@ -224,7 +224,7 @@ suite: !Cycle
           - otherwise: null
 
         grp6: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==60
+          - when: !calc doc.settings.NMEM_ENKF>=60
             do: !Task
               ecf_file: *ecf_file_template
               J_JOB: efcs
@@ -233,7 +233,7 @@ suite: !Cycle
           - otherwise: null
 
         grp7: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==70
+          - when: !calc doc.settings.NMEM_ENKF>=70
             do: !Task
               ecf_file: *ecf_file_template
               J_JOB: efcs
@@ -242,7 +242,7 @@ suite: !Cycle
           - otherwise: null
 
         grp8: !FirstTrue
-          - when: !calc doc.settings.NMEM_ENKF==80
+          - when: !calc doc.settings.NMEM_ENKF>=80
             do: !Task
               ecf_file: *ecf_file_template
               resources: *sample_mpi_omp
@@ -344,7 +344,7 @@ suite: !Cycle
         resources: *sample_shared_serial
         J_JOB: earc
       grp2: !FirstTrue
-        - when: !calc doc.settings.NMEM_ENKF==20
+        - when: !calc doc.settings.NMEM_ENKF>=20
           do: !Task
             ecf_file: *ecf_file_template
             resources: *sample_shared_serial
@@ -352,7 +352,7 @@ suite: !Cycle
             J_JOB: earc
         - otherwise: null
       grp3: !FirstTrue
-        - when: !calc doc.settings.NMEM_ENKF==30
+        - when: !calc doc.settings.NMEM_ENKF>=30
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
@@ -360,7 +360,7 @@ suite: !Cycle
             accounting: *shared_accounting
         - otherwise: null
       grp4: !FirstTrue
-        - when: !calc doc.settings.NMEM_ENKF==40
+        - when: !calc doc.settings.NMEM_ENKF>=40
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
@@ -368,7 +368,7 @@ suite: !Cycle
             accounting: *shared_accounting
         - otherwise: null
       grp5: !FirstTrue
-        - when: !calc doc.settings.NMEM_ENKF==50
+        - when: !calc doc.settings.NMEM_ENKF>=50
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
@@ -376,7 +376,7 @@ suite: !Cycle
             accounting: *shared_accounting
         - otherwise: null
       grp6: !FirstTrue
-        - when: !calc doc.settings.NMEM_ENKF==60
+        - when: !calc doc.settings.NMEM_ENKF>=60
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
@@ -384,7 +384,7 @@ suite: !Cycle
             accounting: *shared_accounting
         - otherwise: null
       grp7: !FirstTrue
-        - when: !calc doc.settings.NMEM_ENKF==70
+        - when: !calc doc.settings.NMEM_ENKF>=70
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc
@@ -392,7 +392,7 @@ suite: !Cycle
             accounting: *shared_accounting
         - otherwise: null
       grp8: !FirstTrue
-        - when: !calc doc.settings.NMEM_ENKF==80
+        - when: !calc doc.settings.NMEM_ENKF>=80
           do: !Task
             ecf_file: *ecf_file_template
             J_JOB: earc

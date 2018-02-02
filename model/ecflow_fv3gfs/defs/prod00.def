@@ -27,6 +27,18 @@ suite prod00
         trigger ./eobs == complete
         task grp1
         endtask
+        task grp2
+        endtask
+        task grp3
+        endtask
+        task grp4
+        endtask
+        task grp5
+        endtask
+        task grp6
+        endtask
+        task grp7
+        endtask
         task grp8
         endtask
       endfamily
@@ -39,6 +51,18 @@ suite prod00
       family efcs
         trigger ./ecen == complete
         task grp1
+        endtask
+        task grp2
+        endtask
+        task grp3
+        endtask
+        task grp4
+        endtask
+        task grp5
+        endtask
+        task grp6
+        endtask
+        task grp7
         endtask
         task grp8
         endtask
@@ -87,6 +111,18 @@ suite prod00
     family earc
       trigger ../gdas/enkf/epos == complete
       task grp1
+      endtask
+      task grp2
+      endtask
+      task grp3
+      endtask
+      task grp4
+      endtask
+      task grp5
+      endtask
+      task grp6
+      endtask
+      task grp7
       endtask
       task grp8
       endtask
