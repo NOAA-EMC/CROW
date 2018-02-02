@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P GFS-T2O
+#BSUB -J gdas.enkf.epos
+#BSUB -o %LOG%gdas.enkf.epos.log
+#BSUB -W 0:05
+#BSUB -R rusage[mem=2000]
+#BSUB -extsched CRAYLINUX[]
+export NODES=2
+%include <head.h>
+echo ${JOBgfs}/epos
+%include <tail.h>

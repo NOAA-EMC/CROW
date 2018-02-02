@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P GFS-T2O
+#BSUB -J archive.gfsarch
+#BSUB -o %LOG%archive.gfsarch.log
+#BSUB -W 0:05
+#BSUB -R rusage[mem=2000]
+#BSUB -n 0
+
+%include <head.h>
+echo ${JOBgfs}/gfsarch
+%include <tail.h>
