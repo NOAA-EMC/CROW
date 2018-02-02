@@ -18,48 +18,48 @@ resource_demo: &resource_demo
           OMP_NUM_THREADS: 2
 
   run_chgres:
-    env: { }
-    resources:  !JobRequest
-      - exe: time
-        OMP_NUM_THREADS: 12
-        args:
-          - placeholder
+    - env: { }
+      resources:  !JobRequest
+        - exe: time
+          OMP_NUM_THREADS: 12
+          args:
+            - placeholder
 
   run_nothing: # Special placeholder for "do nothing"
-    env: { }
-    memory: "300M"
-    resources:  !JobRequest
-      - exe: nothing
+    - env: { }
+      memory: "300M"
+      resources:  !JobRequest
+        - exe: nothing
 
   run_eobs:
-    env: { }
-    memory: "3072M" 
-    walltime: 00:02:00
-    mpi_ranks: !calc 12*6
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 6
-        OMP_NUM_THREADS: 4
+    - env: { }
+      memory: "3072M" 
+      walltime: 00:02:00
+      mpi_ranks: !calc 12*6
+      resources:  !JobRequest
+        - exe: placeholder
+          max_ppn: 6
+          OMP_NUM_THREADS: 4
 
   run_eomg:
-    env: { }
-    memory: "3072M"
-    walltime: 00:02:00
-    mpi_ranks: !calc 6*12
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 6
-        OMP_NUM_THREADS: 2
+    - env: { }
+      memory: "3072M"
+      walltime: 00:02:00
+      mpi_ranks: !calc 6*12
+      resources:  !JobRequest
+        - exe: placeholder
+          max_ppn: 6
+          OMP_NUM_THREADS: 2
 
   run_eupd:
-    env: { }
-    memory: "3072M" 
-    walltime: 00:02:00
-    mpi_ranks: !calc 10*12
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 12
-        OMP_NUM_THREADS: 2
+    - env: { }
+      memory: "3072M" 
+      walltime: 00:02:00
+      mpi_ranks: !calc 10*12
+      resources:  !JobRequest
+        - exe: placeholder
+          max_ppn: 12
+          OMP_NUM_THREADS: 2
 
 #  run_enkf:
 #    env: { }
@@ -70,40 +70,40 @@ resource_demo: &resource_demo
 #        OMP_NUM_THREADS: 4
 
   run_efcs:
-    env: { }
-    walltime: 00:02:00
-    mpi_ranks: 120
-    memory: "3072M"
+    - env: { }
+      walltime: 00:02:00
+      mpi_ranks: 120
+      memory: "3072M"
 
   run_epos:
-    env: { }
-    memory: "254M"
-    mpi_ranks: 84
-    walltime: 00:02:00
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 12
-        OMP_NUM_THREADS: 2
+    - env: { }
+      memory: "254M"
+      mpi_ranks: 84
+      walltime: 00:02:00
+      resources:  !JobRequest
+        - exe: placeholder
+          max_ppn: 12
+          OMP_NUM_THREADS: 2
 
   run_prep:
-    env: { }
-    memory: "3072M"
-    walltime: 00:02:00
-    mpi_ranks: 12
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 12
-        OMP_NUM_THREADS: max
+    - env: { }
+      memory: "3072M"
+      walltime: 00:02:00
+      mpi_ranks: 12
+      resources:  !JobRequest
+        - exe: placeholder
+          max_ppn: 12
+          OMP_NUM_THREADS: max
 
   run_anal:
-    env: { }
-    memory: "3072M" 
-    mpi_ranks: 144
-    walltime: 00:02:00
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 6
-        OMP_NUM_THREADS: 2
+    - env: { }
+      memory: "3072M" 
+      mpi_ranks: 144
+      walltime: 00:02:00
+      resources:  !JobRequest
+        - exe: placeholder
+          max_ppn: 6
+          OMP_NUM_THREADS: 2
 
 #  run_gsi:
 #    env: { }
@@ -114,66 +114,66 @@ resource_demo: &resource_demo
 #        OMP_NUM_THREADS: 4
 
   run_gdasfcst:
-    env: { }
-    mpi_ranks: 144
-    walltime: 00:02:00
-    memory: "3072M"
+    - env: { }
+      mpi_ranks: 144
+      walltime: 00:02:00
+      memory: "3072M"
 
   run_gfsfcst:
-    env: { }
-    mpi_ranks: 144
-    walltime: 00:02:00
-    memory: "3072M" 
+    - env: { }
+      mpi_ranks: 144
+      walltime: 00:02:00
+      memory: "3072M" 
 
   run_gdaspost:
-    env: { }
-    memory: "3072M"
-    mpi_ranks: 72
-    walltime: 00:02:00
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 12
-        OMP_NUM_THREADS: 1
+    - env: { }
+      memory: "3072M"
+      mpi_ranks: 72
+      walltime: 00:02:00
+      resources:  !JobRequest
+        - exe: placeholder
+          max_ppn: 12
+          OMP_NUM_THREADS: 1
 
   run_gfspost:
-    env: { }
-    memory: "3072M"
-    mpi_ranks: 72
-    walltime: 00:02:00
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 12
-        OMP_NUM_THREADS: 1
+    - env: { }
+      memory: "3072M"
+      mpi_ranks: 72
+      walltime: 00:02:00
+      resources:  !JobRequest
+       - exe: placeholder
+         max_ppn: 12
+         OMP_NUM_THREADS: 1
 
   run_vrfy:
-    env: { }
-    memory: "3072M" 
-    mpi_ranks: 1
-    walltime: 00:02:00
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 1
-        OMP_NUM_THREADS: 2
+    - env: { }
+      memory: "3072M" 
+      mpi_ranks: 1
+      walltime: 00:02:00
+      resources:  !JobRequest
+        - exe: placeholder
+          max_ppn: 1
+          OMP_NUM_THREADS: 2
 
   run_arch:
-    env: { }
-    memory: "3072M"
-    mpi_ranks: 1
-    walltime: 00:02:00
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 1
-        OMP_NUM_THREADS: 2
+    - env: { }
+      memory: "3072M"
+      mpi_ranks: 1
+      walltime: 00:02:00
+      resources:  !JobRequest
+        - exe: placeholder
+          max_ppn: 1
+          OMP_NUM_THREADS: 2
 
   run_final:
-    env: { }
-    memory: "2M"
-    mpi_ranks: 1
-    walltime: 00:01:00
-    resources:  !JobRequest
-      - exe: placeholder
-        max_ppn: 1
-        OMP_NUM_THREADS: 2
+    - env: { }
+      memory: "2M"
+      mpi_ranks: 1
+      walltime: 00:01:00
+      resources:  !JobRequest
+        - exe: placeholder
+          max_ppn: 1
+          OMP_NUM_THREADS: 2
 
 #  run_earc:
 #    env: { }
@@ -186,8 +186,8 @@ resource_demo: &resource_demo
 #        OMP_NUM_THREADS: 2
 
   run_fv3ic:
-    env: { }
-    memory: "3072M" 
-    mpi_ranks: 24
-    resources:  !JobRequest
-      - exe: placeholder
+    - env: { }
+      memory: "3072M" 
+      mpi_ranks: 24
+      resources:  !JobRequest
+        - exe: placeholder
