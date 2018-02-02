@@ -242,7 +242,6 @@ class ToEcflow(object):
         ecf_file_set=task.get('ecf_file_set',ecf_file_set)
         ecf_file_path=ecf_file_path+[task.path[-1]]
         path_string='/'.join(ecf_file_path)
-        print(f'task@{task.task_path_var} ecf file set {ecf_file_set} file {path_string}')
         if path_string in ecf_files[ecf_file_set]:
             return # This ecf file is already generated
         ecf_files[ecf_file_set][path_string]=task.ecf_file
@@ -251,7 +250,6 @@ class ToEcflow(object):
                                ecf_file_path,family):
         ecf_file_set=family.get('ecf_file_set',ecf_file_set)
         ecf_file_path=ecf_file_path+[family.path[-1]]
-        print(f'family@{family.task_path_var} ecf file set {ecf_file_set} file {ecf_file_path}')
         for t in family.child_iter():
             if t.is_task():
                 self._make_task_ecf_files(

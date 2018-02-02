@@ -65,7 +65,7 @@ suite: !Cycle
     edit ECF_SOME_OTHER_VAR 'abcd'
 
   task0: !Task
-    Time: !timedelta +2:00:00
+    # Time: !timedelta +2:00:00
     resources: *sample_serial
     J_JOB: JGFS_TASK0
     ecf_file: *ecf_file_template
@@ -76,13 +76,20 @@ suite: !Cycle
       edit SOMEVAR '1'
       edit ANOTHERVAR '2'
     Trigger: !Depend "up.family2.at('-6:00:00').task21 & task0"
-    Time: !timedelta +3:00:00
+    # Time: !timedelta +3:00:00
 
     task11: !Task
       ecflow_def: |
         edit WHATEVER '333'
         event manually_written_event
-      ecf_file: *ecf_file_template
+      ecf_file: !expand |
+        #! /bin/sh
+        {sched.batch_accounting(doc.accounting,jobname=jobname)}{sched.batch_resources(resources)}
+        %include <head.h>
+        echo ${{JOBgfs}}/{J_JOB}
+        ecflow_client --event=some_event
+        ecflow_client --event=another_event
+        %include <tail.h>
       J_JOB: JGFS_TASK11
       resources: *sample_serial
       jobname: !calc task_path_var
@@ -102,7 +109,7 @@ suite: !Cycle
       jobname: !calc task_path_var
 
   family2: !Family
-    Time: !timedelta +4:20:00
+    # Time: !timedelta +4:20:00
     Trigger: !Depend family1.task11.another_event
 
     task21: !Task
@@ -121,7 +128,7 @@ suite: !Cycle
         jobname: !calc task_path_var
 
     task22: !Task
-      Time: !timedelta +5:00:00
+      # Time: !timedelta +5:00:00
       Trigger: !Depend task21
       resources: *sample_mpi_omp
       ecf_file: *ecf_file_template
@@ -129,7 +136,7 @@ suite: !Cycle
       jobname: !calc task_path_var
 
     task23: !Task
-      Time: !timedelta +6:30:00
+      # Time: !timedelta +6:30:00
       Complete: !Depend task22
       resources: *sample_serial
       Trigger: !Depend task21

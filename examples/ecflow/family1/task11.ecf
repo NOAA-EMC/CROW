@@ -8,4 +8,6 @@
 export NODES=1
 %include <head.h>
 echo ${JOBgfs}/JGFS_TASK11
+ecflow_client --event=some_event
+ecflow_client --event=another_event
 %include <tail.h>
