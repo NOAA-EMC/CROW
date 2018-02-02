@@ -38,12 +38,13 @@ scheduler: !calc |
                       doc.scheduler_settings)
 
 accounting:
-  queue: debug
+  queue: '%QUEUE%'
   project: GFS-T2O
 
 ecf_file_template: &ecf_file_template !expand |
   #! /bin/sh
-  {sched.batch_accounting(doc.accounting,jobname=jobname)}{sched.batch_resources(resources)}
+  {sched.batch_accounting(doc.accounting,jobname=jobname,outerr=logfile)
+  }{sched.batch_resources(resources)}
   %include <head.h>
   echo ${{JOBgfs}}/{J_JOB}
   %include <tail.h>
@@ -63,6 +64,7 @@ suite: !Cycle
     repeat day 1
     edit ECF_TRIES '1'
     edit ECF_SOME_OTHER_VAR 'abcd'
+    edit QUEUE 'debug'
 
   task0: !Task
     # Time: !timedelta +2:00:00
@@ -70,6 +72,7 @@ suite: !Cycle
     J_JOB: JGFS_TASK0
     ecf_file: *ecf_file_template
     jobname: !calc task_path_var
+    logfile: !expand '/ptmp/%U/{jobname}'
 
   family1: !Family
     ecflow_def: |
@@ -93,6 +96,7 @@ suite: !Cycle
       J_JOB: JGFS_TASK11
       resources: *sample_serial
       jobname: !calc task_path_var
+      logfile: !expand '/ptmp/%U/{jobname}'
 
       # NOTE: in the below !DataEvent maps, the file= is required, but
       # is just a placeholder for Rocoto support.  It is not used at
@@ -107,6 +111,7 @@ suite: !Cycle
       J_JOB: JGFS_TASK12
       Trigger: !Depend task11.some_event
       jobname: !calc task_path_var
+      logfile: !expand '/ptmp/%U/{jobname}'
 
   family2: !Family
     # Time: !timedelta +4:20:00
@@ -118,6 +123,7 @@ suite: !Cycle
       resources: *sample_mpi_mpmd
       J_JOB: JGFS_TASK21
       jobname: !calc task_path_var
+      logfile: !expand '/ptmp/%U/{jobname}'
 
     family3: !Family 
       task3: !Task
@@ -126,7 +132,7 @@ suite: !Cycle
         Trigger: !Depend up.task21
         J_JOB: JGFS_TASK3
         jobname: !calc task_path_var
-
+        logfile: !expand '/ptmp/%U/{jobname}'
     task22: !Task
       # Time: !timedelta +5:00:00
       Trigger: !Depend task21
@@ -134,7 +140,7 @@ suite: !Cycle
       ecf_file: *ecf_file_template
       J_JOB: JGFS_TASK22
       jobname: !calc task_path_var
-
+      logfile: !expand '/ptmp/%U/{jobname}'
     task23: !Task
       # Time: !timedelta +6:30:00
       Complete: !Depend task22
@@ -143,3 +149,4 @@ suite: !Cycle
       ecf_file: *ecf_file_template
       J_JOB: JGFS_TASK23
       jobname: !calc task_path_var
+      logfile: !expand '/ptmp/%U/{jobname}'
