@@ -2,11 +2,11 @@
 #BSUB -q %QUEUE%
 #BSUB -P %PROJECT%
 #BSUB -J gdas.vrfy
-#BSUB -o %LOG%gdas.vrfy.log
-#BSUB -W 0:05
-#BSUB -R rusage[mem=500]
+#BSUB -o %ECF_OUT%/gdas.vrfy_t00z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=3072]
 #BSUB -extsched CRAYLINUX[]
-export NODES=2
+export NODES=1
 %include <head.h>
 echo ${JOBgfs}/vrfy
 %include <tail.h>

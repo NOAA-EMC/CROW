@@ -65,6 +65,7 @@ class SuiteView(Mapping):
     def __init__(self,suite,viewed,path,parent):
         # assert(isinstance(suite,Suite))
         # assert(isinstance(viewed,dict_eval))
+        assert(hasattr(self,'_iter_raw'))
         assert(isinstance(parent,SuiteView))
         assert(not isinstance(viewed,SuiteView))
         self.suite=suite
@@ -97,6 +98,19 @@ class SuiteView(Mapping):
                 if hasattr(v,'_as_dependency'): continue
                 self.viewed[k]=from_config(k,v,globals,locals,self.viewed._path)
         assert(isinstance(viewed,Cycle) or self.viewed.task_path_var != parent.task_path_var)
+
+    def _raw(self,key):
+        return self.viewed._raw(key)
+
+    def _iter_raw(self):
+        if hasattr(self.viewed,'_iter_raw'):
+            for r in self.viewed._iter_raw():
+                yield r
+
+    def _invalidate_cache(self,key):
+        self.__cache={}
+        if hasattr(self.viewed,'_invalidate_cache'):
+            self.viewed._invalidate_cache(key)
 
     def _globals(self):
         return self.viewed._globals()

@@ -10,6 +10,7 @@ suite prod00
   edit ECF_HOME '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts/'
   edit PROJENVIR 'HUR-T2O'
   edit EMCPEN 'ecfgfsfv3'
+  edit CYC '00'
   edit COM '/gpfs/hps2/ptmp/emc.glopara/%EMCPEN%/com'
   edit QUEUESERV 'dev_transfer'
   edit DATAROOT '/gpfs/hps2/stmp/emc.glopara/%EMCPEN%'

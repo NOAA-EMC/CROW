@@ -2,11 +2,11 @@
 #BSUB -q %QUEUE%
 #BSUB -P %PROJECT%
 #BSUB -J gdas.enkf.eobs
-#BSUB -o %LOG%gdas.enkf.eobs.log
-#BSUB -W 0:05
-#BSUB -R rusage[mem=500]
+#BSUB -o %ECF_OUT%/gdas.enkf.eobs_t00z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=3072]
 #BSUB -extsched CRAYLINUX[]
-export NODES=2
+export NODES=12
 %include <head.h>
 echo ${JOBgfs}/eobs
 %include <tail.h>

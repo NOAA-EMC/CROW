@@ -163,13 +163,16 @@ class dict_eval(MutableMapping):
 
     def _invalidate_cache(self,key=None):
         if key is None:
+            #print(f'{self._path}: reset')
             self.__cache=copy(self.__child)
+            #if 'ecflow_def' in self:
+            #    print(f'ecflow_def = {self.__cache["ecflow_def"]!r}')
         else:
             self.__cache[key]=self.__child[key]
     def _raw_child(self):       return self.__child
     def _has_raw(self,key):     return key in self.__child
     def _iter_raw(self):
-        for v in self.__child.itervalues():
+        for v in self.__child.values():
             yield v
     def _set_globals(self,g):   self.__globals=g
     def _get_globals(self):     return self.__globals
@@ -390,19 +393,27 @@ class Eval(dict_eval):
 
 def _invalidate_cache_one_obj(obj,key=None):
     if hasattr(obj,'_invalidate_cache'):
+        #print(f'invalidate cache {obj.path}')
         obj._invalidate_cache(key)
 
 def _recursively_invalidate_cache(obj,memo):
+    #print('invalidate cache rec')
     if id(obj) in memo: return
     memo.add(id(obj))
     _invalidate_cache_one_obj(obj)
-    if '_iter_raw' in obj:
+    if hasattr(obj, '_iter_raw' ):
+        #print('iter raw in obj')
         for r in obj._iter_raw():
             _recursively_invalidate_cache(r,memo)
+    else:
+        pass
+        #print(f'no _iter_raw in obj of type {type(obj).__name__}')
 
 def invalidate_cache(obj,key=None,recurse=False):
+    #print(f'invalidate cache {key} {recurse}')
     _invalidate_cache_one_obj(obj,key)
     if recurse:
+        #print('in recurse')
         if key is not None: obj=obj[key]
         _recursively_invalidate_cache(obj,set())
 

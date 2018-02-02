@@ -159,6 +159,7 @@ class ToEcflow(object):
         self.sched=scheduler
         self.clock=None
         self.undated=OrderedDict()
+        self.suite_name=None
 
     ####################################################################
         
@@ -273,8 +274,14 @@ class ToEcflow(object):
     def to_ecflow(self):
         suite_def_files=dict()
         ecf_files=collections.defaultdict(dict)
-        for clock in self.suite.Clock.iternow():
+        clock=copy(self.suite.Clock)
+        # Cannot iterate over self.suite.Clock because
+        # self.suite.Clock is not a CLock. It is an object that
+        # generates a Clock.  Hence, invalidate_cache causes a new
+        # clock to be generated.
+        for clock in clock.iternow():
             invalidate_cache(self.suite,recurse=True)
+            self.suite.Clock.now = clock.now
             # Figure our where we are making the suite definition file:
             filename=clock.now.strftime(self.suite.ecFlow.suite_def_filename)
             if filename in suite_def_files:

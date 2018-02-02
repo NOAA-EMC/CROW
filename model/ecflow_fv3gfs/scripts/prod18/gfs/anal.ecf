@@ -2,11 +2,11 @@
 #BSUB -q %QUEUE%
 #BSUB -P %PROJECT%
 #BSUB -J gfs.anal
-#BSUB -o %LOG%gfs.anal.log
-#BSUB -W 0:05
-#BSUB -R rusage[mem=500]
+#BSUB -o %ECF_OUT%/gfs.anal_t00z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=3072]
 #BSUB -extsched CRAYLINUX[]
-export NODES=2
+export NODES=24
 %include <head.h>
 echo ${JOBgfs}/anal
 %include <tail.h>

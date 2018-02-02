@@ -202,6 +202,9 @@ class Clock(object):
             raise ValueError('End time must be at or after start time.')
         self.now=now
 
+    def __repr__(self):
+
+        return f'Clock(start={self.start!r},step={self.step!r},end={self.end!r},now={self.now!r})'
     def __contains__(self,when):
         if isinstance(when,datetime.timedelta):
             return not when%self.step
