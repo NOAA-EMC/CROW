@@ -2,7 +2,7 @@
 #BSUB -q %QUEUESERV%
 #BSUB -P %PROJECT%
 #BSUB -J archive.earc.grp6
-#BSUB -o %ECF_OUT%/archive.earc.grp6_t00z.log
+#BSUB -o %ECF_OUT%/archive.earc.grp6_t%CYC%z.log
 #BSUB -W 0:02
 #BSUB -R rusage[mem=3072]
 #BSUB -n 1

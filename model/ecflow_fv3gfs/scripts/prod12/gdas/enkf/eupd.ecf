@@ -2,7 +2,7 @@
 #BSUB -q %QUEUE%
 #BSUB -P %PROJECT%
 #BSUB -J gdas.enkf.eupd
-#BSUB -o %ECF_OUT%/gdas.enkf.eupd_t00z.log
+#BSUB -o %ECF_OUT%/gdas.enkf.eupd_t%CYC%z.log
 #BSUB -W 0:02
 #BSUB -R rusage[mem=3072]
 #BSUB -extsched CRAYLINUX[]

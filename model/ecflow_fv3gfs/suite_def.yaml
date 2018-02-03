@@ -10,7 +10,7 @@ scheduler: !calc |
 
 settings:
   NMEM_ENKF: 80
-  ECF_HOME: '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts/'
+  ECF_HOME: '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts'
 
 shared_accounting: &shared_accounting
   queue: '%QUEUESERV%' 
@@ -22,7 +22,7 @@ exclusive_accounting: &exclusive_accounting
 
 ecf_file_template: &ecf_file_template !expand |
   #! /bin/sh
-  {sched.batch_accounting(accounting,jobname=task_path_var,outerr="%ECF_OUT%/"+task_path_var+"_t"+tools.strftime(suite.Clock.now,"%H")+"z.log")
+  {sched.batch_accounting(accounting,jobname=task_path_var,outerr="%ECF_OUT%/"+task_path_var+"_t"+"%CYC%"+"z.log")
   }{sched.batch_resources(resources)}
   %include <head.h>
   echo ${{JOBgfs}}/{J_JOB}
