@@ -10,7 +10,7 @@ scheduler: !calc |
 
 settings:
   NMEM_ENKF: 80
-  ECF_HOME: '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts'
+  ECF_HOME: '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs'
 
 shared_accounting: &shared_accounting
   queue: '%QUEUESERV%' 
@@ -53,6 +53,7 @@ suite: !Cycle
     edit COM '/gpfs/hps2/ptmp/emc.glopara/%EMCPEN%/com'
     edit QUEUESERV 'dev_transfer'
     edit DATAROOT '/gpfs/hps2/stmp/emc.glopara/%EMCPEN%'
+    edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
     edit ECF_OUT '{doc.settings.ECF_HOME}/output'
     edit ECF_LOG '{doc.settings.ECF_HOME}/ecf.log'
 
