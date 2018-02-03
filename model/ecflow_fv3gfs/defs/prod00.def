@@ -7,15 +7,16 @@ suite prod00
   edit QUEUESERV 'dev_transfer'
   edit MACHINE 'xc40-dev'
   edit PROJECT 'HUR-T2O'
-  edit ECF_HOME '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts'
+  edit ECF_HOME '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs'
   edit PROJENVIR 'HUR-T2O'
   edit EMCPEN 'ecfgfsfv3'
   edit CYC '00'
   edit COM '/gpfs/hps2/ptmp/emc.glopara/%EMCPEN%/com'
   edit QUEUESERV 'dev_transfer'
   edit DATAROOT '/gpfs/hps2/stmp/emc.glopara/%EMCPEN%'
-  edit ECF_OUT '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts/output'
-  edit ECF_LOG '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts/ecf.log'
+  edit ECF_FILES '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts'
+  edit ECF_OUT '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/output'
+  edit ECF_LOG '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/ecf.log'
   family gdas
     task prep
       trigger /prod18/gdas/post == complete
