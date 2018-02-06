@@ -44,7 +44,8 @@ suite: !Cycle
   ecflow_def: !expand |
     repeat day 1
     edit ECF_TRIES '1'
-    edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+    #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+    edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
     edit ECF_KILL_CMD 'lkill %ECF_NAME% %ECF_JOBOUT%'
     edit ECF_HOME '{doc.settings.ECF_HOME}'
     #edit ECF_HOME '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3'
@@ -63,6 +64,43 @@ suite: !Cycle
     edit ECF_LOG '{doc.settings.ECF_HOME}/ecf.log'
 
   gdas: !Family
+    ecflow_def: |
+      edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
+      edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+      edit PROJ '%PROJENVIR%'
+
+    jgdas_verfrad: !Task
+      Trigger: !Depend enkf
+      ecf_file: *ecf_file_template
+      resources: !calc ( doc.resource_demo.run_nothing )
+      accounting: *exclusive_accounting
+
+    jgdas_vminmon: !Task
+      Trigger: !Depend jgdas_analysis
+      ecf_file: *ecf_file_template
+      resources: !calc ( doc.resource_demo.run_nothing )
+      accounting: *exclusive_accounting
+      J_JOB: nothing
+
+    dump: !Family
+      jgdas_ics: !Task
+        release_gdas00_ics: !DataEvent {file="/dev/null"}
+        ecf_file: *ecf_file_template
+        resources: !calc ( doc.resource_demo.run_nothing )
+        accounting: *exclusive_accounting
+        J_JOB: nothing
+
+      jgdas_tropcy_qc_reloc: !Task
+        Trigger: !Depend jgdas_dump
+        #Time: !timedelta +5:50:00
+
+      #Replaced by emc version of dump job 
+      #This dump job should be using NCO version when delivery to NCO
+      jgdas_dump: !Task
+        release_sfcprep: !DataEvent {file="/dev/null"}
+        #Time: !timedelta +3:50:00
+
+
     prep: !Task
       Trigger: !Depend  up.gdas.post.at('-6:00:00')
       ecf_file: *ecf_file_template
@@ -292,35 +330,72 @@ suite: !Cycle
       J_JOB: vrfy
 
   gfs: !Family
-    prep: !Task
-      Trigger: !Depend  up.gdas.post.at('-6:00:00')
-      ecf_file: *ecf_file_template
-      resources: !calc ( doc.resource_demo.run_prep )
-      accounting: *exclusive_accounting
-      J_JOB: prep
+    ecflow_def: |
+      edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+      edit PROJ '%PROJENVIR%'
+
+    dump: !Family
+      jgfs_tropcy_qc_reloc: !Task
+        Trigger: !Depend jgfs_dump
+        jtwc_bull_email: !DataEvent {file="/dev/null"}
+
+      #Replaced by emc version of dump job 
+      #This dump job should be using NCO version when delivery to NCO
+      jgfs_dump: !Task
+        release_sfcprep: !DataEvent {file="/dev/null"}
+        #Time: !timedelta +3:50:00
+
+    prep: !Family
+      jgfs_emcsfc_sfc_prep: !Task
+        Trigger: !Depend up.dump.jgfs_dump.release_sfcprep
+        ecf_file: *ecf_file_template
+        resources: !calc ( doc.resource_demo.run_prep )
+        accounting: *exclusive_accounting
+        J_JOB: prep
     
-    anal: !Task
-      Trigger: !Depend  ( prep & up.gdas.enkf.epos.at('-6:00:00') )
+      jgfs_prep: !Task
+        Trigger: !Depend up.dump
+        ecf_file: *ecf_file_template
+        resources: !calc ( doc.resource_demo.run_prep )
+        accounting: *exclusive_accounting
+        J_JOB: prep
+    
+      jgfs_prep_post: !Task
+        Trigger: !Depend  up.jgfs_analysis
+        ecf_file: *ecf_file_template
+        resources: !calc ( doc.resource_demo.run_prep )
+        accounting: *exclusive_accounting
+        J_JOB: prep
+    
+    jgfs_analysis: !Task
+      Trigger: !Depend "up.prep.jgfs_prep & up.prep.jgfs_emcsfc_sfc_prep  & up.gdas.enkf.epos.at('-6:00:00')"
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_anal )
       accounting: *exclusive_accounting
       J_JOB: anal
 
-    fcst: !Task
-      Trigger: !Depend anal
+    jgfs_vminmon: !Task
+      Trigger: !Depend jgfs_analysis
+      ecf_file: *ecf_file_template
+      resources: !calc ( doc.resource_demo.run_nothing )
+      accounting: *exclusive_accounting
+      J_JOB: nothing
+
+    jgfs_forecast: !Task
+      Trigger: !Depend jgfs_analysis
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_gfsfcst )
       accounting: *exclusive_accounting
       J_JOB: fcst
 
-    post: !Task
-      Trigger: !Depend fcst
+    jgfs_post: !Task
+      Trigger: !Depend jgfs_forecast
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_gfspost )
       accounting: *exclusive_accounting
       J_JOB: post
     
-    vrfy: !Task
+    jgfs_vrfy: !Task
       Trigger: !Depend post
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_vrfy )
