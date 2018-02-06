@@ -8,10 +8,10 @@ resource_demo: &resource_demo
   run_ecen: !JobRequest
     - memory: "3072M" 
       walltime: 00:02:00
-      mpi_ranks: 84
+      mpi_ranks: 80
       exe: placeholder
           # max_ppn comes from THEIA.env: 84/12 = 7
-      max_ppn: 7
+      max_ppn: 4
       OMP_NUM_THREADS: 2
 
   run_chgres: !JobRequest
@@ -43,9 +43,9 @@ resource_demo: &resource_demo
   run_eupd: !JobRequest
     - memory: "3072M" 
       walltime: 00:02:00
-      mpi_ranks: !calc 10*12
+      mpi_ranks: !calc 20*12
       exe: placeholder
-      max_ppn: 12
+      max_ppn: 6
       OMP_NUM_THREADS: 2
 
 #  run_enkf: !JobRequest
@@ -57,28 +57,29 @@ resource_demo: &resource_demo
 
   run_efcs: !JobRequest
     - walltime: 00:02:00
-      mpi_ranks: 120
-      memory: "3072M"
+      mpi_ranks: !calc "doc.settings.layout_x*doc.settings.layout_y*6"
+      max_ppn: 12
+      memory: "254M"
 
   run_epos: !JobRequest
     - memory: "254M"
-      mpi_ranks: 84
+      mpi_ranks: 80
       walltime: 00:02:00
       exe: placeholder
-      max_ppn: 12
+      max_ppn: 4
       OMP_NUM_THREADS: 2
 
   run_prep: !JobRequest
     - memory: "3072M"
       walltime: 00:02:00
-      mpi_ranks: 12
+      mpi_ranks: 6
       exe: placeholder
-      max_ppn: 12
+      max_ppn: 2
       OMP_NUM_THREADS: max
 
   run_anal: !JobRequest
     - memory: "3072M" 
-      mpi_ranks: 144
+      mpi_ranks: 360
       walltime: 00:02:00
       exe: placeholder
       max_ppn: 6
@@ -92,14 +93,16 @@ resource_demo: &resource_demo
 #        OMP_NUM_THREADS: 4
 
   run_gdasfcst: !JobRequest
-    - mpi_ranks: 144
+    - mpi_ranks: !calc "doc.settings.layout_x*doc.settings.layout_y*6"
       walltime: 00:02:00
-      memory: "3072M"
+      max_ppn: 12
+      memory: "1024M"
 
   run_gfsfcst: !JobRequest
-    - mpi_ranks: 144
+    - mpi_ranks: !calc "doc.settings.layout_x*doc.settings.layout_y*6"
       walltime: 00:02:00
-      memory: "3072M" 
+      max_ppn: 12
+      memory: "1024M"
 
   run_gdaspost: !JobRequest
     - memory: "3072M"

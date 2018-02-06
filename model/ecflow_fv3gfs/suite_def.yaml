@@ -11,6 +11,8 @@ scheduler: !calc |
 settings:
   NMEM_ENKF: 80
   ECF_HOME: '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs'
+  layout_x: 8
+  layout_y: 16
 
 shared_accounting: &shared_accounting
   queue: '%QUEUESERV%' 
