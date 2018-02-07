@@ -1,18 +1,20 @@
-extern /prod18/gdas/post
-extern /prod18/gdas/enkf/epos
-extern /prod00/gdas/post
-extern /prod00/gdas/enkf/epos
+extern /prod18/gdas/enkf/jgdas_enkf_post
+extern /prod00/gdas/enkf/jgdas_enkf_post
 suite prod06
   repeat day 1
   edit ECF_TRIES '1'
-  edit QUEUE 'debug'
-  edit QUEUESERV 'dev_transfer'
-  edit MACHINE 'xc40-dev'
-  edit PROJECT 'HUR-T2O'
+  #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+  edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
+  edit ECF_KILL_CMD 'lkill %ECF_NAME% %ECF_JOBOUT%'
   edit ECF_HOME '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs'
-  edit PROJENVIR 'HUR-T2O'
-  edit EMCPEN 'ecfgfsfv3'
+  #edit ECF_HOME '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3'
   edit CYC '06'
+  edit ENVIR 'prod'
+  edit E 'jecffv3'
+  #edit QUEUE 'dev'
+  edit QUEUE 'debug'
+  edit PROJENVIR 'GFS-T2O'
+  edit EMCPEN 'ecfgfsfv3'
   edit COM '/gpfs/hps2/ptmp/emc.glopara/%EMCPEN%/com'
   edit QUEUESERV 'dev_transfer'
   edit DATAROOT '/gpfs/hps2/stmp/emc.glopara/%EMCPEN%'
@@ -20,100 +22,153 @@ suite prod06
   edit ECF_OUT '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/output'
   edit ECF_LOG '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/ecf.log'
   family gdas
-    task prep
-      trigger /prod00/gdas/post == complete
+    edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
+    edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+    edit PROJ '%PROJENVIR%'
+    task jgdas_verfrad
+      trigger ./enkf == complete
     endtask
-    family enkf
-      task eobs
-        trigger ../prep == complete and /prod00/gdas/enkf/epos == complete
+    task jgdas_vminmon
+      trigger ./jgdas_analysis == complete
+    endtask
+    family dump
+      task jgdas_ics
+       event 1 release_gdas00_ics
       endtask
-      family eomg
-        trigger ./eobs == complete
-        task grp1
-        endtask
-        task grp2
-        endtask
-        task grp3
-        endtask
-        task grp4
-        endtask
-        task grp5
-        endtask
-        task grp6
-        endtask
-        task grp7
-        endtask
-        task grp8
-        endtask
-      endfamily
-      task eupd
-        trigger ./eomg == complete
+      task jgdas_tropcy_qc_reloc
+        trigger ./jgdas_dump == complete
       endtask
-      task ecen
-        trigger ./eupd == complete and ../anal == complete
-      endtask
-      family efcs
-        trigger ./ecen == complete
-        task grp1
-        endtask
-        task grp2
-        endtask
-        task grp3
-        endtask
-        task grp4
-        endtask
-        task grp5
-        endtask
-        task grp6
-        endtask
-        task grp7
-        endtask
-        task grp8
-        endtask
-      endfamily
-      task epos
-        trigger ./efcs == complete
+      task jgdas_dump
+       event 1 release_sfcprep
       endtask
     endfamily
-    task anal
-      trigger ./prep == complete and /prod00/gdas/enkf/epos == complete
+    family prep
+      task jgdas_emcsfc_sfc_prep
+        trigger ../dump/jgdas_dump:release_sfcprep
+      endtask
+      task jgdas_prep
+        trigger ../dump/jgdas_dump == complete and ../dump/jgdas_tropcy_qc_reloc == complete
+      endtask
+      task jgdas_prep_post
+        trigger ../jgdas_analysis == complete
+      endtask
+    endfamily
+    family enkf
+      task jgdas_enkf_select_obs
+        trigger ../prep/jgdas_prep == complete and /prod00/gdas/enkf/jgdas_enkf_post == complete
+      endtask
+      family innovate
+        trigger ./jgdas_enkf_select_obs == complete
+        task grp1
+        endtask
+        task grp2
+        endtask
+        task grp3
+        endtask
+        task grp4
+        endtask
+        task grp5
+        endtask
+        task grp6
+        endtask
+        task grp7
+        endtask
+        task grp8
+        endtask
+      endfamily
+      task jgdas_enkf_update
+        edit ECF_PASS 'FREE'
+        trigger ./innovate == complete
+      endtask
+      task jgdas_enkf_inflate_recenter
+        trigger ./jgdas_enkf_update == complete and ../jgdas_analysis == complete
+      endtask
+      family forecast
+        trigger ./jgdas_enkf_inflate_recenter == complete
+        task grp1
+        endtask
+        task grp2
+        endtask
+        task grp3
+        endtask
+        task grp4
+        endtask
+        task grp5
+        endtask
+        task grp6
+        endtask
+        task grp7
+        endtask
+        task grp8
+        endtask
+      endfamily
+      task jgdas_enkf_post
+        trigger ./forecast == complete
+      endtask
+    endfamily
+    task jgdas_analysis
+     event 1 release_fcst
+      trigger ./prep/jgdas_prep == complete and ./prep/jgdas_emcsfc_sfc_prep == complete and /prod00/gdas/enkf/jgdas_enkf_post == complete
     endtask
-    task fcst
-      trigger ./anal == complete
+    task jgdas_forecast
+     event 1 release_fcst
+      trigger ./jgdas_analysis:release_fcst and ./enkf/innovate == complete
     endtask
     task post
-      trigger ./fcst == complete
+      trigger ./jgdas_forecast == complete
     endtask
     task vrfy
       trigger ./post == complete
     endtask
   endfamily
   family gfs
-    task prep
-      trigger /prod00/gdas/post == complete
+    edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+    edit PROJ '%PROJENVIR%'
+    family dump
+      task jgfs_tropcy_qc_reloc
+       event 1 jtwc_bull_email
+        trigger ./jgfs_dump == complete
+      endtask
+      task jgfs_dump
+       event 1 release_sfcprep
+      endtask
+    endfamily
+    family prep
+      task jgfs_emcsfc_sfc_prep
+        trigger ../dump/jgfs_dump:release_sfcprep
+      endtask
+      task jgfs_prep
+        trigger ../dump == complete
+      endtask
+      task jgfs_prep_post
+        trigger ../jgfs_analysis == complete
+      endtask
+    endfamily
+    task jgfs_analysis
+      trigger ./prep/jgfs_prep == complete and ./prep/jgfs_emcsfc_sfc_prep == complete and /prod00/gdas/enkf/jgdas_enkf_post == complete
     endtask
-    task anal
-      trigger ./prep == complete and /prod00/gdas/enkf/epos == complete
+    task jgfs_vminmon
+      trigger ./jgfs_analysis == complete
     endtask
-    task fcst
-      trigger ./anal == complete
+    task jgfs_forecast
+      trigger ./jgfs_analysis == complete
     endtask
-    task post
-      trigger ./fcst == complete
+    task jgfs_post
+      trigger ./jgfs_forecast == complete
     endtask
-    task vrfy
-      trigger ./post == complete
+    task jgfs_vrfy
+      trigger ./jgfs_post == complete
     endtask
   endfamily
   family archive
     task gdasarch
-      trigger ../gdas/vrfy == complete
+      trigger ../gdas/jgdas_verfrad == complete
     endtask
     task gfsarch
-      trigger ../gfs/vrfy == complete
+      trigger ../gfs/jgfs_vrfy == complete
     endtask
     family earc
-      trigger ../gdas/enkf/epos == complete
+      trigger ../gdas/enkf/jgdas_enkf_post == complete
       task grp1
       endtask
       task grp2

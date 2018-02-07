@@ -74,6 +74,7 @@ suite: !Cycle
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_nothing )
       accounting: *exclusive_accounting
+      J_JOB: nothing
 
     jgdas_vminmon: !Task
       Trigger: !Depend jgdas_analysis
@@ -102,12 +103,20 @@ suite: !Cycle
       jgdas_tropcy_qc_reloc: !Task
         Trigger: !Depend jgdas_dump
         #Time: !timedelta +5:50:00
+        ecf_file: *ecf_file_template
+        resources: !calc ( doc.resource_demo.run_nothing )
+        accounting: *exclusive_accounting
+        J_JOB: nothing
 
       #Replaced by emc version of dump job 
       #This dump job should be using NCO version when delivery to NCO
       jgdas_dump: !Task
         release_sfcprep: !DataEvent {file="/dev/null"}
         #Time: !timedelta +6:20:00
+        ecf_file: *ecf_file_template
+        resources: !calc ( doc.resource_demo.run_nothing )
+        accounting: *exclusive_accounting
+        J_JOB: nothing
 
     prep: !Family
       jgdas_emcsfc_sfc_prep: !Task
@@ -134,7 +143,7 @@ suite: !Cycle
 
     enkf: !Family
       jgdas_enkf_select_obs: !Task
-        Trigger: !Depend  ( up.prep.jgdas_prep & epos.at('-6:00:00') )
+        Trigger: !Depend  ( up.prep.jgdas_prep & jgdas_enkf_post.at('-6:00:00') )
         ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_eobs )
         accounting: *exclusive_accounting
@@ -249,7 +258,7 @@ suite: !Cycle
 #            Rocoto: !expand "{task_template}{ens_more}"
 
       forecast: !Family
-        Trigger: !Depend up.jgdas_enkf_inflate_recenter
+        Trigger: !Depend up.enkf.jgdas_enkf_inflate_recenter
         grp1: !Task
           ecf_file: *ecf_file_template
           resources: !calc ( doc.resource_demo.run_efcs )
@@ -327,7 +336,7 @@ suite: !Cycle
         J_JOB: epos
 
     jgdas_analysis: !Task
-      Trigger: !Depend ( prep.jgdas_prep & prep.jgdas_emcsfc_sfc_prep & enkf.epos.at('-6:00:00') )
+      Trigger: !Depend ( prep.jgdas_prep & prep.jgdas_emcsfc_sfc_prep & enkf.jgdas_enkf_post.at('-6:00:00') )
       release_fcst: !DataEvent {file="/dev/null"}
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_anal )
@@ -343,7 +352,7 @@ suite: !Cycle
       J_JOB: fcst
 
     post: !Task
-      Trigger: !Depend fcst
+      Trigger: !Depend jgdas_forecast
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_gdaspost )
       accounting: *exclusive_accounting
@@ -365,20 +374,28 @@ suite: !Cycle
       jgfs_tropcy_qc_reloc: !Task
         Trigger: !Depend jgfs_dump
         jtwc_bull_email: !DataEvent {file="/dev/null"}
+        ecf_file: *ecf_file_template
+        resources: !calc ( doc.resource_demo.run_nothing )
+        accounting: *exclusive_accounting
+        J_JOB: nothing
 
       #Replaced by emc version of dump job 
       #This dump job should be using NCO version when delivery to NCO
       jgfs_dump: !Task
         release_sfcprep: !DataEvent {file="/dev/null"}
         #Time: !timedelta +3:50:00
+        ecf_file: *ecf_file_template
+        resources: !calc ( doc.resource_demo.run_nothing )
+        accounting: *exclusive_accounting
+        J_JOB: nothing
 
     prep: !Family
       jgfs_emcsfc_sfc_prep: !Task
         Trigger: !Depend up.dump.jgfs_dump.release_sfcprep
         ecf_file: *ecf_file_template
-        resources: !calc ( doc.resource_demo.run_prep )
+        resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
-        J_JOB: prep
+        J_JOB: nothing
     
       jgfs_prep: !Task
         Trigger: !Depend up.dump
@@ -390,12 +407,12 @@ suite: !Cycle
       jgfs_prep_post: !Task
         Trigger: !Depend  up.jgfs_analysis
         ecf_file: *ecf_file_template
-        resources: !calc ( doc.resource_demo.run_prep )
+        resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
-        J_JOB: prep
-    
+        J_JOB: nothing
+
     jgfs_analysis: !Task
-      Trigger: !Depend ( up.prep.jgfs_prep & up.prep.jgfs_emcsfc_sfc_prep  & up.gdas.enkf.epos.at('-6:00:00') )
+      Trigger: !Depend ( prep.jgfs_prep & prep.jgfs_emcsfc_sfc_prep  & up.gdas.enkf.jgdas_enkf_post.at('-6:00:00') )
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_anal )
       accounting: *exclusive_accounting
@@ -423,7 +440,7 @@ suite: !Cycle
       J_JOB: post
     
     jgfs_vrfy: !Task
-      Trigger: !Depend post
+      Trigger: !Depend jgfs_post
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_vrfy )
       accounting: *exclusive_accounting
@@ -431,21 +448,21 @@ suite: !Cycle
 
   archive: !Family
     gdasarch: !Task
-      Trigger: !Depend up.gdas.vrfy
+      Trigger: !Depend up.gdas.jgdas_verfrad
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_arch )
       accounting: *shared_accounting
       J_JOB: gdasarch
 
     gfsarch: !Task
-      Trigger: !Depend up.gfs.vrfy
+      Trigger: !Depend up.gfs.jgfs_vrfy
       ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_arch )
       accounting: *shared_accounting
       J_JOB: gfsarch
 
     earc: !Family
-      Trigger: !Depend up.gdas.enkf.epos
+      Trigger: !Depend up.gdas.enkf.jgdas_enkf_post
       grp1: !Task
         ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_arch )
