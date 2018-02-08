@@ -141,11 +141,18 @@ class Graph(object):
                     self.__cycles[cycle][key],skip_fun,enter_fun,exit_fun,memo):
                 yield node
 
-    def force_never_run(self,path):
+    def get_node(self,path):
         cycle=self.__clock.start+path[0]
         timeless_path=copy.copy(path)
         timeless_path[0]=ZERO_DT
-        self.__nodes[cycle][timeless_path].force_never_run()
+        return self.__nodes[cycle][timeless_path]
+
+    def force_never_run(self,path):
+        node=self.get_node(path)
+        node.force_never_run()
+
+    def might_complete(self,path):
+        return self.get_node(path).might_complete()
 
     def add_cycle(self,cycle):
         self.__clock.now=cycle

@@ -163,7 +163,8 @@ class ToEcflow(object):
 
     def _remove_final_task(self):
         if 'final' not in self.suite or not self.suite.final.is_task() \
-           and not self.suite.final.is_family(): return
+           and not self.suite.final.is_family():
+            print('no final')
         for cycle in self.clock:
             dt=cycle-self.clock.start
             self.graph.force_never_run(self.suite.final.at(dt).path)
@@ -258,6 +259,9 @@ class ToEcflow(object):
 
     def _make_task_ecf_files(self,ecf_files,ecf_file_set,
                                ecf_file_path,task):
+        dt=self.suite.Clock.now-self.suite.Clock.start
+        if not self.graph.might_complete(task.at(dt).path):
+            return
         ecf_file_set=task.get('ecf_file_set',ecf_file_set)
         ecf_file_path=ecf_file_path+[task.path[-1]]
         path_string='/'.join(ecf_file_path)
@@ -267,6 +271,9 @@ class ToEcflow(object):
 
     def _make_family_ecf_files(self,ecf_files,ecf_file_set,
                                ecf_file_path,family):
+        dt=self.suite.Clock.now-self.suite.Clock.start
+        if not self.graph.might_complete(family.at(dt).path):
+            return
         ecf_file_set=family.get('ecf_file_set',ecf_file_set)
         ecf_file_path=ecf_file_path+[family.path[-1]]
         for t in family.child_iter():
