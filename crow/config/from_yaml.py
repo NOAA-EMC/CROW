@@ -43,6 +43,8 @@ class ShellCommandYAML(dict): pass
 class DataEventYAML(dict): pass
 class ShellEventYAML(dict): pass
 class TaskYAML(OrderedDict): pass
+class TaskArrayYAML(OrderedDict): pass
+class TaskElementYAML(OrderedDict): pass
 class FamilyYAML(OrderedDict): pass
 class CycleYAML(OrderedDict): pass
 class TemplateYAML(OrderedDict): pass
@@ -61,7 +63,9 @@ TYPE_MAP={ PlatformYAML:     [ Platform,     dict,        None ],
            CycleYAML:        [ Cycle,        OrderedDict, None ],
            FamilyYAML:       [ Family,       OrderedDict, None ],
            DataEventYAML:    [ DataEvent,    dict,        None ],
-           ShellEventYAML:   [ ShellEvent,   dict,        None ]
+           ShellEventYAML:   [ ShellEvent,   dict,        None ],
+           TaskElementYAML:  [ TaskElement,  OrderedDict, None ],
+           TaskArrayYAML:    [ TaskArray,    OrderedDict, None ]
          }
 
 def type_for(t,path):
@@ -176,6 +180,8 @@ add_yaml_ordered_dict(u'!Clock',ClockYAML)
 add_yaml_ordered_dict(u'!Cycle',CycleYAML)
 add_yaml_ordered_dict(u'!Template',TemplateYAML)
 add_yaml_ordered_dict(u'!Task',TaskYAML)
+add_yaml_ordered_dict(u'!TaskArray',TaskArrayYAML)
+add_yaml_ordered_dict(u'!TaskElement',TaskElementYAML)
 add_yaml_ordered_dict(u'!Family',FamilyYAML)
 
 SUITE={ EvalYAML: Eval,
@@ -185,6 +191,8 @@ SUITE={ EvalYAML: Eval,
         DataEventYAML: DataEvent,
         ShellEventYAML: ShellEvent,
         FamilyYAML: Family,
+        TaskArrayYAML: TaskArray,
+        TaskElementYAML: TaskElement,
         ClockYAML:ClockMaker,
         OutputSlotYAML: OutputSlot,
         InputSlotYAML: InputSlot}

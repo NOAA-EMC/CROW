@@ -10,7 +10,7 @@ following basic Python concepts:
 """
 
 from functools import reduce
-import operator, io, logging
+import operator, io, logging, itertools
 from datetime import timedelta
 from abc import abstractmethod
 from collections import namedtuple, OrderedDict, Sequence
@@ -28,7 +28,7 @@ __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'CycleExistsDependency', 'FamilyView', 'TaskView',
           'CycleView', 'Slot', 'InputSlot', 'OutputSlot', 'Message',
           'Event', 'DataEvent', 'ShellEvent', 'EventDependency',
-          'TaskExistsDependency' ]
+          'TaskExistsDependency', 'TaskArray', 'TaskElement' ]
 
 class Event(dict_eval): pass
 class DataEvent(Event): pass
@@ -42,9 +42,19 @@ VALID_STATES=[ 'RUNNING', 'FAILED', 'COMPLETED' ]
 ZERO_DT=timedelta()
 EMPTY_DICT={}
 SUITE_SPECIAL_KEYS=set([ 'parent', 'up', 'task_path', 'task_path_var',
-                         'task_path_str', 'task_path_list' ])
+                         'task_path_str', 'task_path_list', 'this' ])
 SLOT_SPECIALS = SUITE_SPECIAL_KEYS|set([ 'slot', 'flow', 'actor', 'meta',
                                          'Out', 'Loc'])
+
+def subdict_iter(d):
+    typecheck('d',d,Mapping)
+    dkeys=[k for k in d.keys()]
+    vallist=[v for v in d.values()]
+    print(f'{d} {dkeys} {vallist}')
+    piter=itertools.product(*vallist)
+    dvalues=[p for p in piter]
+    for j in range(len(dvalues)):
+        yield dict([i for i in zip(dkeys,dvalues[j])])
 
 class SuitePath(list):
     """!Simply a list that can be hashed."""
@@ -57,12 +67,24 @@ class SuitePath(list):
 class SuiteView(Mapping):
     LOCALS=set(['suite','viewed','path','parent','__cache','__globals',
                 '_more_globals'])
-    def __init__(self,suite,viewed,path,parent):
+    def __init__(self,suite,viewed,path,parent,
+                 task_array_dimensions=None,
+                 task_array_indices=None):
         # assert(isinstance(suite,Suite))
         # assert(isinstance(viewed,dict_eval))
         assert(hasattr(self,'_iter_raw'))
         assert(isinstance(parent,SuiteView))
         assert(not isinstance(viewed,SuiteView))
+        if task_array_dimensions:
+            self.task_array_dimensions=OrderedDict(
+                task_array_dimensions)
+        else:
+            self.task_array_dimensions=OrderedDict()
+        if task_array_indices:
+            self.task_array_indices=OrderedDict(
+                task_array_indices)
+        else:
+            self.task_array_indices=OrderedDict()
         self.suite=suite
         # if isinstance(viewed,Task) and  'fcst' in '-'.join([str(s) for s in path]):
         #     print(path)
@@ -82,6 +104,7 @@ class SuiteView(Mapping):
                 self.viewed[k]=v
         if type(self.viewed) in SUITE_CLASS_MAP:
             self.viewed.up=parent
+            self.viewed.this=self
         self.path=SuitePath(path)
         self.parent=parent
         self._is_suite_view=True
@@ -134,6 +157,16 @@ class SuiteView(Mapping):
             s=f'dt=[{self.path[0]}]:'+s
         return s
 
+    def depend(self,string,**kwargs):
+        for k,v in kwargs.items():
+            if not isinstance(v,Sequence):
+                kwargs[k]=[v]
+        deps=TRUE_DEPENDENCY
+        for d in subdict_iter(kwargs):
+            name=eval(f"f'''{string}'''",self.viewed._globals(),d)
+            deps = deps & self[name]
+        return deps
+
     def get_trigger_dep(self):
         return self.get('Trigger',TRUE_DEPENDENCY)
 
@@ -148,6 +181,7 @@ class SuiteView(Mapping):
         children of this family, yielding a SuiteView of each."""
         for var,rawval in self.viewed._raw_child().items():
             if var=='up': continue
+            if var=='this': continue
             if hasattr(rawval,'_as_dependency'): continue
             val=self[var]
             #print(f'Yield {type(val).__name__} for child {var}')
@@ -190,12 +224,15 @@ class SuiteView(Mapping):
     def __getitem__(self,key):
         assert(isinstance(key,str))
         if key in self.__cache: return self.__cache[key]
-        if key not in self.viewed: raise KeyError(key)
+        if key not in self.viewed:
+            raise KeyError(f'{key}: not in {", ".join([k for k in self.keys()])}')
         val=self.viewed[key]
 
         if hasattr(val,'_is_suite_view'):
             return val
         elif type(val) in SUITE_CLASS_MAP:
+            val=self.__wrap(key,val)
+        elif isinstance(val,TaskArray):
             val=self.__wrap(key,val)
         elif hasattr(val,'_as_dependency'):
             locals=multidict(self.parent,self)
@@ -210,6 +247,8 @@ class SuiteView(Mapping):
             obj=copy(obj)
             self.viewed[key]=obj
             return CycleView(self.suite,obj,self.path[:1],self)
+        elif isinstance(obj,TaskArray):
+            return self.__wrap(key,obj._generate(self))
         elif type(obj) in SUITE_CLASS_MAP:
             view_class=SUITE_CLASS_MAP[type(obj)]
             obj=copy(obj)
@@ -243,7 +282,6 @@ class SuiteView(Mapping):
         if 'AlarmName' not in self:
             if default==MISSING:
                 return self.suite.Clock
-            #print(f'return default {default} {MISSING} {default==MISSING}')
             return default
         try:
             return self.suite.get_alarm_with_name(self.AlarmName)
@@ -621,43 +659,73 @@ class Task(Taskable): pass
 class Family(Taskable): pass
 class Cycle(dict_eval): pass
 
-class TaskArray(Taskable):
-    def __init__(self,*args,**kwargs):
-        super().init(*args,**kwargs)
-        Index=self['Index']
-        varname=Index[0]
-        if not isinstance(varname,str):
-            raise TypeError('Index first argument should be a string variable '
-                            'name not a %s'%(type(varname.__name__),))
-        values=Index[1]
-        if not isinstance(values,Sequence):
-            raise TypeError('Index second argument should be a sequence '
-                            'name not a %s'%(type(values.__name__),))
-        self.__instances=[MISSING]*len(values)
-    @property
-    def index_name(self):
-        return self['Index'][0]
-    @property
-    def index_count(self):
-        return len(self['Index'][1])
-    def index_keys(self):
-        keys=self['Index'][1]
-        for k in keys: yield k
-    def index_items(self):
-        varname=self.index_name
-        keys=self['Index'][1]
-        for i in len(keys):
-            yield keys[i],self.__for_index(i,varname,key)
-    def for_index(self,i):
-        if self.__instances[i] is not MISSING:
-            return self.__instances[i]
-        varname=self.index_name
-        keys=self['Index'][1]
-        return self.__for_index(i,varname,key)
-    def __for_index(self,i,varname,key):
-        the_copy=Family(self._raw_child())
-        the_copy[varname]=key
+class TaskElement(dict_eval):
+    def _duplicate(self,dimensions,indices):
+        for more_indices in subdict_iter(dimensions):
+            child_indices=copy(indices)
+            child_indices.update(more_indices)
+            t=Task(self._raw_child(),globals=self._globals())
+            t['idx']=dict_eval(child_indices)
+            name=t.Name
+            t._path=f'{self._path}.{name}'
+            yield name,t
+
+class TaskArray(dict_eval):
+    def _generate(self,parent_view):
+        f=Family(self._raw_child(),path=self._path,globals=self._globals())
+        dimensions=copy(parent_view.task_array_dimensions)
+        indices=copy(parent_view.task_array_indices)
+        child_dimensions=self.Dimensions
+        dimensions.update(child_dimensions)
+        for dimname,dimlist in child_dimensions.items():
+            if not isinstance(dimlist,Sequence):
+                raise TypeError(f'{self._path}: dimension {dimname} is not a list (is type {type(dimlist).__name__}).')
+        for k,v in self._raw_child().items():
+            if hasattr(v,'_duplicate'):
+                for name,content in v._duplicate(child_dimensions,indices):
+                    f[name]=content
+            else:
+                f[k]=v
+        return f
+
+
+# class TaskArray(TaskableGenerator):
+#     def __init__(self,*args,**kwargs):
+#         super().init(*args,**kwargs)
+#         Indices=self.Indices
+#         varname=Index[0]
+#         if not isinstance(varname,str):
+#             raise TypeError('Index first argument should be a string variable '
+#                             'name not a %s'%(type(varname.__name__),))
+#         values=Index[1]
+#         if not isinstance(values,Sequence):
+#             raise TypeError('Index second argument should be a sequence '
+#                             'name not a %s'%(type(values.__name__),))
+#         self.__instances=[MISSING]*len(values)
+#     @property
+#     def index_name(self):
+#         return self['Index'][0]
+#     @property
+#     def index_count(self):
+#         return len(self['Index'][1])
+#     def index_keys(self):
+#         keys=self['Index'][1]
+#         for k in keys: yield k
+#     def index_items(self):
+#         varname=self.index_name
+#         keys=self['Index'][1]
+#         for i in len(keys):
+#             yield keys[i],self.__for_index(i,varname,key)
+#     def for_index(self,i):
+#         if self.__instances[i] is not MISSING:
+#             return self.__instances[i]
+#         varname=self.index_name
+#         keys=self['Index'][1]
+#         return self.__for_index(i,varname,key)
+#     def __for_index(self,i,varname,key):
+#         the_copy=Family(self._raw_child())
+#         the_copy[varname]=key
 
 SUITE_CLASS_MAP={ Task:TaskView, Family: FamilyView, Event: EventView,
                   DataEvent: EventView, ShellEvent: EventView,
-                  OutputSlot: OutputSlotView, InputSlot:InputSlotView }
+                  OutputSlot: OutputSlotView, InputSlot:InputSlotView}
