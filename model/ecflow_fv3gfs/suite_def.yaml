@@ -189,7 +189,6 @@ suite: !Cycle
           accounting: *exclusive_accounting
           J_JOB: efcs
 
-
       jgdas_enkf_post: !Task
         Trigger: !Depend forecast
         ecf_file: *ecf_file_template
