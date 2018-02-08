@@ -287,7 +287,7 @@ class ToEcflow(object):
             suite_name, suite_def = self._make_suite_def(cycle)
             assert(isinstance(suite_name,str))
             assert(isinstance(suite_def,str))
-            suite_def_files[filename]={ 'name':suite_name, 'def':suite_def }
+            suite_def_files[filename]={ 'name':suite_name, 'def':suite_def, 'file':filename }
             self._make_ecf_files_for_one_cycle(ecf_files)
         del self.suite
         return suite_def_files,ecf_files
