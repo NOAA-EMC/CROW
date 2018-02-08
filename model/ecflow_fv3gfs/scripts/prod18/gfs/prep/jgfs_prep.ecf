@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gfs.prep.jgfs_prep
+#BSUB -o %ECF_OUT%/gfs.prep.jgfs_prep_t%CYC%z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=3072]
+#BSUB -extsched CRAYLINUX[]
+export NODES=3
+%include <head.h>
+echo ${JOBgfs}/prep
+%include <tail.h>

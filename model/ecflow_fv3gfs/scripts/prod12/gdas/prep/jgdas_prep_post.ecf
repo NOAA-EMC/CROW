@@ -1,0 +1,11 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.prep.jgdas_prep_post
+#BSUB -o %ECF_OUT%/gdas.prep.jgdas_prep_post_t%CYC%z.log
+#BSUB -R rusage[mem=300]
+#BSUB -extsched CRAYLINUX[]
+export NODES=1
+%include <head.h>
+echo ${JOBgfs}/nothing
+%include <tail.h>

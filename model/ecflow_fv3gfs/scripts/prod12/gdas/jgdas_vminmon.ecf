@@ -1,0 +1,11 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.jgdas_vminmon
+#BSUB -o %ECF_OUT%/gdas.jgdas_vminmon_t%CYC%z.log
+#BSUB -R rusage[mem=300]
+#BSUB -extsched CRAYLINUX[]
+export NODES=1
+%include <head.h>
+echo ${JOBgfs}/nothing
+%include <tail.h>

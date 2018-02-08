@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.enkf.jgdas_enkf_inflate_recenter
+#BSUB -o %ECF_OUT%/gdas.enkf.jgdas_enkf_inflate_recenter_t%CYC%z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=3072]
+#BSUB -extsched CRAYLINUX[]
+export NODES=20
+%include <head.h>
+echo ${JOBgfs}/ecen
+%include <tail.h>

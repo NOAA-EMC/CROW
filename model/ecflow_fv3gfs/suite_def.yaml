@@ -323,7 +323,7 @@ suite: !Cycle
       J_JOB: gfsarch
 
     earc: !TaskArray
-      Trigger: !Depend up.gdas.enkf.epos
+      Trigger: !Depend up.gdas.enkf.jgdas_enkf_post
       Dimensions:
         groupid: !calc tools.seq(1,8,1)
       grp: !TaskElement

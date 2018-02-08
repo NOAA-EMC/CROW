@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gfs.jgfs_forecast
+#BSUB -o %ECF_OUT%/gfs.jgfs_forecast_t%CYC%z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=1024]
+#BSUB -extsched CRAYLINUX[]
+export NODES=64
+%include <head.h>
+echo ${JOBgfs}/fcst
+%include <tail.h>

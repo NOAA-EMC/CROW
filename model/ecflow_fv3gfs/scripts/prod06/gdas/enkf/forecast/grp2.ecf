@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.enkf.forecast.grp2
+#BSUB -o %ECF_OUT%/gdas.enkf.forecast.grp2_t%CYC%z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=254]
+#BSUB -extsched CRAYLINUX[]
+export NODES=64
+%include <head.h>
+echo ${JOBgfs}/efcs
+%include <tail.h>

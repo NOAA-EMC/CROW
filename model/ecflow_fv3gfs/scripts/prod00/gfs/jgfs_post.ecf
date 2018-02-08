@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gfs.jgfs_post
+#BSUB -o %ECF_OUT%/gfs.jgfs_post_t%CYC%z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=3072]
+#BSUB -extsched CRAYLINUX[]
+export NODES=6
+%include <head.h>
+echo ${JOBgfs}/post
+%include <tail.h>
