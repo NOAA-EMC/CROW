@@ -7,5 +7,5 @@
 #BSUB -extsched CRAYLINUX[]
 export NODES=1
 %include <head.h>
-echo ${JOBgfs}/N
+echo ${JOBgfs}/JGDAS_VMINMON
 %include <tail.h>

@@ -8,5 +8,5 @@
 #BSUB -extsched CRAYLINUX[]
 export NODES=60
 %include <head.h>
-echo ${JOBgfs}/S
+echo ${JOBgfs}/JGFS_ANALYSIS
 %include <tail.h>

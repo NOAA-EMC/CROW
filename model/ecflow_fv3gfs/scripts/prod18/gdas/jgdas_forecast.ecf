@@ -8,5 +8,5 @@
 #BSUB -extsched CRAYLINUX[]
 export NODES=64
 %include <head.h>
-echo ${JOBgfs}/T
+echo ${JOBgfs}/JGLOBAL_FORECAST
 %include <tail.h>

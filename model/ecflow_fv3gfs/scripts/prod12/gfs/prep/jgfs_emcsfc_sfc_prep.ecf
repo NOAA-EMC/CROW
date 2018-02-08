@@ -7,5 +7,5 @@
 #BSUB -extsched CRAYLINUX[]
 export NODES=1
 %include <head.h>
-echo ${JOBgfs}/P
+echo ${JOBgfs}/JGFS_EMCSFC_SFC_PREP
 %include <tail.h>

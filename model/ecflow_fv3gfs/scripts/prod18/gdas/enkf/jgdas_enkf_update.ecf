@@ -8,5 +8,5 @@
 #BSUB -extsched CRAYLINUX[]
 export NODES=40
 %include <head.h>
-echo ${JOBgfs}/E
+echo ${JOBgfs}/JGDAS_ENKF_UPDATE
 %include <tail.h>

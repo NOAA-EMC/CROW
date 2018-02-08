@@ -18,7 +18,7 @@
   <metatask name="gdas">
     <var name="dummy_var_2">DUMMY_VALUE</var>
     <task name="gdas.jgdas_verfrad" maxtries="1">
-      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_VERFRAD</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gdas.jgdas_verfrad</jobname>
@@ -32,7 +32,7 @@
       </dependency>
     </task>
     <task name="gdas.jgdas_vminmon" maxtries="1">
-      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_VMINMON</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gdas.jgdas_vminmon</jobname>
@@ -48,7 +48,7 @@
     <metatask name="gdas.dump">
       <var name="dummy_var_3">DUMMY_VALUE</var>
       <task name="gdas.dump.jgdas_ics" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_ICS</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.dump.jgdas_ics</jobname>
@@ -60,7 +60,7 @@
         <!-- no dependencies -->
       </task>
       <task name="gdas.dump.jgdas_tropcy_qc_reloc" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_TROPCY_QC_RELOC</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.dump.jgdas_tropcy_qc_reloc</jobname>
@@ -74,7 +74,7 @@
         </dependency>
       </task>
       <task name="gdas.dump.jgdas_dump" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_DUMP</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.dump.jgdas_dump</jobname>
@@ -89,7 +89,7 @@
     <metatask name="gdas.prep">
       <var name="dummy_var_4">DUMMY_VALUE</var>
       <task name="gdas.prep.jgdas_emcsfc_sfc_prep" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_EMCSFC_SFC_PREP</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.prep.jgdas_emcsfc_sfc_prep</jobname>
@@ -103,7 +103,7 @@
         </dependency>
       </task>
       <task name="gdas.prep.jgdas_prep" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/prep</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_PREP</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.prep.jgdas_prep</jobname>
@@ -121,7 +121,7 @@
         </dependency>
       </task>
       <task name="gdas.prep.jgdas_prep_post" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_PREP_POST</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.prep.jgdas_prep_post</jobname>
@@ -138,7 +138,7 @@
     <metatask name="gdas.enkf">
       <var name="dummy_var_5">DUMMY_VALUE</var>
       <task name="gdas.enkf.jgdas_enkf_select_obs" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/eobs</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_ENKF_SELECT_OBS</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.enkf.jgdas_enkf_select_obs</jobname>
@@ -158,7 +158,7 @@
       <metatask name="gdas.enkf.innovate">
         <var name="dummy_var_6">DUMMY_VALUE</var>
         <task name="gdas.enkf.innovate.grp1" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/eomg</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/jgdas_innovate</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.innovate.grp1</jobname>
@@ -173,7 +173,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.innovate.grp2" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/eomg</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/jgdas_innovate</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.innovate.grp2</jobname>
@@ -188,7 +188,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.innovate.grp3" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/eomg</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/jgdas_innovate</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.innovate.grp3</jobname>
@@ -203,7 +203,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.innovate.grp4" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/eomg</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/jgdas_innovate</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.innovate.grp4</jobname>
@@ -218,7 +218,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.innovate.grp5" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/eomg</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/jgdas_innovate</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.innovate.grp5</jobname>
@@ -233,7 +233,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.innovate.grp6" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/eomg</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/jgdas_innovate</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.innovate.grp6</jobname>
@@ -248,7 +248,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.innovate.grp7" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/eomg</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/jgdas_innovate</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.innovate.grp7</jobname>
@@ -263,7 +263,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.innovate.grp8" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/eomg</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/jgdas_innovate</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.innovate.grp8</jobname>
@@ -279,7 +279,7 @@
         </task>
       </metatask>
       <task name="gdas.enkf.jgdas_enkf_update" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/eupd</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_ENKF_UPDATE</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.enkf.jgdas_enkf_update</jobname>
@@ -294,7 +294,7 @@
         </dependency>
       </task>
       <task name="gdas.enkf.jgdas_enkf_inflate_recenter" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/ecen</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_ENKF_INFLATE_RECENTER</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.enkf.jgdas_enkf_inflate_recenter</jobname>
@@ -314,7 +314,7 @@
       <metatask name="gdas.enkf.forecast">
         <var name="dummy_var_7">DUMMY_VALUE</var>
         <task name="gdas.enkf.forecast.grp1" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/efcs</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGLOBAL_FORECAST</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.forecast.grp1</jobname>
@@ -329,7 +329,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.forecast.grp2" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/efcs</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGLOBAL_FORECAST</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.forecast.grp2</jobname>
@@ -344,7 +344,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.forecast.grp3" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/efcs</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGLOBAL_FORECAST</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.forecast.grp3</jobname>
@@ -359,7 +359,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.forecast.grp4" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/efcs</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGLOBAL_FORECAST</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.forecast.grp4</jobname>
@@ -374,7 +374,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.forecast.grp5" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/efcs</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGLOBAL_FORECAST</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.forecast.grp5</jobname>
@@ -389,7 +389,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.forecast.grp6" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/efcs</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGLOBAL_FORECAST</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.forecast.grp6</jobname>
@@ -404,7 +404,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.forecast.grp7" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/efcs</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGLOBAL_FORECAST</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.forecast.grp7</jobname>
@@ -419,7 +419,7 @@
           </dependency>
         </task>
         <task name="gdas.enkf.forecast.grp8" maxtries="1">
-          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/efcs</command>
+          <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGLOBAL_FORECAST</command>
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.forecast.grp8</jobname>
@@ -435,7 +435,7 @@
         </task>
       </metatask>
       <task name="gdas.enkf.jgdas_enkf_post" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/epos</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_ENKF_POST</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.enkf.jgdas_enkf_post</jobname>
@@ -451,7 +451,7 @@
       </task>
     </metatask>
     <task name="gdas.jgdas_analysis" maxtries="1">
-      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/anal</command>
+      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGDAS_ANALYSIS</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gdas.jgdas_analysis</jobname>
@@ -470,7 +470,7 @@
       </dependency>
     </task>
     <task name="gdas.jgdas_forecast" maxtries="1">
-      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/fcst</command>
+      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGLOBAL_FORECAST</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gdas.jgdas_forecast</jobname>
@@ -523,7 +523,7 @@
     <metatask name="gfs.dump">
       <var name="dummy_var_9">DUMMY_VALUE</var>
       <task name="gfs.dump.jgfs_tropcy_qc_reloc" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGFS_TROPCY_QC_RELOC</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.dump.jgfs_tropcy_qc_reloc</jobname>
@@ -537,7 +537,7 @@
         </dependency>
       </task>
       <task name="gfs.dump.jgfs_dump" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGFS_DUMP</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.dump.jgfs_dump</jobname>
@@ -552,7 +552,7 @@
     <metatask name="gfs.prep">
       <var name="dummy_var_10">DUMMY_VALUE</var>
       <task name="gfs.prep.jgfs_emcsfc_sfc_prep" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGFS_EMCSFC_SFC_PREP</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.prep.jgfs_emcsfc_sfc_prep</jobname>
@@ -566,7 +566,7 @@
         </dependency>
       </task>
       <task name="gfs.prep.jgfs_prep" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/prep</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGFS_PREP</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.prep.jgfs_prep</jobname>
@@ -581,7 +581,7 @@
         </dependency>
       </task>
       <task name="gfs.prep.jgfs_prep_post" maxtries="1">
-        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+        <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGFS_PREP_POST</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.prep.jgfs_prep_post</jobname>
@@ -596,7 +596,7 @@
       </task>
     </metatask>
     <task name="gfs.jgfs_analysis" maxtries="1">
-      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/anal</command>
+      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGFS_ANALYSIS</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gfs.jgfs_analysis</jobname>
@@ -615,7 +615,7 @@
       </dependency>
     </task>
     <task name="gfs.jgfs_vminmon" maxtries="1">
-      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/nothing</command>
+      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGFS_VMINMON</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gfs.jgfs_vminmon</jobname>
@@ -629,7 +629,7 @@
       </dependency>
     </task>
     <task name="gfs.jgfs_forecast" maxtries="1">
-      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/fcst</command>
+      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGLOBAL_FORECAST</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gfs.jgfs_forecast</jobname>
@@ -644,7 +644,7 @@
       </dependency>
     </task>
     <task name="gfs.jgfs_post" maxtries="1">
-      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/post</command>
+      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGFS_POST</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gfs.jgfs_post</jobname>
@@ -659,7 +659,7 @@
       </dependency>
     </task>
     <task name="gfs.jgfs_vrfy" maxtries="1">
-      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/vrfy</command>
+      <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/JGFS_VRFY</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gfs.jgfs_vrfy</jobname>
@@ -851,7 +851,7 @@
     </metatask>
   </metatask>
   <task name="final" final="true">
-    <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/final</command>
+    <command>/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/jobs/L</command>
     <queue>&QUEUESERV;</queue>
     <account>&PROJECT;</account>
     <jobname>final</jobname>

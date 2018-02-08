@@ -8,5 +8,5 @@
 #BSUB -extsched CRAYLINUX[]
 export NODES=12
 %include <head.h>
-echo ${JOBgfs}/S
+echo ${JOBgfs}/JGDAS_ENKF_SELECT_OBS
 %include <tail.h>

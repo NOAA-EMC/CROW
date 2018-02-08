@@ -41,7 +41,7 @@ shared_task_template: &shared_task_template
 exclusive_task_template: &exclusive_task_template
   ecf_file: *ecf_file_template
   accounting: *exclusive_accounting
-  J_JOB: !calc tools.to_upper(task_path_var[-1])
+  J_JOB: !calc tools.to_upper(task_path_list[-1])
   Rocoto: *rocoto_task_template
 
 suite: !Cycle
@@ -71,10 +71,10 @@ suite: !Cycle
     #edit QUEUE 'dev'
     edit QUEUE '{doc.settings.QUEUE}'
     edit PROJENVIR '{doc.settings.PROJECT}'
-    edit EMCPEN 'ecfgfsfv3'
-    edit COM '/gpfs/hps2/ptmp/emc.glopara/%EMCPEN%/com'
+    edit EMCPEN '{doc.settings.experiment_name}'
+    edit COM '{doc.settings.COM}'
     edit QUEUESERV '{doc.settings.QUEUESERV}'
-    edit DATAROOT '/gpfs/hps2/stmp/emc.glopara/%EMCPEN%'
+    edit DATAROOT '{doc.settings.DATAROOT}'
     edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
     edit ECF_OUT '{doc.settings.ECF_HOME}/output'
     edit ECF_LOG '{doc.settings.ECF_HOME}/ecf.log'
@@ -150,7 +150,7 @@ suite: !Cycle
       innovate: !TaskArray
         Trigger: !Depend jgdas_enkf_select_obs
         Dimensions:
-          groupid: !calc tools.seq(1,8,1)
+          groupid: !calc tools.seq(1,doc.settings.ENKF_INNOVATE_GROUPS,1)
         grp: !TaskElement
           <<: *exclusive_task_template
           Foreach: [ group ]
@@ -173,13 +173,13 @@ suite: !Cycle
       forecast: !TaskArray
         Trigger: !Depend up.enkf.jgdas_enkf_inflate_recenter
         Dimensions:
-          groupid: !calc tools.seq(1,8,1)
+          groupid: !calc tools.seq(1,doc.settings.ENKF_FORECAST_GROUPS,1)
         grp: !TaskElement
           <<: *exclusive_task_template
           Foreach: [ group ]
           Name: !expand "grp{idx.groupid}"
           resources: !calc ( doc.resource_demo.run_efcs )
-          J_JOB: jgfs_forecast
+          J_JOB: JGLOBAL_FORECAST
           
       jgdas_enkf_post: !Task
         <<: *exclusive_task_template
@@ -198,6 +198,7 @@ suite: !Cycle
       Trigger: !Depend ( jgdas_analysis.release_fcst & enkf.innovate )
       release_fcst: !DataEvent {file="/dev/null"}
       resources: !calc ( doc.resource_demo.run_gdasfcst )
+      J_JOB: JGLOBAL_FORECAST
 
     post: !Task
       <<: *exclusive_task_template
@@ -261,6 +262,7 @@ suite: !Cycle
       <<: *exclusive_task_template
       Trigger: !Depend jgfs_analysis
       resources: !calc ( doc.resource_demo.run_gfsfcst )
+      J_JOB: JGLOBAL_FORECAST
 
     jgfs_post: !Task
       <<: *exclusive_task_template
@@ -288,7 +290,7 @@ suite: !Cycle
     earc: !TaskArray
       Trigger: !Depend up.gdas.enkf.jgdas_enkf_post
       Dimensions:
-        groupid: !calc tools.seq(1,8,1)
+        groupid: !calc tools.seq(1,doc.settings.ENKF_ARCHIVE_GROUPS,1)
       grp: !TaskElement
         <<: *shared_task_template
         Foreach: [ group ]
