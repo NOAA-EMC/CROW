@@ -149,76 +149,17 @@ suite: !Cycle
         accounting: *exclusive_accounting
         J_JOB: eobs
 
-      innovate: !Family
+      innovate: !TaskArray
         Trigger: !Depend jgdas_enkf_select_obs
-        grp1: !Task
+        Dimensions:
+          groupid: !calc tools.seq(1,8,1)
+        grp: !TaskElement
+          Foreach: [ group ]
+          Name: !expand "grp{idx.groupid}"
           ecf_file: *ecf_file_template
           resources: !calc ( doc.resource_demo.run_eomg )
           accounting: *exclusive_accounting
           J_JOB: eomg
-
-        grp2: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=20 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_eomg ) 
-              accounting: *exclusive_accounting
-              J_JOB: eomg
-          - otherwise: null
-
-        grp3: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=30 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_eomg )
-              accounting: *exclusive_accounting
-              J_JOB: eomg
-          - otherwise: null
-
-        grp4: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=40 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_eomg )
-              accounting: *exclusive_accounting
-              J_JOB: eomg
-          - otherwise: null
-
-        grp5: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=50 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_eomg )
-              accounting: *exclusive_accounting
-              J_JOB: eomg
-          - otherwise: null
-
-        grp6: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=60 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_eomg )
-              accounting: *exclusive_accounting
-              J_JOB: eomg
-          - otherwise: null
-
-        grp7: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=70 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_eomg )
-              accounting: *exclusive_accounting
-              J_JOB: eomg
-          - otherwise: null
-
-        grp8: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=80 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_eomg )
-              accounting: *exclusive_accounting
-              J_JOB: eomg
-          - otherwise: null
 
       jgdas_enkf_update: !Task
         ecflow_def: |
@@ -236,97 +177,18 @@ suite: !Cycle
         accounting: *exclusive_accounting
         J_JOB: ecen
 
-#      efcs: !TaskArray
-#        Trigger: !Depend ecen
-#        Indices:
-#          GROUP_NUMBER_INDEX: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
-#          OTHER_INDEX: [ a, b, c, d ]
-#        Names: 
-#          grp: !expand grp{indices.GROUP_NUMBER_INDEX:%d}_{indices.OTHER_INDEX}
-#          other: !expand other{indices.OTHER_INDEX}_{indices.GROUP_NUMBER_INDEX}
-#        Contents:
-#          other: !Task
-#            ...
-#          grp: !Task 
-#            Perform:  
-#              <<: *efcs_action
-#              NMEM_ENKF: *NMEM_ENKF
-#              NMEM_ENKF_GRP_EFMN: *NMEM_ENKF_GRP_EFMN
-#              GROUP_NUMBER: !calc indices.GROUP_NUMBER_INDEX   # Convert to ENSGRP %02d
-#            task_template: *task_template
-#            ens_more: *ens_task_template
-#            Rocoto: !expand "{task_template}{ens_more}"
-
-      forecast: !Family
+      forecast: !TaskArray
         Trigger: !Depend up.enkf.jgdas_enkf_inflate_recenter
-        grp1: !Task
+        Dimensions:
+          groupid: !calc tools.seq(1,8,1)
+        grp: !TaskElement
+          Foreach: [ group ]
+          Name: !expand "grp{idx.groupid}"
           ecf_file: *ecf_file_template
           resources: !calc ( doc.resource_demo.run_efcs )
           accounting: *exclusive_accounting
           J_JOB: efcs
 
-        grp2: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=20 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_efcs )
-              accounting: *exclusive_accounting
-              J_JOB: efcs
-          - otherwise: null
-
-        grp3: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=30 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_efcs )
-              accounting: *exclusive_accounting
-              J_JOB: efcs
-          - otherwise: null
-
-        grp4: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=40 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_efcs )
-              accounting: *exclusive_accounting
-              J_JOB: efcs
-          - otherwise: null
-
-        grp5: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=50 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              J_JOB: efcs
-              resources: !calc ( doc.resource_demo.run_efcs )
-              accounting: *exclusive_accounting
-          - otherwise: null
-
-        grp6: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=60 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              J_JOB: efcs
-              resources: !calc ( doc.resource_demo.run_efcs )
-              accounting: *exclusive_accounting
-          - otherwise: null
-
-        grp7: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=70 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              J_JOB: efcs
-              resources: !calc ( doc.resource_demo.run_efcs )
-              accounting: *exclusive_accounting
-          - otherwise: null
-
-        grp8: !FirstTrue
-          - when: !calc "( doc.settings.NMEM_ENKF>=80 )"
-            do: !Task
-              ecf_file: *ecf_file_template
-              resources: !calc ( doc.resource_demo.run_efcs )
-              accounting: *exclusive_accounting
-              J_JOB: efcs
-          - otherwise: null
 
       jgdas_enkf_post: !Task
         Trigger: !Depend forecast
@@ -461,77 +323,17 @@ suite: !Cycle
       accounting: *shared_accounting
       J_JOB: gfsarch
 
-    earc: !Family
-      Trigger: !Depend up.gdas.enkf.jgdas_enkf_post
-      grp1: !Task
+    earc: !TaskArray
+      Trigger: !Depend up.gdas.enkf.epos
+      Dimensions:
+        groupid: !calc tools.seq(1,8,1)
+      grp: !TaskElement
+        Foreach: [ group ]
+        Name: !expand "grp{idx.groupid}"
         ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_arch )
         accounting: *shared_accounting
         J_JOB: earc
-      grp2: !FirstTrue
-        - when: !calc "( doc.settings.NMEM_ENKF>=20 )"
-          do: !Task
-            ecf_file: *ecf_file_template
-            resources: !calc ( doc.resource_demo.run_arch )
-            accounting: *shared_accounting
-            J_JOB: earc
-        - otherwise: null
-      grp3: !FirstTrue
-        - when: !calc "( doc.settings.NMEM_ENKF>=30 )"
-          do: !Task
-            ecf_file: *ecf_file_template
-            J_JOB: earc
-            resources: !calc ( doc.resource_demo.run_arch )
-            accounting: *shared_accounting
-        - otherwise: null
-      grp4: !FirstTrue
-        - when: !calc "( doc.settings.NMEM_ENKF>=40 )"
-          do: !Task
-            ecf_file: *ecf_file_template
-            J_JOB: earc
-            resources: !calc ( doc.resource_demo.run_arch )
-            accounting: *shared_accounting
-        - otherwise: null
-      grp5: !FirstTrue
-        - when: !calc "( doc.settings.NMEM_ENKF>=50 )"
-          do: !Task
-            ecf_file: *ecf_file_template
-            J_JOB: earc
-            resources: !calc ( doc.resource_demo.run_arch )
-            accounting: *shared_accounting
-        - otherwise: null
-      grp6: !FirstTrue
-        - when: !calc "( doc.settings.NMEM_ENKF>=60 )"
-          do: !Task
-            ecf_file: *ecf_file_template
-            J_JOB: earc
-            resources: !calc ( doc.resource_demo.run_arch )
-            accounting: *shared_accounting
-        - otherwise: null
-      grp7: !FirstTrue
-        - when: !calc "( doc.settings.NMEM_ENKF==70 )"
-          do: !Task
-            ecf_file: *ecf_file_template
-            J_JOB: earc
-            resources: !calc ( doc.resource_demo.run_arch )
-            accounting: *shared_accounting
-        - otherwise: null
-      grp7: !FirstTrue
-        - when: !calc "( doc.settings.NMEM_ENKF>=70 )"
-          do: !Task
-            ecf_file: *ecf_file_template
-            J_JOB: earc
-            resources: !calc ( doc.resource_demo.run_arch )
-            accounting: *shared_accounting
-        - otherwise: null
-      grp8: !FirstTrue
-        - when: !calc "( doc.settings.NMEM_ENKF>=80 )"
-          do: !Task
-            ecf_file: *ecf_file_template
-            J_JOB: earc
-            accounting: *shared_accounting
-            resources: !calc ( doc.resource_demo.run_arch )
-        - otherwise: null
 
   #final: !Task
   #  ecf_file: *ecf_file_template

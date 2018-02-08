@@ -15,11 +15,11 @@ def make_parent_dir(filename):
         os.makedirs(os.path.dirname(filename))
 
 for deffile in suite_defs.keys():
-    defname,defcontents = suite_defs[deffile]
+    defname = suite_defs[deffile]['name']
+    defcontents = suite_defs[deffile]['def']
     #print(f'=== contents of suite def {defname}\n{suite_defs[defname]}')
     filename=os.path.join('defs',deffile)
     make_parent_dir(filename)
-    print(filename)
     dirname=os.path.dirname(filename)
     if dirname and not os.path.exists(dirname):
         os.makedirs(os.path.dirname(filename))

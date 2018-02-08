@@ -5,8 +5,9 @@ from io import StringIO
 
 import crow.tools
 from copy import copy
-from crow.tools import to_timedelta, typecheck
-from crow.metascheduler.simplify import simplify
+from crow.tools import to_timedelta, typecheck, ZERO_DT
+from crow.metascheduler.algebra import simplify, assume
+from crow.metascheduler.graph import Graph
 from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           AndDependency, OrDependency, NotDependency, \
           StateDependency, Dependable, Taskable, Task, \
@@ -55,20 +56,6 @@ def undate_path(relative_time,format,suite_path,undated):
         return result,True
     return suite_path,False
 
-def remove_cyc_exist(task,dep,clock,undated):
-    assert(isinstance(undated,OrderedDict))
-    typecheck('dep',dep,LogicalDependency)
-    if isinstance(dep,CycleExistsDependency):
-        if dep.dt in clock:
-            return TRUE_DEPENDENCY
-        return FALSE_DEPENDENCY
-    if isinstance(dep,AndDependency) or isinstance(dep,OrDependency):
-        return type(dep)( *[
-            remove_cyc_exist(task,d,clock,undated) for d in dep ])
-    if isinstance(dep,NotDependency):
-        return NotDependency(remove_cyc_exist(task,dep.depend,clock,undated))
-    return dep
-
 def convert_state_dep(fd,task,dep,clock,time_format,negate,undated):
     assert(isinstance(undated,OrderedDict))
     typecheck('clock',clock,crow.tools.Clock)
@@ -90,7 +77,7 @@ def convert_event_dep(fd,task,dep_path,event_name,clock,time_format,negate,undat
         undated[rel_path]=1
     fd.write(f'{rel_path}:{event_name}{" is clear" if negate else ""}')
 
-def _convert_dep(fd,task,dep,clock,time_format,undated):
+def dep_to_ecflow(fd,task,dep,clock,time_format,undated):
     assert(isinstance(undated,OrderedDict))
     first=True
     if isinstance(dep,OrDependency):
@@ -98,13 +85,13 @@ def _convert_dep(fd,task,dep,clock,time_format,undated):
             if not first:
                 fd.write(' or ')
             first=False
-            _convert_dep(fd,task,subdep,clock,time_format,undated)
+            dep_to_ecflow(fd,task,subdep,clock,time_format,undated)
     elif isinstance(dep,AndDependency):
         for subdep in dep:
             if not first:
                 fd.write(' and ')
             first=False
-            _convert_dep(fd,task,subdep,clock,time_format,undated)
+            dep_to_ecflow(fd,task,subdep,clock,time_format,undated)
     elif isinstance(dep,NotDependency):
         fd.write('not ')
         if isinstance(dep.depend,StateDependency):
@@ -115,23 +102,12 @@ def _convert_dep(fd,task,dep,clock,time_format,undated):
                               dep.event.path[-1],clock,time_format,True,
                               undated)
         else:
-            _convert_dep(fd,task,dep.depend,undated)
+            dep_to_ecflow(fd,task,dep.depend,clock,time_format,undated)
     elif isinstance(dep,StateDependency):
         convert_state_dep(fd,task,dep,clock,time_format,False,undated)
     elif isinstance(dep,EventDependency):
         convert_event_dep(fd,task,dep.event.path[:-1],
                           dep.event.path[-1],clock,time_format,False,undated)
-
-def dep_to_ecflow(fd,task,dep,clock,time_format,undated):
-    assert(isinstance(undated,OrderedDict))
-    # Walk the tree, removing CycleExistsDependency objects:
-    dep=remove_cyc_exist(task,dep,clock,undated)
-
-    # Apply boolean algebra simplification algorithms.  This will
-    # remove the true/false dependencies added by remove_cyc_exist.
-    dep=simplify(dep)
-
-    _convert_dep(fd,task,dep,clock,time_format,undated)
 
 class ToEcflow(object):
     def __init__(self,suite):
@@ -157,83 +133,112 @@ class ToEcflow(object):
         self.settings=self.suite.ecFlow
         self.indent=self.settings.get('indent','  ')
         self.sched=scheduler
-        self.clock=None
+        self.clock=copy(self.suite.Clock)
         self.undated=OrderedDict()
-        self.suite_name=None
+        self.graph=Graph(self.suite,self.clock)
+        if 'cycles_to_generate' in self.suite.ecFlow:
+            self.cycles_to_generate=self.suite.ecFlow.cycles_to_generate
+        else:
+            self.cycles_to_generate=copy(self.clock)
 
-    ####################################################################
-        
-    # ecflow suite definition generation
+    def _select_cycle(self,cycle):
+        invalidate_cache(self.suite,recurse=True)
+        self.suite.Clock.now = cycle
 
-    def _add_ecflow_def_meat(self,fd,node,indent):
-        ecflow_def_more=node.get('ecflow_def','')
-        if ecflow_def_more:
-            for line in str(node.get('ecflow_def','')).splitlines():
-                fd.write(f'{indent}{line.rstrip()}\n')
-        if 'Trigger' in node:
-            typecheck(node.task_path_var+'.Trigger',node.Trigger,
-                      LogicalDependency,'!Depend')
-            fd.write(f'{indent}trigger ')
-            ecdep=dep_to_ecflow(
-                fd,node,node.Trigger,
-                self.suite.Clock,self.suite.ecFlow.suite_name,self.undated)
-            fd.write('\n')
-        if 'Complete' in node:
-            typecheck(node.task_path_var+'.Complete',node.Complete,
-                      LogicalDependency,'!Depend')
-            fd.write(f'{indent}complete ')
-            ecdep=dep_to_ecflow(
-                fd,node,node.Complete,
-                self.suite.Clock,self.suite.ecFlow.suite_name,self.undated)
-            fd.write('\n')
-        if 'Time' in node:
-            typecheck(node.task_path_var+'.Time',node.Time,
-                      datetime.timedelta,'!timedelta')
-            dt=to_timedelta(node.Time)
-            when=self.suite.Clock.now+dt
-            #ecdate=when.strftime('%d.%m.%Y')
-            ectime=when.strftime('%H:%M')
-            fd.write(f'{indent}time {ectime}\n')
-            #fd.write(f'{indent}date {ecdate}\n{indent}time {ectime}\n')
-            
-    def _make_task_def(self,fd,task):
-        indent=max(0,len(task.path)-1)*self.indent
-        fd.write(f'{indent}task {task.path[-1]}\n')
-        event_number=1
-        for item in task.child_iter():
-            if item.is_event():
-                fd.write(f'{indent} event {event_number} {item.path[-1]}\n')
-                event_number+=1
-        self._add_ecflow_def_meat(fd,task,indent+self.indent)
-        fd.write(f'{indent}endtask\n')
+    def _foreach_cycle(self):
+        """!Iterates over all cycles, ensuring self.suite is correctly set up
+        to handle a cycle within during each iteration."""
+        clock=copy(self.suite.Clock)
+        # Cannot iterate over self.suite.Clock because
+        # self.suite.Clock is not a Clock. It is an object that
+        # generates a Clock.  Hence, invalidate_cache causes a new
+        # clock to be generated.
+        for clock in clock.iternow():
+            self._select_cycle(clock.now)
+            yield clock.now
 
-    def _make_family_def(self,fd,family):
-        indent=max(0,len(family.path)-1)*self.indent
-        fd.write(f'{indent}family {family.path[-1]}\n')
-        self._add_ecflow_def_meat(fd,family,indent+self.indent)
-        for item in family.child_iter():
-            if item.is_task():
-                self._make_task_def(fd,item)
-            elif item.is_family():
-                self._make_family_def(fd,item)
-        fd.write(f'{indent}endfamily\n')
-    
-    def _make_suite_def_for_one_cycle(self,fd):
-        fd.write(f'suite {self.suite_name}\n')
+    def _initialize_graph(self):
+        self._populate_job_graph()
+        self._simplify_job_graph()
+
+    def _populate_job_graph(self):
+        for cycle in self._foreach_cycle():
+            self.graph.add_cycle(cycle)
+
+    def _simplify_job_graph(self):
+        for cycle in self._foreach_cycle():
+            self.graph.simplify_cycle(cycle)
+
+    def _walk_job_graph(self,cycle,skip_fun=None,enter_fun=None,exit_fun=None):
+        self._select_cycle(cycle)
+        for node in self.graph.depth_first_traversal(
+                cycle,skip_fun,enter_fun,exit_fun):
+            yield node
+
+    def _make_suite_def(self,cycle):
+        self._select_cycle(cycle)
+        clock=self.suite.Clock
+
+        suite_name_format=self.suite.ecFlow.suite_name
+        suite_name=cycle.strftime(suite_name_format)
+        undated=OrderedDict()
+        sio=StringIO()
+        sio.write(f'suite {suite_name}\n')
         if 'ecflow_def' in self.suite:
             for line in self.suite.ecflow_def.splitlines():
-                fd.write(f'{self.indent}{line.rstrip()}\n')
-        for item in self.suite.child_iter():
-            if item.is_task():
-                self._make_task_def(fd,item)
-            elif item.is_family():
-                self._make_family_def(fd,item)
-        fd.write('endsuite\n')
-        return self.suite_name
+                sio.write(f'{self.indent}{line.rstrip()}\n')
 
-    def _make_externs(self,fd):
-        for d in self.undated.keys():
-            fd.write(f'extern {d}\n')
+        def exit_fun(node):
+            indent=max(0,len(node.path)-1)*self.indent
+            nodetype='task' if node.is_task() else 'family'
+            sio.write(f'{indent}end{nodetype}\n')
+
+        def skip_fun(node):
+            return not node.might_complete()
+
+        for node in self._walk_job_graph(cycle,skip_fun=skip_fun,exit_fun=exit_fun):
+            if 'ecflow_def' in node:
+                for line in node.ecflow_def.splitlines():
+                    sio.write(f'{indent}{line.rstrip()}\n')
+
+            indent0=max(0,len(node.path)-1)*self.indent
+            indent1=max(0,len(node.path))*self.indent
+            nodetype='task' if node.is_task() else 'family'
+            sio.write(f'{indent0}{nodetype} {node.path[-1]}\n')
+            
+            if node.trigger not in [FALSE_DEPENDENCY,TRUE_DEPENDENCY]:
+                sio.write(f'{indent1}trigger ')
+                dep_to_ecflow(sio,node,node.trigger,clock,suite_name_format,undated)
+                sio.write('\n')
+            if node.complete not in [FALSE_DEPENDENCY,TRUE_DEPENDENCY]:
+                sio.write(f'{indent1}complete ')
+                dep_to_ecflow(sio,node,node.complete,clock,suite_name_format,undated)
+                sio.write('\n')
+            if node.time>ZERO_DT:
+                ectime=when.strftime('%H:%M')
+                sio.write(f'{indent1}time {ectime}\n')
+
+            event_number=1
+            if node.is_task():
+                for item in node.view.child_iter():
+                    if item.is_event():
+                        sio.write(f'{indent1} event {event_number} '
+                                  f'{item.path[-1]}\n')
+                event_number+=1
+
+        sio.write('endsuite\n')
+        suite_def_without_externs=sio.getvalue()
+        sio.close()
+        sio=StringIO()
+        if undated:
+            for d in undated.keys():
+                sio.write(f'extern {d}\n')
+            sio.write(suite_def_without_externs)
+            suite_def=sio.getvalue()
+            sio.close()
+        else:
+            suite_def=suite_def_without_externs
+        return suite_name, suite_def
 
     ####################################################################
 
@@ -274,27 +279,18 @@ class ToEcflow(object):
     def to_ecflow(self):
         suite_def_files=dict()
         ecf_files=collections.defaultdict(dict)
-        clock=copy(self.suite.Clock)
-        # Cannot iterate over self.suite.Clock because
-        # self.suite.Clock is not a CLock. It is an object that
-        # generates a Clock.  Hence, invalidate_cache causes a new
-        # clock to be generated.
-        for clock in clock.iternow():
-            invalidate_cache(self.suite,recurse=True)
-            self.suite.Clock.now = clock.now
+        self._initialize_graph()
+        for cycle in self._foreach_cycle():
             # Figure our where we are making the suite definition file:
-            filename=clock.now.strftime(self.suite.ecFlow.suite_def_filename)
+            filename=cycle.strftime(self.suite.ecFlow.suite_def_filename)
             if filename in suite_def_files:
                 # We already processed a cycle whose suite definition
                 # is the same as this one's.  Skip.
                 continue
-            self.suite_name=clock.now.strftime(self.suite.ecFlow.suite_name)
-            with StringIO() as sio:
-                def_name = self._make_suite_def_for_one_cycle(sio)
-                suite_def_files[filename]=( def_name, sio.getvalue() )
-            with StringIO() as sio:
-                self._make_externs(sio)
-                suite_def_files[filename]=( def_name, sio.getvalue()+suite_def_files[filename][1] )
+            suite_name, suite_def = self._make_suite_def(cycle)
+            assert(isinstance(suite_name,str))
+            assert(isinstance(suite_def,str))
+            suite_def_files[filename]={ 'name':suite_name, 'def':suite_def }
             self._make_ecf_files_for_one_cycle(ecf_files)
         del self.suite
         return suite_def_files,ecf_files

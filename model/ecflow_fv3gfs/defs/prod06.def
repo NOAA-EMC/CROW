@@ -1,5 +1,5 @@
-extern /prod18/gdas/enkf/jgdas_enkf_post
-extern /prod00/gdas/enkf/jgdas_enkf_post
+extern /prod00/gdas/post
+extern /prod00/gdas/enkf/epos
 suite prod06
   repeat day 1
   edit ECF_TRIES '1'
