@@ -10,7 +10,7 @@ from .tasks import Suite, Depend, AndDependency, SuitePath, \
     Taskable, Task, Family, Cycle, LogicalDependency, SuiteView, \
     RUNNING, COMPLETED, FAILED, TRUE_DEPENDENCY, FALSE_DEPENDENCY, \
     CycleExistsDependency, InputSlot, OutputSlot, EventDependency, \
-    Event, DataEvent, ShellEvent
+    Event, DataEvent, ShellEvent, TaskExistsDependency
 from .to_yaml import to_yaml
 from .eval_tools import invalidate_cache
 from .eval_tools import evaluate_immediates as _evaluate_immediates
@@ -20,7 +20,8 @@ __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
          'TaskStateAnd', 'TaskStateOr', 'TaskStateNot', 'TaskStateIs',
          'Taskable', 'Task', 'Family', 'CycleAt', 'CycleTime', 'Cycle',
          'Trigger', 'Depend', 'Timespec', 'SuitePath', 'ShellEvent', 'Event',
-         'DataEvent', 'CycleExistsDependency', 'validate', 'EventDependency' ]
+         'DataEvent', 'CycleExistsDependency', 'validate', 'EventDependency',
+         'TaskExistsDependency' ]
 
 def to_py(obj):
     return obj._to_py() if hasattr(obj,'_to_py') else obj

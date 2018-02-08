@@ -17,7 +17,7 @@ for defname in suite_defs:
     if dirname and not os.path.exists(dirname):
         os.makedirs(os.path.dirname(filename))
     with open(filename,'wt') as fd:
-        fd.write(suite_defs[defname])
+        fd.write(suite_defs[defname]['def'])
 
 for setname in ecf_files:
     print(f'ecf file set {setname}:\n')

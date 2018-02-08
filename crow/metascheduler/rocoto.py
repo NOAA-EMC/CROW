@@ -13,7 +13,7 @@ from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           Family, Cycle, RUNNING, COMPLETED, FAILED, \
           TRUE_DEPENDENCY, FALSE_DEPENDENCY, SuitePath, \
           CycleExistsDependency
-from crow.metascheduler.simplify import simplify
+from crow.metascheduler.algebra import simplify
 
 __all__=['to_rocoto','RocotoConfigError','ToRocoto',
          'SelfReferentialDependency' ]
