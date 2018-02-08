@@ -15,9 +15,8 @@ def make_parent_dir(filename):
         os.makedirs(os.path.dirname(filename))
 
 for deffile in suite_defs.keys():
-    suite_def_info = suite_defs[deffile]
-    defname=suite_def_info['name']
-    defcontents=suite_def_info['def']
+    defname,defcontents = suite_defs[deffile]
+    #print(f'=== contents of suite def {defname}\n{suite_defs[defname]}')
     filename=os.path.join('defs',deffile)
     make_parent_dir(filename)
     print(filename)
