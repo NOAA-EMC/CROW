@@ -102,48 +102,87 @@ class Scheduler(BaseScheduler):
     
     # Rocoto XML generation
 
-    def rocoto_accounting(self,spec,indent=0):
+    def rocoto_accounting(self,spec,indent=0,**kwargs):
+        if kwargs:
+            spec=dict(spec,**kwargs)
         space=self.indent_text
         sio=StringIO()
         if 'queue' in spec:
-            sio.write(f'{indent*space}<queue>{spec.queue!s}</queue>\n')
+            sio.write(f'{indent*space}<queue>{spec["queue"]!s}</queue>\n')
         if 'account' in spec:
-            sio.write(f'{indent*space}<account>{spec.account!s}</account>\n')
+            sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
         if 'project' in spec:
-            sio.write(f'{indent*space}<account>{spec.project!s}</account>\n')
+            sio.write(f'{indent*space}<account>{spec["project"]!s}</account>\n')
         if 'partition' in spec:
             sio.write(f'{indent*space}<native>-l partition='
-                      f'{spec.partition!s}</native>\n')
+                      f'{spec["partition"]!s}</native>\n')
         if 'account' in spec:
-            sio.write(f'{indent*space}<account>{spec.account!s}</account>\n')
+            sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
+        if 'jobname' in spec:
+            sio.write(f'{indent*space}<jobname>{spec["jobname"]!s}</jobname>\n')
+        if 'outerr' in spec:
+            sio.write(f'{indent*space}<join>{spec["outerr"]}</join>\n')
+        else:
+            if 'stdout' in spec:
+                sio.write('{indent*space}<stdout>{spec["stdout"]}</stdout>\n')
+            if 'stderr' in spec:
+                sio.write('{indent*space}<stderr>{spec["stderr"]}</stderr>\n')
         ret=sio.getvalue()
         sio.close()
         return ret
 
     def rocoto_resources(self,spec,indent=0):
+        sio=StringIO()
         space=self.indent_text
         if not isinstance(spec,JobResourceSpec):
             spec=JobResourceSpec(spec)
 
+        if spec[0].get('walltime',''):
+            dt=tools.to_timedelta(spec[0]['walltime'])
+            dt=dt.total_seconds()
+            hours=int(dt//3600)
+            minutes=int((dt%3600)//60)
+            seconds=int(math.floor(dt%60))
+            sio.write(f'{indent*space}<walltime>{hours}:{minutes:02d}:{seconds:02d}</walltime>\n')
+       
+        if spec[0].get('memory',''):
+            memory=spec[0]['memory']
+            bytes=tools.memory_in_bytes(memory)
+            megabytes=int(math.ceil(bytes/1048576.))
+            sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
+        else:
+            sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
+
+        if 'outerr' in spec:
+            sio.write(f'{indent*space}<join>{spec["outerr"]}</join>\n')
+        else:
+            if 'stdout' in spec:
+                sio.write('{indent*space}<stdout>{spec["stdout"]}</stdout>\n')
+            if 'stderr' in spec:
+                sio.write('{indent*space}<stderr>{spec["stderr"]}</stderr>\n')
+
         if spec.is_pure_serial():
             if spec[0].is_exclusive() in [True,None]:
-                return indent*space+'<nodes>1:ppn=2</nodes>\n'
+                sio.write(indent*space+'<nodes>1:ppn=2</nodes>\n')
             else:
-                return indent*space+'<cores>1</cores>\n'
+                sio.write(indent*space+'<cores>1</cores>\n')
         elif spec.is_pure_openmp():
             # Pure threaded.  Treat as exclusive serial.
-            return indent*space+'<nodes>1:ppn=2</nodes>\n'
-
-        # This is an MPI program.
-
-        # Split into (nodes,ranks_per_node) pairs.  Ignore differeing
-        # executables between ranks while merging them (del_exe):
-        nodes_ranks=self.nodes.to_nodes_ppn(
-            spec,can_merge_ranks=self.nodes.same_except_exe)
-
-        return indent*space+'<nodes>' \
-            + '+'.join([f'{n}:ppn={p}' for n,p in nodes_ranks ]) \
-            + '</nodes>\n'
+            sio.write(indent*space+'<nodes>1:ppn=2</nodes>\n')
+        else:
+            # This is an MPI program.
+            
+            # Split into (nodes,ranks_per_node) pairs.  Ignore differeing
+            # executables between ranks while merging them (del_exe):
+            nodes_ranks=self.nodes.to_nodes_ppn(
+                spec,can_merge_ranks=self.nodes.same_except_exe)
+            
+            sio.write(indent*space+'<nodes>' \
+                + '+'.join([f'{n}:ppn={p}' for n,p in nodes_ranks ]) \
+                + '</nodes>\n')
+        ret=sio.getvalue()
+        sio.close()
+        return ret
 
 def test():
     settings={ 'physical_cores_per_node':24,

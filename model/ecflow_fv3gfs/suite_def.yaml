@@ -1,9 +1,17 @@
-scheduler_settings:
+wcoss_cray_scheduler_settings:
   name: LSFAlps
   physical_cores_per_node: 24
   logical_cpus_per_core: 2
   hyperthreading_allowed: true
+
+theia_scheduler_settings:
+  name: MoabTorque
+  physical_cores_per_node: 24
+  logical_cpus_per_core: 2
+  hyperthreading_allowed: true
   
+scheduler_settings: !calc wcoss_cray_scheduler_settings
+
 scheduler: !calc |
   tools.get_scheduler(doc.scheduler_settings.name,
                       doc.scheduler_settings)

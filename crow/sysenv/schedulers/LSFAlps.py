@@ -144,9 +144,7 @@ class Scheduler(BaseScheduler):
         sio.close()
         return ret
 
-    def rocoto_resources(self,spec,indent=0,**kwargs):
-        if kwargs:
-            spec=dict(spec,**kwargs)
+    def rocoto_resources(self,spec,indent=0):
         sio=StringIO()
         space=self.indent_text
         if not isinstance(spec,JobResourceSpec):
