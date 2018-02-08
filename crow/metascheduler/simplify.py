@@ -3,50 +3,10 @@ boolean algebra.  Ensures short circuit assumptions still hold."""
 
 import crow.config
 from crow.config import OrDependency,AndDependency,NotDependency, \
-    TRUE_DEPENDENCY, FALSE_DEPENDENCY, LogicalDependency,\
-    CycleExistsDependency,TaskExistsDependency, StateDependency, \
-    EventDependency, RUNNING, COMPLETED, FAILED, TaskExistsDependency
-from crow.tools import typecheck, NamedConstant
+    TRUE_DEPENDENCY, FALSE_DEPENDENCY, LogicalDependency
+from crow.tools import typecheck
 
-__all__=[ 'complexity', 'simplify', 'assume' ]
-
-def assume(tree,existing_cycles,current_cycle,assume_complete=None,
-           assume_never_run=None):
-    typecheck('tree',tree,LogicalDependency)
-    if isinstance(tree,CycleExistsDependency):
-        if tree.dt in existing_cycles:
-            return TRUE_DEPENDENCY
-        return FALSE_DEPENDENCY
-    elif isinstance(tree,TaskExistsDependency):
-        cycle=current_cycle+tree.view.path[0]
-        if assume_complete and assume_complete(tree.view) or \
-           assume_never_run and assume_never_run(tree.view):
-            return FALSE_DEPENDENCY
-        alarm=tree.view.get_alarm(default=existing_cycles)
-        if cycle in alarm:
-            return TRUE_DEPENDENCY
-        else:
-            return FALSE_DEPENDENCY
-    elif isinstance(tree,AndDependency) or isinstance(tree,OrDependency):
-        return type(tree)( *[
-            assume(d,existing_cycles,current_cycle) for d in tree ])
-    elif isinstance(tree,NotDependency):
-        return NotDependency(assume(tree.depend,existing_cycles,current_cycle))
-    elif isinstance(tree,StateDependency):
-        if assume_never_run and assume_never_run(tree.path):
-            return FALSE_DEPENDENCY
-        if assume_complete and assume_complete(tree.path):
-            return TRUE_DEPENDENCY if tree.state==COMPLETED \
-              else FALSE_DEPENDENCY
-        return tree
-    elif isinstance(tree,EventDependency):
-        if assume_never_run and assume_never_run(tree.event.parent.path):
-            return FALSE_DEPENDENCY
-        if assume_complete and assume_complete(tree.event.parent.path):
-            return TRUE_DEPENDENCY
-        return tree
-
-    return tree
+__all__=[ 'complexity', 'simplify' ]
 
 def complexity(tree):
     if isinstance(tree,AndDependency) or isinstance(tree,OrDependency):

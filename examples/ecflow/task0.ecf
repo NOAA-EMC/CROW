@@ -5,8 +5,8 @@
 #BSUB -o /ptmp/%U/task0
 #BSUB -W 0:05
 #BSUB -R rusage[mem=2000]
-#BSUB -n 1
-
+#BSUB -extsched CRAYLINUX[]
+export NODES=1
 %include <head.h>
 echo ${JOBgfs}/JGFS_TASK0
 %include <tail.h>

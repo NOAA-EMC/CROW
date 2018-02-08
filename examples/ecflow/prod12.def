@@ -1,3 +1,6 @@
+extern /prod18/family2/task21
+extern /prod00/family2/task21
+extern /prod06/family2/task21
 suite prod12
   repeat day 1
   edit ECF_TRIES '1'
@@ -6,10 +9,14 @@ suite prod12
   task task0
   endtask
   family family1
-    trigger ./family2/task21 == complete and ./task0 == complete
+    edit SOMEVAR '1'
+    edit ANOTHERVAR '2'
+    trigger /prod06/family2/task21 == complete and ./task0 == complete
     task task11
-       event 1 some_event
-       event 1 another_event
+     event 1 some_event
+     event 2 another_event
+      edit WHATEVER '333'
+      event manually_written_event
     endtask
     task task12
       trigger ./task11:some_event
@@ -21,18 +28,16 @@ suite prod12
       trigger ../family1/task12 == complete
     endtask
     family family3
-      task task31
+      task task3
         trigger ../task21 == complete
       endtask
-      task task32
-        trigger ./task31 == complete
-      endtask
-      task task33
-        trigger ./task31 == complete
-      endtask
     endfamily
+    task task22
+      trigger ./task21 == complete
+    endtask
     task task23
       trigger ./task21 == complete
+      complete ./task22 == complete
     endtask
   endfamily
 endsuite

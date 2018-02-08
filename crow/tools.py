@@ -4,11 +4,7 @@ from copy import deepcopy
 from contextlib import suppress
 from collections.abc import Mapping
 
-__all__=['panasas_gb','gpfs_gb','to_timedelta','deliver_file','NamedConstant',
-         'Clock','str_timedelta','memory_in_bytes','to_printf_octal',
-         'str_to_posix_sh','typecheck','ZER_DT','shell_to_python_type',
-         'MISSING']
-
+__all__=['panasas_gb','gpfs_gb','to_timedelta','deliver_file']
 _logger=logging.getLogger('crow.tools')
 
 def deliver_file(from_file: str,to_file: str,*,blocksize: int=1048576,
@@ -133,21 +129,6 @@ def to_timedelta(s):
     raise ValueError(s+': invalid timedelta specification (12:34, '
                      '12:34:56, 9d12h, 9d12:34, 9d12:34:56)')
 
-ZERO_DT=timedelta(0)
-def str_timedelta(dt):
-    sign='+'
-    if dt<ZERO_DT:
-        dt=-dt
-        sign='-'
-    d=int(dt.total_seconds()/(3600*24))
-    h=int((dt.total_seconds()/3600)%24)
-    m=int((dt.total_seconds()/60)%60)
-    s=int(dt.total_seconds()%60)
-    if d:
-        return f'{sign}{d}d{h:02d}:{m:02d}:{s:02d}'
-    else:
-        return f'{sign}{h:02d}:{m:02d}:{s:02d}'
-
 ########################################################################
 
 def memory_in_bytes(s):
@@ -217,29 +198,16 @@ class Clock(object):
         self.__now=start
         if self.step<=ZERO_DT:
             raise ValueError('Time step must be positive and non-zero.')
-        if self.end is not None and self.end<self.start:
+        if self.end<self.start:
             raise ValueError('End time must be at or after start time.')
         self.now=now
 
     def __repr__(self):
-        return f'Clock(start={self.start!r},step={self.step!r},'\
-               f'end={self.end!r},now={self.now!r})'
 
+        return f'Clock(start={self.start!r},step={self.step!r},end={self.end!r},now={self.now!r})'
     def __contains__(self,when):
         if isinstance(when,datetime.timedelta):
             return not when%self.step
-        elif isinstance(when,Clock):
-            # Are the other clock's times a subset of my times?
-            if when.start<self.start: return False # starts before me
-            if when.step<self.step: return False # ticks more frequently
-            if when.step%self.step: return False # ticks don't line up
-            if when.end is None and self.end is not None:
-                return False # is eternal, but I have an end time
-            if self.end is None:
-                return True # I am eternal, so the other clock must
-                            # stop before or during my time
-            if when.end>self.end: return False # other clock stops after me
-            return True
         elif isinstance(when,datetime.datetime):
             if self.end and when>self.end: return False
             if when<self.start: return False
@@ -247,23 +215,14 @@ class Clock(object):
             if not dt: return True
             if dt%self.step: return False # does not lie on a time step
             return True
-        raise TypeError(f'{type(self).__name__}.__contains__ only understands Clock, datetime, and timedelta objects.  You passed type f{type(when).__name__}.')
+        raise TypeError(f'{type(self).__name__}.__contains__ only understands datetime and timedelta objects.  You passed a f{type(when).__name__}.')
 
     def __iter__(self):
         time=self.start
         while time<=self.end:
             yield time
             time+=self.step
-    def __str__(self):
-        ret='Clock'
-        if self.now is not None:
-            ret=f'{ret}@{self.now:%Ft%T}'
-        ret=f'{ret} from {self.start:%Ft%T} until '
-        if self.end is not None:
-            ret=f'{ret}{self.end:%Ft%T}'
-        else:
-            ret=f'{ret}eternity ends'
-        return f'{ret} by {str_timedelta(self.step)}'
+
     def setnow(self,time):
         if time is None:
             self.__now=self.start
@@ -316,21 +275,3 @@ def shell_to_python_type(arg):
         if arg.upper() in [ 'YES', 'TRUE' ]: return True
         if arg.upper() in [ 'NO', 'FALSE' ]: return False
         return arg
-
-########################################################################
-
-class NamedConstant(object):
-    def __init__(self,name):
-        self.__name=name
-    @property
-    def name(self): return self.__name
-    def __repr__(self): return f'NamedConstant({self.__name!r})'
-    def __str__(self): return self.__name
-    def __copy__(self): return self
-    def __deepcopy__(self): return self
-    def __hash__(self): return hash(self.__name)
-    def __eq__(self,other):
-        return isinstance(other,NamedConstant) and other.__name==self.__name
-    def __ne__(self,other):
-        return not isinstance(other,NamedConstant) or other.__name!=self.__name
-MISSING=NamedConstant('MISSING')

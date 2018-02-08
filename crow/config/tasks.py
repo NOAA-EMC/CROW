@@ -18,7 +18,7 @@ from collections.abc import Mapping, Sequence
 from copy import copy, deepcopy
 from crow.config.exceptions import *
 from crow.config.eval_tools import dict_eval, strcalc, multidict, from_config
-from crow.tools import to_timedelta, typecheck, NamedConstant, MISSING
+from crow.tools import to_timedelta, typecheck
 
 __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'AndDependency', 'OrDependency', 'NotDependency',
@@ -27,17 +27,22 @@ __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'TRUE_DEPENDENCY', 'FALSE_DEPENDENCY', 'SuitePath',
           'CycleExistsDependency', 'FamilyView', 'TaskView',
           'CycleView', 'Slot', 'InputSlot', 'OutputSlot', 'Message',
-          'Event', 'DataEvent', 'ShellEvent', 'EventDependency',
-          'TaskExistsDependency' ]
+          'Event', 'DataEvent', 'ShellEvent', 'EventDependency' ]
 
 class Event(dict_eval): pass
 class DataEvent(Event): pass
 class ShellEvent(Event): pass
 
-RUNNING=NamedConstant('RUNNING')
-COMPLETED=NamedConstant('COMPLETED')
-FAILED=NamedConstant('FAILED')
+class StateConstant(object):
+    def __init__(self,name):
+        self.name=name
+    def __repr__(self): return self.name
+    def __str__(self): return self.name
+RUNNING=StateConstant('RUNNING')
+COMPLETED=StateConstant('COMPLETED')
+FAILED=StateConstant('FAILED')
 _logger=logging.getLogger('crow.config')
+MISSING=object()
 VALID_STATES=[ 'RUNNING', 'FAILED', 'COMPLETED' ]
 ZERO_DT=timedelta()
 EMPTY_DICT={}
@@ -236,19 +241,6 @@ class SuiteView(Mapping):
         return StateDependency(self,FAILED)
     def is_completed(self):
         return StateDependency(self,COMPLETED)
-    def exists(self):
-        return TaskExistsDependency(self)
-
-    def get_alarm(self,default=MISSING):
-        if 'AlarmName' not in self:
-            if default==MISSING:
-                return self.suite.Clock
-            #print(f'return default {default} {MISSING} {default==MISSING}')
-            return default
-        try:
-            return self.suite.get_alarm_with_name(self.AlarmName)
-        except KeyError as ke:
-            raise ValueError(f'{self.task_path_var}: no alarm with name {self.AlarmName} in suite.')
 
 class EventView(SuiteView): pass
 
@@ -318,9 +310,8 @@ class SlotView(SuiteView):
     def is_completed(self): raise TypeError('data cannot run')
 
 class CycleView(SuiteView): pass
-class TaskableView(SuiteView): pass
-class TaskView(TaskableView): pass
-class FamilyView(TaskableView): pass
+class TaskView(SuiteView): pass
+class FamilyView(SuiteView): pass
 class InputSlotView(SlotView):
     def get_output_slot(self,meta):
         result=self.viewed._raw('Out')
@@ -361,8 +352,6 @@ class Suite(SuiteView):
         globals=self.viewed._get_globals()
         globals.update(*args,**kwargs)
         self.viewed._recursively_set_globals(globals)
-    def get_alarm_with_name(self,alarm_name):
-        return self["Alarms"][alarm_name]
 
 class Message(str):
     def _as_dependency(self,globals,locals,path):
@@ -410,9 +399,6 @@ class LogicalDependency(object):
         dep=as_dependency(other)
         if dep is NotImplemented: raise TypeError(other)
         return OrDependency(self,dep)
-    def __iter__(self):
-        return
-        yield self # ensure this is an iterator.
     @abstractmethod
     def copy_dependencies(self): pass
     @abstractmethod
@@ -504,24 +490,6 @@ class CycleExistsDependency(LogicalDependency):
     def copy_dependencies(self):  return CycleExistsDependency(self.dt)
     def __eq__(self,other):
         return isinstance(other,CycleExistsDependency) and self.dt==other.dt
-
-class TaskExistsDependency(LogicalDependency):
-    def __init__(self,view):
-        typecheck('view',view,TaskableView,'Task or Tamily')
-        self.view=view
-    @property
-    def path(self):              return self.view.path
-    def is_task(self):           return self.view.is_task()
-    def __hash__(self):          return hash(self.view.path)
-    def copy_dependencies(self): return TaskExistsDependency(self.view)
-    def add_time(self,dt):
-        self.view=copy(self.view)
-        self.view.path[0]+=dt
-    def __repr__(self):
-        return f'/{"/".join([str(s) for s in self.view.path])} exists'
-    def __eq__(self,other):
-        return isinstance(other,StateDependency) \
-            and other.view.path==self.view.path
 
 class StateDependency(LogicalDependency):
     def __init__(self,view,state):
