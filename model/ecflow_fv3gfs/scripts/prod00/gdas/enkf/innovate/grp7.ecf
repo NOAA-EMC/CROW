@@ -8,5 +8,5 @@
 #BSUB -extsched CRAYLINUX[]
 export NODES=12
 %include <head.h>
-echo ${JOBgfs}/eomg
+echo ${JOBgfs}/jgdas_innovate
 %include <tail.h>

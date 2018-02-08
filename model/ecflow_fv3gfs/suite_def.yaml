@@ -32,6 +32,18 @@ ecf_file_template: &ecf_file_template !expand |
   echo ${{JOBgfs}}/{J_JOB}
   %include <tail.h>
 
+shared_task_template: &shared_task_template
+  ecf_file: *ecf_file_template
+  accounting: *shared_accounting
+  J_JOB: !calc tools.to_upper(task_path_var[-1])
+  Rocoto: *rocoto_task_template
+
+exclusive_task_template: &exclusive_task_template
+  ecf_file: *ecf_file_template
+  accounting: *exclusive_accounting
+  J_JOB: !calc tools.to_upper(task_path_var[-1])
+  Rocoto: *rocoto_task_template
+
 suite: !Cycle
   Clock: !Clock
     start: 2018-01-01T00:00:00
@@ -74,29 +86,20 @@ suite: !Cycle
       edit PROJ '%PROJENVIR%'
 
     jgdas_verfrad: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend enkf
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_nothing )
-      accounting: *exclusive_accounting
-      J_JOB: nothing
-      Rocoto: *rocoto_task_template
 
     jgdas_vminmon: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend jgdas_analysis
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_nothing )
-      accounting: *exclusive_accounting
-      J_JOB: nothing
-      Rocoto: *rocoto_task_template
 
     dump: !Family
       jgdas_ics: !Task
+        <<: *exclusive_task_template
         release_gdas00_ics: !DataEvent {file="/dev/null"}
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_nothing )
-        accounting: *exclusive_accounting
-        J_JOB: nothing
-        Rocoto: *rocoto_task_template
 
       #jgdas_dump_post: !Task
       #  Trigger: !Depend jgdas_dump
@@ -108,146 +111,105 @@ suite: !Cycle
       #  J_JOB: nothing
  
       jgdas_tropcy_qc_reloc: !Task
+        <<: *exclusive_task_template
         Trigger: !Depend jgdas_dump
         #Time: !timedelta +5:50:00
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_nothing )
-        accounting: *exclusive_accounting
-        J_JOB: nothing
-        Rocoto: *rocoto_task_template
 
       #Replaced by emc version of dump job 
       #This dump job should be using NCO version when delivery to NCO
       jgdas_dump: !Task
+        <<: *exclusive_task_template
         release_sfcprep: !DataEvent {file="/dev/null"}
         #Time: !timedelta +6:20:00
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_nothing )
-        accounting: *exclusive_accounting
-        J_JOB: nothing
-        Rocoto: *rocoto_task_template
 
     prep: !Family
       jgdas_emcsfc_sfc_prep: !Task
+        <<: *exclusive_task_template
         Trigger: !Depend up.dump.jgdas_dump.release_sfcprep
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_nothing )
-        accounting: *exclusive_accounting
-        J_JOB: nothing
-        Rocoto: *rocoto_task_template
 
       jgdas_prep: !Task
         #Trigger: !Depend (up.dump.jgdas_dump & up.dump.jgdas_tropcy_qc_reloc & up.gdas.post.at('-6:00:00') )
+        <<: *exclusive_task_template
         Trigger: !Depend ( up.dump.jgdas_dump & up.dump.jgdas_tropcy_qc_reloc )
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_prep )
-        accounting: *exclusive_accounting
-        J_JOB: prep
-        Rocoto: *rocoto_task_template
 
       jgdas_prep_post: !Task
+        <<: *exclusive_task_template
         Trigger: !Depend up.jgdas_analysis
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_nothing )
-        accounting: *exclusive_accounting
-        J_JOB: nothing
-        Rocoto: *rocoto_task_template
 
     enkf: !Family
       jgdas_enkf_select_obs: !Task
+        <<: *exclusive_task_template
         Trigger: !Depend  ( up.prep.jgdas_prep & jgdas_enkf_post.at('-6:00:00') )
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_eobs )
-        accounting: *exclusive_accounting
-        J_JOB: eobs
-        Rocoto: *rocoto_task_template
 
       innovate: !TaskArray
         Trigger: !Depend jgdas_enkf_select_obs
         Dimensions:
           groupid: !calc tools.seq(1,8,1)
         grp: !TaskElement
+          <<: *exclusive_task_template
           Foreach: [ group ]
           Name: !expand "grp{idx.groupid}"
-          ecf_file: *ecf_file_template
           resources: !calc ( doc.resource_demo.run_eomg )
-          accounting: *exclusive_accounting
-          J_JOB: eomg
-          Rocoto: *rocoto_task_template
+          J_JOB: jgdas_innovate
 
       jgdas_enkf_update: !Task
+        <<: *exclusive_task_template
         ecflow_def: |
           edit ECF_PASS 'FREE'
         Trigger: !Depend innovate
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_eupd )
-        accounting: *exclusive_accounting
-        J_JOB: eupd
-        Rocoto: *rocoto_task_template
 
       jgdas_enkf_inflate_recenter: !Task
+        <<: *exclusive_task_template
         Trigger: !Depend ( jgdas_enkf_update & up.jgdas_analysis )
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_ecen )
-        accounting: *exclusive_accounting
-        J_JOB: ecen
-        Rocoto: *rocoto_task_template
 
       forecast: !TaskArray
         Trigger: !Depend up.enkf.jgdas_enkf_inflate_recenter
         Dimensions:
           groupid: !calc tools.seq(1,8,1)
         grp: !TaskElement
+          <<: *exclusive_task_template
           Foreach: [ group ]
           Name: !expand "grp{idx.groupid}"
-          ecf_file: *ecf_file_template
           resources: !calc ( doc.resource_demo.run_efcs )
-          accounting: *exclusive_accounting
-          J_JOB: efcs
-          Rocoto: *rocoto_task_template
+          J_JOB: jgfs_forecast
           
       jgdas_enkf_post: !Task
+        <<: *exclusive_task_template
         Trigger: !Depend forecast
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_epos )
-        accounting: *exclusive_accounting
-        J_JOB: epos
-        Rocoto: *rocoto_task_template
 
 
     jgdas_analysis: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend ( prep.jgdas_prep & prep.jgdas_emcsfc_sfc_prep & enkf.jgdas_enkf_post.at('-6:00:00') )
       release_fcst: !DataEvent {file="/dev/null"}
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_anal )
-      accounting: *exclusive_accounting
-      J_JOB: anal
-      Rocoto: *rocoto_task_template
 
     jgdas_forecast: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend ( jgdas_analysis.release_fcst & enkf.innovate )
       release_fcst: !DataEvent {file="/dev/null"}
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_gdasfcst )
-      accounting: *exclusive_accounting
-      J_JOB: fcst
-      Rocoto: *rocoto_task_template
 
     post: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend jgdas_forecast
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_gdaspost )
-      accounting: *exclusive_accounting
       J_JOB: post
-      Rocoto: *rocoto_task_template
 
     vrfy: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend post
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_vrfy )
-      accounting: *exclusive_accounting
       J_JOB: vrfy
-      Rocoto: *rocoto_task_template
 
   gfs: !Family
     ecflow_def: |
@@ -256,124 +218,85 @@ suite: !Cycle
 
     dump: !Family
       jgfs_tropcy_qc_reloc: !Task
+        <<: *exclusive_task_template
         Trigger: !Depend jgfs_dump
         jtwc_bull_email: !DataEvent {file="/dev/null"}
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_nothing )
-        accounting: *exclusive_accounting
-        J_JOB: nothing
-        Rocoto: *rocoto_task_template
 
       #Replaced by emc version of dump job 
       #This dump job should be using NCO version when delivery to NCO
       jgfs_dump: !Task
+        <<: *exclusive_task_template
         release_sfcprep: !DataEvent {file="/dev/null"}
         #Time: !timedelta +3:50:00
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_nothing )
-        accounting: *exclusive_accounting
-        J_JOB: nothing
-        Rocoto: *rocoto_task_template
 
     prep: !Family
       jgfs_emcsfc_sfc_prep: !Task
+        <<: *exclusive_task_template
         Trigger: !Depend up.dump.jgfs_dump.release_sfcprep
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_nothing )
-        accounting: *exclusive_accounting
-        J_JOB: nothing
-        Rocoto: *rocoto_task_template
     
       jgfs_prep: !Task
+        <<: *exclusive_task_template
         Trigger: !Depend up.dump
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_prep )
-        accounting: *exclusive_accounting
-        J_JOB: prep
-        Rocoto: *rocoto_task_template
 
       jgfs_prep_post: !Task
+        <<: *exclusive_task_template
         Trigger: !Depend  up.jgfs_analysis
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_nothing )
-        accounting: *exclusive_accounting
-        J_JOB: nothing
-        Rocoto: *rocoto_task_template
 
     jgfs_analysis: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend ( prep.jgfs_prep & prep.jgfs_emcsfc_sfc_prep  & up.gdas.enkf.jgdas_enkf_post.at('-6:00:00') )
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_anal )
-      accounting: *exclusive_accounting
-      J_JOB: anal
-      Rocoto: *rocoto_task_template
 
     jgfs_vminmon: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend jgfs_analysis
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_nothing )
-      accounting: *exclusive_accounting
-      J_JOB: nothing
-      Rocoto: *rocoto_task_template
 
     jgfs_forecast: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend jgfs_analysis
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_gfsfcst )
-      accounting: *exclusive_accounting
-      J_JOB: fcst
-      Rocoto: *rocoto_task_template
 
     jgfs_post: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend jgfs_forecast
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_gfspost )
-      accounting: *exclusive_accounting
-      J_JOB: post
-      Rocoto: *rocoto_task_template
     
     jgfs_vrfy: !Task
+      <<: *exclusive_task_template
       Trigger: !Depend jgfs_post
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_vrfy )
-      accounting: *exclusive_accounting
-      J_JOB: vrfy
-      Rocoto: *rocoto_task_template
 
   archive: !Family
     gdasarch: !Task
+      <<: *shared_task_template
       Trigger: !Depend up.gdas.jgdas_verfrad
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_arch )
-      accounting: *shared_accounting
       J_JOB: gdasarch
-      Rocoto: *rocoto_task_template
 
     gfsarch: !Task
+      <<: *shared_task_template
       Trigger: !Depend up.gfs.jgfs_vrfy
-      ecf_file: *ecf_file_template
       resources: !calc ( doc.resource_demo.run_arch )
-      accounting: *shared_accounting
       J_JOB: gfsarch
-      Rocoto: *rocoto_task_template
 
     earc: !TaskArray
       Trigger: !Depend up.gdas.enkf.jgdas_enkf_post
       Dimensions:
         groupid: !calc tools.seq(1,8,1)
       grp: !TaskElement
+        <<: *shared_task_template
         Foreach: [ group ]
         Name: !expand "grp{idx.groupid}"
-        ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_arch )
-        accounting: *shared_accounting
         J_JOB: earc
-        Rocoto: *rocoto_task_template
 
   final: !Task
-    ecf_file: *ecf_file_template
+    <<: *shared_task_template
     resources: !calc ( doc.resource_demo.run_nothing )
-    accounting: *shared_accounting
-    J_JOB: final
-    Rocoto: *rocoto_task_template
 

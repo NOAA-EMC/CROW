@@ -11,9 +11,11 @@ following python concept:
 
 from datetime import timedelta
 from collections import namedtuple, OrderedDict
+import collections
 import re
 import yaml
 from yaml import YAMLObject
+from yaml.nodes import MappingNode
 
 from crow.config.eval_tools import *
 from crow.config.represent import *
@@ -163,13 +165,29 @@ CONDITIONALS={ FirstMaxYAML:FirstMax,
 
 ########################################################################
 
+def construct_ordered_dict(loader, node, deep=False):
+    if not isinstance(node, MappingNode):
+        raise ConstructorError(None, None,
+                    "expected a mapping node, but found %s" % node.id,
+                    node.start_mark)
+    mapping = OrderedDict()
+    loader.flatten_mapping(node)
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if not isinstance(key, collections.Hashable):
+            raise ConstructorError("while constructing a mapping", node.start_mark,
+                                   "found unhashable key", key_node.start_mark)
+        value = loader.construct_object(value_node, deep=deep)
+        mapping[key] = value
+    return mapping
+
 def add_yaml_ordered_dict(key,cls):
     """!Generates and registers representers and constructors for custom
     YAML map types    """
     def representer(dumper,data):
         return dumper.represent_ordered_dict(key,data)
     def constructor(loader,node):
-        return cls(loader.construct_pairs(node))
+        return cls(construct_ordered_dict(loader,node))
     #yaml.add_representer(cls,representer)
     yaml.add_constructor(key,constructor)
 

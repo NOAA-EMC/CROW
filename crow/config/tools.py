@@ -83,6 +83,8 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'fort':fort,
     'seq':seq,
     'crow_install_dir':crow_install_dir,
+    'to_upper':(lambda s: s.upper()),
+    'to_lower':(lambda s: s.lower()),
     'panasas_gb':crow.tools.panasas_gb,
     'gpfs_gb':crow.tools.gpfs_gb,
     'basename':os.path.basename,

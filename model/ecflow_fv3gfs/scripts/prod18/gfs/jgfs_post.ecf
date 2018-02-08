@@ -8,5 +8,5 @@
 #BSUB -extsched CRAYLINUX[]
 export NODES=6
 %include <head.h>
-echo ${JOBgfs}/post
+echo ${JOBgfs}/T
 %include <tail.h>
