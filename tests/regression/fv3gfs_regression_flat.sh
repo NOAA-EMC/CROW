@@ -59,7 +59,7 @@ RZDM_RESULTS=${RZDM_RESULTS:-'FALSE'}
 PYTHON_FILE_COMPARE=${PYTHON_FILE_COMPARE:-'TRUE'}
 REGRESSSION_COMROT_BASENAME='fv3gfs_regression_experments'
 
-#CHECKOUT='FALSE'
+CHECKOUT='FALSE'
 #CREATE_EXP='FALSE'
 #BUILD='FALSE'
 #RUNROCOTO='FALSE'
@@ -129,9 +129,9 @@ checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
 pslot="${pslot_basename}_exp_${regressionID}"
 
 username=`echo ${USER} | tr '[:upper:]' '[:lower:]'`
-setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/gfs_workflow.${fv3gfs_ver}/ush/setup_expt.py
-setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/gfs_workflow.${fv3gfs_ver}/ush/setup_workflow.py
-config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/gfs_workflow.${fv3gfs_ver}/config
+setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
+setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
+config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
 
 comrot=${CHECKOUT_DIR}/${REGRESSSION_COMROT_BASENAME}
 comrot_test_dir=${comrot}/${pslot}
@@ -331,7 +331,8 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
 fi
 
 if [[ $BUILD == 'TRUE' ]]; then
- cd ${checkout_dir_basename}/global_shared.${fv3gfs_ver}/sorc
+
+   cd ${checkout_dir_basename}/sorc
 
    sed -i  's/cd gsi.fd/cd gsi.fd\n    checkout DA-FV3-IMPL/' checkout.sh
    log_message "WARNING" "just updated checkout.sh script and added line to checkout DA-FV3-IMPL branch for gsi instead of master"
