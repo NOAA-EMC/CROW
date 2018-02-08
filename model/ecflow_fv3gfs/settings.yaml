@@ -1,0 +1,11 @@
+settings:
+  NMEM_ENKF: 80
+  ECF_HOME: '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs'
+  ROCOTO_HOMEgfs: !calc ECF_HOME # Would be different in the real execution
+  ROCOTO_HOME: !calc ECF_HOME
+  layout_x: 8
+  layout_y: 16
+  experiment_name: gfs.v15.0.0
+  QUEUE: debug
+  PROJECT: GFS-T2O
+  QUEUESERV: dev_transfer

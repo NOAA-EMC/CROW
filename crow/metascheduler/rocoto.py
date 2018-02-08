@@ -11,8 +11,8 @@ from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           AndDependency, OrDependency, NotDependency, \
           StateDependency, Dependable, Taskable, Task, \
           Family, Cycle, RUNNING, COMPLETED, FAILED, \
-          TRUE_DEPENDENCY, FALSE_DEPENDENCY, SuitePath, \
-          CycleExistsDependency
+          TRUE_DEPENDENCY, FALSE_DEPENDENCY, SuitePath, TaskExistsDependency, \
+          CycleExistsDependency, DataEvent, ShellEvent, EventDependency
 from crow.metascheduler.algebra import simplify
 
 __all__=['to_rocoto','RocotoConfigError','ToRocoto',
@@ -59,6 +59,8 @@ def _to_rocoto_dep_impl(dep,fd,indent):
         fd.write(f'{"  "*indent}<{tag}>\n')
         for d in dep: _to_rocoto_dep_impl(d,fd,indent+1)
         fd.write(f'{"  "*indent}</{tag}>\n')
+    elif isinstance(dep,TaskExistsDependency):
+        fd.write(f'{"  "*indent}<true></true> <!-- WARNING: ignoring "task exists" dependency on {".".join(dep.path[1:])}-->\n')
     elif isinstance(dep,StateDependency):
         path='.'.join(dep.path[1:])
         more=''
@@ -74,6 +76,27 @@ def _to_rocoto_dep_impl(dep,fd,indent):
     elif isinstance(dep,CycleExistsDependency):
         dt=_cycle_offset(dep.dt)
         fd.write(f'{"  "*indent}<cycleexistdep cycle_offset="{dt}"/>\n')
+    elif isinstance(dep,EventDependency):
+        event=dep.event
+        if event.is_shell_event():
+            if not 'command' in event:
+                fd.write(f'{"  "*indent}<true></true><!-- shell dependency with no file -->\n')
+            else:
+                fd.write(f'{"  "*indent}<sh>{event.command}</sh>\n')
+        elif event.is_data_event():
+            if not 'file' in event:
+                fd.write(f'{"  "*indent}<true></true><!-- data dependency with no file -->\n')
+                return
+            fd.write(f'{"  "*indent}<true></true><datadep')
+            if 'age' in event:
+                dt=crow.tools.str_timedelta(event.age).sub('d',':')
+                fd.write(f' age={dt}')
+            if 'minsize' in dep:
+                nbytes=crow.tools.in_bytes(event.size)
+                fd.write(f' size={nbytes}')
+            fd.write(f'>{event.file}</datadep>\n')
+        else:
+            raise TypeError(f'Unexpected {type(event).__name__} event type in an EventDependency in _to_rocoto_dep')
     else:
         raise TypeError(f'Unexpected {type(dep).__name__} in _to_rocoto_dep')
 
@@ -98,14 +121,18 @@ class ToRocoto(object):
         try:
             settings=suite.Rocoto.scheduler
             scheduler=suite.Rocoto.scheduler
-            parallelism=suite.Rocoto.parallelism
         except(AttributeError,IndexError,TypeError,ValueError) as e:
             raise ValueError('A Suite must define a Rocoto section containing '
                              'a "parallelism" and a "scheduler."')
 
+        update_globals={ 'sched':scheduler, 'to_rocoto':self,
+                         'metasched':self }
+        if 'parallelism' in suite.Rocoto:
+            update_globals['parallelism']=suite.Rocoto.parallelism
+
+        self.type='rocoto'
         self.suite=suite
-        self.suite.update_globals(sched=scheduler,to_rocoto=self,
-                                  runner=parallelism)
+        self.suite.update_globals(**update_globals)
         self.settings=self.suite.Rocoto
         self.sched=scheduler
         self.__all_defined=set()
@@ -118,6 +145,9 @@ class ToRocoto(object):
                             "must be a string.")
         self.__dummy_var_count=0
         self.__families_with_completes=set()
+
+    def varref(self,name):
+        return f'&{name};'
 
     def make_time_xml(self,indent=1):
         clock=copy(self.suite.Clock)
@@ -244,7 +274,7 @@ class ToRocoto(object):
         self.__families.add(SuitePath(view.path[1:-1]))
 
         for key,child in view.items():
-            if key=='up': continue
+            if key in [ 'up', 'this' ]: continue
             if not isinstance(child,SuiteView):
                 continue
             if child.path[1:] == ['final']:
@@ -278,7 +308,7 @@ class ToRocoto(object):
 {space*indent}  <var name="{dummy_var}">DUMMY_VALUE</var>
 ''')
         for key,child in view.items():
-            if key=='up': continue
+            if key in [ 'up', 'this' ]: continue
             if not isinstance(child,SuiteView):
                 continue
             if child.path[1:] == ['final']:

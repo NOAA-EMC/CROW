@@ -1,12 +1,11 @@
 #! /bin/sh
-#BSUB -q %QUEUE%
+#BSUB -q %QUEUESERV%
 #BSUB -P %PROJECT%
 #BSUB -J final
-#BSUB -o %LOG%final.log
-#BSUB -W 0:05
-#BSUB -R rusage[mem=3072]
-#BSUB -n 1
-
+#BSUB -o %ECF_OUT%/final_t%CYC%z.log
+#BSUB -R rusage[mem=300]
+#BSUB -extsched CRAYLINUX[]
+export NODES=1
 %include <head.h>
 echo ${JOBgfs}/final
 %include <tail.h>

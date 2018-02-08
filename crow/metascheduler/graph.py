@@ -48,6 +48,10 @@ class Node(object):
         for value in self.children.values():
             yield value
 
+    def force_never_run(self):
+        self.trigger=FALSE_DEPENDENCY
+        self.complete=FALSE_DEPENDENCY
+
     def assume(self,clock,assume_complete=None,assume_never_run=None):
         typecheck('self.alarm',self.alarm,Clock)
         if self.cycle not in self.alarm:
@@ -137,6 +141,12 @@ class Graph(object):
                     self.__cycles[cycle][key],skip_fun,enter_fun,exit_fun,memo):
                 yield node
 
+    def force_never_run(self,path):
+        cycle=self.__clock.start+path[0]
+        timeless_path=copy.copy(path)
+        timeless_path[0]=ZERO_DT
+        self.__nodes[cycle][timeless_path].force_never_run()
+
     def add_cycle(self,cycle):
         self.__clock.now=cycle
         memo=set()
@@ -150,7 +160,7 @@ class Graph(object):
         if child_view.path in memo: return
         child_node=Node(child_view,self.__clock.now)
         if parent_node is not None:
-            parent_node.children[child_node.path[-1]]=child_node
+            parent_node.children[child_node.path]=child_node
         child_cycle=cycle+child_node.path[0]
         self.__nodes[child_cycle][child_node.path]=child_node
         if child_view.is_family():

@@ -123,7 +123,8 @@ class ToEcflow(object):
                 'A Suite must define an ecFlow section containing '
                 'scheduler, and suite_name; and the suite must have a Clock')
 
-        update_globals={ 'sched':scheduler, 'to_ecflow':self, 'clock':clock }
+        update_globals={ 'sched':scheduler, 'to_ecflow':self, 'clock':clock,
+                         'metasched':self }
 
         if 'parallelism' in suite.ecFlow:
             update_globals['parallelism']=suite.ecFlow.parallelism
@@ -141,6 +142,9 @@ class ToEcflow(object):
         else:
             self.cycles_to_generate=copy(self.clock)
 
+    def varref(self,name):
+        return f'%{name}%'
+
     def _select_cycle(self,cycle):
         invalidate_cache(self.suite,recurse=True)
         self.suite.Clock.now = cycle
@@ -157,8 +161,16 @@ class ToEcflow(object):
             self._select_cycle(clock.now)
             yield clock.now
 
+    def _remove_final_task(self):
+        if 'final' not in self.suite or not self.suite.final.is_task() \
+           and not self.suite.final.is_family(): return
+        for cycle in self.clock:
+            dt=cycle-self.clock.start
+            self.graph.force_never_run(self.suite.final.at(dt).path)
+
     def _initialize_graph(self):
         self._populate_job_graph()
+        self._remove_final_task()
         self._simplify_job_graph()
 
     def _populate_job_graph(self):

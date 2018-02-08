@@ -8,19 +8,13 @@ scheduler: !calc |
   tools.get_scheduler(doc.scheduler_settings.name,
                       doc.scheduler_settings)
 
-settings:
-  NMEM_ENKF: 80
-  ECF_HOME: '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs'
-  layout_x: 8
-  layout_y: 16
-
 shared_accounting: &shared_accounting
-  queue: '%QUEUESERV%' 
-  project: '%PROJECT%'
+  queue: !calc metasched.varref('QUEUESERV')
+  project: !calc metasched.varref('PROJECT')
 
 exclusive_accounting: &exclusive_accounting
-  queue: '%QUEUE%'
-  project: '%PROJECT%'
+  queue: !calc metasched.varref('QUEUE')
+  project: !calc metasched.varref('PROJECT')
 
 ecf_file_template: &ecf_file_template !expand |
   #! /bin/sh
@@ -41,6 +35,8 @@ suite: !Cycle
     suite_name: "prod%H"
     scheduler: !calc doc.scheduler
 
+  Rocoto: *Rocoto
+
   ecflow_def: !expand |
     repeat day 1
     edit ECF_TRIES '1'
@@ -53,11 +49,11 @@ suite: !Cycle
     edit ENVIR 'prod'
     edit E 'jecffv3'
     #edit QUEUE 'dev'
-    edit QUEUE 'debug'
-    edit PROJENVIR 'GFS-T2O'
+    edit QUEUE '{doc.settings.QUEUE}'
+    edit PROJENVIR '{doc.settings.PROJECT}'
     edit EMCPEN 'ecfgfsfv3'
     edit COM '/gpfs/hps2/ptmp/emc.glopara/%EMCPEN%/com'
-    edit QUEUESERV 'dev_transfer'
+    edit QUEUESERV '{doc.settings.QUEUESERV}'
     edit DATAROOT '/gpfs/hps2/stmp/emc.glopara/%EMCPEN%'
     edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
     edit ECF_OUT '{doc.settings.ECF_HOME}/output'
@@ -75,6 +71,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_nothing )
       accounting: *exclusive_accounting
       J_JOB: nothing
+      Rocoto: *rocoto_task_template
 
     jgdas_vminmon: !Task
       Trigger: !Depend jgdas_analysis
@@ -82,6 +79,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_nothing )
       accounting: *exclusive_accounting
       J_JOB: nothing
+      Rocoto: *rocoto_task_template
 
     dump: !Family
       jgdas_ics: !Task
@@ -90,6 +88,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
         J_JOB: nothing
+        Rocoto: *rocoto_task_template
 
       #jgdas_dump_post: !Task
       #  Trigger: !Depend jgdas_dump
@@ -107,6 +106,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
         J_JOB: nothing
+        Rocoto: *rocoto_task_template
 
       #Replaced by emc version of dump job 
       #This dump job should be using NCO version when delivery to NCO
@@ -117,6 +117,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
         J_JOB: nothing
+        Rocoto: *rocoto_task_template
 
     prep: !Family
       jgdas_emcsfc_sfc_prep: !Task
@@ -125,6 +126,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
         J_JOB: nothing
+        Rocoto: *rocoto_task_template
 
       jgdas_prep: !Task
         #Trigger: !Depend (up.dump.jgdas_dump & up.dump.jgdas_tropcy_qc_reloc & up.gdas.post.at('-6:00:00') )
@@ -133,6 +135,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_prep )
         accounting: *exclusive_accounting
         J_JOB: prep
+        Rocoto: *rocoto_task_template
 
       jgdas_prep_post: !Task
         Trigger: !Depend up.jgdas_analysis
@@ -140,6 +143,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
         J_JOB: nothing
+        Rocoto: *rocoto_task_template
 
     enkf: !Family
       jgdas_enkf_select_obs: !Task
@@ -148,6 +152,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_eobs )
         accounting: *exclusive_accounting
         J_JOB: eobs
+        Rocoto: *rocoto_task_template
 
       innovate: !TaskArray
         Trigger: !Depend jgdas_enkf_select_obs
@@ -160,6 +165,7 @@ suite: !Cycle
           resources: !calc ( doc.resource_demo.run_eomg )
           accounting: *exclusive_accounting
           J_JOB: eomg
+          Rocoto: *rocoto_task_template
 
       jgdas_enkf_update: !Task
         ecflow_def: |
@@ -169,6 +175,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_eupd )
         accounting: *exclusive_accounting
         J_JOB: eupd
+        Rocoto: *rocoto_task_template
 
       jgdas_enkf_inflate_recenter: !Task
         Trigger: !Depend ( jgdas_enkf_update & up.jgdas_analysis )
@@ -176,6 +183,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_ecen )
         accounting: *exclusive_accounting
         J_JOB: ecen
+        Rocoto: *rocoto_task_template
 
       forecast: !TaskArray
         Trigger: !Depend up.enkf.jgdas_enkf_inflate_recenter
@@ -188,13 +196,16 @@ suite: !Cycle
           resources: !calc ( doc.resource_demo.run_efcs )
           accounting: *exclusive_accounting
           J_JOB: efcs
-
+          Rocoto: *rocoto_task_template
+          
       jgdas_enkf_post: !Task
         Trigger: !Depend forecast
         ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_epos )
         accounting: *exclusive_accounting
         J_JOB: epos
+        Rocoto: *rocoto_task_template
+
 
     jgdas_analysis: !Task
       Trigger: !Depend ( prep.jgdas_prep & prep.jgdas_emcsfc_sfc_prep & enkf.jgdas_enkf_post.at('-6:00:00') )
@@ -203,6 +214,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_anal )
       accounting: *exclusive_accounting
       J_JOB: anal
+      Rocoto: *rocoto_task_template
 
     jgdas_forecast: !Task
       Trigger: !Depend ( jgdas_analysis.release_fcst & enkf.innovate )
@@ -211,6 +223,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_gdasfcst )
       accounting: *exclusive_accounting
       J_JOB: fcst
+      Rocoto: *rocoto_task_template
 
     post: !Task
       Trigger: !Depend jgdas_forecast
@@ -218,6 +231,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_gdaspost )
       accounting: *exclusive_accounting
       J_JOB: post
+      Rocoto: *rocoto_task_template
 
     vrfy: !Task
       Trigger: !Depend post
@@ -225,6 +239,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_vrfy )
       accounting: *exclusive_accounting
       J_JOB: vrfy
+      Rocoto: *rocoto_task_template
 
   gfs: !Family
     ecflow_def: |
@@ -239,6 +254,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
         J_JOB: nothing
+        Rocoto: *rocoto_task_template
 
       #Replaced by emc version of dump job 
       #This dump job should be using NCO version when delivery to NCO
@@ -249,6 +265,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
         J_JOB: nothing
+        Rocoto: *rocoto_task_template
 
     prep: !Family
       jgfs_emcsfc_sfc_prep: !Task
@@ -257,6 +274,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
         J_JOB: nothing
+        Rocoto: *rocoto_task_template
     
       jgfs_prep: !Task
         Trigger: !Depend up.dump
@@ -264,13 +282,15 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_prep )
         accounting: *exclusive_accounting
         J_JOB: prep
-    
+        Rocoto: *rocoto_task_template
+
       jgfs_prep_post: !Task
         Trigger: !Depend  up.jgfs_analysis
         ecf_file: *ecf_file_template
         resources: !calc ( doc.resource_demo.run_nothing )
         accounting: *exclusive_accounting
         J_JOB: nothing
+        Rocoto: *rocoto_task_template
 
     jgfs_analysis: !Task
       Trigger: !Depend ( prep.jgfs_prep & prep.jgfs_emcsfc_sfc_prep  & up.gdas.enkf.jgdas_enkf_post.at('-6:00:00') )
@@ -278,6 +298,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_anal )
       accounting: *exclusive_accounting
       J_JOB: anal
+      Rocoto: *rocoto_task_template
 
     jgfs_vminmon: !Task
       Trigger: !Depend jgfs_analysis
@@ -285,6 +306,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_nothing )
       accounting: *exclusive_accounting
       J_JOB: nothing
+      Rocoto: *rocoto_task_template
 
     jgfs_forecast: !Task
       Trigger: !Depend jgfs_analysis
@@ -292,6 +314,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_gfsfcst )
       accounting: *exclusive_accounting
       J_JOB: fcst
+      Rocoto: *rocoto_task_template
 
     jgfs_post: !Task
       Trigger: !Depend jgfs_forecast
@@ -299,6 +322,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_gfspost )
       accounting: *exclusive_accounting
       J_JOB: post
+      Rocoto: *rocoto_task_template
     
     jgfs_vrfy: !Task
       Trigger: !Depend jgfs_post
@@ -306,6 +330,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_vrfy )
       accounting: *exclusive_accounting
       J_JOB: vrfy
+      Rocoto: *rocoto_task_template
 
   archive: !Family
     gdasarch: !Task
@@ -314,6 +339,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_arch )
       accounting: *shared_accounting
       J_JOB: gdasarch
+      Rocoto: *rocoto_task_template
 
     gfsarch: !Task
       Trigger: !Depend up.gfs.jgfs_vrfy
@@ -321,6 +347,7 @@ suite: !Cycle
       resources: !calc ( doc.resource_demo.run_arch )
       accounting: *shared_accounting
       J_JOB: gfsarch
+      Rocoto: *rocoto_task_template
 
     earc: !TaskArray
       Trigger: !Depend up.gdas.enkf.jgdas_enkf_post
@@ -333,10 +360,12 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_arch )
         accounting: *shared_accounting
         J_JOB: earc
+        Rocoto: *rocoto_task_template
 
-  #final: !Task
-  #  ecf_file: *ecf_file_template
-  #  resources: *sample_shared_serial
-  #  accounting: *shared_accounting
-  #  J_JOB: final
+  final: !Task
+    ecf_file: *ecf_file_template
+    resources: !calc ( doc.resource_demo.run_nothing )
+    accounting: *shared_accounting
+    J_JOB: final
+    Rocoto: *rocoto_task_template
 
