@@ -55,7 +55,7 @@ BUILD=${BUILD:-'TRUE'}
 CREATE_EXP=${CREATE_EXP:-'TRUE'}
 RUNROCOTO=${RUNROCOTO:-'TRUE'}
 JOB_LEVEL_CHECK=${JOB_LEVEL_CHECK:-'FALSE'}
-RZDM_RESULTS=${RZDM_RESULTS:-'FALSE'}
+#RZDM_RESULTS=${RZDM_RESULTS:-'FALSE'}
 PYTHON_FILE_COMPARE=${PYTHON_FILE_COMPARE:-'TRUE'}
 REGRESSSION_COMROT_BASENAME='fv3gfs_regression_experments'
 
@@ -209,8 +209,8 @@ exp_dir_fullpath=${CHECKOUT_DIR}/${pslot}
 exp_setup_string="--pslot ${pslot} --icsdir $ICS_dir --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR} $EXTRA_SETUP_STRING"
 
 # If RZDM is set then the viewer will attempt to post the state of the workflow in html on the rzdm server
-RZDM='tmcguinness@emcrzdm.ncep.noaa.gov:/home/www/emc/htdocs/gc_wmb/tmcguinness'
-ROCOTOVIEWER='/u/Terry.McGuinness/bin/rocoto_viewer.py'
+#RZDM='tmcguinness@emcrzdm.ncep.noaa.gov:/home/www/emc/htdocs/gc_wmb/tmcguinness'
+#ROCOTOVIEWER='/u/Terry.McGuinness/bin/rocoto_viewer.py'
 
 find_data_dir () {
 
@@ -310,9 +310,9 @@ elif [[ -d $1 && ! -d $2 ]]; then
  log_message "INFO" "found baseline fv3gfs gfs data found in directory: $check_baseline_dir"
 fi
 
-if [[ -z $ROCOTOVIEWER ]]; then
-  RZDM_RESULTS="FALSE"
-fi
+#if [[ -z $ROCOTOVIEWER ]]; then
+#  RZDM_RESULTS="FALSE"
+#fi
 
 regressionID=${regressionID:-'test_run'}
 
@@ -327,7 +327,7 @@ echo "CHECKOUT     = $CHECKOUT"
 echo "BUILD        = $BUILD"
 echo "CREATE_EXP   = $CREATE_EXP"
 echo "COMPARE_BASE = $COMPARE_BASE"
-echo "RZDM_RESULTS = $RZDM_RESULTS"
+#echo "RZDM_RESULTS = $RZDM_RESULTS"
 echo -e "RUNROCOTO    = $RUNROCOTO\n"
 echo "PYTHON_FILE_COMPARE = $PYTHON_FILE_COMPARE"
 echo -e "JOB_LEVEL_CHECK = $JOB_LEVEL_CHECK\n"
@@ -690,16 +690,16 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
       log_message "INFO" "Waiting here for $ROCOTO_WAIT_FRQUANCY ..."
       sleep $ROCOTO_WAIT_FRQUANCY 
 
-      if [[ ! -z $RZDM ]]; then
-        viewer_arg_str="-d ${pslot}.db -w ${pslot}.xml --html=$RZDM"
-        cd ${exp_dir_fullpath}
-        $ROCOTOVIEWER $viewer_arg_str
-        if [[ $? == "0" ]]; then 
-          log_message "INFO" "state of workflow posted at $RZDM"
-        else
-          log_message "WARNING" "attempt to write stats to the rzdm server failed"
-        fi
-      fi
+#      if [[ ! -z $RZDM ]]; then
+#        viewer_arg_str="-d ${pslot}.db -w ${pslot}.xml --html=$RZDM"
+#        cd ${exp_dir_fullpath}
+#        $ROCOTOVIEWER $viewer_arg_str
+#        if [[ $? == "0" ]]; then 
+#          log_message "INFO" "state of workflow posted at $RZDM"
+#        else
+#          log_message "WARNING" "attempt to write stats to the rzdm server failed"
+#        fi
+#      fi
 
    done
    log_message "INFO" "rocotorun completed successfully"
