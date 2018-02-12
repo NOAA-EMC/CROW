@@ -57,6 +57,7 @@ RUNROCOTO=${RUNROCOTO:-'TRUE'}
 JOB_LEVEL_CHECK=${JOB_LEVEL_CHECK:-'FALSE'}
 RZDM_RESULTS=${RZDM_RESULTS:-'FALSE'}
 PYTHON_FILE_COMPARE=${PYTHON_FILE_COMPARE:-'TRUE'}
+REGRESSSION_COMROT_BASENAME='fv3gfs_regression_experments'
 
 #CHECKOUT='FALSE'
 #CREATE_EXP='FALSE'
@@ -66,18 +67,126 @@ PYTHON_FILE_COMPARE=${PYTHON_FILE_COMPARE:-'TRUE'}
 #RZDM_RESULTS='TRUE'
 #PYTHON_FILE_COMPARE='FALSE'
 
-idate='2017073118'
-edate='2017080106'
+idate='2018012306'
+edate='2018012312'
 
 fv3gfs_git_branch='master'
 # Leave fv3gfs_svn_url blank to use git branch in fv3gfs_git_branch
 fv3gfs_svn_url=''
 load_rocoto='rocoto/1.2.4'
 
-ICS_dir_cray='/gpfs/hps3/emc/global/noscrub/emc.glopara/ICS'
+ICS_dir_cray='/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/ICS'
 PTMP_cray='/gpfs/hps3/ptmp'
 ICS_dir_theia='/scratch4/NCEPDEV/global/noscrub/glopara/ICS/FV3GFS'
 PTMP_theia='/scratch4/NCEPDEV/stmp4'
+
+# system dependent
+#----------------- 
+if [[ -d /scratch4/NCEPDEV ]]; then
+  system="theia"
+elif [[ -d /gpfs/hps3 ]]; then
+  system="cray"
+else
+  log_message "CRITICAL" "Unknown machine $system, not supported"
+fi
+
+if [[ $system == "cray" ]]; then
+ ICS_dir=$ICS_dir_cray
+ PTMP=$PTMP_cray
+else
+ ICS_dir=$ICS_dir_theia
+ PTMP=$PTMP_theia
+fi
+
+module load $load_rocoto
+rocotoruncmd=`which rocotorun`
+if [[ -z ${rocotoruncmd} ]]; then
+  log_message "CRITICAL" "module load for rocoto ($load_rocoto) on system failed"
+fi
+
+rocotover=`$rocotoruncmd --version`
+log_message "INFO" "using rocoto version $rocotover"
+rocotostatcmd=`which rocotostat`
+if [[ -z ${rocotostatcmd} ]]; then
+  log_message "CRITICAL" "($rocotostatcmd) not found on system"
+fi
+
+fv3gfs_ver='v15.0.0'
+num_expected_exec='29'
+
+if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
+ if [[ -z $1 || $1 == "--non-interactive" ]]; then
+    regressionID='baseline'
+    log_message "INFO" "No arguments given assuming to make new baseline with default ID: $regressionID"
+ else 
+    regressionID=$1
+    log_message "INFO" "only the baseline will be created with ID: $regressionID"
+ fi
+fi
+
+
+# CASES:
+# default master
+# CASE=0
+
+# On disk snapshot for flat master low res
+# =========================================
+# ./setup_expt.py --pslot crowmaster192 --configdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/$fv3gfs_ver/parm/config/ --idate 2018010500 --edate 2018010506 --icsdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/ICS --comrot /gpfs/hps2/ptmp/emc.glopara/ROTDIRS_CROW --expdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/ --resdet 192 --resens 192 --nens 20 --gfs_cyc 4
+
+# On disk snapshot for flat master high res
+# ./setup_expt.py --pslot crowmaster768 --configdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/$fv3gfs_ver/parm/config/ --idate 2018010500 --edate 2018010506 --icsdir /gpfs/hps3/emc/global/noscrub/emc.glopara/ICS --comrot /gpfs/hps2/ptmp/emc.glopara/ROTDIRS_CROW --expdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209 --resdet 768 --resens 384 --nens 80 --gfs_cyc 4
+
+CASE=C192_C192_low
+
+if [[ $CASE == "0" ]]; then
+
+ log_message "INFO" "Running default case" 
+
+ setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
+ setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
+ config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
+
+elif [[ $CASE == "C192_C192_low" ]]; then 
+ regressionID=$CASE
+ log_message "INFO" "Running case: $CASE ID for this run is now $regressionID" 
+ config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
+ setup_expt=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_expt.py
+ setup_workflow=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_workflow.py
+ EXTRA_SETUP_STRING="--resdet 192 --resens 192 --nens 20 --gfs_cyc 4"
+ idate=2018010500
+ edate=2018010506
+ ICS_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/ICS
+ CHECKOUT='FALSE'
+ BUILD='FALSE'
+ log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so CHECKOUT is set to FALSE"
+ log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so BUILD is set to FALSE"
+elif [[ $CASE == "C768_C384_high" ]]; then
+ regressionID=$CASE
+ log_message "INFO" "Running case: $CASE ID for this run is now $regressionID" 
+ config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
+ setup_expt=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_expt.py
+ setup_workflow=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_workflow.py
+ EXTRA_SETUP_STRING="--resdet 768 --resens 384 --nens 80 --gfs_cyc 4"
+ idate=2018010500
+ edate=2018010506
+ ICS_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/ICS
+ CHECKOUT='FALSE'
+ BUILD='FALSE'
+ log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so CHECKOUT is set to FALSE"
+ log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so BUILD is set to FALSE"
+fi
+
+pslot_basename='fv3gfs'
+checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
+pslot="${pslot_basename}_exp_${regressionID}"
+
+username=`echo ${USER} | tr '[:upper:]' '[:lower:]'`
+
+comrot=${CHECKOUT_DIR}/${REGRESSSION_COMROT_BASENAME}
+comrot_test_dir=${comrot}/${pslot}
+exp_dir_fullpath=${CHECKOUT_DIR}/${pslot}
+
+exp_setup_string="--pslot ${pslot} --icsdir $ICS_dir --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR} $EXTRA_SETUP_STRING"
 
 # If RZDM is set then the viewer will attempt to post the state of the workflow in html on the rzdm server
 RZDM='tmcguinness@emcrzdm.ncep.noaa.gov:/home/www/emc/htdocs/gc_wmb/tmcguinness'
@@ -112,18 +221,7 @@ find_data_dir () {
     echo $_check_baseline_dir
 }
 
-COMPARE_BASE='FALSE'
-if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
- if [[ -z $1 || $1 == "--non-interactive" ]]; then
-    regressionID='baseline'
-    log_message "INFO" "No arguments given assuming to make new baseline with default ID: $regressionID"
- else 
-    regressionID=$1
-    log_message "INFO" "only the baseline will be created with ID: $regressionID"
- fi
-fi
-
-log_message "INFO" "running regression script on host $HOST"
+log_message "INFO" "running regression script on host $HOST with PID $BASHPID"
 
 COMPARE_BASE='FALSE'
 JUST_COMPARE_TWO_DIRS='FALSE'
@@ -165,10 +263,12 @@ if [[ -d $1 ]] && [[ -d $2 ]]; then
 elif [[ -d $1 && ! -d $2 ]]; then
   check_baseline_dir=`readlink -f $1`
   if [[ -z $2 ]]; then
-   regressionID='test_run'
+   :
+   #regressionID='test_run'
   else
    if [[ $2 == "--non-interactive" ]]; then
-     regressionID='test_run'
+     :
+     #regressionID='test_run'
    else
      if [[ `echo $2  | cut -c1-2` == "--" ]]; then
        log_message "CRITICAL" "an errounous option was given ($2), --non-interactive is the only allowable option"
@@ -190,31 +290,38 @@ elif [[ -d $1 && ! -d $2 ]]; then
  log_message "INFO" "found baseline fv3gfs gfs data found in directory: $check_baseline_dir"
 fi
 
-if [[ -d /scratch4/NCEPDEV ]]; then
-  system="theia"
-elif [[ -d /gpfs/hps3 ]]; then
-  system="cray"
-else
-  log_message "CRITICAL" "Unknown machine $system, not supported"
-fi
-
 if [[ -z $ROCOTOVIEWER ]]; then
   RZDM_RESULTS="FALSE"
 fi
 
-echo -e "Current Settings are:\n"
+regressionID=${regressionID:-'test_run'}
+
+echo -e "\nCurrent Script Settings are"
+echo -e "============================"
 echo "regressionID = $regressionID"
 echo "git branch   = $fv3gfs_git_branch"
 echo "idate        = $idate"
 echo "edate        = $edate"
 echo "CHECKOUT_DIR = $CHECKOUT_DIR"
 echo "CHECKOUT     = $CHECKOUT"
+echo "BUILD        = $BUILD"
 echo "CREATE_EXP   = $CREATE_EXP"
 echo "COMPARE_BASE = $COMPARE_BASE"
 echo "RZDM_RESULTS = $RZDM_RESULTS"
 echo -e "RUNROCOTO    = $RUNROCOTO\n"
 echo "PYTHON_FILE_COMPARE = $PYTHON_FILE_COMPARE"
 echo -e "JOB_LEVEL_CHECK = $JOB_LEVEL_CHECK\n"
+
+echo -e "\nModel Workflow Configuration Settings"
+echo "======================================"
+echo "PSLOT  : $pslot"
+echo "COMROT : $comrot"
+echo "CONFIG : $config_dir"
+echo "ICDIR  : $ICS_dir"
+echo "IDATE  : $idate"
+echo "EDATE  : $edate"
+echo "EXPDIR : $exp_dir_fullpath"
+echo -e "EXTRA  : $EXTRA_SETUP_STRING\n"
 
 if [[ $INTERACTIVE == "TRUE" ]]; then
    while read -n1 -r -p "Are these the correct settings (y/n): " answer
@@ -232,44 +339,6 @@ if [[ $INTERACTIVE == "TRUE" ]]; then
 fi
 
 SCRIPT_STARTTIME=$(date +%s)
-
-module load $load_rocoto
-rocotoruncmd=`which rocotorun`
-if [[ -z ${rocotoruncmd} ]]; then
-  log_message "CRITICAL" "module load for rocoto ($load_rocoto) on system failed"
-fi
-
-# system dependent
-#----------------- 
-
-if [[ $system != "cray" ]] && [[ $system != 'theia' ]]; then
- log_message "CRITICAL" "system setting: $system is not set correctly (only options are cray or theia)"
-fi
-
-if [[ $system == "cray" ]]; then
- ICS_dir=$ICS_dir_cray
- PTMP=$PTMP_cray
-else
- ICS_dir=$ICS_dir_theia
- PTMP=$PTMP_theia
-fi
-
-rocotover=`$rocotoruncmd --version`
-log_message "INFO" "using rocoto version $rocotover"
-rocotostatcmd=`which rocotostat`
-
-fv3gfs_ver='v15.0.0'
-num_expected_exec='29'
-
-pslot_basename='fv3gfs'
-checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
-pslot="${pslot_basename}_exp_${regressionID}"
-
-username=`echo ${USER} | tr '[:upper:]' '[:lower:]'`
-setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/gfs_workflow.${fv3gfs_ver}/ush/setup_expt.py
-setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/gfs_workflow.${fv3gfs_ver}/ush/setup_workflow.py
-config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/gfs_workflow.${fv3gfs_ver}/config
-
 
 if [[ $CHECKOUT == 'TRUE' ]]; then
   cd ${CHECKOUT_DIR}
@@ -297,10 +366,6 @@ if [[ $CHECKOUT == 'TRUE' ]]; then
   fi
 fi
 
-comrot=${CHECKOUT_DIR}/fv3gfs_regression_experments
-comrot_test_dir=${comrot}/${pslot}
-exp_dir_fullpath=${CHECKOUT_DIR}/${pslot}
-exp_setup_string="--pslot ${pslot} --icsdir $ICS_dir --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR}"
 
 if [[ $CREATE_EXP == 'TRUE' ]]; then
 
@@ -321,14 +386,30 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     yes | ${setup_expt} ${exp_setup_string}
     log_message "INFO" "setting up workflow: ${setup_workflow} --expdir $exp_dir_fullpath"
     yes | ${setup_workflow} --expdir $exp_dir_fullpath
-    sed -i 's/^export VRFYGENESIS=.*/export VRFYGENESIS=\"NO\"          \# WARNING changed by regression script/' $exp_dir_fullpath/config.vrfy
-    log_message "WARNING" "modified config.vrfy with VRFYGENESIS=NO because geneses tracker is currently failing"
-    sed -i 's/^export VRFYG2OBS=.*/export VRFYG2OBS=\"NO\"          \# WARNING changed by regression script/' $exp_dir_fullpath/config.vrfy
-    log_message "WARNING" "modified config.vrfy with VRFYG2OBS=NO because it do not make sense for it to be on for only one cycle"
+
+    if [[ -d $exp_dir_fullpath ]]; then
+
+       if [[ $CASE == "C192_C192_low" ]]; then
+         log_message "INFO" "updated config.base and changed  FHMAX_GFS=240"
+         sed -i 's/^export FHMAX_GFS=.*/export FHMAX_GFS=\"240\"        \# WARNING changed to 240 by regression script/' $exp_dir_fullpath/config.base
+       fi
+
+    else
+       log_message "CRITICAL" "The experment directory was not created corectly"
+    fi
+
+    #sed -i 's/^export VRFYGENESIS=.*/export VRFYGENESIS=\"NO\"          \# WARNING changed by regression script/' $exp_dir_fullpath/config.vrfy
+    #log_message "WARNING" "modified config.vrfy with VRFYGENESIS=NO because geneses tracker is currently failing"
+    #sed -i 's/^export VRFYG2OBS=.*/export VRFYG2OBS=\"NO\"          \# WARNING changed by regression script/' $exp_dir_fullpath/config.vrfy
+    #log_message "WARNING" "modified config.vrfy with VRFYG2OBS=NO because it do not make sense for it to be on for only one cycle"
 fi
 
 if [[ $BUILD == 'TRUE' ]]; then
- cd ${checkout_dir_basename}/global_shared.${fv3gfs_ver}/sorc
+
+   cd ${checkout_dir_basename}/sorc
+
+   sed -i  's/cd gsi.fd/cd gsi.fd\n    checkout DA-FV3-IMPL/' checkout.sh
+   log_message "WARNING" "just updated checkout.sh script and added line to checkout DA-FV3-IMPL branch for gsi instead of master"
 
    log_message "INFO" "running checkout script: $PWD/checkout.sh $username"
   ./checkout.sh $username
