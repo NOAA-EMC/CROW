@@ -136,20 +136,40 @@ fi
 # On disk snapshot for flat master high res
 # ./setup_expt.py --pslot crowmaster768 --configdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/$fv3gfs_ver/parm/config/ --idate 2018010500 --edate 2018010506 --icsdir /gpfs/hps3/emc/global/noscrub/emc.glopara/ICS --comrot /gpfs/hps2/ptmp/emc.glopara/ROTDIRS_CROW --expdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209 --resdet 768 --resens 384 --nens 80 --gfs_cyc 4
 
-CASE=C192_C192_low
+#CASE=C192_C192_low
+CASE='BUILD'
 
+pslot_basename='fv3gfs'
+checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
+pslot="${pslot_basename}_exp_${regressionID}"
+
+#TODO make sure don't overwrite CASE dirs
 if [[ $CASE == "0" ]]; then
-
  log_message "INFO" "Running default case" 
 
  setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
  setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
  config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
 
+elif [[ $CASE == "BUILD" ]]; then
+
+ pslot_basename="fv3gfs"
+ regressionID=${CASE}
+ checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
+ pslot="${pslot_basename}_exp_${regressionID}"
+ log_message "INFO" "Running $CASE case"
+
+ setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
+ setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
+ config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
+ fv3gfs_git_branch='BUILD'
+ EXTRA_SETUP_STRING="--resdet 192 --resens 192 --nens 20 --gfs_cyc 4"
+ echo "ARRG: $pslot $config_dir"
+
 elif [[ $CASE == "C192_C192_low" ]]; then 
  regressionID=$CASE
  log_message "INFO" "Running case: $CASE ID for this run is now $regressionID" 
- config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
+ #config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
  setup_expt=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_expt.py
  setup_workflow=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_workflow.py
  EXTRA_SETUP_STRING="--resdet 192 --resens 192 --nens 20 --gfs_cyc 4"
@@ -163,7 +183,7 @@ elif [[ $CASE == "C192_C192_low" ]]; then
 elif [[ $CASE == "C768_C384_high" ]]; then
  regressionID=$CASE
  log_message "INFO" "Running case: $CASE ID for this run is now $regressionID" 
- config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
+ #config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
  setup_expt=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_expt.py
  setup_workflow=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_workflow.py
  EXTRA_SETUP_STRING="--resdet 768 --resens 384 --nens 80 --gfs_cyc 4"
@@ -389,9 +409,11 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
 
     if [[ -d $exp_dir_fullpath ]]; then
 
-       if [[ $CASE == "C192_C192_low" ]]; then
-         log_message "INFO" "updated config.base and changed  FHMAX_GFS=240"
+       if [[ $CASE == "C192_C192_low" || $CASE == "BUILD" ]]; then
+         log_message "WARNING" "updated config.base and changed  FHMAX_GFS=240"
          sed -i 's/^export FHMAX_GFS=.*/export FHMAX_GFS=\"240\"        \# WARNING changed to 240 by regression script/' $exp_dir_fullpath/config.base
+         sed -i 's/^export VRFYTRAK=.*/export VRFYTRAK=\"NO\"        \# WARNING changed to 240 by regression script/' $exp_dir_fullpath/config.vrfy
+         sed -i 's/^export VRFYGENESIS=.*/export VRFYGENESIS=\"NO\"        \# WARNING changed to 240 by regression script/' $exp_dir_fullpath/config.vrfy
        fi
 
     else
