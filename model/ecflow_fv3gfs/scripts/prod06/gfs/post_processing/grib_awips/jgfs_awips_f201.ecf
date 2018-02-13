@@ -1,0 +1,44 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gfs.post_processing.grib_awips.jgfs_awips_f201
+#BSUB -o %ECF_OUT%/gfs.post_processing.grib_awips.jgfs_awips_f201_t%CYC%z.log
+
+#BSUB -R rusage[mem=300]
+#BSUB -extsched CRAYLINUX[]
+export NODES=1
+%include <head.h>
+%include <envir-xc40.h>
+
+set -x
+
+# No MPI in use, so I am not setting $ntasks.
+# Neither OpenMP nor MPI are in use, so I am not setting $ptile
+# No OpenMP in use, so I am not setting $threads
+
+export model=%MODEL_NAME%
+%include <model_ver.h>
+
+############################################################
+# Load modules
+############################################################
+. $MODULESHOME/init/sh
+# Add any "module" commands here (switch, load, use, etc.)
+module list
+
+#############################################################
+# WCOSS environment settings
+#############################################################
+
+# Set tuning variables like KMP_AFFINITY and OMP_STACKSIZE here.
+
+###########################################################
+export cyc=%CYC%
+
+# CALL executable job script here
+echo ${HOMEgfs}/jobs/JGFS_AWIPS_F201
+
+%include <tail.h>
+%manual
+# FIXME: Insert manual for this job.
+

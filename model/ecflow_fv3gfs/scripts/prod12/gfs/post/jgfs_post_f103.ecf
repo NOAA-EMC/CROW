@@ -36,7 +36,9 @@ module list
 export cyc=%CYC%
 
 # CALL executable job script here
-${HOMEgfs}/jobs/JGLOBAL_FORECAST
+echo ${HOMEgfs}/jobs/JGFS_POST_F103
 
 %include <tail.h>
 %manual
+# FIXME: Insert manual for this job.
+

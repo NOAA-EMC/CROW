@@ -210,15 +210,15 @@ class ToEcflow(object):
             return not node.might_complete()
 
         for node in self._walk_job_graph(cycle,skip_fun=skip_fun,exit_fun=exit_fun):
-            if 'ecflow_def' in node:
-                for line in node.ecflow_def.splitlines():
-                    sio.write(f'{indent}{line.rstrip()}\n')
-
             indent0=max(0,len(node.path)-1)*self.indent
             indent1=max(0,len(node.path))*self.indent
             nodetype='task' if node.is_task() else 'family'
             sio.write(f'{indent0}{nodetype} {node.path[-1]}\n')
             
+            if 'ecflow_def' in node.view:
+                for line in node.view.ecflow_def.splitlines():
+                    sio.write(f'{indent1}{line.rstrip()}\n')
+
             if node.trigger not in [FALSE_DEPENDENCY,TRUE_DEPENDENCY]:
                 sio.write(f'{indent1}trigger ')
                 dep_to_ecflow(sio,node,node.trigger,clock,suite_name_format,undated)
@@ -231,7 +231,8 @@ class ToEcflow(object):
                 ectime=when.strftime('%H:%M')
                 sio.write(f'{indent1}time {ectime}\n')
 
-            event_number=1
+            event_number=node.view.get('ecflow_first_event_number',1)
+            typecheck(f'{node.view.task_path_var}.ecflow_first_event_number',event_number,int)
             if node.is_task():
                 for item in node.view.child_iter():
                     if item.is_event():

@@ -33,7 +33,7 @@ ecf_file_logic: &ecf_file_logic
     export cyc=%CYC%
 
     # CALL executable job script here
-    ${{HOMEgfs}}/jobs/JGLOBAL_FORECAST
+    echo ${{HOMEgfs}}/jobs/{J_JOB}
 
     %include <tail.h>
     %manual

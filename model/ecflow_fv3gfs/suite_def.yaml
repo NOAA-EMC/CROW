@@ -59,11 +59,14 @@ suite: !Cycle
     #edit ECF_HOME '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3'
     edit CYC '{tools.strftime(suite.Clock.now,"%H")}'
     edit ENVIR 'prod'
+    edit PROJ '{doc.settings.PROJECT}'
     edit E 'jecffv3'
     #edit QUEUE 'dev'
     edit QUEUE '{doc.settings.QUEUE}'
     edit PROJENVIR '{doc.settings.PROJECT}'
+    #edit EMCPEN 'ecfgfsfv3'
     edit EMCPEN '{doc.settings.experiment_name}'
+    #edit COM '/gpfs/hps2/ptmp/emc.glopara/%EMCPEN%/com'
     edit COM '{doc.settings.COM}'
     edit QUEUESERV '{doc.settings.QUEUESERV}'
     edit DATAROOT '{doc.settings.DATAROOT}'
@@ -73,7 +76,7 @@ suite: !Cycle
     edit MODEL_NAME 'gfs'
 
   gfs: !Family
-    ecflow_def: |
+    ecflow_def: !expand |
       edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
       edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
       edit PROJ '%PROJENVIR%'
@@ -218,8 +221,9 @@ suite: !Cycle
 
         jgfs_cyclone_tracker: !Task
           <<: *exclusive_task_template
-          # Very long trigger up.up.post.jgfs_post_f00-f180 & up.up.prdgen.jgfs_pgrb2_f00-f180
-          Trigger: !Depend ( up.up.post.jgfs_post_f00 & up.up.post.jgfs_post_f06 & up.up.prdgen.jgfs_pgrb2_f00 & up.up.prdgen.jgfs_pgrb2_f06 )
+          Trigger: !Depend >- 
+                up.up.post.depend("jgfs_post_f{N:02d}",N=tools.seq(0,180,6))
+                & up.up.prdgen.depend("jgfs_pgrb2_f{N:02d}",N=tools.seq(0,180,6))
           resources: !calc ( doc.resource_demo.run_nothing )
 
       grib2_wafs: !Family
@@ -234,73 +238,54 @@ suite: !Cycle
           #Time: !timedelta +4:33:00
           resources: !calc ( doc.resource_demo.run_nothing )
 
-      grib_awips: !Family
-        jgfs_awips_f00: !Task
-          ecflow_def: |
-            edit FCSTHR '00'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
-          resources: !calc ( doc.resource_demo.run_nothing )
-
-        jgfs_awips_f06: !Task
-          ecflow_def: |
-            edit FCSTHR '06'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f06
-          resources: !calc ( doc.resource_demo.run_nothing )
-
+      grib_awips: !TaskArray
+        Dimensions:
+          fhr: !calc doc.settings.forecast_hours
         # tasks every 6 hours till f240
-
-        jgfs_awips_f240: !Task
-          ecflow_def: |
-            edit FCSTHR '240'
+        jgfs_awips: !TaskElement
           <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f240
+          Foreach: [ fhr ]
+          Name: !expand "jgfs_awips_f{idx.fhr:02d}"
+          Trigger: !Depend up.up.prdgen.depend('jgfs_pgrb2_f{N:02d}',N=idx.fhr)
           resources: !calc ( doc.resource_demo.run_nothing )
+          ecflow_def: !expand |
+            edit FCSTHR '{idx.fhr:02d}'
 
-      awips_1p0deg: !Family
+      awips_1p0deg: !TaskArray
+        Dimensions:
+          fhr: !calc doc.settings.forecast_hours
         ecflow_def: |
           edit RES '1p0deg'
           edit RESC '1P0DEG'
           #edit ECF_FILES '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3/scripts/gfs/post_processing/awips'
           edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
 
-        jgfs_awips_f000: !Task
-          ecflow_def: |
-            edit FCSTHR '000'
+        jgfs_awips: !TaskElement
           <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
+          Foreach: [ fhr ]
+          Name: !expand "jgfs_awips_f{idx.fhr:03d}"
+          Trigger: !Depend up.up.prdgen.depend('jgfs_pgrb2_f{N:02d}',N=idx.fhr)
           resources: !calc ( doc.resource_demo.run_nothing )
+          ecflow_def: !expand |
+            edit FCSTHR '{idx.fhr:03d}'
 
-        jgfs_awips_f006: !Task
-          ecflow_def: |
-            edit FCSTHR '006'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f06
-          resources: !calc ( doc.resource_demo.run_nothing )
-
-        # tasks every 6 hours till f240
-
-        jgfs_awips_f240: !Task
-          ecflow_def: |
-            edit FCSTHR '240'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f240
-          resources: !calc ( doc.resource_demo.run_nothing )
-
-      awips_20km: !Family
+      awips_20km: !TaskArray
+        Dimensions:
+          fhr: !calc doc.settings.forecast_hours
         ecflow_def: |
           edit RES '20km'
           edit RESC '20KM'
           #edit ECF_FILES '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3/scripts/gfs/post_processing/awips'
           edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
-
-        jgfs_awips_f000: !Task
-          ecflow_def: |
-            edit FCSTHR '000'
+        # tasks every 3 hours till f084, then every 6 hours till f240
+        jgfs_awips: !TaskElement
           <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
+          Foreach: [ fhr ]
+          Name: !expand "jgfs_awips_f{idx.fhr:03d}"
+          Trigger: !Depend up.up.prdgen.depend('jgfs_pgrb2_f{N:02d}',N=idx.fhr)
           resources: !calc ( doc.resource_demo.run_nothing )
+          ecflow_def: !expand |
+            edit FCSTHR '{idx.fhr:03d}'
 
     post: !TaskArray
       Dimensions:
@@ -315,10 +300,6 @@ suite: !Cycle
           Name: !expand "release_post{idx.fhr:02d}"
           Foreach: [ fhr ]
           file: "/dev/null"
-
-        # release_post00: !DataEvent {file="/dev/null"}
-        # # events from release_post00  to release_post384
-        # release_post384: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resource_demo.run_nothing )
 
       jgfs_post_anl: !Task
@@ -333,10 +314,16 @@ suite: !Cycle
       jgfs_post_f: !TaskElement
         <<: *exclusive_task_template
         Name: !expand jgfs_post_f{idx.fhr:02d}
-        ecflow_def: |
+        ecflow_def: !expand |
           edit FHR: 'f{idx.fhr:02d}'
           edit HR: '{idx.fhr:02d}'
         Trigger: !Depend jgfs_post_manager.depend('release_post{N:02d}',N=idx.fhr)
+        resources: !calc ( doc.resource_demo.run_nothing )
+
+      jgfs_pgrb2_spec_post: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend ( jgfs_post_f336 & jgfs_post_f348 & jgfs_post_f360 & jgfs_post_f372 & jgfs_post_f384 )
+        resources: !calc ( doc.resource_demo.run_nothing )
 
     prdgen: !TaskArray
       Dimensions:
@@ -347,7 +334,8 @@ suite: !Cycle
         Foreach: []
         Name: jgfs_pgrb2_manager
         Trigger: !Depend ( up.post )
-        release_postanl: !DataEvent {file="/dev/null"}
+        #release_postanl: !DataEvent {file="/dev/null"}
+        ecflow_first_event_number: 2
         release_post_fhr: !DataEventElement
           Name: !expand "release_post{idx.fhr:02d}"
           Foreach: [ fhr ]
