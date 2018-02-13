@@ -337,7 +337,7 @@ suite: !Cycle
         #release_postanl: !DataEvent {file="/dev/null"}
         ecflow_first_event_number: 2
         release_post_fhr: !DataEventElement
-          Name: !expand "release_post{idx.fhr:02d}"
+          Name: !expand "release_pgrb2_{idx.fhr:02d}"
           Foreach: [ fhr ]
           file: "/dev/null"
 
