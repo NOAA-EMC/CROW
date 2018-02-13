@@ -1,0 +1,11 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gfs.prdgen.jgfs_pgrb2_manager
+#BSUB -o %ECF_OUT%/gfs.prdgen.jgfs_pgrb2_manager_t%CYC%z.log
+#BSUB -R rusage[mem=300]
+#BSUB -extsched CRAYLINUX[]
+export NODES=1
+%include <head.h>
+echo ${JOBgfs}/JGFS_PGRB2_MANAGER
+%include <tail.h>

@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.analysis.jgdas_analysis_high
+#BSUB -o %ECF_OUT%/gdas.analysis.jgdas_analysis_high_t%CYC%z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=3072]
+#BSUB -extsched CRAYLINUX[]
+export NODES=60
+%include <head.h>
+echo ${JOBgfs}/JGDAS_ANALYSIS_HIGH
+%include <tail.h>

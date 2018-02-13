@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.enkf.forecast.jgdas_enkf_fcst_grp1
+#BSUB -o %ECF_OUT%/gdas.enkf.forecast.jgdas_enkf_fcst_grp1_t%CYC%z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=254]
+#BSUB -extsched CRAYLINUX[]
+export NODES=64
+%include <head.h>
+echo ${JOBgfs}/JGLOBAL_FORECAST
+%include <tail.h>

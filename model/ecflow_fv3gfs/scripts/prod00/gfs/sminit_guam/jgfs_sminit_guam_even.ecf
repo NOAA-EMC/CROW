@@ -1,0 +1,11 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gfs.sminit_guam.jgfs_sminit_guam_even
+#BSUB -o %ECF_OUT%/gfs.sminit_guam.jgfs_sminit_guam_even_t%CYC%z.log
+#BSUB -R rusage[mem=300]
+#BSUB -extsched CRAYLINUX[]
+export NODES=1
+%include <head.h>
+echo ${JOBgfs}/JGFS_SMINIT_GUAM_EVEN
+%include <tail.h>
