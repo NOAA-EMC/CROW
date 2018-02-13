@@ -70,12 +70,14 @@ suite: !Cycle
     edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
     edit ECF_OUT '{doc.settings.ECF_HOME}/output'
     edit ECF_LOG '{doc.settings.ECF_HOME}/ecf.log'
+    edit MODEL_NAME 'gfs'
 
   gfs: !Family
     ecflow_def: |
       edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
       edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
       edit PROJ '%PROJENVIR%'
+      edit MODEL_NAME 'gfs'
 
     dump: !Family
       jgfs_tropcy_qc_reloc: !Task
@@ -407,6 +409,7 @@ suite: !Cycle
       edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
       edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
       edit PROJ '%PROJENVIR%'
+      edit MODEL_NAME 'gdas'
 
     jgdas_verfrad: !Task
       <<: *exclusive_task_template
