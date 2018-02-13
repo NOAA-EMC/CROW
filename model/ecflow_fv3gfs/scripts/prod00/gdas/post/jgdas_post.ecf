@@ -1,33 +1,12 @@
 #! /bin/sh
-{ecf_batch_resources}
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.post.jgdas_post
+#BSUB -o %ECF_OUT%/gdas.post.jgdas_post_t%CYC%z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=3072]
+#BSUB -extsched CRAYLINUX[]
+export NODES=6
 %include <head.h>
-%include <envir-xc40.h>
-
-set -x
-
-{ecf_resource_more}
-
-export model={model_name}
-%include <model_ver.h>
-
-############################################################
-# Load modules
-############################################################
-. $MODULESHOME/init/sh
-{ecf_module_commands}
-module list
-
-#############################################################
-# WCOSS environment settings
-#############################################################
-
-{ecf_environment_settings}
-
-###########################################################
-export cyc=%CYC%
-
-# CALL executable job script here
-${{HOMEgfs}}/jobs/JGLOBAL_FORECAST
-
+echo ${JOBgfs}/post
 %include <tail.h>
-%manual

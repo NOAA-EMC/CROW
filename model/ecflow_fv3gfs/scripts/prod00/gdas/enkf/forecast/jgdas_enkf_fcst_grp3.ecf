@@ -1,33 +1,12 @@
 #! /bin/sh
-{ecf_batch_resources}
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.enkf.forecast.jgdas_enkf_fcst_grp3
+#BSUB -o %ECF_OUT%/gdas.enkf.forecast.jgdas_enkf_fcst_grp3_t%CYC%z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=254]
+#BSUB -extsched CRAYLINUX[]
+export NODES=64
 %include <head.h>
-%include <envir-xc40.h>
-
-set -x
-
-{ecf_resource_more}
-
-export model={model_name}
-%include <model_ver.h>
-
-############################################################
-# Load modules
-############################################################
-. $MODULESHOME/init/sh
-{ecf_module_commands}
-module list
-
-#############################################################
-# WCOSS environment settings
-#############################################################
-
-{ecf_environment_settings}
-
-###########################################################
-export cyc=%CYC%
-
-# CALL executable job script here
-${{HOMEgfs}}/jobs/JGLOBAL_FORECAST
-
+echo ${JOBgfs}/JGLOBAL_FORECAST
 %include <tail.h>
-%manual
