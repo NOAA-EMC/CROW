@@ -1368,6 +1368,22 @@ suite prod06
         endtask
         task jgdas_enkf_innovate_obs_grp8
         endtask
+        task jgdas_enkf_innovate_obs_grp9
+        endtask
+        task jgdas_enkf_innovate_obs_grp10
+        endtask
+        task jgdas_enkf_innovate_obs_grp11
+        endtask
+        task jgdas_enkf_innovate_obs_grp12
+        endtask
+        task jgdas_enkf_innovate_obs_grp13
+        endtask
+        task jgdas_enkf_innovate_obs_grp14
+        endtask
+        task jgdas_enkf_innovate_obs_grp15
+        endtask
+        task jgdas_enkf_innovate_obs_grp16
+        endtask
       endfamily
       task jgdas_enkf_update
         trigger ./innovate == complete
@@ -1392,6 +1408,22 @@ suite prod06
         task jgdas_enkf_fcst_grp7
         endtask
         task jgdas_enkf_fcst_grp8
+        endtask
+        task jgdas_enkf_fcst_grp9
+        endtask
+        task jgdas_enkf_fcst_grp10
+        endtask
+        task jgdas_enkf_fcst_grp11
+        endtask
+        task jgdas_enkf_fcst_grp12
+        endtask
+        task jgdas_enkf_fcst_grp13
+        endtask
+        task jgdas_enkf_fcst_grp14
+        endtask
+        task jgdas_enkf_fcst_grp15
+        endtask
+        task jgdas_enkf_fcst_grp16
         endtask
       endfamily
       task jgdas_enkf_post

@@ -1,0 +1,12 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.enkf.innovate.jgdas_enkf_innovate_obs_grp13
+#BSUB -o %ECF_OUT%/gdas.enkf.innovate.jgdas_enkf_innovate_obs_grp13_t%CYC%z.log
+#BSUB -W 0:02
+#BSUB -R rusage[mem=3072]
+#BSUB -extsched CRAYLINUX[]
+export NODES=12
+%include <head.h>
+echo ${JOBgfs}/jgdas_innovate
+%include <tail.h>
