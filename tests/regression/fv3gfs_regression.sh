@@ -1,15 +1,17 @@
 #!/bin/bash
 
+export REGRESSSION_COMROT_BASENAME='fv3gfs_regression_COMROTs'
+
 usage () {
-   echo -e "\033[1mUSAGE:\033[0m\n $0 [[baseline]] [[compare]] [[--non-interactive]]\n"
-   echo -e "\tno arguments           : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_baseline fv3gfs_exp_basline respectivly"
-   echo -e "\tone argument  (string) : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${string} respectivly\n\n"
+   echo -e "\033[1mUSAGE:\033[0m\n\t$0 [[baseline]] [[compare]] [[--non-interactive]]\n"
+   echo -e "\tno arguments              : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_baseline fv3gfs_exp_basline respectivly"
+   echo -e "\tone argument  (str)       : creates a baseline with sorc and exp dir in \$PWD named fvgfs_sorc_\${str} fv3gfs_exp_\${str} respectivly\n\n"
    echo -e "\tone argument  (dir)       : creates a test run with sorc and exp dir in \$PWD named fvgfs_sorc_test_run   fv3gfs_exp_test_run respectivly \n\t\t\t\t    and then compares the results against the comrot found in the directory \${dir}"
-   echo -e "\ttwo arguments (dir) (str) : creates a test_run with sorc and exp dir in \$PWD named fvgfs_sorc_\${string} fv3gfs_exp_\${srting} respectivly \n\t\t\t\t    and then compares the results against the comrot found in the directory \${dir} "
+   echo -e "\ttwo arguments (dir) (str) : creates a test run with sorc and exp dir in \$PWD named fvgfs_sorc_\${str} fv3gfs_exp_\${srting} respectivly \n\t\t\t\t    and then compares the results against the comrot found in the directory \${dir} "
    echo -e "\ttwo arguments (dir) (dir) : does a bitwise compare on the gfs files from the first dir to the second\n"
-   echo -e "\tthird optional argument is used when acctually running the script so no promps are given, otherwize the script will report on the settings.\n\n"
-   echo -e "\033[1mEXAMPLE:\033[0m\n"
-   echo -e "\tnohup ./fv3gfs_regression.sh baseline --non-interactive > & fv3gfs_regression_baseline_run.log &\n"
+   echo -e "\tthird optional argument is used when acctually running the script so no promps are given, otherwize the script will report on the settings.\n"
+   echo -e "\033[1mEXAMPLE:\033[0m\n\tnohup ./fv3gfs_regression.sh baseline --non-interactive > & fv3gfs_regression_baseline_run.log &\n"
+   echo -e "\033[1mNOTE:\033[0m\n\tSupported CASES are BUILD, C192_C192_low, and C192_C192_high. Any of these CASES are run by using them by names as (str)\n"
    exit
 }
 
@@ -57,7 +59,6 @@ RUNROCOTO=${RUNROCOTO:-'TRUE'}
 JOB_LEVEL_CHECK=${JOB_LEVEL_CHECK:-'FALSE'}
 #RZDM_RESULTS=${RZDM_RESULTS:-'FALSE'}
 PYTHON_FILE_COMPARE=${PYTHON_FILE_COMPARE:-'TRUE'}
-REGRESSSION_COMROT_BASENAME='fv3gfs_regression_experments'
 
 #CHECKOUT='FALSE'
 #CREATE_EXP='FALSE'
@@ -125,51 +126,40 @@ if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
 fi
 
 
-# CASES:
-# default master
-# CASE=0
-
+# CASE = C192_C192_low
+#
 # On disk snapshot for flat master low res
 # =========================================
 # ./setup_expt.py --pslot crowmaster192 --configdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/$fv3gfs_ver/parm/config/ --idate 2018010500 --edate 2018010506 --icsdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/ICS --comrot /gpfs/hps2/ptmp/emc.glopara/ROTDIRS_CROW --expdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/ --resdet 192 --resens 192 --nens 20 --gfs_cyc 4
-
+#
+# CASE = C768_C384_high
+#
 # On disk snapshot for flat master high res
+# =========================================
 # ./setup_expt.py --pslot crowmaster768 --configdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/$fv3gfs_ver/parm/config/ --idate 2018010500 --edate 2018010506 --icsdir /gpfs/hps3/emc/global/noscrub/emc.glopara/ICS --comrot /gpfs/hps2/ptmp/emc.glopara/ROTDIRS_CROW --expdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209 --resdet 768 --resens 384 --nens 80 --gfs_cyc 4
-
-#CASE=C192_C192_low
-CASE='BUILD'
 
 pslot_basename='fv3gfs'
 checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
 pslot="${pslot_basename}_exp_${regressionID}"
 
-#TODO make sure don't overwrite CASE dirs
-if [[ $CASE == "0" ]]; then
- log_message "INFO" "Running default case" 
+# Check to see if user entered a CASE from regressionID
+CASE=$regressionID
 
- setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
- setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
- config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
+if [[ $CASE == "BUILD" ]]; then
 
-elif [[ $CASE == "BUILD" ]]; then
-
- pslot_basename="fv3gfs"
+ log_message "INFO" "Running special $CASE case"
  regressionID=${CASE}
- checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
- pslot="${pslot_basename}_exp_${regressionID}"
- log_message "INFO" "Running $CASE case"
 
  setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
  setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
  config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
  fv3gfs_git_branch='BUILD'
  EXTRA_SETUP_STRING="--resdet 192 --resens 192 --nens 20 --gfs_cyc 4"
- echo "ARRG: $pslot $config_dir"
 
 elif [[ $CASE == "C192_C192_low" ]]; then 
- regressionID=$CASE
- log_message "INFO" "Running case: $CASE ID for this run is now $regressionID" 
- #config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
+
+ log_message "INFO" "Running special case: $CASE for this regression test"
+ config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
  setup_expt=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_expt.py
  setup_workflow=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_workflow.py
  EXTRA_SETUP_STRING="--resdet 192 --resens 192 --nens 20 --gfs_cyc 4"
@@ -180,10 +170,11 @@ elif [[ $CASE == "C192_C192_low" ]]; then
  BUILD='FALSE'
  log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so CHECKOUT is set to FALSE"
  log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so BUILD is set to FALSE"
+
 elif [[ $CASE == "C768_C384_high" ]]; then
- regressionID=$CASE
- log_message "INFO" "Running case: $CASE ID for this run is now $regressionID" 
- #config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
+
+ log_message "INFO" "Running special case: $CASE for this regression test"
+ config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
  setup_expt=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_expt.py
  setup_workflow=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_workflow.py
  EXTRA_SETUP_STRING="--resdet 768 --resens 384 --nens 80 --gfs_cyc 4"
@@ -194,11 +185,16 @@ elif [[ $CASE == "C768_C384_high" ]]; then
  BUILD='FALSE'
  log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so CHECKOUT is set to FALSE"
  log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so BUILD is set to FALSE"
-fi
 
-pslot_basename='fv3gfs'
-checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
-pslot="${pslot_basename}_exp_${regressionID}"
+else:
+ 
+ CASE='master'
+ log_message "INFO" "Running default case with regressionID: $regressionID" 
+ setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
+ setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
+ config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
+
+fi
 
 username=`echo ${USER} | tr '[:upper:]' '[:lower:]'`
 
@@ -410,18 +406,18 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     if [[ -d $exp_dir_fullpath ]]; then
 
        if [[ $CASE == "C192_C192_low" || $CASE == "BUILD" ]]; then
-         log_message "WARNING" "updated config.base and changed  FHMAX_GFS=240"
+         log_message "WARNING" "updated config.base and changed FHMAX_GFS=240"
          sed -i 's/^export FHMAX_GFS=.*/export FHMAX_GFS=\"240\"        \# WARNING changed to 240 by regression script/' $exp_dir_fullpath/config.base
+         log_message "WARNING" "updated config.vrfy and changed VRFYTRAK=NO"
          sed -i 's/^export VRFYTRAK=.*/export VRFYTRAK=\"NO\"        \# WARNING changed to 240 by regression script/' $exp_dir_fullpath/config.vrfy
+         log_message "WARNING" "updated config.vrfy and changed VRFYGENESIS=NO"
          sed -i 's/^export VRFYGENESIS=.*/export VRFYGENESIS=\"NO\"        \# WARNING changed to 240 by regression script/' $exp_dir_fullpath/config.vrfy
        fi
 
     else
-       log_message "CRITICAL" "The experment directory was not created corectly"
+       log_message "CRITICAL" "The experment directory was not created correctly"
     fi
 
-    #sed -i 's/^export VRFYGENESIS=.*/export VRFYGENESIS=\"NO\"          \# WARNING changed by regression script/' $exp_dir_fullpath/config.vrfy
-    #log_message "WARNING" "modified config.vrfy with VRFYGENESIS=NO because geneses tracker is currently failing"
     #sed -i 's/^export VRFYG2OBS=.*/export VRFYG2OBS=\"NO\"          \# WARNING changed by regression script/' $exp_dir_fullpath/config.vrfy
     #log_message "WARNING" "modified config.vrfy with VRFYG2OBS=NO because it do not make sense for it to be on for only one cycle"
 fi
@@ -715,17 +711,19 @@ if [[ $COMPARE_BASE == 'TRUE' ]]; then
 fi  
 
 DATE=`date`
-if [[ $number_diff == 0 ]]; then
-  log_message "INFO" "regression tests script completed successfully on $DATE with no file differences"
-else
-    if (( $number_diff > 500 )); then
-      some="many"
-    elif (( $number_diff < 100 )); then
-      some="some"
+if [[ ! -z $number_diff ]]; then
+    if [[ $number_diff == 0 ]]; then
+      log_message "INFO" "regression tests script completed successfully on $DATE with no file differences"
     else
-      some="several"
+        if (( $number_diff > 500 )); then
+          some="many"
+        elif (( $number_diff < 100 )); then
+          some="some"
+        else
+          some="several"
+        fi
+      log_message "INFO" "regression tests script completed successfully on $DATE with $some file differences"
     fi
-  log_message "INFO" "regression tests script completed successfully on $DATE with $some file differences"
 fi
 SCRIPT_ENDTIME=$(date +%s)
 PROCESSTIME=$(($SCRIPT_ENDTIME-$SCRIPT_STARTTIME))

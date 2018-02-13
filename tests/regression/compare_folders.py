@@ -423,11 +423,15 @@ if __name__ == '__main__':
     import yaml
     import subprocess
     from subprocess import run
+    from os import environ
 
     logger,logger_hdr = get_logger()
     args = get_args()
 
-    fixed_dir_experment_name = 'fv3gfs_regression_experments'
+    if 'REGRESSSION_COMROT_BASENAME' in os.environ:
+        fixed_dir_experment_name = environ.get('REGRESSSION_COMROT_BASENAME')
+    else:
+        fixed_dir_experment_name = 'fv3gfs_regression_ROTDIRs'
     using_file_list = False
 
     NCCMP='/gpfs/hps3/emc/nems/noscrub/emc.nemspara/FV3GFS_V0_RELEASE/util/nccmp'
