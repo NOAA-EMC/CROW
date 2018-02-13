@@ -47,6 +47,8 @@ class ShellEventYAML(dict): pass
 class TaskYAML(OrderedDict): pass
 class TaskArrayYAML(OrderedDict): pass
 class TaskElementYAML(OrderedDict): pass
+class DataEventElementYAML(OrderedDict): pass
+class ShellEventElementYAML(OrderedDict): pass
 class FamilyYAML(OrderedDict): pass
 class CycleYAML(OrderedDict): pass
 class TemplateYAML(OrderedDict): pass
@@ -57,17 +59,19 @@ class JobResourceSpecMakerYAML(list): pass
 # Mapping from YAML representation class to a pair:
 # * internal representation class
 # * python core class for intermediate conversion
-TYPE_MAP={ PlatformYAML:     [ Platform,     dict,        None ], 
-           TemplateYAML:     [ Template,     OrderedDict, None ],
-           ActionYAML:       [ Action,       dict,        None ],
-           ShellCommandYAML: [ ShellCommand, OrderedDict, None ],
-           TaskYAML:         [ Task,         OrderedDict, None ],
-           CycleYAML:        [ Cycle,        OrderedDict, None ],
-           FamilyYAML:       [ Family,       OrderedDict, None ],
-           DataEventYAML:    [ DataEvent,    dict,        None ],
-           ShellEventYAML:   [ ShellEvent,   dict,        None ],
-           TaskElementYAML:  [ TaskElement,  OrderedDict, None ],
-           TaskArrayYAML:    [ TaskArray,    OrderedDict, None ]
+TYPE_MAP={ PlatformYAML:          [ Platform,     dict,        None ], 
+           TemplateYAML:          [ Template,     OrderedDict, None ],
+           ActionYAML:            [ Action,       dict,        None ],
+           ShellCommandYAML:      [ ShellCommand, OrderedDict, None ],
+           TaskYAML:              [ Task,         OrderedDict, None ],
+           CycleYAML:             [ Cycle,        OrderedDict, None ],
+           FamilyYAML:            [ Family,       OrderedDict, None ],
+           DataEventYAML:         [ DataEvent,    dict,        None ],
+           ShellEventYAML:        [ ShellEvent,   dict,        None ],
+           TaskArrayYAML:         [ TaskArray,    OrderedDict, None ],
+           TaskElementYAML:       [ TaskElement,  OrderedDict, None ],
+           DataEventElementYAML:  [ DataEventElement,   OrderedDict, None ],
+           ShellEventElementYAML: [ ShellEventElement,  OrderedDict, None ],
          }
 
 def type_for(t,path):
@@ -200,6 +204,8 @@ add_yaml_ordered_dict(u'!Template',TemplateYAML)
 add_yaml_ordered_dict(u'!Task',TaskYAML)
 add_yaml_ordered_dict(u'!TaskArray',TaskArrayYAML)
 add_yaml_ordered_dict(u'!TaskElement',TaskElementYAML)
+add_yaml_ordered_dict(u'!DataEventElement',DataEventElementYAML)
+add_yaml_ordered_dict(u'!ShellEventElement',ShellEventElementYAML)
 add_yaml_ordered_dict(u'!Family',FamilyYAML)
 
 SUITE={ EvalYAML: Eval,
@@ -211,6 +217,8 @@ SUITE={ EvalYAML: Eval,
         FamilyYAML: Family,
         TaskArrayYAML: TaskArray,
         TaskElementYAML: TaskElement,
+        DataEventElementYAML: DataEventElement,
+        ShellEventElementYAML: ShellEventElement,
         ClockYAML:ClockMaker,
         OutputSlotYAML: OutputSlot,
         InputSlotYAML: InputSlot}

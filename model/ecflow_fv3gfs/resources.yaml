@@ -20,7 +20,7 @@ resource_demo: &resource_demo
       args:
         - placeholder
 
-  run_nothing: # Special placeholder for "do nothing" !JobRequest
+  run_nothing: !JobRequest # Special placeholder for "do nothing"
     - memory: "300M"
       exe: nothing
 

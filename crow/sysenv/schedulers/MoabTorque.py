@@ -21,6 +21,13 @@ class Scheduler(BaseScheduler):
         self.rocoto_name='MoabTorque'
         self.indent_text=str(settings.get('indent_text','  '))
 
+    def max_ranks_per_node(self,spec):
+        if not spec.is_pure_serial() and not spec.is_pure_openmp():
+            # MPI program.  Merge ranks if allowed.
+            spec=self.nodes.to_nodes_ppn(
+                spec,can_merge_ranks=self.nodes.same_except_exe)
+        return max([ self.nodes.max_ranks_per_node(j) for j in spec ])
+
     ####################################################################
 
     # Batch card generation

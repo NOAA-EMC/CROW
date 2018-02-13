@@ -162,9 +162,9 @@ class ToEcflow(object):
             yield clock.now
 
     def _remove_final_task(self):
-        if 'final' not in self.suite or not self.suite.final.is_task() \
-           and not self.suite.final.is_family():
-            print('no final')
+        if 'final' not in self.suite: return
+        assert('final' in self.suite)
+        print(self.suite.final)
         for cycle in self.clock:
             dt=cycle-self.clock.start
             self.graph.force_never_run(self.suite.final.at(dt).path)
@@ -235,9 +235,9 @@ class ToEcflow(object):
             if node.is_task():
                 for item in node.view.child_iter():
                     if item.is_event():
-                        sio.write(f'{indent1} event {event_number} '
+                        sio.write(f'{indent1}event {event_number} '
                                   f'{item.path[-1]}\n')
-                event_number+=1
+                    event_number+=1
 
         sio.write('endsuite\n')
         suite_def_without_externs=sio.getvalue()

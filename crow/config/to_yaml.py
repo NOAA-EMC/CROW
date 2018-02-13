@@ -121,6 +121,8 @@ add_yaml_taskable(u'!Task',Task)
 add_yaml_taskable(u'!Family',Family)
 add_yaml_taskable(u'!TaskArray',TaskArray)
 add_yaml_taskable(u'!TaskElement',TaskElement)
+add_yaml_taskable(u'!ShellEventElement',ShellEventElement)
+add_yaml_taskable(u'!DataEventElement',DataEventElement)
 add_yaml_taskable(u'!Cycle',Cycle)
 add_yaml_taskable(u'!Template',Template)
 

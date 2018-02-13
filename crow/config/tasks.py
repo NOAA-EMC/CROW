@@ -28,7 +28,8 @@ __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'CycleExistsDependency', 'FamilyView', 'TaskView',
           'CycleView', 'Slot', 'InputSlot', 'OutputSlot', 'Message',
           'Event', 'DataEvent', 'ShellEvent', 'EventDependency',
-          'TaskExistsDependency', 'TaskArray', 'TaskElement' ]
+          'TaskExistsDependency', 'TaskArray', 'TaskElement',
+          'DataEventElement', 'ShellEventElement' ]
 
 class Event(dict_eval): pass
 class DataEvent(Event): pass
@@ -240,7 +241,7 @@ class SuiteView(Mapping):
             obj=copy(obj)
             self.viewed[key]=obj
             return CycleView(self.suite,obj,self.path[:1],self)
-        elif isinstance(obj,TaskArray):
+        elif hasattr(obj,'_generate'):
             return self.__wrap(key,obj._generate(self))
         elif type(obj) in SUITE_CLASS_MAP:
             view_class=SUITE_CLASS_MAP[type(obj)]
@@ -652,16 +653,62 @@ class Task(Taskable): pass
 class Family(Taskable): pass
 class Cycle(dict_eval): pass
 
-class TaskElement(dict_eval):
-    def _duplicate(self,dimensions,indices):
-        for more_indices in subdict_iter(dimensions):
+class TaskArrayElement(dict_eval):
+    def _duplicate(self,parent,dimensions,indices):
+        child_dimensions=dimensions
+        if 'Foreach' in self:
+            typecheck(f'{self._path}.Foreach',self.Foreach,Sequence,'sequence')
+            d2=dict()
+            for idxname in self.Foreach:
+                if idxname in dimensions:
+                    d2[idxname]=dimensions[idxname]
+                else:
+                    raise KeyError(f'{self._path}.Foreach: {idxname}: no such dimension')
+            dimensions=d2
+        dict_iter=[{}]
+        if dimensions:
+            dict_iter=subdict_iter(dimensions)
+        for more_indices in dict_iter:
             child_indices=copy(indices)
             child_indices.update(more_indices)
-            t=Task(self._raw_child(),globals=self._globals())
+            cls=ARRAY_ELEMENT_TYPE_MAP[type(self)]
+            t=cls(self._raw_child(),globals=self._globals())
+            t._path=self._path # used if Name is missing
             t['idx']=dict_eval(child_indices)
             name=t.Name
-            t._path=f'{self._path}.{name}'
+            t._path=f'{parent._path}.{name}'
+            for k,v in self._raw_child().items():
+                if hasattr(v,'_duplicate'):
+                    for name2,content2 in v._duplicate(t,child_dimensions,indices):
+                        t[name2]=content2
             yield name,t
+
+class DataEventElement(TaskArrayElement): pass
+class ShellEventElement(TaskArrayElement): pass
+class TaskElement(TaskArrayElement): pass
+
+    # def _duplicate(self,dimensions,indices):
+    #     if 'Foreach' in self:
+    #         typecheck(f'{self._path}.Foreach',self.Foreach,Sequence,'sequence')
+    #         d2=dict()
+    #         for idxname in self.Foreach:
+    #             if idxname in dimensions:
+    #                 d2[idxname]=dimensions[idxname]
+    #             else:
+    #                 raise KeyError(f'{self._path}.Foreach: {idxname}: no such dimension')
+    #         dimensions=d2
+    #     dict_iter=[{}]
+    #     if dimensions:
+    #         dict_iter=subdict_iter(dimensions)
+    #     for more_indices in dict_iter:
+    #         child_indices=copy(indices)
+    #         child_indices.update(more_indices)
+    #         t=Task(self._raw_child(),globals=self._globals())
+    #         t._path=self._path # used if Name is missing
+    #         t['idx']=dict_eval(child_indices)
+    #         name=t.Name
+    #         t._path=f'{self._path}.{name}'
+    #         yield name,t
 
 class TaskArray(dict_eval):
     def _generate(self,parent_view):
@@ -675,11 +722,18 @@ class TaskArray(dict_eval):
                 raise TypeError(f'{self._path}: dimension {dimname} is not a list (is type {type(dimlist).__name__}).')
         for k,v in self._raw_child().items():
             if hasattr(v,'_duplicate'):
-                for name,content in v._duplicate(child_dimensions,indices):
+                for name,content in v._duplicate(f,child_dimensions,indices):
                     f[name]=content
             else:
                 f[k]=v
         return f
+
+
+ARRAY_ELEMENT_TYPE_MAP={
+    TaskElement: Task,
+    DataEventElement: DataEvent,
+    ShellEventElement: ShellEvent
+}
 
 
 # class TaskArray(TaskableGenerator):

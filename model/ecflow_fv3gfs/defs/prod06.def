@@ -20,110 +20,14 @@ suite prod06
   edit ECF_FILES '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts'
   edit ECF_OUT '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/output'
   edit ECF_LOG '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/ecf.log'
-  family gdas
-    task jgdas_verfrad
-      trigger ./enkf == complete
-    endtask
-    task jgdas_vminmon
-      trigger ./jgdas_analysis == complete
-    endtask
-    family dump
-      task jgdas_ics
-         event 1 release_gdas00_ics
-      endtask
-      task jgdas_tropcy_qc_reloc
-        trigger ./jgdas_dump == complete
-      endtask
-      task jgdas_dump
-         event 1 release_sfcprep
-      endtask
-    endfamily
-    family prep
-      task jgdas_emcsfc_sfc_prep
-        trigger ../dump/jgdas_dump:release_sfcprep
-      endtask
-      task jgdas_prep
-        trigger ../dump/jgdas_dump == complete and ../dump/jgdas_tropcy_qc_reloc == complete
-      endtask
-      task jgdas_prep_post
-        trigger ../jgdas_analysis == complete
-      endtask
-    endfamily
-    family enkf
-      task jgdas_enkf_select_obs
-        trigger ../prep/jgdas_prep == complete and /prod00/gdas/enkf/jgdas_enkf_post == complete
-      endtask
-      family innovate
-        trigger ./jgdas_enkf_select_obs == complete
-        task grp1
-        endtask
-        task grp2
-        endtask
-        task grp3
-        endtask
-        task grp4
-        endtask
-        task grp5
-        endtask
-        task grp6
-        endtask
-        task grp7
-        endtask
-        task grp8
-        endtask
-      endfamily
-      task jgdas_enkf_update
-        trigger ./innovate == complete
-      endtask
-      task jgdas_enkf_inflate_recenter
-        trigger ./jgdas_enkf_update == complete and ../jgdas_analysis == complete
-      endtask
-      family forecast
-        trigger ./jgdas_enkf_inflate_recenter == complete
-        task grp1
-        endtask
-        task grp2
-        endtask
-        task grp3
-        endtask
-        task grp4
-        endtask
-        task grp5
-        endtask
-        task grp6
-        endtask
-        task grp7
-        endtask
-        task grp8
-        endtask
-      endfamily
-      task jgdas_enkf_post
-        trigger ./forecast == complete
-      endtask
-    endfamily
-    task jgdas_analysis
-      trigger ./prep/jgdas_prep == complete and ./prep/jgdas_emcsfc_sfc_prep == complete and /prod00/gdas/enkf/jgdas_enkf_post == complete
-       event 1 release_fcst
-    endtask
-    task jgdas_forecast
-      trigger ./jgdas_analysis:release_fcst and ./enkf/innovate == complete
-       event 1 release_fcst
-    endtask
-    task post
-      trigger ./jgdas_forecast == complete
-    endtask
-    task vrfy
-      trigger ./post == complete
-    endtask
-  endfamily
   family gfs
     family dump
       task jgfs_tropcy_qc_reloc
         trigger ./jgfs_dump == complete
-         event 1 jtwc_bull_email
+        event 1 jtwc_bull_email
       endtask
       task jgfs_dump
-         event 1 release_sfcprep
+        event 1 release_sfcprep
       endtask
     endfamily
     family prep
@@ -138,46 +42,1363 @@ suite prod06
       endtask
     endfamily
     task jgfs_analysis
-      trigger ./prep/jgfs_prep == complete and ./prep/jgfs_emcsfc_sfc_prep == complete and /prod00/gdas/enkf/jgdas_enkf_post == complete
+      trigger ./prep/jgfs_prep == complete and ./prep/jgfs_emcsfc_sfc_prep == complete
     endtask
     task jgfs_vminmon
       trigger ./jgfs_analysis == complete
     endtask
-    task jgfs_forecast
-      trigger ./jgfs_analysis == complete
-    endtask
-    task jgfs_post
-      trigger ./jgfs_forecast == complete
-    endtask
-    task jgfs_vrfy
-      trigger ./jgfs_post == complete
-    endtask
-  endfamily
-  family archive
-    task gdasarch
-      trigger ../gdas/jgdas_verfrad == complete
-    endtask
-    task gfsarch
-      trigger ../gfs/jgfs_vrfy == complete
-    endtask
-    family earc
-      trigger ../gdas/enkf/jgdas_enkf_post == complete
-      task grp1
+    family forecast
+      task jgfs_forecast_high
+        trigger ../jgfs_analysis == complete
       endtask
-      task grp2
+      task jgfs_forecast_low
+        trigger ./jgfs_forecast_high == complete
       endtask
-      task grp3
+    endfamily
+    family sminit_guam
+      task jgfs_sminit_guam_even
+        trigger ../post/jgfs_post_anl == active or ../post/jgfs_post_anl == complete
       endtask
-      task grp4
+      task jgfs_sminit_guam_odd
+        trigger ../post/jgfs_post_anl == active or ../post/jgfs_post_anl == complete
       endtask
-      task grp5
+    endfamily
+    family post_processing
+      task jgfs_wafs_gcip
+        trigger ../prdgen/jgfs_pgrb2_f03 == complete
       endtask
-      task grp6
+      family fax
+        task jgfs_fax_f00
+          trigger ../../prdgen/jgfs_pgrb2_f00 == complete and ../../prdgen/jgfs_pgrb2_anl == complete
+        endtask
+        task jgfs_fax_anl
+          trigger ../../prdgen/jgfs_pgrb2_anl == complete
+        endtask
+        task jgfs_fax_wafs_f12
+          trigger ../../prdgen/jgfs_pgrb2_f12 == complete
+        endtask
+        task jgfs_fax_wafs_f24
+          trigger ../../prdgen/jgfs_pgrb2_f24 == complete
+        endtask
+        task jgfs_fax_wafs_f36
+          trigger ../../prdgen/jgfs_pgrb2_f36 == complete
+        endtask
+      endfamily
+      family grib_wafs
+        task jgfs_wafs_f00
+          trigger ../../prdgen/jgfs_pgrb2_f00 == complete and ../../prdgen/jgfs_pgrb2_f120 == complete and ../grib2_wafs/jgfs_wafs_grib2 == complete
+        endtask
+        task jgfs_wafs_f06
+          trigger ../../prdgen/jgfs_pgrb2_f06 == complete and ./jgfs_wafs_f00 == complete
+        endtask
+        task jgfs_wafs_f12
+          trigger ../../prdgen/jgfs_pgrb2_f12 == complete and ./jgfs_wafs_f06 == complete
+        endtask
+        task jgfs_wafs_f18
+          trigger ../../prdgen/jgfs_pgrb2_f18 == complete and ./jgfs_wafs_f12 == complete
+        endtask
+        task jgfs_wafs_f24
+          trigger ../../prdgen/jgfs_pgrb2_f24 == complete and ./jgfs_wafs_f18 == complete
+        endtask
+        task jgfs_wafs_f30
+          trigger ../../prdgen/jgfs_pgrb2_f30 == complete and ./jgfs_wafs_f24 == complete
+        endtask
+        task jgfs_wafs_f36
+          trigger ../../prdgen/jgfs_pgrb2_f36 == complete and ./jgfs_wafs_f30 == complete
+        endtask
+        task jgfs_wafs_f42
+          trigger ../../prdgen/jgfs_pgrb2_f42 == complete and ./jgfs_wafs_f36 == complete
+        endtask
+        task jgfs_wafs_f48
+          trigger ../../prdgen/jgfs_pgrb2_f48 == complete and ./jgfs_wafs_f42 == complete
+        endtask
+        task jgfs_wafs_f54
+          trigger ../../prdgen/jgfs_pgrb2_f54 == complete and ./jgfs_wafs_f48 == complete
+        endtask
+        task jgfs_wafs_f60
+          trigger ../../prdgen/jgfs_pgrb2_f60 == complete and ./jgfs_wafs_f54 == complete
+        endtask
+        task jgfs_wafs_f66
+          trigger ../../prdgen/jgfs_pgrb2_f66 == complete and ./jgfs_wafs_f60 == complete
+        endtask
+        task jgfs_wafs_f72
+          trigger ../../prdgen/jgfs_pgrb2_f72 == complete and ./jgfs_wafs_f66 == complete
+        endtask
+        task jgfs_wafs_f78
+          trigger ../../prdgen/jgfs_pgrb2_f78 == complete and ./jgfs_wafs_f72 == complete
+        endtask
+        task jgfs_wafs_f84
+          trigger ../../prdgen/jgfs_pgrb2_f84 == complete and ./jgfs_wafs_f78 == complete
+        endtask
+        task jgfs_wafs_f90
+          trigger ../../prdgen/jgfs_pgrb2_f90 == complete and ./jgfs_wafs_f84 == complete
+        endtask
+        task jgfs_wafs_f96
+          trigger ../../prdgen/jgfs_pgrb2_f96 == complete and ./jgfs_wafs_f90 == complete
+        endtask
+        task jgfs_wafs_f102
+          trigger ../../prdgen/jgfs_pgrb2_f102 == complete and ./jgfs_wafs_f96 == complete
+        endtask
+        task jgfs_wafs_f108
+          trigger ../../prdgen/jgfs_pgrb2_f108 == complete and ./jgfs_wafs_f102 == complete
+        endtask
+        task jgfs_wafs_f114
+          trigger ../../prdgen/jgfs_pgrb2_f114 == complete and ./jgfs_wafs_f108 == complete
+        endtask
+        task jgfs_wafs_f120
+          trigger ../../prdgen/jgfs_pgrb2_f120 == complete and ./jgfs_wafs_f114 == complete
+        endtask
+      endfamily
+      family bufr_sounding
+        task jgfs_postsnd
+          trigger ../../post/jgfs_post_manager:release_post00
+        endtask
+      endfamily
+      family bulletins
+        task jgfs_fbwind
+          trigger ../../post/jgfs_post_f06 == complete and ../../post/jgfs_post_f12 == complete and ../../post/jgfs_post_f24 == complete
+        endtask
+        task jgfs_cyclone_tracker
+          trigger ../../post/jgfs_post_f00 == complete and ../../post/jgfs_post_f06 == complete and ../../prdgen/jgfs_pgrb2_f00 == complete and ../../prdgen/jgfs_pgrb2_f06 == complete
+        endtask
+      endfamily
+      family grib2_wafs
+        task jgfs_wafs_grib2
+          trigger ../../prdgen/jgfs_pgrb2_f00 == complete
+        endtask
+        task jgfs_wafs_blending
+          trigger ./jgfs_wafs_grib2 == complete
+        endtask
+      endfamily
+      family grib_awips
+        task jgfs_awips_f00
+          trigger ../../prdgen/jgfs_pgrb2_f00 == complete
+        endtask
+        task jgfs_awips_f06
+          trigger ../../prdgen/jgfs_pgrb2_f06 == complete
+        endtask
+        task jgfs_awips_f240
+          trigger ../../prdgen/jgfs_pgrb2_f240 == complete
+        endtask
+      endfamily
+      family awips_1p0deg
+        task jgfs_awips_f000
+          trigger ../../prdgen/jgfs_pgrb2_f00 == complete
+        endtask
+        task jgfs_awips_f006
+          trigger ../../prdgen/jgfs_pgrb2_f06 == complete
+        endtask
+        task jgfs_awips_f240
+          trigger ../../prdgen/jgfs_pgrb2_f240 == complete
+        endtask
+      endfamily
+      family awips_20km
+        task jgfs_awips_f000
+          trigger ../../prdgen/jgfs_pgrb2_f00 == complete
+        endtask
+        task jgfs_awips_f003
+          trigger ../../prdgen/jgfs_pgrb2_f03 == complete
+        endtask
+        task jgfs_awips_f240
+          trigger ../../prdgen/jgfs_pgrb2_f240 == complete
+        endtask
+      endfamily
+    endfamily
+    family post
+      task jgfs_post_anl
+        trigger ./jgfs_post_manager:release_postanl
+        event 1 release_pgrb2_anl
       endtask
-      task grp7
+      task jgfs_post_f00
+        trigger ./jgfs_post_manager:release_post00
       endtask
-      task grp8
+      task jgfs_post_f01
+        trigger ./jgfs_post_manager:release_post01
+      endtask
+      task jgfs_post_f384
+        trigger ./jgfs_post_manager:release_post384
+      endtask
+      task jgfs_pgrb2_spec_post
+        trigger ./jgfs_post_f336 == complete and ./jgfs_post_f384 == complete
+      endtask
+      task jgfs_post_manager
+        trigger ../jgfs_analysis == complete and ../forecast == complete
+        event 1 release_postanl
+        event 2 release_post00
+        event 3 release_post01
+        event 4 release_post02
+        event 5 release_post03
+        event 6 release_post04
+        event 7 release_post05
+        event 8 release_post06
+        event 9 release_post07
+        event 10 release_post08
+        event 11 release_post09
+        event 12 release_post10
+        event 13 release_post11
+        event 14 release_post12
+        event 15 release_post13
+        event 16 release_post14
+        event 17 release_post15
+        event 18 release_post16
+        event 19 release_post17
+        event 20 release_post18
+        event 21 release_post19
+        event 22 release_post20
+        event 23 release_post21
+        event 24 release_post22
+        event 25 release_post23
+        event 26 release_post24
+        event 27 release_post25
+        event 28 release_post26
+        event 29 release_post27
+        event 30 release_post28
+        event 31 release_post29
+        event 32 release_post30
+        event 33 release_post31
+        event 34 release_post32
+        event 35 release_post33
+        event 36 release_post34
+        event 37 release_post35
+        event 38 release_post36
+        event 39 release_post37
+        event 40 release_post38
+        event 41 release_post39
+        event 42 release_post40
+        event 43 release_post41
+        event 44 release_post42
+        event 45 release_post43
+        event 46 release_post44
+        event 47 release_post45
+        event 48 release_post46
+        event 49 release_post47
+        event 50 release_post48
+        event 51 release_post49
+        event 52 release_post50
+        event 53 release_post51
+        event 54 release_post52
+        event 55 release_post53
+        event 56 release_post54
+        event 57 release_post55
+        event 58 release_post56
+        event 59 release_post57
+        event 60 release_post58
+        event 61 release_post59
+        event 62 release_post60
+        event 63 release_post61
+        event 64 release_post62
+        event 65 release_post63
+        event 66 release_post64
+        event 67 release_post65
+        event 68 release_post66
+        event 69 release_post67
+        event 70 release_post68
+        event 71 release_post69
+        event 72 release_post70
+        event 73 release_post71
+        event 74 release_post72
+        event 75 release_post73
+        event 76 release_post74
+        event 77 release_post75
+        event 78 release_post76
+        event 79 release_post77
+        event 80 release_post78
+        event 81 release_post79
+        event 82 release_post80
+        event 83 release_post81
+        event 84 release_post82
+        event 85 release_post83
+        event 86 release_post84
+        event 87 release_post85
+        event 88 release_post86
+        event 89 release_post87
+        event 90 release_post88
+        event 91 release_post89
+        event 92 release_post90
+        event 93 release_post91
+        event 94 release_post92
+        event 95 release_post93
+        event 96 release_post94
+        event 97 release_post95
+        event 98 release_post96
+        event 99 release_post97
+        event 100 release_post98
+        event 101 release_post99
+        event 102 release_post100
+        event 103 release_post101
+        event 104 release_post102
+        event 105 release_post103
+        event 106 release_post104
+        event 107 release_post105
+        event 108 release_post106
+        event 109 release_post107
+        event 110 release_post108
+        event 111 release_post109
+        event 112 release_post110
+        event 113 release_post111
+        event 114 release_post112
+        event 115 release_post113
+        event 116 release_post114
+        event 117 release_post115
+        event 118 release_post116
+        event 119 release_post117
+        event 120 release_post118
+        event 121 release_post119
+        event 122 release_post120
+        event 123 release_post123
+        event 124 release_post126
+        event 125 release_post129
+        event 126 release_post132
+        event 127 release_post135
+        event 128 release_post138
+        event 129 release_post141
+        event 130 release_post144
+        event 131 release_post147
+        event 132 release_post150
+        event 133 release_post153
+        event 134 release_post156
+        event 135 release_post159
+        event 136 release_post162
+        event 137 release_post165
+        event 138 release_post168
+        event 139 release_post171
+        event 140 release_post174
+        event 141 release_post177
+        event 142 release_post180
+        event 143 release_post183
+        event 144 release_post186
+        event 145 release_post189
+        event 146 release_post192
+        event 147 release_post195
+        event 148 release_post198
+        event 149 release_post201
+        event 150 release_post204
+        event 151 release_post207
+        event 152 release_post210
+        event 153 release_post213
+        event 154 release_post216
+        event 155 release_post219
+        event 156 release_post222
+        event 157 release_post225
+        event 158 release_post228
+        event 159 release_post231
+        event 160 release_post234
+        event 161 release_post237
+        event 162 release_post240
+        event 163 release_post252
+        event 164 release_post264
+        event 165 release_post276
+        event 166 release_post288
+        event 167 release_post300
+        event 168 release_post312
+        event 169 release_post324
+        event 170 release_post336
+        event 171 release_post348
+        event 172 release_post360
+        event 173 release_post372
+        event 174 release_post384
+      endtask
+      task jgfs_post_f02
+        trigger ./jgfs_post_manager:release_post02
+      endtask
+      task jgfs_post_f03
+        trigger ./jgfs_post_manager:release_post03
+      endtask
+      task jgfs_post_f04
+        trigger ./jgfs_post_manager:release_post04
+      endtask
+      task jgfs_post_f05
+        trigger ./jgfs_post_manager:release_post05
+      endtask
+      task jgfs_post_f06
+        trigger ./jgfs_post_manager:release_post06
+      endtask
+      task jgfs_post_f07
+        trigger ./jgfs_post_manager:release_post07
+      endtask
+      task jgfs_post_f08
+        trigger ./jgfs_post_manager:release_post08
+      endtask
+      task jgfs_post_f09
+        trigger ./jgfs_post_manager:release_post09
+      endtask
+      task jgfs_post_f10
+        trigger ./jgfs_post_manager:release_post10
+      endtask
+      task jgfs_post_f11
+        trigger ./jgfs_post_manager:release_post11
+      endtask
+      task jgfs_post_f12
+        trigger ./jgfs_post_manager:release_post12
+      endtask
+      task jgfs_post_f13
+        trigger ./jgfs_post_manager:release_post13
+      endtask
+      task jgfs_post_f14
+        trigger ./jgfs_post_manager:release_post14
+      endtask
+      task jgfs_post_f15
+        trigger ./jgfs_post_manager:release_post15
+      endtask
+      task jgfs_post_f16
+        trigger ./jgfs_post_manager:release_post16
+      endtask
+      task jgfs_post_f17
+        trigger ./jgfs_post_manager:release_post17
+      endtask
+      task jgfs_post_f18
+        trigger ./jgfs_post_manager:release_post18
+      endtask
+      task jgfs_post_f19
+        trigger ./jgfs_post_manager:release_post19
+      endtask
+      task jgfs_post_f20
+        trigger ./jgfs_post_manager:release_post20
+      endtask
+      task jgfs_post_f21
+        trigger ./jgfs_post_manager:release_post21
+      endtask
+      task jgfs_post_f22
+        trigger ./jgfs_post_manager:release_post22
+      endtask
+      task jgfs_post_f23
+        trigger ./jgfs_post_manager:release_post23
+      endtask
+      task jgfs_post_f24
+        trigger ./jgfs_post_manager:release_post24
+      endtask
+      task jgfs_post_f25
+        trigger ./jgfs_post_manager:release_post25
+      endtask
+      task jgfs_post_f26
+        trigger ./jgfs_post_manager:release_post26
+      endtask
+      task jgfs_post_f27
+        trigger ./jgfs_post_manager:release_post27
+      endtask
+      task jgfs_post_f28
+        trigger ./jgfs_post_manager:release_post28
+      endtask
+      task jgfs_post_f29
+        trigger ./jgfs_post_manager:release_post29
+      endtask
+      task jgfs_post_f30
+        trigger ./jgfs_post_manager:release_post30
+      endtask
+      task jgfs_post_f31
+        trigger ./jgfs_post_manager:release_post31
+      endtask
+      task jgfs_post_f32
+        trigger ./jgfs_post_manager:release_post32
+      endtask
+      task jgfs_post_f33
+        trigger ./jgfs_post_manager:release_post33
+      endtask
+      task jgfs_post_f34
+        trigger ./jgfs_post_manager:release_post34
+      endtask
+      task jgfs_post_f35
+        trigger ./jgfs_post_manager:release_post35
+      endtask
+      task jgfs_post_f36
+        trigger ./jgfs_post_manager:release_post36
+      endtask
+      task jgfs_post_f37
+        trigger ./jgfs_post_manager:release_post37
+      endtask
+      task jgfs_post_f38
+        trigger ./jgfs_post_manager:release_post38
+      endtask
+      task jgfs_post_f39
+        trigger ./jgfs_post_manager:release_post39
+      endtask
+      task jgfs_post_f40
+        trigger ./jgfs_post_manager:release_post40
+      endtask
+      task jgfs_post_f41
+        trigger ./jgfs_post_manager:release_post41
+      endtask
+      task jgfs_post_f42
+        trigger ./jgfs_post_manager:release_post42
+      endtask
+      task jgfs_post_f43
+        trigger ./jgfs_post_manager:release_post43
+      endtask
+      task jgfs_post_f44
+        trigger ./jgfs_post_manager:release_post44
+      endtask
+      task jgfs_post_f45
+        trigger ./jgfs_post_manager:release_post45
+      endtask
+      task jgfs_post_f46
+        trigger ./jgfs_post_manager:release_post46
+      endtask
+      task jgfs_post_f47
+        trigger ./jgfs_post_manager:release_post47
+      endtask
+      task jgfs_post_f48
+        trigger ./jgfs_post_manager:release_post48
+      endtask
+      task jgfs_post_f49
+        trigger ./jgfs_post_manager:release_post49
+      endtask
+      task jgfs_post_f50
+        trigger ./jgfs_post_manager:release_post50
+      endtask
+      task jgfs_post_f51
+        trigger ./jgfs_post_manager:release_post51
+      endtask
+      task jgfs_post_f52
+        trigger ./jgfs_post_manager:release_post52
+      endtask
+      task jgfs_post_f53
+        trigger ./jgfs_post_manager:release_post53
+      endtask
+      task jgfs_post_f54
+        trigger ./jgfs_post_manager:release_post54
+      endtask
+      task jgfs_post_f55
+        trigger ./jgfs_post_manager:release_post55
+      endtask
+      task jgfs_post_f56
+        trigger ./jgfs_post_manager:release_post56
+      endtask
+      task jgfs_post_f57
+        trigger ./jgfs_post_manager:release_post57
+      endtask
+      task jgfs_post_f58
+        trigger ./jgfs_post_manager:release_post58
+      endtask
+      task jgfs_post_f59
+        trigger ./jgfs_post_manager:release_post59
+      endtask
+      task jgfs_post_f60
+        trigger ./jgfs_post_manager:release_post60
+      endtask
+      task jgfs_post_f61
+        trigger ./jgfs_post_manager:release_post61
+      endtask
+      task jgfs_post_f62
+        trigger ./jgfs_post_manager:release_post62
+      endtask
+      task jgfs_post_f63
+        trigger ./jgfs_post_manager:release_post63
+      endtask
+      task jgfs_post_f64
+        trigger ./jgfs_post_manager:release_post64
+      endtask
+      task jgfs_post_f65
+        trigger ./jgfs_post_manager:release_post65
+      endtask
+      task jgfs_post_f66
+        trigger ./jgfs_post_manager:release_post66
+      endtask
+      task jgfs_post_f67
+        trigger ./jgfs_post_manager:release_post67
+      endtask
+      task jgfs_post_f68
+        trigger ./jgfs_post_manager:release_post68
+      endtask
+      task jgfs_post_f69
+        trigger ./jgfs_post_manager:release_post69
+      endtask
+      task jgfs_post_f70
+        trigger ./jgfs_post_manager:release_post70
+      endtask
+      task jgfs_post_f71
+        trigger ./jgfs_post_manager:release_post71
+      endtask
+      task jgfs_post_f72
+        trigger ./jgfs_post_manager:release_post72
+      endtask
+      task jgfs_post_f73
+        trigger ./jgfs_post_manager:release_post73
+      endtask
+      task jgfs_post_f74
+        trigger ./jgfs_post_manager:release_post74
+      endtask
+      task jgfs_post_f75
+        trigger ./jgfs_post_manager:release_post75
+      endtask
+      task jgfs_post_f76
+        trigger ./jgfs_post_manager:release_post76
+      endtask
+      task jgfs_post_f77
+        trigger ./jgfs_post_manager:release_post77
+      endtask
+      task jgfs_post_f78
+        trigger ./jgfs_post_manager:release_post78
+      endtask
+      task jgfs_post_f79
+        trigger ./jgfs_post_manager:release_post79
+      endtask
+      task jgfs_post_f80
+        trigger ./jgfs_post_manager:release_post80
+      endtask
+      task jgfs_post_f81
+        trigger ./jgfs_post_manager:release_post81
+      endtask
+      task jgfs_post_f82
+        trigger ./jgfs_post_manager:release_post82
+      endtask
+      task jgfs_post_f83
+        trigger ./jgfs_post_manager:release_post83
+      endtask
+      task jgfs_post_f84
+        trigger ./jgfs_post_manager:release_post84
+      endtask
+      task jgfs_post_f85
+        trigger ./jgfs_post_manager:release_post85
+      endtask
+      task jgfs_post_f86
+        trigger ./jgfs_post_manager:release_post86
+      endtask
+      task jgfs_post_f87
+        trigger ./jgfs_post_manager:release_post87
+      endtask
+      task jgfs_post_f88
+        trigger ./jgfs_post_manager:release_post88
+      endtask
+      task jgfs_post_f89
+        trigger ./jgfs_post_manager:release_post89
+      endtask
+      task jgfs_post_f90
+        trigger ./jgfs_post_manager:release_post90
+      endtask
+      task jgfs_post_f91
+        trigger ./jgfs_post_manager:release_post91
+      endtask
+      task jgfs_post_f92
+        trigger ./jgfs_post_manager:release_post92
+      endtask
+      task jgfs_post_f93
+        trigger ./jgfs_post_manager:release_post93
+      endtask
+      task jgfs_post_f94
+        trigger ./jgfs_post_manager:release_post94
+      endtask
+      task jgfs_post_f95
+        trigger ./jgfs_post_manager:release_post95
+      endtask
+      task jgfs_post_f96
+        trigger ./jgfs_post_manager:release_post96
+      endtask
+      task jgfs_post_f97
+        trigger ./jgfs_post_manager:release_post97
+      endtask
+      task jgfs_post_f98
+        trigger ./jgfs_post_manager:release_post98
+      endtask
+      task jgfs_post_f99
+        trigger ./jgfs_post_manager:release_post99
+      endtask
+      task jgfs_post_f100
+        trigger ./jgfs_post_manager:release_post100
+      endtask
+      task jgfs_post_f101
+        trigger ./jgfs_post_manager:release_post101
+      endtask
+      task jgfs_post_f102
+        trigger ./jgfs_post_manager:release_post102
+      endtask
+      task jgfs_post_f103
+        trigger ./jgfs_post_manager:release_post103
+      endtask
+      task jgfs_post_f104
+        trigger ./jgfs_post_manager:release_post104
+      endtask
+      task jgfs_post_f105
+        trigger ./jgfs_post_manager:release_post105
+      endtask
+      task jgfs_post_f106
+        trigger ./jgfs_post_manager:release_post106
+      endtask
+      task jgfs_post_f107
+        trigger ./jgfs_post_manager:release_post107
+      endtask
+      task jgfs_post_f108
+        trigger ./jgfs_post_manager:release_post108
+      endtask
+      task jgfs_post_f109
+        trigger ./jgfs_post_manager:release_post109
+      endtask
+      task jgfs_post_f110
+        trigger ./jgfs_post_manager:release_post110
+      endtask
+      task jgfs_post_f111
+        trigger ./jgfs_post_manager:release_post111
+      endtask
+      task jgfs_post_f112
+        trigger ./jgfs_post_manager:release_post112
+      endtask
+      task jgfs_post_f113
+        trigger ./jgfs_post_manager:release_post113
+      endtask
+      task jgfs_post_f114
+        trigger ./jgfs_post_manager:release_post114
+      endtask
+      task jgfs_post_f115
+        trigger ./jgfs_post_manager:release_post115
+      endtask
+      task jgfs_post_f116
+        trigger ./jgfs_post_manager:release_post116
+      endtask
+      task jgfs_post_f117
+        trigger ./jgfs_post_manager:release_post117
+      endtask
+      task jgfs_post_f118
+        trigger ./jgfs_post_manager:release_post118
+      endtask
+      task jgfs_post_f119
+        trigger ./jgfs_post_manager:release_post119
+      endtask
+      task jgfs_post_f120
+        trigger ./jgfs_post_manager:release_post120
+      endtask
+      task jgfs_post_f123
+        trigger ./jgfs_post_manager:release_post123
+      endtask
+      task jgfs_post_f126
+        trigger ./jgfs_post_manager:release_post126
+      endtask
+      task jgfs_post_f129
+        trigger ./jgfs_post_manager:release_post129
+      endtask
+      task jgfs_post_f132
+        trigger ./jgfs_post_manager:release_post132
+      endtask
+      task jgfs_post_f135
+        trigger ./jgfs_post_manager:release_post135
+      endtask
+      task jgfs_post_f138
+        trigger ./jgfs_post_manager:release_post138
+      endtask
+      task jgfs_post_f141
+        trigger ./jgfs_post_manager:release_post141
+      endtask
+      task jgfs_post_f144
+        trigger ./jgfs_post_manager:release_post144
+      endtask
+      task jgfs_post_f147
+        trigger ./jgfs_post_manager:release_post147
+      endtask
+      task jgfs_post_f150
+        trigger ./jgfs_post_manager:release_post150
+      endtask
+      task jgfs_post_f153
+        trigger ./jgfs_post_manager:release_post153
+      endtask
+      task jgfs_post_f156
+        trigger ./jgfs_post_manager:release_post156
+      endtask
+      task jgfs_post_f159
+        trigger ./jgfs_post_manager:release_post159
+      endtask
+      task jgfs_post_f162
+        trigger ./jgfs_post_manager:release_post162
+      endtask
+      task jgfs_post_f165
+        trigger ./jgfs_post_manager:release_post165
+      endtask
+      task jgfs_post_f168
+        trigger ./jgfs_post_manager:release_post168
+      endtask
+      task jgfs_post_f171
+        trigger ./jgfs_post_manager:release_post171
+      endtask
+      task jgfs_post_f174
+        trigger ./jgfs_post_manager:release_post174
+      endtask
+      task jgfs_post_f177
+        trigger ./jgfs_post_manager:release_post177
+      endtask
+      task jgfs_post_f180
+        trigger ./jgfs_post_manager:release_post180
+      endtask
+      task jgfs_post_f183
+        trigger ./jgfs_post_manager:release_post183
+      endtask
+      task jgfs_post_f186
+        trigger ./jgfs_post_manager:release_post186
+      endtask
+      task jgfs_post_f189
+        trigger ./jgfs_post_manager:release_post189
+      endtask
+      task jgfs_post_f192
+        trigger ./jgfs_post_manager:release_post192
+      endtask
+      task jgfs_post_f195
+        trigger ./jgfs_post_manager:release_post195
+      endtask
+      task jgfs_post_f198
+        trigger ./jgfs_post_manager:release_post198
+      endtask
+      task jgfs_post_f201
+        trigger ./jgfs_post_manager:release_post201
+      endtask
+      task jgfs_post_f204
+        trigger ./jgfs_post_manager:release_post204
+      endtask
+      task jgfs_post_f207
+        trigger ./jgfs_post_manager:release_post207
+      endtask
+      task jgfs_post_f210
+        trigger ./jgfs_post_manager:release_post210
+      endtask
+      task jgfs_post_f213
+        trigger ./jgfs_post_manager:release_post213
+      endtask
+      task jgfs_post_f216
+        trigger ./jgfs_post_manager:release_post216
+      endtask
+      task jgfs_post_f219
+        trigger ./jgfs_post_manager:release_post219
+      endtask
+      task jgfs_post_f222
+        trigger ./jgfs_post_manager:release_post222
+      endtask
+      task jgfs_post_f225
+        trigger ./jgfs_post_manager:release_post225
+      endtask
+      task jgfs_post_f228
+        trigger ./jgfs_post_manager:release_post228
+      endtask
+      task jgfs_post_f231
+        trigger ./jgfs_post_manager:release_post231
+      endtask
+      task jgfs_post_f234
+        trigger ./jgfs_post_manager:release_post234
+      endtask
+      task jgfs_post_f237
+        trigger ./jgfs_post_manager:release_post237
+      endtask
+      task jgfs_post_f240
+        trigger ./jgfs_post_manager:release_post240
+      endtask
+      task jgfs_post_f252
+        trigger ./jgfs_post_manager:release_post252
+      endtask
+      task jgfs_post_f264
+        trigger ./jgfs_post_manager:release_post264
+      endtask
+      task jgfs_post_f276
+        trigger ./jgfs_post_manager:release_post276
+      endtask
+      task jgfs_post_f288
+        trigger ./jgfs_post_manager:release_post288
+      endtask
+      task jgfs_post_f300
+        trigger ./jgfs_post_manager:release_post300
+      endtask
+      task jgfs_post_f312
+        trigger ./jgfs_post_manager:release_post312
+      endtask
+      task jgfs_post_f324
+        trigger ./jgfs_post_manager:release_post324
+      endtask
+      task jgfs_post_f336
+        trigger ./jgfs_post_manager:release_post336
+      endtask
+      task jgfs_post_f348
+        trigger ./jgfs_post_manager:release_post348
+      endtask
+      task jgfs_post_f360
+        trigger ./jgfs_post_manager:release_post360
+      endtask
+      task jgfs_post_f372
+        trigger ./jgfs_post_manager:release_post372
+      endtask
+    endfamily
+    family prdgen
+      task jgfs_pgrb2_manager
+        trigger ../post == complete
+        event 1 release_pgrb2_00
+        event 2 release_post384
+      endtask
+      task jgfs_pgrb2_anl
+      endtask
+      task jgfs_pgrb2_f00
+      endtask
+      task jgfs_pgrb2_f01
+      endtask
+      task jgfs_pgrb2_f02
+      endtask
+      task jgfs_pgrb2_f03
+      endtask
+      task jgfs_pgrb2_f04
+      endtask
+      task jgfs_pgrb2_f05
+      endtask
+      task jgfs_pgrb2_f06
+      endtask
+      task jgfs_pgrb2_f07
+      endtask
+      task jgfs_pgrb2_f08
+      endtask
+      task jgfs_pgrb2_f09
+      endtask
+      task jgfs_pgrb2_f10
+      endtask
+      task jgfs_pgrb2_f11
+      endtask
+      task jgfs_pgrb2_f12
+      endtask
+      task jgfs_pgrb2_f13
+      endtask
+      task jgfs_pgrb2_f14
+      endtask
+      task jgfs_pgrb2_f15
+      endtask
+      task jgfs_pgrb2_f16
+      endtask
+      task jgfs_pgrb2_f17
+      endtask
+      task jgfs_pgrb2_f18
+      endtask
+      task jgfs_pgrb2_f19
+      endtask
+      task jgfs_pgrb2_f20
+      endtask
+      task jgfs_pgrb2_f21
+      endtask
+      task jgfs_pgrb2_f22
+      endtask
+      task jgfs_pgrb2_f23
+      endtask
+      task jgfs_pgrb2_f24
+      endtask
+      task jgfs_pgrb2_f25
+      endtask
+      task jgfs_pgrb2_f26
+      endtask
+      task jgfs_pgrb2_f27
+      endtask
+      task jgfs_pgrb2_f28
+      endtask
+      task jgfs_pgrb2_f29
+      endtask
+      task jgfs_pgrb2_f30
+      endtask
+      task jgfs_pgrb2_f31
+      endtask
+      task jgfs_pgrb2_f32
+      endtask
+      task jgfs_pgrb2_f33
+      endtask
+      task jgfs_pgrb2_f34
+      endtask
+      task jgfs_pgrb2_f35
+      endtask
+      task jgfs_pgrb2_f36
+      endtask
+      task jgfs_pgrb2_f37
+      endtask
+      task jgfs_pgrb2_f38
+      endtask
+      task jgfs_pgrb2_f39
+      endtask
+      task jgfs_pgrb2_f40
+      endtask
+      task jgfs_pgrb2_f41
+      endtask
+      task jgfs_pgrb2_f42
+      endtask
+      task jgfs_pgrb2_f43
+      endtask
+      task jgfs_pgrb2_f44
+      endtask
+      task jgfs_pgrb2_f45
+      endtask
+      task jgfs_pgrb2_f46
+      endtask
+      task jgfs_pgrb2_f47
+      endtask
+      task jgfs_pgrb2_f48
+      endtask
+      task jgfs_pgrb2_f49
+      endtask
+      task jgfs_pgrb2_f50
+      endtask
+      task jgfs_pgrb2_f51
+      endtask
+      task jgfs_pgrb2_f52
+      endtask
+      task jgfs_pgrb2_f53
+      endtask
+      task jgfs_pgrb2_f54
+      endtask
+      task jgfs_pgrb2_f55
+      endtask
+      task jgfs_pgrb2_f56
+      endtask
+      task jgfs_pgrb2_f57
+      endtask
+      task jgfs_pgrb2_f58
+      endtask
+      task jgfs_pgrb2_f59
+      endtask
+      task jgfs_pgrb2_f60
+      endtask
+      task jgfs_pgrb2_f61
+      endtask
+      task jgfs_pgrb2_f62
+      endtask
+      task jgfs_pgrb2_f63
+      endtask
+      task jgfs_pgrb2_f64
+      endtask
+      task jgfs_pgrb2_f65
+      endtask
+      task jgfs_pgrb2_f66
+      endtask
+      task jgfs_pgrb2_f67
+      endtask
+      task jgfs_pgrb2_f68
+      endtask
+      task jgfs_pgrb2_f69
+      endtask
+      task jgfs_pgrb2_f70
+      endtask
+      task jgfs_pgrb2_f71
+      endtask
+      task jgfs_pgrb2_f72
+      endtask
+      task jgfs_pgrb2_f73
+      endtask
+      task jgfs_pgrb2_f74
+      endtask
+      task jgfs_pgrb2_f75
+      endtask
+      task jgfs_pgrb2_f76
+      endtask
+      task jgfs_pgrb2_f77
+      endtask
+      task jgfs_pgrb2_f78
+      endtask
+      task jgfs_pgrb2_f79
+      endtask
+      task jgfs_pgrb2_f80
+      endtask
+      task jgfs_pgrb2_f81
+      endtask
+      task jgfs_pgrb2_f82
+      endtask
+      task jgfs_pgrb2_f83
+      endtask
+      task jgfs_pgrb2_f84
+      endtask
+      task jgfs_pgrb2_f85
+      endtask
+      task jgfs_pgrb2_f86
+      endtask
+      task jgfs_pgrb2_f87
+      endtask
+      task jgfs_pgrb2_f88
+      endtask
+      task jgfs_pgrb2_f89
+      endtask
+      task jgfs_pgrb2_f90
+      endtask
+      task jgfs_pgrb2_f91
+      endtask
+      task jgfs_pgrb2_f92
+      endtask
+      task jgfs_pgrb2_f93
+      endtask
+      task jgfs_pgrb2_f94
+      endtask
+      task jgfs_pgrb2_f95
+      endtask
+      task jgfs_pgrb2_f96
+      endtask
+      task jgfs_pgrb2_f97
+      endtask
+      task jgfs_pgrb2_f98
+      endtask
+      task jgfs_pgrb2_f99
+      endtask
+      task jgfs_pgrb2_f100
+      endtask
+      task jgfs_pgrb2_f101
+      endtask
+      task jgfs_pgrb2_f102
+      endtask
+      task jgfs_pgrb2_f103
+      endtask
+      task jgfs_pgrb2_f104
+      endtask
+      task jgfs_pgrb2_f105
+      endtask
+      task jgfs_pgrb2_f106
+      endtask
+      task jgfs_pgrb2_f107
+      endtask
+      task jgfs_pgrb2_f108
+      endtask
+      task jgfs_pgrb2_f109
+      endtask
+      task jgfs_pgrb2_f110
+      endtask
+      task jgfs_pgrb2_f111
+      endtask
+      task jgfs_pgrb2_f112
+      endtask
+      task jgfs_pgrb2_f113
+      endtask
+      task jgfs_pgrb2_f114
+      endtask
+      task jgfs_pgrb2_f115
+      endtask
+      task jgfs_pgrb2_f116
+      endtask
+      task jgfs_pgrb2_f117
+      endtask
+      task jgfs_pgrb2_f118
+      endtask
+      task jgfs_pgrb2_f119
+      endtask
+      task jgfs_pgrb2_f120
+      endtask
+      task jgfs_pgrb2_f123
+      endtask
+      task jgfs_pgrb2_f126
+      endtask
+      task jgfs_pgrb2_f129
+      endtask
+      task jgfs_pgrb2_f132
+      endtask
+      task jgfs_pgrb2_f135
+      endtask
+      task jgfs_pgrb2_f138
+      endtask
+      task jgfs_pgrb2_f141
+      endtask
+      task jgfs_pgrb2_f144
+      endtask
+      task jgfs_pgrb2_f147
+      endtask
+      task jgfs_pgrb2_f150
+      endtask
+      task jgfs_pgrb2_f153
+      endtask
+      task jgfs_pgrb2_f156
+      endtask
+      task jgfs_pgrb2_f159
+      endtask
+      task jgfs_pgrb2_f162
+      endtask
+      task jgfs_pgrb2_f165
+      endtask
+      task jgfs_pgrb2_f168
+      endtask
+      task jgfs_pgrb2_f171
+      endtask
+      task jgfs_pgrb2_f174
+      endtask
+      task jgfs_pgrb2_f177
+      endtask
+      task jgfs_pgrb2_f180
+      endtask
+      task jgfs_pgrb2_f183
+      endtask
+      task jgfs_pgrb2_f186
+      endtask
+      task jgfs_pgrb2_f189
+      endtask
+      task jgfs_pgrb2_f192
+      endtask
+      task jgfs_pgrb2_f195
+      endtask
+      task jgfs_pgrb2_f198
+      endtask
+      task jgfs_pgrb2_f201
+      endtask
+      task jgfs_pgrb2_f204
+      endtask
+      task jgfs_pgrb2_f207
+      endtask
+      task jgfs_pgrb2_f210
+      endtask
+      task jgfs_pgrb2_f213
+      endtask
+      task jgfs_pgrb2_f216
+      endtask
+      task jgfs_pgrb2_f219
+      endtask
+      task jgfs_pgrb2_f222
+      endtask
+      task jgfs_pgrb2_f225
+      endtask
+      task jgfs_pgrb2_f228
+      endtask
+      task jgfs_pgrb2_f231
+      endtask
+      task jgfs_pgrb2_f234
+      endtask
+      task jgfs_pgrb2_f237
+      endtask
+      task jgfs_pgrb2_f240
+      endtask
+      task jgfs_pgrb2_f252
+      endtask
+      task jgfs_pgrb2_f264
+      endtask
+      task jgfs_pgrb2_f276
+      endtask
+      task jgfs_pgrb2_f288
+      endtask
+      task jgfs_pgrb2_f300
+      endtask
+      task jgfs_pgrb2_f312
+      endtask
+      task jgfs_pgrb2_f324
+      endtask
+      task jgfs_pgrb2_f336
+      endtask
+      task jgfs_pgrb2_f348
+      endtask
+      task jgfs_pgrb2_f360
+      endtask
+      task jgfs_pgrb2_f372
+      endtask
+      task jgfs_pgrb2_f384
+      endtask
+    endfamily
+    family gempak
+      task jgfs_gempak_upapgif
+        trigger ../dump/jgfs_dump == complete
+      endtask
+      task jgfs_gempak_ncdc
+        trigger ./jgfs_gempak == active or ./jgfs_gempak == complete
+      endtask
+      task jgfs_gempak
+        trigger ../jgfs_analysis == complete
+      endtask
+      task jgfs_gempak_meta
+        trigger ../jgfs_analysis == complete
+      endtask
+      task jgfs_pgrb2_spec_gempak
+        trigger ../post/jgfs_pgrb2_spec_post == complete
       endtask
     endfamily
   endfamily
+  family gdas
+    task jgdas_verfrad
+      trigger ./enkf == complete
+    endtask
+    task jgdas_vminmon
+      trigger ./analysis/jgdas_analysis_high == complete
+    endtask
+    family dump
+      task jgdas_ics
+        event 1 release_gdas00_ics
+      endtask
+      task jgdas_tropcy_qc_reloc
+        trigger ./jgdas_dump == complete
+      endtask
+      task jgdas_dump
+        event 1 release_sfcprep
+      endtask
+    endfamily
+    family prep
+      task jgdas_emcsfc_sfc_prep
+        trigger ../dump/jgdas_dump:release_sfcprep
+      endtask
+      task jgdas_prep
+        trigger ../dump/jgdas_dump == complete and ../dump/jgdas_tropcy_qc_reloc == complete
+      endtask
+      task jgdas_prep_post
+        trigger ../analysis/jgdas_analysis_high == complete
+      endtask
+    endfamily
+    family analysis
+      task jgdas_analysis_high
+        trigger ../prep/jgdas_prep == complete and ../prep/jgdas_emcsfc_sfc_prep == complete
+        event 1 release_fcst
+      endtask
+    endfamily
+    family forecast
+      task jgdas_forecast
+        trigger ../analysis/jgdas_analysis_high:release_fcst and ../enkf/innovate == complete
+        event 1 release_fcst
+      endtask
+    endfamily
+    family post_processing
+      family bulletins
+        task jgdas_mknavybulls
+          trigger ../../dump/jgdas_dump == complete
+        endtask
+      endfamily
+    endfamily
+    family gempak
+      task jgdas_gempak
+        trigger ../forecast/jgdas_forecast == complete
+      endtask
+      task jgdas_gempak_meta
+        trigger ./jgdas_gempak == complete
+      endtask
+      task jgdas_gempak_ncdc
+        trigger ./jgdas_gempak == complete
+      endtask
+    endfamily
+    family post
+      task jgdas_post
+        trigger ../forecast/jgdas_forecast == complete
+      endtask
+    endfamily
+    family enkf
+      task jgdas_enkf_select_obs
+        trigger ../prep/jgdas_prep == complete and /prod00/gdas/enkf/jgdas_enkf_post == complete
+      endtask
+      family innovate
+        trigger ./jgdas_enkf_select_obs == complete
+        task jgdas_enkf_innovate_obs_grp1
+        endtask
+        task jgdas_enkf_innovate_obs_grp2
+        endtask
+        task jgdas_enkf_innovate_obs_grp3
+        endtask
+        task jgdas_enkf_innovate_obs_grp4
+        endtask
+        task jgdas_enkf_innovate_obs_grp5
+        endtask
+        task jgdas_enkf_innovate_obs_grp6
+        endtask
+        task jgdas_enkf_innovate_obs_grp7
+        endtask
+        task jgdas_enkf_innovate_obs_grp8
+        endtask
+      endfamily
+      task jgdas_enkf_update
+        trigger ./innovate == complete
+      endtask
+      task jgdas_enkf_inflate_recenter
+        trigger ./jgdas_enkf_update == complete and ../analysis/jgdas_analysis_high == complete
+      endtask
+      family forecast
+        trigger ./jgdas_enkf_inflate_recenter == complete
+        task jgdas_enkf_fcst_grp1
+        endtask
+        task jgdas_enkf_fcst_grp2
+        endtask
+        task jgdas_enkf_fcst_grp3
+        endtask
+        task jgdas_enkf_fcst_grp4
+        endtask
+        task jgdas_enkf_fcst_grp5
+        endtask
+        task jgdas_enkf_fcst_grp6
+        endtask
+        task jgdas_enkf_fcst_grp7
+        endtask
+        task jgdas_enkf_fcst_grp8
+        endtask
+      endfamily
+      task jgdas_enkf_post
+        trigger ./forecast == complete
+      endtask
+    endfamily
+  endfamily
+  task cycle_end
+  endtask
 endsuite

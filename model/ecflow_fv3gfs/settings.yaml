@@ -16,6 +16,9 @@ settings:
   PROJECT: GFS-T2O
   QUEUESERV: dev_transfer
 
+  forecast_hours: !calc tools.seq(0,120,1)+tools.seq(123,240,3)+tools.seq(240,384,12)
+  wafs_last_hour: !calc 120
+
   # NOTE TO SELF: replace experiment_name with %EMCPEN%
   COM: !expand '/gpfs/hps2/ptmp/emc.glopara/{experiment_name}/com'
   DATAROOT: !expand '/gpfs/hps2/stmp/emc.glopara/{experiment_name}'

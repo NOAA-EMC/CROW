@@ -24,22 +24,14 @@ exclusive_accounting: &exclusive_accounting
   queue: !calc metasched.varref('QUEUE')
   project: !calc metasched.varref('PROJECT')
 
-ecf_file_template: &ecf_file_template !expand |
-  #! /bin/sh
-  {sched.batch_accounting(accounting,jobname=task_path_var,outerr="%ECF_OUT%/"+task_path_var+"_t"+"%CYC%"+"z.log")
-  }{sched.batch_resources(resources)}
-  %include <head.h>
-  echo ${{JOBgfs}}/{J_JOB}
-  %include <tail.h>
-
 shared_task_template: &shared_task_template
-  ecf_file: *ecf_file_template
+  <<: *ecf_file_logic
   accounting: *shared_accounting
   J_JOB: !calc tools.to_upper(task_path_var[-1])
   Rocoto: *rocoto_task_template
 
 exclusive_task_template: &exclusive_task_template
-  ecf_file: *ecf_file_template
+  <<: *ecf_file_logic
   accounting: *exclusive_accounting
   J_JOB: !calc tools.to_upper(task_path_list[-1])
   Rocoto: *rocoto_task_template
@@ -144,12 +136,12 @@ suite: !Cycle
     sminit_guam: !Family
       jgfs_sminit_guam_even: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend ( up.post.jgfs_post_anl eq active or up.post.jgfs_post_anl )
+        Trigger: !Depend ( up.post.jgfs_post_anl.is_running() | up.post.jgfs_post_anl )
         resources: !calc ( doc.resource_demo.run_nothing )
 
       jgfs_sminit_guam_odd: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend ( up.post.jgfs_post_anl eq active or up.post.jgfs_post_anl )
+        Trigger: !Depend ( up.post.jgfs_post_anl.is_running() | up.post.jgfs_post_anl )
         resources: !calc ( doc.resource_demo.run_nothing )
 
     post_processing: !Family
@@ -195,36 +187,20 @@ suite: !Cycle
           Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f36
           resources: !calc ( doc.resource_demo.run_nothing )
 
-      grib_wafs: !Family
-        jgfs_wafs_f00: !Task
-          ecflow_def: |
-            edit FCSTHR '00'
+      grib_wafs: !TaskArray
+        Dimensions:
+          fhr: !calc tools.seq(0,doc.settings.wafs_last_hour,6)
+        jgfs_wafs: !TaskElement
           <<: *exclusive_task_template
-          Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f00 & up.up.prdgen.jgfs_pgrb2_f120 & up.grib2_wafs.jgfs_wafs_grib2 )
+          Name: !expand 'jgfs_wafs_f{idx.fhr:02d}'
+          Trigger: !FirstTrue
+            - when: !calc idx.fhr == 0
+              do:   !Depend ( up.up.prdgen.jgfs_pgrb2_f00 & up.up.prdgen.jgfs_pgrb2_f120 & up.grib2_wafs.jgfs_wafs_grib2 )
+            - otherwise: !Depend >-
+                up.up.prdgen.depend("jgfs_pgrb2_f{N:02d}",N=[ idx.fhr ])
+                & this.depend("jgfs_wafs_f{N:02d}",N=[ idx.fhr-6 ])
           resources: !calc ( doc.resource_demo.run_nothing )
-
-        jgfs_wafs_f06: !Task
-          ecflow_def: |
-            edit FCSTHR '06'
-          <<: *exclusive_task_template
-          Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f06 & jgfs_wafs_f00 )
-          resources: !calc ( doc.resource_demo.run_nothing )
-
-        jgfs_wafs_f12: !Task
-          ecflow_def: |
-            edit FCSTHR '12'
-          <<: *exclusive_task_template
-          Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f12 & jgfs_wafs_f06 )
-          resources: !calc ( doc.resource_demo.run_nothing )
-
-        # tasks every 6 hours till f120
-
-        jgfs_wafs_f120: !Task
-          ecflow_def: |
-            edit FCSTHR '120'
-          <<: *exclusive_task_template
-          Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f120 & jgfs_wafs_f114 )
-          resources: !calc ( doc.resource_demo.run_nothing )
+          ecflow_def: !expand "edit FCSTHR '{idx.fhr:02d}'"
 
       bufr_sounding: !Family
         jgfs_postsnd: !Task
@@ -340,14 +316,23 @@ suite: !Cycle
           Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f240
           resources: !calc ( doc.resource_demo.run_nothing )
 
-    post: !Family
-      jgfs_post_manager: !Task
+    post: !TaskArray
+      Dimensions:
+        fhr: !calc doc.settings.forecast_hours
+      jgfs_post_manager_el: !TaskElement
         <<: *exclusive_task_template
+        Foreach: []
+        Name: jgfs_post_manager
         Trigger: !Depend ( up.jgfs_analysis & up.forecast )
         release_postanl: !DataEvent {file="/dev/null"}
-        release_post00: !DataEvent {file="/dev/null"}
-        # events from release_post00  to release_post384
-        release_post384: !DataEvent {file="/dev/null"}
+        release_post_fhr: !DataEventElement
+          Name: !expand "release_post{idx.fhr:02d}"
+          Foreach: [ fhr ]
+          file: "/dev/null"
+
+        # release_post00: !DataEvent {file="/dev/null"}
+        # # events from release_post00  to release_post384
+        # release_post384: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resource_demo.run_nothing )
 
       jgfs_post_anl: !Task
@@ -358,6 +343,14 @@ suite: !Cycle
         Trigger: !Depend jgfs_post_manager.release_postanl
         release_pgrb2_anl: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resource_demo.run_nothing )
+
+      jgfs_post_f: !TaskElement
+        <<: *exclusive_task_template
+        Name: !expand jgfs_post_f{idx.fhr:02d}
+        ecflow_def: |
+          edit FHR: 'f{idx.fhr:02d}'
+          edit HR: '{idx.fhr:02d}'
+        Trigger: !Depend jgfs_post_manager.depend('release_post{N:02d}',N=idx.fhr)
 
       jgfs_post_f00: !Task
         ecflow_def: |
@@ -399,7 +392,10 @@ suite: !Cycle
         Trigger: !Depend ( jgfs_post_f336 & jgfs_post_f384 )
         resources: !calc ( doc.resource_demo.run_nothing )
 
-    prdgen: !Family
+    prdgen: !TaskArray
+      Dimensions:
+        fhr: !calc doc.settings.forecast_hours
+
       jgfs_pgrb2_manager: !Task
         <<: *exclusive_task_template
         Trigger: !Depend up.post
@@ -409,6 +405,24 @@ suite: !Cycle
         # And Note event number start from 2 instead of 1
         release_post384: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resource_demo.run_nothing )
+
+      pgrb_f: !TaskElement
+        <<: *exclusive_task_template
+        Foreach: [ fhr ]
+        Name: !expand "jgfs_pgrb2_f{idx.fhr:02d}"
+        resources: !calc ( doc.resource_demo.run_gfspost )
+        J_JOB: JGLOBAL_POST
+        ecflow_def: !expand |
+          edit FHR '{idx.fhr:02d}'
+          edit HR '{idx.fhr:02d}'
+
+      jgfs_pgrb2_anl: !Task
+        <<: *exclusive_task_template
+        resources: !calc ( doc.resource_demo.run_gfspost )
+        J_JOB: JGLOBAL_POST
+        ecflow_def: !expand |
+          edit FHR 'anl'
+          edit HR 'anl'
 
       #Need to add other tasks in this prdgen family
 
@@ -420,7 +434,7 @@ suite: !Cycle
 
       jgfs_gempak_ncdc: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend jgfs_gempak eq active
+        Trigger: !Depend jgfs_gempak.is_running() | jgfs_gempak.is_completed()
         resources: !calc ( doc.resource_demo.run_nothing )
 
       jgfs_gempak: !Task
@@ -453,7 +467,7 @@ suite: !Cycle
 
     jgdas_vminmon: !Task
       <<: *exclusive_task_template
-      Trigger: !Depend jgdas_analysis
+      Trigger: !Depend analysis.jgdas_analysis_high
       resources: !calc ( doc.resource_demo.run_nothing )
 
     dump: !Family
@@ -513,14 +527,14 @@ suite: !Cycle
     forecast: !Family
       #jgdas_forecast_high: !Task
       #  <<: *exclusive_task_template
-      #  Trigger: !Depend ( up.jgdas_analysis.release_fcst & up.enkf.innovate )
+      #  Trigger: !Depend ( up.analysis.jgdas_analysis_high.release_fcst & up.enkf.innovate )
       #  release_fcst: !DataEvent {file="/dev/null"}
       #  resources: !calc ( doc.resource_demo.run_gdasfcst )
       #  J_JOB: JGLOBAL_FORECAST
 
       jgdas_forecast: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend ( up.jgdas_analysis.release_fcst & up.enkf.innovate )
+        Trigger: !Depend ( up.analysis.jgdas_analysis_high.release_fcst & up.enkf.innovate )
         release_fcst: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resource_demo.run_gdasfcst )
         J_JOB: JGLOBAL_FORECAST
@@ -537,7 +551,7 @@ suite: !Cycle
     gempak: !Family
       jgdas_gempak: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend up.forecast/jgdas_forecast
+        Trigger: !Depend up.forecast.jgdas_forecast
         resources: !calc ( doc.resource_demo.run_nothing )
 
       jgdas_gempak_meta: !Task
@@ -582,10 +596,10 @@ suite: !Cycle
           groupid: !calc tools.seq(1,doc.settings.ENKF_INNOVATE_GROUPS,1)
         jgdas_enkf_innovate_obs_grp: !TaskElement
           <<: *exclusive_task_template
-          Foreach: [ group ]
+          Foreach: [ groupid ]
           Name: !expand "jgdas_enkf_innovate_obs_grp{idx.groupid}"
           resources: !calc ( doc.resource_demo.run_eomg )
-          J_JOB: jgdas_innovate
+          J_JOB: JGDAS_INNOVATE
 
       jgdas_enkf_update: !Task
         <<: *exclusive_task_template
@@ -596,7 +610,7 @@ suite: !Cycle
 
       jgdas_enkf_inflate_recenter: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend ( jgdas_enkf_update & up.jgdas_analysis )
+        Trigger: !Depend ( jgdas_enkf_update & up.analysis.jgdas_analysis_high )
         resources: !calc ( doc.resource_demo.run_ecen )
 
       forecast: !TaskArray
@@ -605,7 +619,7 @@ suite: !Cycle
           groupid: !calc tools.seq(1,doc.settings.ENKF_FORECAST_GROUPS,1)
         jgdas_enkf_fcst_grp: !TaskElement
           <<: *exclusive_task_template
-          Foreach: [ group ]
+          Foreach: [ groupid ]
           Name: !expand "jgdas_enkf_fcst_grp{idx.groupid}"
           resources: !calc ( doc.resource_demo.run_efcs )
           J_JOB: JGLOBAL_FORECAST

@@ -22,6 +22,9 @@ class Scheduler(BaseScheduler):
         self.rocoto_name='lsf'
         self.indent_text=str(settings.get('indent_text','  '))
 
+    def max_ranks_per_node(self,spec):
+        return max([ self.nodes.max_ranks_per_node(j) for j in spec ])
+
     ####################################################################
 
     # Generation of batch cards
