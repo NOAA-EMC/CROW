@@ -144,262 +144,290 @@ suite: !Cycle
     sminit_guam: !Family
       jgfs_sminit_guam_even: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend ( up.post.jgfs_post_anl eq active or up.post.jgfs_post_anl )
+        #Trigger: !Depend ( up.post.jgfs_post_anl.is_running() or up.post.jgfs_post_anl )
+        Trigger: !Depend ( up.post )
         resources: !calc ( doc.resource_demo.run_nothing )
 
       jgfs_sminit_guam_odd: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend ( up.post.jgfs_post_anl eq active or up.post.jgfs_post_anl )
+        #Trigger: !Depend ( up.post.jgfs_post_anl.isrunning() or up.post.jgfs_post_anl )
+        Trigger: !Depend ( up.post )
         resources: !calc ( doc.resource_demo.run_nothing )
 
     post_processing: !Family
-      jgfs_wafs_gcip: !Task
+      #This is a dummy task as a placeholder
+      dummy: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend up.prdgen.jgfs_pgrb2_f03
+        Trigger: !Depend up.forecast
         resources: !calc ( doc.resource_demo.run_nothing )
-        #Time: !timedelta +4:40:00
 
-      fax: !Family
-        jgfs_fax_f00: !Task
-          ecflow_def: |
-            edit FCSTHR '00'
-          <<: *exclusive_task_template
-          Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f00 & up.up.prdgen.jgfs_pgrb2_anl )
-          resources: !calc ( doc.resource_demo.run_nothing )
+#     jgfs_wafs_gcip: !Task
+#       <<: *exclusive_task_template
+#       Trigger: !Depend up.prdgen.jgfs_pgrb2_f03
+#       resources: !calc ( doc.resource_demo.run_nothing )
+#       #Time: !timedelta +4:40:00
 
-        jgfs_fax_anl: !Task
-          ecflow_def: |
-            edit FCSTHR 'anl'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_anl
-          resources: !calc ( doc.resource_demo.run_nothing )
+#     fax: !Family
+#       jgfs_fax_f00: !Task
+#         ecflow_def: |
+#           edit FCSTHR '00'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f00 & up.up.prdgen.jgfs_pgrb2_anl )
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_fax_wafs_f12: !Task
-          ecflow_def: |
-            edit FCSTHR '12'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f12
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       jgfs_fax_anl: !Task
+#         ecflow_def: |
+#           edit FCSTHR 'anl'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_anl
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_fax_wafs_f24: !Task
-          ecflow_def: |
-            edit FCSTHR '24'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f24
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       jgfs_fax_wafs_f12: !Task
+#         ecflow_def: |
+#           edit FCSTHR '12'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f12
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_fax_wafs_f36: !Task
-          ecflow_def: |
-            edit FCSTHR '36'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f36
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       jgfs_fax_wafs_f24: !Task
+#         ecflow_def: |
+#           edit FCSTHR '24'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f24
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-      grib_wafs: !Family
-        jgfs_wafs_f00: !Task
-          ecflow_def: |
-            edit FCSTHR '00'
-          <<: *exclusive_task_template
-          Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f00 & up.up.prdgen.jgfs_pgrb2_f120 & up.grib2_wafs.jgfs_wafs_grib2 )
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       jgfs_fax_wafs_f36: !Task
+#         ecflow_def: |
+#           edit FCSTHR '36'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f36
+#         resources: !calc ( doc.resource_demo.run_nothing )
+#     #endfamily fax
 
-        jgfs_wafs_f06: !Task
-          ecflow_def: |
-            edit FCSTHR '06'
-          <<: *exclusive_task_template
-          Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f06 & jgfs_wafs_f00 )
-          resources: !calc ( doc.resource_demo.run_nothing )
+#     grib_wafs: !Family
+#       jgfs_wafs_f00: !Task
+#         ecflow_def: |
+#           edit FCSTHR '00'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f00 & up.up.prdgen.jgfs_pgrb2_f120 & up.grib2_wafs.jgfs_wafs_grib2 )
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_wafs_f12: !Task
-          ecflow_def: |
-            edit FCSTHR '12'
-          <<: *exclusive_task_template
-          Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f12 & jgfs_wafs_f06 )
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       jgfs_wafs_f06: !Task
+#         ecflow_def: |
+#           edit FCSTHR '06'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f06 & jgfs_wafs_f00 )
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        # tasks every 6 hours till f120
+#       jgfs_wafs_f12: !Task
+#         ecflow_def: |
+#           edit FCSTHR '12'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f12 & jgfs_wafs_f06 )
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_wafs_f120: !Task
-          ecflow_def: |
-            edit FCSTHR '120'
-          <<: *exclusive_task_template
-          Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f120 & jgfs_wafs_f114 )
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       # tasks every 6 hours till f120
 
-      bufr_sounding: !Family
-        jgfs_postsnd: !Task
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.post.jgfs_post_manager.release_post00
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       jgfs_wafs_f120: !Task
+#         ecflow_def: |
+#           edit FCSTHR '120'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend ( up.up.prdgen.jgfs_pgrb2_f120 & jgfs_wafs_f114 )
+#         resources: !calc ( doc.resource_demo.run_nothing )
+#     #endfamily grib_wafs
 
-      bulletins: !Family
-        jgfs_fbwind: !Task
-          <<: *exclusive_task_template
-          Trigger: !Depend ( up.up.post.jgfs_post_f06 & up.up.post.jgfs_post_f12 & up.up.post.jgfs_post_f24 )
-          resources: !calc ( doc.resource_demo.run_nothing )
+#     bufr_sounding: !Family
+#       jgfs_postsnd: !Task
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.post.jgfs_post_manager.release_post00
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_cyclone_tracker: !Task
-          <<: *exclusive_task_template
-          # Very long trigger up.up.post.jgfs_post_f00-f180 & up.up.prdgen.jgfs_pgrb2_f00-f180
-          Trigger: !Depend ( up.up.post.jgfs_post_f00 & up.up.post.jgfs_post_f06 & up.up.prdgen.jgfs_pgrb2_f00 & up.up.prdgen.jgfs_pgrb2_f06 )
-          resources: !calc ( doc.resource_demo.run_nothing )
+#     bulletins: !Family
+#       jgfs_fbwind: !Task
+#         <<: *exclusive_task_template
+#         Trigger: !Depend ( up.up.post.jgfs_post_f06 & up.up.post.jgfs_post_f12 & up.up.post.jgfs_post_f24 )
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-      grib2_wafs: !Family
-        jgfs_wafs_grib2: !Task
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       jgfs_cyclone_tracker: !Task
+#         <<: *exclusive_task_template
+#         # Very long trigger up.up.post.jgfs_post_f00-f180 & up.up.prdgen.jgfs_pgrb2_f00-f180
+#         Trigger: !Depend ( up.up.post.jgfs_post_f00 & up.up.post.jgfs_post_f06 & up.up.prdgen.jgfs_pgrb2_f00 & up.up.prdgen.jgfs_pgrb2_f06 )
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_wafs_blending: !Task
-          <<: *exclusive_task_template
-          Trigger: !Depend jgfs_wafs_grib2
-          #Time: !timedelta +4:33:00
-          resources: !calc ( doc.resource_demo.run_nothing )
+#     grib2_wafs: !Family
+#       jgfs_wafs_grib2: !Task
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-      grib_awips: !Family
-        jgfs_awips_f00: !Task
-          ecflow_def: |
-            edit FCSTHR '00'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       jgfs_wafs_blending: !Task
+#         <<: *exclusive_task_template
+#         Trigger: !Depend jgfs_wafs_grib2
+#         #Time: !timedelta +4:33:00
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_awips_f06: !Task
-          ecflow_def: |
-            edit FCSTHR '06'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f06
-          resources: !calc ( doc.resource_demo.run_nothing )
+#     grib_awips: !Family
+#       jgfs_awips_f00: !Task
+#         ecflow_def: |
+#           edit FCSTHR '00'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        # tasks every 6 hours till f240
+#       jgfs_awips_f06: !Task
+#         ecflow_def: |
+#           edit FCSTHR '06'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f06
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_awips_f240: !Task
-          ecflow_def: |
-            edit FCSTHR '240'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f240
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       # tasks every 6 hours till f240
 
-      awips_1p0deg: !Family
-        ecflow_def: |
-          edit RES '1p0deg'
-          edit RESC '1P0DEG'
-          #edit ECF_FILES '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3/scripts/gfs/post_processing/awips'
-          edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+#       jgfs_awips_f240: !Task
+#         ecflow_def: |
+#           edit FCSTHR '240'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f240
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_awips_f000: !Task
-          ecflow_def: |
-            edit FCSTHR '000'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
-          resources: !calc ( doc.resource_demo.run_nothing )
+#     awips_1p0deg: !Family
+#       ecflow_def: |
+#         edit RES '1p0deg'
+#         edit RESC '1P0DEG'
+#         #edit ECF_FILES '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3/scripts/gfs/post_processing/awips'
+#         edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
 
-        jgfs_awips_f006: !Task
-          ecflow_def: |
-            edit FCSTHR '006'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f06
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       jgfs_awips_f000: !Task
+#         ecflow_def: |
+#           edit FCSTHR '000'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        # tasks every 6 hours till f240
+#       jgfs_awips_f006: !Task
+#         ecflow_def: |
+#           edit FCSTHR '006'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f06
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_awips_f240: !Task
-          ecflow_def: |
-            edit FCSTHR '240'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f240
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       # tasks every 6 hours till f240
 
-      awips_20km: !Family
-        ecflow_def: |
-          edit RES '20km'
-          edit RESC '20KM'
-          #edit ECF_FILES '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3/scripts/gfs/post_processing/awips'
-          edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+#       jgfs_awips_f240: !Task
+#         ecflow_def: |
+#           edit FCSTHR '240'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f240
+#         resources: !calc ( doc.resource_demo.run_nothing )
+#     #endfamily awips_1p0deg
 
-        jgfs_awips_f000: !Task
-          ecflow_def: |
-            edit FCSTHR '000'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
-          resources: !calc ( doc.resource_demo.run_nothing )
+#     awips_20km: !Family
+#       ecflow_def: |
+#         edit RES '20km'
+#         edit RESC '20KM'
+#         #edit ECF_FILES '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3/scripts/gfs/post_processing/awips'
+#         edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
 
-        jgfs_awips_f003: !Task
-          ecflow_def: |
-            edit FCSTHR '003'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f03
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       jgfs_awips_f000: !Task
+#         ecflow_def: |
+#           edit FCSTHR '000'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f00
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        # tasks every 3 hours till f240
+#       jgfs_awips_f003: !Task
+#         ecflow_def: |
+#           edit FCSTHR '003'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f03
+#         resources: !calc ( doc.resource_demo.run_nothing )
 
-        jgfs_awips_f240: !Task
-          ecflow_def: |
-            edit FCSTHR '240'
-          <<: *exclusive_task_template
-          Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f240
-          resources: !calc ( doc.resource_demo.run_nothing )
+#       # tasks every 3 hours till f240
+
+#       jgfs_awips_f240: !Task
+#         ecflow_def: |
+#           edit FCSTHR '240'
+#         <<: *exclusive_task_template
+#         Trigger: !Depend up.up.prdgen.jgfs_pgrb2_f240
+#         resources: !calc ( doc.resource_demo.run_nothing )
+#     #endfamily awips_20km
+
+    #endfamily post_processing
 
     post: !Family
-      jgfs_post_manager: !Task
+
+      #This is a dummy task as a placeholder
+      dummy: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend ( up.jgfs_analysis & up.forecast )
-        release_postanl: !DataEvent {file="/dev/null"}
-        release_post00: !DataEvent {file="/dev/null"}
-        # events from release_post00  to release_post384
-        release_post384: !DataEvent {file="/dev/null"}
+        Trigger: !Depend up.forecast
         resources: !calc ( doc.resource_demo.run_nothing )
 
-      jgfs_post_anl: !Task
-        ecflow_def: |
-          edit FHR 'anl'
-          edit HR 'anl'
-        <<: *exclusive_task_template
-        Trigger: !Depend jgfs_post_manager.release_postanl
-        release_pgrb2_anl: !DataEvent {file="/dev/null"}
-        resources: !calc ( doc.resource_demo.run_nothing )
+#     jgfs_post_manager: !Task
+#       <<: *exclusive_task_template
+#       Trigger: !Depend ( up.jgfs_analysis & up.forecast )
+#       release_postanl: !DataEvent {file="/dev/null"}
+#       release_post00: !DataEvent {file="/dev/null"}
+#       # events from release_post00  to release_post384
+#       release_post384: !DataEvent {file="/dev/null"}
+#       resources: !calc ( doc.resource_demo.run_nothing )
 
-      jgfs_post_f00: !Task
-        ecflow_def: |
-          edit FHR 'f00'
-          edit HR '00'
-        <<: *exclusive_task_template
-        Trigger: !Depend jgfs_post_manager.release_post00
-        resources: !calc ( doc.resource_demo.run_nothing )
+#     jgfs_post_anl: !Task
+#       ecflow_def: |
+#         edit FHR 'anl'
+#         edit HR 'anl'
+#       <<: *exclusive_task_template
+#       Trigger: !Depend jgfs_post_manager.release_postanl
+#       release_pgrb2_anl: !DataEvent {file="/dev/null"}
+#       resources: !calc ( doc.resource_demo.run_nothing )
 
-      jgfs_post_f01: !Task
-        ecflow_def: |
-          edit FHR 'f01'
-          edit HR '01'
-        <<: *exclusive_task_template
-        Trigger: !Depend jgfs_post_manager.release_post01
-        resources: !calc ( doc.resource_demo.run_nothing )
+#     jgfs_post_f00: !Task
+#       ecflow_def: |
+#         edit FHR 'f00'
+#         edit HR '00'
+#       <<: *exclusive_task_template
+#       Trigger: !Depend jgfs_post_manager.release_post00
+#       resources: !calc ( doc.resource_demo.run_nothing )
 
-        # tasks from jgfs_post_f00 to jgfs_post_f384
+#     jgfs_post_f01: !Task
+#       ecflow_def: |
+#         edit FHR 'f01'
+#         edit HR '01'
+#       <<: *exclusive_task_template
+#       Trigger: !Depend jgfs_post_manager.release_post01
+#       resources: !calc ( doc.resource_demo.run_nothing )
 
-      jgfs_post_f384: !Task
-        ecflow_def: |
-          edit FHR 'f384'
-          edit HR '384'
-        <<: *exclusive_task_template
-        Trigger: !Depend jgfs_post_manager.release_post384
-        resources: !calc ( doc.resource_demo.run_nothing )
+#       # tasks from jgfs_post_f00 to jgfs_post_f384
 
-      jgfs_post_f01: !Task
-        ecflow_def: |
-          edit FHR 'f01'
-          edit HR '01'
-        <<: *exclusive_task_template
-        Trigger: !Depend jgfs_post_manager.release_post01
-        resources: !calc ( doc.resource_demo.run_nothing )
+#     jgfs_post_f384: !Task
+#       ecflow_def: |
+#         edit FHR 'f384'
+#         edit HR '384'
+#       <<: *exclusive_task_template
+#       Trigger: !Depend jgfs_post_manager.release_post384
+#       resources: !calc ( doc.resource_demo.run_nothing )
 
-      jgfs_pgrb2_spec_post: !Task
-        <<: *exclusive_task_template
-        # Very long trigger jgfs_post_f336-f384 every 12h
-        Trigger: !Depend ( jgfs_post_f336 & jgfs_post_f384 )
-        resources: !calc ( doc.resource_demo.run_nothing )
+#     jgfs_post_f01: !Task
+#       ecflow_def: |
+#         edit FHR 'f01'
+#         edit HR '01'
+#       <<: *exclusive_task_template
+#       Trigger: !Depend jgfs_post_manager.release_post01
+#       resources: !calc ( doc.resource_demo.run_nothing )
+
+#     jgfs_pgrb2_spec_post: !Task
+#       <<: *exclusive_task_template
+#       # Very long trigger jgfs_post_f336-f384 every 12h
+#       Trigger: !Depend ( jgfs_post_f336 & jgfs_post_f384 )
+#       resources: !calc ( doc.resource_demo.run_nothing )
+    #endfamily post
 
     prdgen: !Family
+      #This is a dummy task as a placeholder
+      dummy: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend up.post
+        resources: !calc ( doc.resource_demo.run_nothing )
+
       jgfs_pgrb2_manager: !Task
         <<: *exclusive_task_template
         Trigger: !Depend up.post
@@ -412,6 +440,8 @@ suite: !Cycle
 
       #Need to add other tasks in this prdgen family
 
+    #endfamily prdgen
+
     gempak: !Family
       jgfs_gempak_upapgif: !Task
         <<: *exclusive_task_template
@@ -420,7 +450,7 @@ suite: !Cycle
 
       jgfs_gempak_ncdc: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend jgfs_gempak eq active
+        Trigger: !Depend jgfs_gempak.is_running()
         resources: !calc ( doc.resource_demo.run_nothing )
 
       jgfs_gempak: !Task
@@ -433,12 +463,13 @@ suite: !Cycle
         Trigger: !Depend up.jgfs_analysis
         resources: !calc ( doc.resource_demo.run_nothing )
 
-      jgfs_pgrb2_spec_gempak: !Task
-        <<: *exclusive_task_template
-        Trigger: !Depend up.post.jgfs_pgrb2_spec_post
-        resources: !calc ( doc.resource_demo.run_nothing )
-
+#     jgfs_pgrb2_spec_gempak: !Task
+#       <<: *exclusive_task_template
+#       Trigger: !Depend up.post.jgfs_pgrb2_spec_post
+#       resources: !calc ( doc.resource_demo.run_nothing )
     #endfamily gempak
+
+  #endfamily gfs
 
   gdas: !Family
     ecflow_def: |
@@ -453,7 +484,7 @@ suite: !Cycle
 
     jgdas_vminmon: !Task
       <<: *exclusive_task_template
-      Trigger: !Depend jgdas_analysis
+      Trigger: !Depend analysis.jgdas_analysis_high
       resources: !calc ( doc.resource_demo.run_nothing )
 
     dump: !Family
@@ -520,7 +551,7 @@ suite: !Cycle
 
       jgdas_forecast: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend ( up.jgdas_analysis.release_fcst & up.enkf.innovate )
+        Trigger: !Depend ( up.analysis.jgdas_analysis_high.release_fcst & up.enkf.innovate )
         release_fcst: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resource_demo.run_gdasfcst )
         J_JOB: JGLOBAL_FORECAST
@@ -532,12 +563,11 @@ suite: !Cycle
           #Trigger: !Depend ( up.up.dump.jgdas_dump_post )
           Trigger: !Depend ( up.up.dump.jgdas_dump )
           resources: !calc ( doc.resource_demo.run_nothing )
-    #endfamily post_processing
 
     gempak: !Family
       jgdas_gempak: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend up.forecast/jgdas_forecast
+        Trigger: !Depend up.forecast.jgdas_forecast
         resources: !calc ( doc.resource_demo.run_nothing )
 
       jgdas_gempak_meta: !Task
@@ -550,7 +580,6 @@ suite: !Cycle
         Trigger: !Depend jgdas_gempak
         resources: !calc ( doc.resource_demo.run_nothing )
     #endfamily gempak
-
 
     post: !Family
       #jgdas_post_high: !Task
@@ -596,7 +625,7 @@ suite: !Cycle
 
       jgdas_enkf_inflate_recenter: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend ( jgdas_enkf_update & up.jgdas_analysis )
+        Trigger: !Depend ( jgdas_enkf_update & up.analysis.jgdas_analysis_high )
         resources: !calc ( doc.resource_demo.run_ecen )
 
       forecast: !TaskArray
@@ -616,6 +645,7 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_epos )
 
     #endfamily enkf
+
   #endfamily gdas
 
   cycle_end: !Task
@@ -652,7 +682,7 @@ suite: !Cycle
   #      resources: !calc ( doc.resource_demo.run_arch )
   #      J_JOB: earc
 
-  #final: !Task
-  #  <<: *shared_task_template
-  #  resources: !calc ( doc.resource_demo.run_nothing )
+  final: !Task
+    <<: *shared_task_template
+    resources: !calc ( doc.resource_demo.run_nothing )
 
