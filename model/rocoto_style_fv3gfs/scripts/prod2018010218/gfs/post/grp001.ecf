@@ -1,0 +1,45 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gfs.post.grp001
+#BSUB -o %ECF_OUT%/gfs.post.grp001_t%CYC%z.log
+
+#BSUB -W 0:02
+#BSUB -R rusage[mem=3072]
+#BSUB -extsched CRAYLINUX[]
+export NODES=6
+%include <head.h>
+%include <envir-xc40.h>
+
+set -x
+
+export ntasks=72
+export ptile=12
+export threads=1
+
+export model=%MODEL_NAME%
+%include <model_ver.h>
+
+############################################################
+# Load modules
+############################################################
+. $MODULESHOME/init/sh
+# Add any "module" commands here (switch, load, use, etc.)
+module list
+
+#############################################################
+# WCOSS environment settings
+#############################################################
+
+# Set tuning variables like KMP_AFFINITY and OMP_STACKSIZE here.
+
+###########################################################
+export cyc=%CYC%
+
+# CALL executable job script here
+${HOMEgfs}/jobs/post
+
+%include <tail.h>
+%manual
+# FIXME: Insert manual for this job.
+
