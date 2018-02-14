@@ -242,10 +242,8 @@ class ToRocoto(object):
                 self.__families_with_completes.add(family_path)
 
         for path,alarm_name in self.__alarms.items():
-            print(f'{path}: alarm {alarm_name} add families')
             for i in range(1,len(path)):
                 family_path=SuitePath(path[1:i])
-                print(f'{path}: alarm {alarm_name} add {family_path}')
                 self.__families_with_alarms.add(family_path)
 
         self._convert_item(fd,max(0,indent-1),self.suite,TRUE_DEPENDENCY,
@@ -375,7 +373,6 @@ class ToRocoto(object):
                 raise ValueError('{view.task_path_var}: nested alarms are not supported in crow.metascheduler.to_rocoto()')
             else:
                 alarm_name=view.AlarmName
-                print(f'{view.path}: has alarm')
                 self.__alarms[view.path]=alarm_name
 
         if view.is_task():
@@ -544,18 +541,15 @@ class ToRocoto(object):
         with_alarms=self.__families_with_alarms
 
         if 'Disabled' in item and item.Disabled:
-            print(f'{path}: disabled (true)')
             return TRUE_DEPENDENCY
 
         if item.is_task():
             if alarm_name!=for_alarm:
                 # Assume tasks that are not in this cycle have completed.
-                print(f'{path}: alarm {alarm_name} not {for_alarm} - true')
                 return TRUE_DEPENDENCY
             dep = item.is_completed()
             if item.path in self.__completes:
                 dep = dep | self.__completes[item.path][1]
-            print(f'{path}: alarm {alarm_name} is {for_alarm} - {dep}')
             return dep
 
         # Initial completion dependency is the task or family
@@ -574,14 +568,7 @@ class ToRocoto(object):
             # their entire tree have no further dependencies to
             # identify.  Their own completion is the entirety of the
             # completion dependency.
-            print(f'{path}: no alarms no completes')
             return dep
-        if path in with_alarms:
-            print(f'{path}: with alarms')
-        if path in with_completes:
-            print(f'{path}: with completes')
-
-        print(f'{path}: start with dep={dep}')
 
         subdep=TRUE_DEPENDENCY
         for subitem in item.child_iter():
@@ -590,151 +577,20 @@ class ToRocoto(object):
             if not path and subitem.path[1:][:5] == [ 'final' ]:
                 # Special case.  Do not include final tasks'
                 # dependencies in the final tasks' dependencies.
-                print(f'{path}: skip {subitem.task_path_var} is final')
                 continue
             if not subitem.is_task() and not subitem.is_family():
-                print(f'{path}: skip {subitem.task_path_var} not node')
                 continue
-            print(f'{path}: recurse into {subitem.task_path_var}')
             indep=self._final_task_deps_for_alarm(
                 subitem,for_alarm,alarm_name)
             if indep not in [ TRUE_DEPENDENCY, FALSE_DEPENDENCY ]:
                 subdep=subdep & indep
-            print(f'{path}: subdep is now {subdep}')
 
         if dep is FALSE_DEPENDENCY:
             dep=subdep
         else:
             dep=dep | subdep
 
-        print(f'{path}: end with dep={dep}')
-
         return dep
-
-    # def _final_task_deps(self,item,for_alarm=None,alarm_name=None):
-    #     if item.is_cycle():
-    #         alarm_dep = None
-    #         complete_dep = None
-    #     else:
-    #         if for_alarm is not None:
-    #             if alarm_name is None and 'AlarmName' in item:
-    #                 alarm_name=item.AlarmName
-    #         print(f'{item.path}: alarm name {alarm_name!r}')
-    #         if for_alarm is not None:
-    #             if not for_alarm and alarm_name:
-    #                 alarm_dep=None
-    #             elif not for_alarm and alarm_name!=for_alarm:
-    #                 alarm_dep=None
-    #             else:
-    #                 print(f'{item.path}: use alarm dep')
-    #                 alarm_dep=item.is_completed()
-    #         else:
-    #             alarm_dep=None
-
-
-    #         if 'Complete' in item:
-    #             complete_dep=item.get_complete_dep()
-    #         else:
-    #             complete_dep=None
-    
-    #         if item.is_task():
-    #             print(f'{item.path}: c={complete_dep} a={alarm_dep}')
-    #             return alarm_dep, complete_dep
-    
-    #         if alarm_dep is TRUE_DEPENDENCY and complete_dep is FALSE_DEPENDENCY:
-    #             # No more processing to do
-    #             print(f'{item.path}: c={complete_dep} a={alarm_dep}')
-    #             return alarm_dep, complete_dep
-    
-    #     process_completes = complete_dep is not None
-    #     process_alarms = alarm_dep is not TRUE_DEPENDENCY
-    #     for subitem in item.child_iter():
-    #         aldep, cmdep = self._final_task_deps(subitem,for_alarm,alarm_name)
-    #         if process_completes:
-    #             if complete_dep is None and cmdep is not None:
-    #                 complete_dep=cmdep
-    #             elif complete_dep is not None and cmdep is not None:
-    #                 complete_dep = complete_dep & cmdep
-    #         if process_alarms:
-    #             if alarm_dep is None and aldep is not None:
-    #                 alarm_dep=aldep
-    #             elif alarm_dep is not None and aldep is not None:
-    #                 alarm_dep = alarm_dep & aldep
-
-    #     print(f'{item.path}: c={complete_dep} a={alarm_dep}')
-    #     return alarm_dep, complete_dep
-
-    # def not_final_task_deps(self,item,for_alarm=None,alarm_name=None):
-    #     if 'Disable' in item and item.Disable:
-    #         return FALSE_DEPENDENCY
-    #     path=SuitePath(item.path[1:])
-    #     with_completes=self.__families_with_completes
-    #     with_alarms=self.__nodes_with_alarms
-    #     keep_for_alarm=True
-
-    #     if for_alarm is not None and len(item.path)>1:
-    #         if 'AlarmName' in item:
-    #             if alarm_name:
-    #                 raise ValueError('{item.task_path_var}: nested alarms are not supported in crow.metascheduler.to_rocoto()')
-    #             else:
-    #                 alarm_name=item.AlarmName
-    #         if not for_alarm and alarm_name:
-    #             print(f'{item.path}: alarm {alarm_name} discarded for {for_alarm!r}')
-    #             keep_for_alarm=False
-    #         if for_alarm and alarm_name!=for_alarm:
-    #             print(f'{item.path}: alarm {alarm_name} discarded for {for_alarm!r}')
-    #             keep_for_alarm=False
-
-    #     if keep_for_alarm:
-    #         print(f'{item.path}: alarm {alarm_name} included for {for_alarm!r}')
-
-    #     if not keep_for_alarm:
-
-    #         if item.is_task():
-    #             dep = item.is_completed()
-    #             if item.path in self.__completes:
-    #                 dep = dep | self.__completes[item.path][1]
-    #             print(f'{item.path}: is task so return early with {dep}')
-    #             return dep
-    
-    #         # Initial completion dependency is the task or family
-    #         # completion unless this item is the Suite.  Suites must be
-    #         # handled differently.
-    #         if path:
-    #             dep = item.is_completed() # Family SuiteView
-    #         else:
-    #             dep = FALSE_DEPENDENCY   # Suite
-    
-    #         if ( path and path not in with_completes ) or \
-    #            (for_alarm is not None and path not in with_alarms):
-    #             # Families with no "complete" dependency in their entire
-    #             # tree have no further dependencies to identify.  Their
-    #             # own completion is the entirety of the completion
-    #             # dependency.
-    #             print(f'{item.path}: no complete nor alarm so {dep}')
-    #             return dep
-    #     else:
-    #         dep=item.is_completed()
-
-    #     subdep=TRUE_DEPENDENCY
-    #     for subitem in item.child_iter():
-    #         if subitem.path[1:][:5] == [ 'final' ]:
-    #             # Special case.  Do not include final task's
-    #             # dependency in the final task's dependency.
-    #             print(f'{subitem.path}: do not recurse; is final')
-    #             continue
-    #         if not subitem.is_task() and not subitem.is_family():
-    #             #print(f'{subitem.path}: do not recurse; is not task or family ({subitem!r})')
-    #             continue
-    #         subdep=subdep & self._final_task_deps(subitem,for_alarm,alarm_name)
-    
-    #     if dep is FALSE_DEPENDENCY:
-    #         dep=subdep
-    #     else:
-    #         dep=dep | subdep
-
-    #     print(f'{item.path}: result: {dep}')
-    #     return dep
 
     def _handle_final_task(self,fd,indent):
         # Find and validate the "final" task:
@@ -777,11 +633,8 @@ class ToRocoto(object):
         alarms = set(self.__alarms_used)
         alarms.add('')
         for alarm_name in alarms:
-            print(f'ALARM {alarm_name}')
             dep = self._final_task_deps_for_alarm(self.suite,alarm_name)
-            print(f'ALARM {alarm_name} dep={dep}')
             dep = simplify(dep)
-            print(f'ALARM {alarm_name} dep={dep}')
             task_name=f'final_for_{alarm_name}' if alarm_name else 'final_no_alarm'
             new_task=copy(self.suite.final.viewed)
             new_task['AlarmName']=alarm_name
@@ -791,10 +644,7 @@ class ToRocoto(object):
             del new_task
             self.__all_defined.add(SuitePath(
                 [_ZERO_DT] + new_task_view.path[1:]))
-            if dep is FALSE_DEPENDENCY:
-                print(f'{task_name}: false')
-                assert(False)
-        
+            assert( dep is not FALSE_DEPENDENCY )
             self._write_task_text(fd,' final="true"',indent,new_task_view,
                                   dep,timedelta.min,alarm_name)
             

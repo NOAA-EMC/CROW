@@ -10,6 +10,8 @@
   <!ENTITY COM "/gpfs/hps2/ptmp/emc.glopara/ecfgfsfv3/com">
   <!ENTITY QUEUESERV "dev_transfer">
 ]>
+<!-- This Rocoto suite definition is automatically generated.
+     Changes will be overwritten.  Please edit suite_def.yaml instead. -->
 <workflow realtime="F"
           cyclethrottle="&CYCLE_THROTTLE;"
           scheduler="lsf"
@@ -1504,25 +1506,10 @@
       </task>
     </metatask>
   </metatask>
-  <task name="dummy" maxtries="1">
-    <command>&HOMEgfs;/jobs/DUMMY.sh</command>
-    <queue>&QUEUESERV;</queue>
-    <account>&PROJECT;</account>
-    <jobname>dummy</jobname>
-    <join><cyclestr>&LOG_DIR;/dummy_t@Hz.log</cyclestr></join>
-    
-    <memory>300M</memory>
-    <nodes>1:ppn=24</nodes>
-    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
-    <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
-    <envar><name>CDUMP</name><value>dummy</value></envar>
-    
-    <!-- no dependencies -->
-  </task>
 
   <!-- These final tasks are automatically generated to handle Complate and Trigger conditions, and alarms. -->
 
-  <task name="final_no_alarm" final="true">
+  <task name="final_for_gdas" final="true" cycledefs="gdas">
     <command>&HOMEgfs;/jobs/FINAL.sh</command>
     <queue>&QUEUESERV;</queue>
     <account>&PROJECT;</account>
@@ -1536,7 +1523,11 @@
     <envar><name>CDUMP</name><value>final</value></envar>
     
     <dependency>
-      <taskdep task="dummy"/>
+      <and>
+        <metataskdep metatask="gdas"/>
+        <taskdep task="archive.gdasarch"/>
+        <metataskdep metatask="archive.earc"/>
+      </and>
     </dependency>
   </task>
   <task name="final_for_gfs" final="true" cycledefs="gfs">
@@ -1559,7 +1550,7 @@
       </and>
     </dependency>
   </task>
-  <task name="final_for_gdas" final="true" cycledefs="gdas">
+  <task name="final_no_alarm" final="true">
     <command>&HOMEgfs;/jobs/FINAL.sh</command>
     <queue>&QUEUESERV;</queue>
     <account>&PROJECT;</account>
@@ -1572,13 +1563,7 @@
     <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
     <envar><name>CDUMP</name><value>final</value></envar>
     
-    <dependency>
-      <and>
-        <metataskdep metatask="gdas"/>
-        <taskdep task="archive.gdasarch"/>
-        <metataskdep metatask="archive.earc"/>
-      </and>
-    </dependency>
+    <!-- no dependencies -->
   </task>
   <task name="final" final="true">
     <command>&HOMEgfs;/jobs/FINAL.sh</command>
@@ -1597,16 +1582,16 @@
       <and>
         <!-- All tasks must be complete or invalid for this cycle -->
         <or>
-          <taskdep task="final_no_alarm"/>
-          <not><taskvalid task="final_no_alarm"/></not>
+          <taskdep task="final_for_gdas"/>
+          <not><taskvalid task="final_for_gdas"/></not>
         </or>
         <or>
           <taskdep task="final_for_gfs"/>
           <not><taskvalid task="final_for_gfs"/></not>
         </or>
         <or>
-          <taskdep task="final_for_gdas"/>
-          <not><taskvalid task="final_for_gdas"/></not>
+          <taskdep task="final_no_alarm"/>
+          <not><taskvalid task="final_no_alarm"/></not>
         </or>
       </and>
     </dependency>

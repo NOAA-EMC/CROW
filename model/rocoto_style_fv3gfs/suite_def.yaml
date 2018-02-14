@@ -35,6 +35,8 @@ suite: !Cycle
       step: !timedelta "6:00:00"
 
   ecflow_def: !expand |
+    # This ecflow suite definition is automatically generated.
+    # Changes will be overwritten.  Please edit suite_def.yaml instead.
     #repeat day 1
     edit ECF_TRIES '{doc.settings.max_job_tries}'
     #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
@@ -76,6 +78,8 @@ suite: !Cycle
         <!ENTITY HOMEgfs "{doc.settings.HOMEgfs}">
       {tools.indent("  ",suite.common_metasched_vars)}
       ]>
+      <!-- This Rocoto suite definition is automatically generated.
+           Changes will be overwritten.  Please edit suite_def.yaml instead. -->
       <workflow realtime="F"
                 cyclethrottle="&CYCLE_THROTTLE;"
                 scheduler="{sched.rocoto_name.lower()}"
