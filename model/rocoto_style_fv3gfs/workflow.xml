@@ -36,7 +36,7 @@
       <dependency>
         <and>
           <metataskdep metatask="gdas.post" cycle_offset="-06:00:00"/>
-          <true></true><datadep>/gpfs/tp1/emc/globaldump/@Y@m@d@H/gdas/gdas.t@Hz.updated.status.tm00.bufr_d</datadep>
+          <datadep><cyclestr>/gpfs/tp1/emc/globaldump/@Y@m@d@H/gdas/gdas.t@Hz.updated.status.tm00.bufr_d</cyclestr></datadep>
         </and>
       </dependency>
     </task>
@@ -765,13 +765,18 @@
       
       <walltime>0:02:00</walltime>
       <memory>1024M</memory>
-      <nodes>64:ppn=24</nodes>
+      <nodes>12:ppn=24</nodes>
       <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
       <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
       <envar><name>CDUMP</name><value>gdas</value></envar>
       
       <dependency>
-        <taskdep task="gdas.anal"/>
+        <or>
+          <taskdep task="gdas.anal"/>
+          <not>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </not>
+        </or>
       </dependency>
     </task>
     <metatask name="gdas.post">
@@ -791,7 +796,9 @@
         <envar><name>FHRGRP</name><value>f000</value></envar>
         <envar><name>FHRLST</name><value>anl</value></envar>
         
-        <!-- no dependencies -->
+        <dependency>
+          <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf000.nemsio</cyclestr></datadep>
+        </dependency>
       </task>
       <task name="gdas.post.f006" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/post</command>
@@ -808,7 +815,9 @@
         <envar><name>FHRGRP</name><value>f006</value></envar>
         <envar><name>FHRLST</name><value>f006</value></envar>
         
-        <!-- no dependencies -->
+        <dependency>
+          <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf001.nemsio</cyclestr></datadep>
+        </dependency>
       </task>
       <task name="gdas.post.f012" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/post</command>
@@ -825,7 +834,9 @@
         <envar><name>FHRGRP</name><value>f012</value></envar>
         <envar><name>FHRLST</name><value>f012</value></envar>
         
-        <!-- no dependencies -->
+        <dependency>
+          <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf002.nemsio</cyclestr></datadep>
+        </dependency>
       </task>
       <task name="gdas.post.f018" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/post</command>
@@ -842,7 +853,9 @@
         <envar><name>FHRGRP</name><value>f018</value></envar>
         <envar><name>FHRLST</name><value>f018</value></envar>
         
-        <!-- no dependencies -->
+        <dependency>
+          <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf003.nemsio</cyclestr></datadep>
+        </dependency>
       </task>
       <task name="gdas.post.f024" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/post</command>
@@ -859,7 +872,9 @@
         <envar><name>FHRGRP</name><value>f024</value></envar>
         <envar><name>FHRLST</name><value>f024</value></envar>
         
-        <!-- no dependencies -->
+        <dependency>
+          <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf004.nemsio</cyclestr></datadep>
+        </dependency>
       </task>
       <task name="gdas.post.f030" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/post</command>
@@ -876,7 +891,9 @@
         <envar><name>FHRGRP</name><value>f030</value></envar>
         <envar><name>FHRLST</name><value>f030</value></envar>
         
-        <!-- no dependencies -->
+        <dependency>
+          <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf005.nemsio</cyclestr></datadep>
+        </dependency>
       </task>
     </metatask>
     <task name="gdas.vrfy" maxtries="1" cycledefs="gdas">
@@ -948,7 +965,7 @@
       
       <walltime>0:02:00</walltime>
       <memory>1024M</memory>
-      <nodes>64:ppn=24</nodes>
+      <nodes>12:ppn=24</nodes>
       <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
       <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
       <envar><name>CDUMP</name><value>gfs</value></envar>
@@ -959,136 +976,144 @@
     </task>
     <metatask name="gfs.post">
       <var name="dummy_var_8">DUMMY_VALUE</var>
-      <task name="gfs.post.f000" maxtries="1" cycledefs="gfs">
-        <command>&HOMEgfs;/jobs/post</command>
+      <task name="gfs.post.post_manager" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/post_manager</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
-        <jobname>gfs.post.f000</jobname>
-        <join><cyclestr>&LOG_DIR;/gfs.post.f000_t@Hz.log</cyclestr></join>
+        <jobname>gfs.post.post_manager</jobname>
+        <join><cyclestr>&LOG_DIR;/gfs.post.post_manager_t@Hz.log</cyclestr></join>
         
         <memory>300M</memory>
         <nodes>1:ppn=24</nodes>
         <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
         <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
         <envar><name>CDUMP</name><value>gfs</value></envar>
-        <envar><name>FHRGRP</name><value>f000</value></envar>
+        
+        <dependency>
+          <or>
+            <taskdep task="gfs.fcst" state="RUNNING"/>
+            <taskdep task="gfs.fcst"/>
+          </or>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp000" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/post</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp000</jobname>
+        <join><cyclestr>&LOG_DIR;/gfs.post.grp000_t@Hz.log</cyclestr></join>
+        
+        <walltime>0:02:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=24</nodes>
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>000</value></envar>
         <envar><name>FHRLST</name><value>anl</value></envar>
         
         <dependency>
-          <or>
-            <taskdep task="gfs.fcst" state="RUNNING"/>
-            <taskdep task="gfs.fcst"/>
-          </or>
+          <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf000.nemsio</cyclestr></datadep>
         </dependency>
       </task>
-      <task name="gfs.post.f006" maxtries="1" cycledefs="gfs">
+      <task name="gfs.post.grp001" maxtries="1" cycledefs="gfs">
         <command>&HOMEgfs;/jobs/post</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
-        <jobname>gfs.post.f006</jobname>
-        <join><cyclestr>&LOG_DIR;/gfs.post.f006_t@Hz.log</cyclestr></join>
+        <jobname>gfs.post.grp001</jobname>
+        <join><cyclestr>&LOG_DIR;/gfs.post.grp001_t@Hz.log</cyclestr></join>
         
-        <memory>300M</memory>
-        <nodes>1:ppn=24</nodes>
+        <walltime>0:02:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=24</nodes>
         <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
         <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
         <envar><name>CDUMP</name><value>gfs</value></envar>
-        <envar><name>FHRGRP</name><value>f006</value></envar>
+        <envar><name>FHRGRP</name><value>001</value></envar>
+        <envar><name>FHRLST</name><value>f000</value></envar>
+        
+        <dependency>
+          <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf001.nemsio</cyclestr></datadep>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp002" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/post</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp002</jobname>
+        <join><cyclestr>&LOG_DIR;/gfs.post.grp002_t@Hz.log</cyclestr></join>
+        
+        <walltime>0:02:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=24</nodes>
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>002</value></envar>
         <envar><name>FHRLST</name><value>f006</value></envar>
         
         <dependency>
-          <or>
-            <taskdep task="gfs.fcst" state="RUNNING"/>
-            <taskdep task="gfs.fcst"/>
-          </or>
+          <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf002.nemsio</cyclestr></datadep>
         </dependency>
       </task>
-      <task name="gfs.post.f012" maxtries="1" cycledefs="gfs">
+      <task name="gfs.post.grp003" maxtries="1" cycledefs="gfs">
         <command>&HOMEgfs;/jobs/post</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
-        <jobname>gfs.post.f012</jobname>
-        <join><cyclestr>&LOG_DIR;/gfs.post.f012_t@Hz.log</cyclestr></join>
+        <jobname>gfs.post.grp003</jobname>
+        <join><cyclestr>&LOG_DIR;/gfs.post.grp003_t@Hz.log</cyclestr></join>
         
-        <memory>300M</memory>
-        <nodes>1:ppn=24</nodes>
+        <walltime>0:02:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=24</nodes>
         <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
         <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
         <envar><name>CDUMP</name><value>gfs</value></envar>
-        <envar><name>FHRGRP</name><value>f012</value></envar>
+        <envar><name>FHRGRP</name><value>003</value></envar>
         <envar><name>FHRLST</name><value>f012</value></envar>
         
         <dependency>
-          <or>
-            <taskdep task="gfs.fcst" state="RUNNING"/>
-            <taskdep task="gfs.fcst"/>
-          </or>
+          <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf003.nemsio</cyclestr></datadep>
         </dependency>
       </task>
-      <task name="gfs.post.f018" maxtries="1" cycledefs="gfs">
+      <task name="gfs.post.grp004" maxtries="1" cycledefs="gfs">
         <command>&HOMEgfs;/jobs/post</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
-        <jobname>gfs.post.f018</jobname>
-        <join><cyclestr>&LOG_DIR;/gfs.post.f018_t@Hz.log</cyclestr></join>
+        <jobname>gfs.post.grp004</jobname>
+        <join><cyclestr>&LOG_DIR;/gfs.post.grp004_t@Hz.log</cyclestr></join>
         
-        <memory>300M</memory>
-        <nodes>1:ppn=24</nodes>
+        <walltime>0:02:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=24</nodes>
         <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
         <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
         <envar><name>CDUMP</name><value>gfs</value></envar>
-        <envar><name>FHRGRP</name><value>f018</value></envar>
+        <envar><name>FHRGRP</name><value>004</value></envar>
         <envar><name>FHRLST</name><value>f018</value></envar>
         
         <dependency>
-          <or>
-            <taskdep task="gfs.fcst" state="RUNNING"/>
-            <taskdep task="gfs.fcst"/>
-          </or>
+          <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf004.nemsio</cyclestr></datadep>
         </dependency>
       </task>
-      <task name="gfs.post.f024" maxtries="1" cycledefs="gfs">
+      <task name="gfs.post.grp005" maxtries="1" cycledefs="gfs">
         <command>&HOMEgfs;/jobs/post</command>
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
-        <jobname>gfs.post.f024</jobname>
-        <join><cyclestr>&LOG_DIR;/gfs.post.f024_t@Hz.log</cyclestr></join>
+        <jobname>gfs.post.grp005</jobname>
+        <join><cyclestr>&LOG_DIR;/gfs.post.grp005_t@Hz.log</cyclestr></join>
         
-        <memory>300M</memory>
-        <nodes>1:ppn=24</nodes>
+        <walltime>0:02:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=24</nodes>
         <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
         <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
         <envar><name>CDUMP</name><value>gfs</value></envar>
-        <envar><name>FHRGRP</name><value>f024</value></envar>
+        <envar><name>FHRGRP</name><value>005</value></envar>
         <envar><name>FHRLST</name><value>f024</value></envar>
         
         <dependency>
-          <or>
-            <taskdep task="gfs.fcst" state="RUNNING"/>
-            <taskdep task="gfs.fcst"/>
-          </or>
-        </dependency>
-      </task>
-      <task name="gfs.post.f030" maxtries="1" cycledefs="gfs">
-        <command>&HOMEgfs;/jobs/post</command>
-        <queue>&QUEUE;</queue>
-        <account>&PROJECT;</account>
-        <jobname>gfs.post.f030</jobname>
-        <join><cyclestr>&LOG_DIR;/gfs.post.f030_t@Hz.log</cyclestr></join>
-        
-        <memory>300M</memory>
-        <nodes>1:ppn=24</nodes>
-        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
-        <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
-        <envar><name>CDUMP</name><value>gfs</value></envar>
-        <envar><name>FHRGRP</name><value>f030</value></envar>
-        <envar><name>FHRLST</name><value>f030</value></envar>
-        
-        <dependency>
-          <or>
-            <taskdep task="gfs.fcst" state="RUNNING"/>
-            <taskdep task="gfs.fcst"/>
-          </or>
+          <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf005.nemsio</cyclestr></datadep>
         </dependency>
       </task>
     </metatask>
@@ -1113,9 +1138,49 @@
   </metatask>
   <metatask name="archive">
     <var name="dummy_var_9">DUMMY_VALUE</var>
+    <task name="archive.gdasarch" maxtries="1" cycledefs="gdas">
+      <command>&HOMEgfs;/jobs/GDASARCH.sh</command>
+      <queue>&QUEUESERV;</queue>
+      <account>&PROJECT;</account>
+      <jobname>archive.gdasarch</jobname>
+      <join><cyclestr>&LOG_DIR;/archive.gdasarch_t@Hz.log</cyclestr></join>
+      
+      <walltime>0:02:00</walltime>
+      <memory>3072M</memory>
+      <cores>1</cores>
+      <shared></shared>
+      
+      <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+      <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
+      <envar><name>CDUMP</name><value>archive</value></envar>
+      
+      <dependency>
+        <taskdep task="gdas.vrfy"/>
+      </dependency>
+    </task>
+    <task name="archive.gfsarch" maxtries="1" cycledefs="gfs">
+      <command>&HOMEgfs;/jobs/GFSARCH.sh</command>
+      <queue>&QUEUESERV;</queue>
+      <account>&PROJECT;</account>
+      <jobname>archive.gfsarch</jobname>
+      <join><cyclestr>&LOG_DIR;/archive.gfsarch_t@Hz.log</cyclestr></join>
+      
+      <walltime>0:02:00</walltime>
+      <memory>3072M</memory>
+      <cores>1</cores>
+      <shared></shared>
+      
+      <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+      <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
+      <envar><name>CDUMP</name><value>archive</value></envar>
+      
+      <dependency>
+        <taskdep task="gfs.vrfy"/>
+      </dependency>
+    </task>
     <metatask name="archive.earc">
       <var name="dummy_var_10">DUMMY_VALUE</var>
-      <task name="archive.earc.grp1" maxtries="1">
+      <task name="archive.earc.grp1" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1136,7 +1201,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp2" maxtries="1">
+      <task name="archive.earc.grp2" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1157,7 +1222,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp3" maxtries="1">
+      <task name="archive.earc.grp3" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1178,7 +1243,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp4" maxtries="1">
+      <task name="archive.earc.grp4" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1199,7 +1264,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp5" maxtries="1">
+      <task name="archive.earc.grp5" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1220,7 +1285,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp6" maxtries="1">
+      <task name="archive.earc.grp6" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1241,7 +1306,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp7" maxtries="1">
+      <task name="archive.earc.grp7" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1262,7 +1327,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp8" maxtries="1">
+      <task name="archive.earc.grp8" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1283,7 +1348,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp9" maxtries="1">
+      <task name="archive.earc.grp9" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1304,7 +1369,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp10" maxtries="1">
+      <task name="archive.earc.grp10" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1325,7 +1390,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp11" maxtries="1">
+      <task name="archive.earc.grp11" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1346,7 +1411,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp12" maxtries="1">
+      <task name="archive.earc.grp12" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1367,7 +1432,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp13" maxtries="1">
+      <task name="archive.earc.grp13" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1388,7 +1453,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp14" maxtries="1">
+      <task name="archive.earc.grp14" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1409,7 +1474,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp15" maxtries="1">
+      <task name="archive.earc.grp15" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1430,7 +1495,7 @@
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
       </task>
-      <task name="archive.earc.grp16" maxtries="1">
+      <task name="archive.earc.grp16" maxtries="1" cycledefs="gdas">
         <command>&HOMEgfs;/jobs/earc</command>
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
@@ -1470,27 +1535,21 @@
     <envar><name>CDUMP</name><value>final</value></envar>
     
     <dependency>
-      <metataskdep metatask="archive"/>
-    </dependency>
-  </task>
-  <task name="final_for_gfs" final="true" cycledefs="gfs">
-    <command>&HOMEgfs;/jobs/FINAL.sh</command>
-    <queue>&QUEUESERV;</queue>
-    <account>&PROJECT;</account>
-    <jobname>final</jobname>
-    <join><cyclestr>&LOG_DIR;/final_t@Hz.log</cyclestr></join>
-    
-    <memory>300M</memory>
-    <nodes>1:ppn=24</nodes>
-    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
-    <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
-    <envar><name>CDUMP</name><value>final</value></envar>
-    
-    <dependency>
-      <and>
-        <metataskdep metatask="gfs"/>
-        <metataskdep metatask="archive"/>
-      </and>
+      <or>
+        <metataskdep metatask=""/>
+        <and>
+          <metataskdep metatask="gdas"/>
+          <metataskdep metatask="gfs"/>
+          <or>
+            <metataskdep metatask="archive"/>
+            <and>
+              <taskdep task="archive.gdasarch"/>
+              <taskdep task="archive.gfsarch"/>
+              <metataskdep metatask="archive.earc"/>
+            </and>
+          </or>
+        </and>
+      </or>
     </dependency>
   </task>
   <task name="final_for_gdas" final="true" cycledefs="gdas">
@@ -1507,10 +1566,41 @@
     <envar><name>CDUMP</name><value>final</value></envar>
     
     <dependency>
-      <and>
-        <metataskdep metatask="gdas"/>
-        <metataskdep metatask="archive"/>
-      </and>
+      <or>
+        <metataskdep metatask=""/>
+        <and>
+          <metataskdep metatask="gdas"/>
+          <metataskdep metatask="gfs"/>
+          <metataskdep metatask="archive"/>
+          <taskdep task="final_no_alarm"/>
+        </and>
+      </or>
+    </dependency>
+  </task>
+  <task name="final_for_gfs" final="true" cycledefs="gfs">
+    <command>&HOMEgfs;/jobs/FINAL.sh</command>
+    <queue>&QUEUESERV;</queue>
+    <account>&PROJECT;</account>
+    <jobname>final</jobname>
+    <join><cyclestr>&LOG_DIR;/final_t@Hz.log</cyclestr></join>
+    
+    <memory>300M</memory>
+    <nodes>1:ppn=24</nodes>
+    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+    <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
+    <envar><name>CDUMP</name><value>final</value></envar>
+    
+    <dependency>
+      <or>
+        <metataskdep metatask=""/>
+        <and>
+          <metataskdep metatask="gdas"/>
+          <metataskdep metatask="gfs"/>
+          <metataskdep metatask="archive"/>
+          <taskdep task="final_no_alarm"/>
+          <taskdep task="final_for_gdas"/>
+        </and>
+      </or>
     </dependency>
   </task>
   <task name="final" final="true">
@@ -1534,12 +1624,12 @@
           <not><taskvalid task="final_no_alarm"/></not>
         </or>
         <or>
-          <taskdep task="final_for_gfs"/>
-          <not><taskvalid task="final_for_gfs"/></not>
-        </or>
-        <or>
           <taskdep task="final_for_gdas"/>
           <not><taskvalid task="final_for_gdas"/></not>
+        </or>
+        <or>
+          <taskdep task="final_for_gfs"/>
+          <not><taskvalid task="final_for_gfs"/></not>
         </or>
       </and>
     </dependency>

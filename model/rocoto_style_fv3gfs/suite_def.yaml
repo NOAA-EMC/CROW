@@ -158,26 +158,43 @@ suite: !Cycle
 
     fcst: !Task
       <<: *exclusive_task_template
-      Trigger: !Depend anal
+      Trigger: !Depend anal | ~ suite.has_cycle('-6:00:00')
       resources: !calc ( doc.resources.run_gdasfcst )
 
     post: !TaskArray
       Dimensions:
-        groupid: !calc tools.seq(0,5,1)
+        fhr: !calc tools.seq(0,5,1)
+      post_manager_el: !TaskElement
+        <<: *exclusive_task_template
+        Trigger: !Depend ( up.fcst.is_running() | up.fcst.is_completed() )
+        Disable: !calc metasched.type=='rocoto'
+        Foreach: []
+        J_JOB: post_manager
+        Name: post_manager
+        release_postanl: !DataEvent
+          file: !expand >-
+            {metasched.varref("COM")}/{up.CDUMP}.{metasched.datestring("%Y%m%d/%H/")}{up.CDUMP}.t{metasched.datestring("%H")}z.logf000.nemsio
+        release_post_fhr: !DataEventElement
+          Name: !expand "release_post{idx.fhr:02d}"
+          Foreach: [ fhr ]
+          file: !expand >
+            {metasched.varref("COM")}/{up.CDUMP}.{metasched.datestring("%Y%m%d/%H/")}{up.CDUMP}.t{metasched.datestring("%H")}z.logf{idx.fhr:03d}.nemsio
+        
       post_el: !TaskElement
         <<: *exclusive_task_template
-        Foreach: [ groupid ]
+        Foreach: [ fhr ]
         J_JOB: post
-        Name: !expand "f{idx.groupid*6:03d}"
+        Name: !expand "f{idx.fhr*6:03d}"
         fhrlst: !FirstTrue
-          - when: !calc idx.groupid==0
+          - when: !calc idx.fhr==0
             do:   anl
-          - otherwise: !expand "f{idx.groupid*6:03d}"
+          - otherwise: !expand "f{idx.fhr*6:03d}"
         ecflow_def: !calc more_vars
         rocoto_more_vars: !calc more_vars
         more_vars: !expand |
           {metasched.defenvar("FHRGRP",Name)}
           {metasched.defenvar("FHRLST",fhrlst)}
+        Trigger: !Depend post_manager.depend("release_post{F:02d}",F=idx.fhr)
 
     vrfy: !Task
       <<: *exclusive_task_template
@@ -210,22 +227,41 @@ suite: !Cycle
       resources: !calc ( doc.resources.run_gfsfcst )
 
     post: !TaskArray
-      Trigger: !Depend ( fcst.is_running() | fcst.is_completed() )
       Dimensions:
         groupid: !calc tools.seq(0,5,1)
+        fhr: !calc doc.settings.forecast_hours
+
+      post_manager_el: !TaskElement
+        <<: *exclusive_task_template
+        Trigger: !Depend ( up.fcst.is_running() | up.fcst.is_completed() )
+        Foreach: [ fhr ]
+        J_JOB: post_manager
+        Name: post_manager
+        release_postanl: !DataEvent
+          file: !expand >-
+            {metasched.varref("COM")}/{up.CDUMP}.{metasched.datestring("%Y%m%d/%H/")}{up.CDUMP}.t{metasched.datestring("%H")}z.logf000.nemsio
+        release_post_fhr: !DataEventElement
+          Name: !expand "release_post{idx.fhr:02d}"
+          Foreach: [ fhr ]
+          file: !expand >-
+            {metasched.varref("COM")}/{up.CDUMP}.{metasched.datestring("%Y%m%d/%H/")}{up.CDUMP}.t{metasched.datestring("%H")}z.logf{idx.fhr:03d}.nemsio
+
       post_el: !TaskElement
         <<: *exclusive_task_template
-        Foreach: [ groupid ]
-        Name: !expand "f{idx.groupid*6:03d}"
+        Foreach: [ groupid  ]
+        resources: !calc doc.resources.run_gfspost
+        Name: !expand "grp{idx.groupid:03d}"
+        fhrgrp: !expand "{idx.groupid:03d}"
         J_JOB: post
         fhrlst: !FirstTrue
           - when: !calc idx.groupid==0
             do:   anl
-          - otherwise: !expand "f{idx.groupid*6:03d}"
+          - otherwise: !expand "f{(idx.groupid-1)*6:03d}"
         ecflow_def: !calc more_vars
         rocoto_more_vars: !calc more_vars
+        Trigger: !Depend post_manager.depend("release_post{F:02d}",F=idx.groupid)
         more_vars: !expand |
-          {metasched.defenvar("FHRGRP",Name)}
+          {metasched.defenvar("FHRGRP",fhrgrp)}
           {metasched.defenvar("FHRLST",fhrlst)}
     
     vrfy: !Task
@@ -236,17 +272,20 @@ suite: !Cycle
   archive: !Family
     gdasarch: !Task
       <<: *shared_task_template
+      AlarmName: gdas
       Trigger: !Depend up.gdas.vrfy
       resources: !calc ( doc.resources.run_arch )
-      Disable: !calc doc.settings.archive_to_hpss
+      Disable: !calc not doc.settings.archive_to_hpss
 
     gfsarch: !Task
       <<: *shared_task_template
+      AlarmName: gfs
       Trigger: !Depend up.gfs.vrfy
       resources: !calc ( doc.resources.run_arch )
-      Disable: !calc doc.settings.archive_to_hpss
+      Disable: !calc not doc.settings.archive_to_hpss
 
     earc: !TaskArray
+      AlarmName: gdas
       Trigger: !Depend up.gdas.enkf.epos
       Dimensions:
         groupid: !calc tools.seq(1,doc.settings.ENKF_ARCHIVE_GROUPS,1)

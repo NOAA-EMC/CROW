@@ -13,8 +13,8 @@ settings:
   ECF_HOME: !calc ( doc.initial_directory )
   ROCOTO_HOME: !calc ( doc.initial_directory )
   HOMEgfs: "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/snapshot_flat/gfs.v15.0.0"
-  layout_x: 8
-  layout_y: 16
+  layout_x: 4
+  layout_y: 6
   experiment_name: ecfgfsfv3
   QUEUE: debug
   PROJECT: GFS-T2O
@@ -29,6 +29,7 @@ settings:
   start_date_gfs: !calc start_date
   end_date_gfs: !calc end_date
   interval_gfs: !timedelta "12:00:00"
+  forecast_hours: !calc tools.seq(0,120,1)+tools.seq(123,240,3)+tools.seq(240,384,12)
 
   max_job_tries: 1
   realtime: False

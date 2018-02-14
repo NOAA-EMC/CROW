@@ -119,29 +119,46 @@ suite prod2018010206
     task fcst
       trigger ./anal == complete
     family post # /prod2018010206/gdas/post
+      task post_manager
+        trigger ../fcst == active or ../fcst == complete
+        event 1 release_postanl
+        event 2 release_post00
+        event 3 release_post01
+        event 4 release_post02
+        event 5 release_post03
+        event 6 release_post04
+        event 7 release_post05
       task f000
         edit FHRGRP 'f000'
         edit FHRLST 'anl'
+        trigger ./post_manager:release_post00
       task f006
         edit FHRGRP 'f006'
         edit FHRLST 'f006'
+        trigger ./post_manager:release_post01
       task f012
         edit FHRGRP 'f012'
         edit FHRLST 'f012'
+        trigger ./post_manager:release_post02
       task f018
         edit FHRGRP 'f018'
         edit FHRLST 'f018'
+        trigger ./post_manager:release_post03
       task f024
         edit FHRGRP 'f024'
         edit FHRLST 'f024'
+        trigger ./post_manager:release_post04
       task f030
         edit FHRGRP 'f030'
         edit FHRLST 'f030'
+        trigger ./post_manager:release_post05
     endfamily # /prod2018010206/gdas/post
     task vrfy
       trigger ./post == complete
   endfamily # /prod2018010206/gdas
   family archive # /prod2018010206/archive
+    task gdasarch
+      trigger ../gdas/vrfy == complete
     family earc # /prod2018010206/archive/earc
       trigger ../gdas/enkf/epos == complete
       task grp1

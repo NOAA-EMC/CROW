@@ -1,4 +1,4 @@
-import sys, io
+import sys, io, re
 from datetime import timedelta, datetime
 from io import StringIO
 from copy import copy
@@ -38,6 +38,41 @@ _ROCOTO_DEP_TAG={ AndDependency:'and',
                  NotDependency:'not' }
 
 _ZERO_DT=timedelta()
+
+def has_conditions(self,item,completes,test_alarm_name,alarm_name=None):
+    if completes and 'Complete' in item:
+        return True
+
+    if 'AlarmName' in item:
+        alarm_name=item.alarm_name
+    if test_alarm_name is not None:
+        if alarm_name is not None and test_alarm_name==alarm_name:
+            return True
+
+    if not item.is_family():             
+        return False
+
+    for subitem in item.child_iter():
+        if has_conditions(subitem,completes,test_alarm_name,alarm_name):
+            return True
+
+def _has_completes(self,item):
+        if 'Complete' in item:
+            return True
+        if not item.is_family():
+            return False
+        for subitem in item.child_iter():
+            if _has_completes(subitem): return True
+        return False
+
+def _has_alarms(self,item):
+        if 'AlarmName' in item:
+            return True
+        if not item.is_family():
+            return False
+        for subitem in item.child_iter():
+            if _has_alarms(subitem): return True
+        return False
 
 def stringify_clock(name,clock,indent):
     start_time=clock.start.strftime('%Y%m%d%H%M')
@@ -101,14 +136,17 @@ def _to_rocoto_dep_impl(dep,fd,indent):
             if not 'file' in event:
                 fd.write(f'{"  "*indent}<true></true><!-- data dependency with no file -->\n')
                 return
-            fd.write(f'{"  "*indent}<true></true><datadep')
+            fd.write(f'{"  "*indent}<datadep')
             if 'age' in event:
                 dt=crow.tools.str_timedelta(event.age).sub('d',':')
                 fd.write(f' age={dt}')
             if 'minsize' in dep:
                 nbytes=crow.tools.in_bytes(event.size)
                 fd.write(f' size={nbytes}')
-            fd.write(f'>{event.file}</datadep>\n')
+            fd.write(f'><cyclestr')
+            if dep.event.path[0]:
+                fd.write(f' offset="{_cycle_offset(dep.event.path[0])}"')
+            fd.write(f'>{event.file.strip()}</cyclestr></datadep>\n')
         else:
             raise TypeError(f'Unexpected {type(event).__name__} event type in an EventDependency in _to_rocoto_dep')
     else:
@@ -160,9 +198,15 @@ class ToRocoto(object):
         self.__dummy_var_count=0
         self.__families_with_completes=set()
         self.__alarms_used=set([""])
+        self.__nodes_with_alarms=set()
 
     def defenvar(self,name,value):
         return f'<envar><name>{name}</name><value>{value!s}</value></envar>'
+
+    def datestring(self,format):
+        def replacer(m):
+            return( (m.group(1) or "")+"@"+m.group(2) )
+        return re.sub(r'(\%\%)*\%([a-zA-Z])',replacer,format)
 
     def defvar(self,name,value):
         qvalue=quoteattr(str(value))
@@ -323,6 +367,9 @@ class ToRocoto(object):
             else:
                 alarm_name=view.AlarmName
 
+        if alarm_name:
+            self.__nodes_with_alarms.add(SuitePath(view.path[1:]))
+
         if view.is_task():
             maxtries=int(view.get(
                 'max_tries',self.suite.Rocoto.get('max_tries',0)))
@@ -405,54 +452,90 @@ class ToRocoto(object):
         return dep
 
     def _final_task_deps(self,item,for_alarm=None,alarm_name=None):
-        path=SuitePath(item.path[1:])
-        with_completes=self.__families_with_completes
+        result=TRUE_DEPENDENCY
 
         if for_alarm is not None:
+            if alarm_name is None and 'AlarmName' in item:
+                alarm_name=item.AlarmName
+
+        if not has_conditions(item,True,alarm_name,None):
+            # There are no completes, and either we don't care about
+            # alarms or there are no matching alarms.
+            return TRUE_DEPENDENCY, TRUE_DEPENDENCY
+
+        alarm_dep=TRUE_DEPENDENCY
+        complete_dep=TRUE_DEPENDENCY
+
+    def _final_task_deps(self,item,for_alarm=None,alarm_name=None):
+        if 'Disable' in item and item.Disable:
+            return FALSE_DEPENDENCY
+        path=SuitePath(item.path[1:])
+        with_completes=self.__families_with_completes
+        with_alarms=self.__nodes_with_alarms
+        keep_for_alarm=True
+
+        if for_alarm is not None and len(item.path)>1:
             if 'AlarmName' in item:
                 if alarm_name:
                     raise ValueError('{item.task_path_var}: nested alarms are not supported in crow.metascheduler.to_rocoto()')
                 else:
                     alarm_name=item.AlarmName
-            if alarm_name is not None and alarm_name != for_alarm:
-                return TRUE_DEPENDENCY
+            if not for_alarm and alarm_name:
+                print(f'{item.path}: alarm {alarm_name} discarded for {for_alarm!r}')
+                keep_for_alarm=False
+            if for_alarm and alarm_name!=for_alarm:
+                print(f'{item.path}: alarm {alarm_name} discarded for {for_alarm!r}')
+                keep_for_alarm=False
 
-        if item.is_task():
-            dep = item.is_completed()
-            if item.path in self.__completes:
-                dep = dep | self.__completes[item.path][1]
-            return dep
+        if keep_for_alarm:
+            print(f'{item.path}: alarm {alarm_name} included for {for_alarm!r}')
 
-        # Initial completion dependency is the task or family
-        # completion unless this item is the Suite.  Suites must be
-        # handled differently.
-        if path:
-            dep = item.is_completed() # Family SuiteView
+        if not keep_for_alarm:
+
+            if item.is_task():
+                dep = item.is_completed()
+                if item.path in self.__completes:
+                    dep = dep | self.__completes[item.path][1]
+                print(f'{item.path}: is task so return early with {dep}')
+                return dep
+    
+            # Initial completion dependency is the task or family
+            # completion unless this item is the Suite.  Suites must be
+            # handled differently.
+            if path:
+                dep = item.is_completed() # Family SuiteView
+            else:
+                dep = FALSE_DEPENDENCY   # Suite
+    
+            if ( path and path not in with_completes ) or \
+               (for_alarm is not None and path not in with_alarms):
+                # Families with no "complete" dependency in their entire
+                # tree have no further dependencies to identify.  Their
+                # own completion is the entirety of the completion
+                # dependency.
+                print(f'{item.path}: no complete nor alarm so {dep}')
+                return dep
         else:
-            dep = FALSE_DEPENDENCY   # Suite
-
-        if path and path not in with_completes:
-            # Families with no "complete" dependency in their entire
-            # tree have no further dependencies to identify.  Their
-            # own completion is the entirety of the completion
-            # dependency.
-            return dep
+            dep=item.is_completed()
 
         subdep=TRUE_DEPENDENCY
         for subitem in item.child_iter():
-            if not path and subitem.path[1:] == [ 'final' ]:
+            if subitem.path[1:][:5] == [ 'final' ]:
                 # Special case.  Do not include final task's
                 # dependency in the final task's dependency.
+                print(f'{subitem.path}: do not recurse; is final')
                 continue
-            if not isinstance(subitem,SuiteView):
+            if not subitem.is_task() and not subitem.is_family():
+                #print(f'{subitem.path}: do not recurse; is not task or family ({subitem!r})')
                 continue
             subdep=subdep & self._final_task_deps(subitem,for_alarm,alarm_name)
-
+    
         if dep is FALSE_DEPENDENCY:
             dep=subdep
         else:
             dep=dep | subdep
 
+        print(f'{item.path}: result: {dep}')
         return dep
 
     def _handle_final_task(self,fd,indent):
@@ -501,6 +584,10 @@ class ToRocoto(object):
             del new_task
             self.__all_defined.add(SuitePath(
                 [_ZERO_DT] + new_task_view.path[1:]))
+            if this_alarm_final_dep is FALSE_DEPENDENCY:
+                print(f'{task_name}: false')
+                continue
+        
             self._write_task_text(fd,' final="true"',indent,new_task_view,
                                   this_alarm_final_dep,timedelta.min,alarm_name)
             

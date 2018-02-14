@@ -7,13 +7,13 @@
 #BSUB -W 0:02
 #BSUB -R rusage[mem=1024]
 #BSUB -extsched CRAYLINUX[]
-export NODES=64
+export NODES=12
 %include <head.h>
 %include <envir-xc40.h>
 
 set -x
 
-export ntasks=768
+export ntasks=144
 export ptile=12
 # No OpenMP in use, so I am not setting $threads
 

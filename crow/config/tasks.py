@@ -579,7 +579,7 @@ class StateDependency(LogicalDependency):
         self.view.path[0]+=dt
     def __repr__(self):
         return f'/{"/".join([str(s) for s in self.view.path])}'\
-               f'= {self.state}'
+               f'={self.state}'
     def __eq__(self,other):
         return isinstance(other,StateDependency) \
             and other.state==self.state \
@@ -598,8 +598,8 @@ class EventDependency(LogicalDependency):
         self.event=copy(self.event)
         self.event.path[0]+=dt
     def __repr__(self):
-        return f'/{"/".join([str(s) for s in self.event.path])}'\
-               f'= {self.state}'
+        return f'/{"/".join([str(s) for s in self.event.path[:-1]])}'\
+            f':{self.event.path[-1]}'
     def __eq__(self,other):
         return isinstance(other,EventDependency) \
             and other.event.path==self.event.path
@@ -730,6 +730,8 @@ class TaskArray(dict_eval):
                     f[name]=content
             else:
                 f[k]=v
+        if 'Trigger' in self:
+            assert('Trigger' in f)
         return f
 
 

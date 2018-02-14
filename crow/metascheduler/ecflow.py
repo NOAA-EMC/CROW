@@ -147,6 +147,11 @@ class ToEcflow(object):
         self.graph=Graph(self.suite,self.suite.Clock)
         self.type='ecflow'
 
+    def datestring(self,format):
+        def replacer(m):
+            return( (m.group(1) or "")+"%"+m.group(2)+"%" )
+        return re.sub(r'(\%\%)*\%([a-zA-Z])',replacer,format)
+
     def defenvar(self,name,value):
         return f"edit {name} '{value!s}'"
 
