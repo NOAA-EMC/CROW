@@ -200,6 +200,7 @@ class SuiteView(Mapping):
 
     def is_task(self): return isinstance(self.viewed,Task)
     def is_family(self): return isinstance(self.viewed,Family)
+    def is_cycle(self): return isinstance(self.viewed,Cycle)
     def is_input_slot(self): return isinstance(self.viewed,InputSlot)
     def is_output_slot(self): return isinstance(self.viewed,OutputSlot)
     def is_shell_event(self): return isinstance(self.viewed,ShellEvent)
