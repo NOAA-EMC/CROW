@@ -1,0 +1,268 @@
+scheduler: !calc |
+  tools.get_scheduler(doc.scheduler_settings.name,
+                      doc.scheduler_settings)
+suite: !Cycle
+  Clock: !Clock
+    start: 2018-01-01T00:00:00
+    end: 2018-01-02T18:00:00
+    step: !timedelta "6:00:00"
+
+  Alarms:
+    first: !Clock
+      start: !calc suite.Clock.start
+      end: !calc suite.Clock.start
+      step: !calc suite.Clock.step
+    gdas: !Clock
+      start: !calc suite.Clock.start
+      end: !calc suite.Clock.end
+      step: !calc suite.Clock.step
+    gfs: !Clock
+      start: !calc suite.Clock.start
+      end: !calc suite.Clock.end
+      step: !calc suite.Clock.step*2
+
+  ecFlow:
+    suite_def_filename: "prod%Y%m%d%H.def"
+    suite_name: "prod%Y%m%d%H"
+    scheduler: !calc doc.scheduler
+    write_cycles: !Clock
+      start: 2018-01-02T00:00:00
+      end: 2018-01-02T18:00:00
+      step: !timedelta "6:00:00"
+    analyze_cycles: !Clock
+      start: 2018-01-02T00:00:00
+      end: 2018-01-02T18:00:00
+      step: !timedelta "6:00:00"
+
+  ecflow_def: !expand |
+    #repeat day 1
+    edit ECF_TRIES '{doc.settings.max_job_tries}'
+    #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+    edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
+    edit ECF_KILL_CMD 'lkill %ECF_NAME% %ECF_JOBOUT%'
+    edit ECF_HOME '{doc.settings.ECF_HOME}'
+    #edit ECF_HOME '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3'
+    edit CYC '{tools.strftime(suite.Clock.now,"%H")}'
+    edit ENVIR 'prod'
+    edit E 'jecffv3'
+    #edit QUEUE 'dev'
+    edit PROJENVIR '{doc.settings.PROJECT}'
+    edit EMCPEN '{doc.settings.experiment_name}'
+    edit DATAROOT '{doc.settings.DATAROOT}'
+    edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+    edit ECF_OUT '{doc.settings.ECF_HOME}/output'
+    edit ECF_LOG '{doc.settings.ECF_HOME}/ecf.log'
+    edit MODEL_NAME 'gfs'
+
+    edit DUMPDIR '{doc.settings.DUMPDIR}'
+    {common_metasched_vars}
+
+  common_metasched_vars: !expand |
+    {metasched.defvar("QUEUE", doc.settings.QUEUE)}
+    {metasched.defvar("COM", doc.settings.COM)}
+    {metasched.defvar("QUEUESERV", doc.settings.QUEUESERV)}
+
+  Rocoto:
+    scheduler: !calc doc.scheduler
+    max_tries: !calc doc.settings.max_job_tries
+    workflow_xml: !expand |
+      <?xml version="1.0"?>
+      <!DOCTYPE workflow [
+        <!ENTITY LOG_DIR "{doc.settings.ROCOTO_HOME}/log">
+        <!ENTITY TASK_THROTTLE "5">
+        <!ENTITY PROJECT "{doc.settings.PROJECT}">
+        <!ENTITY CYCLE_THROTTLE "2">
+        <!ENTITY MAX_TRIES "{doc.settings.max_job_tries}">
+        <!ENTITY HOMEgfs "{doc.settings.HOMEgfs}">
+      {tools.indent("  ",suite.common_metasched_vars)}
+      ]>
+      <workflow realtime="F"
+                cyclethrottle="&CYCLE_THROTTLE;"
+                scheduler="{sched.rocoto_name.lower()}"
+                taskthrottle="&TASK_THROTTLE;" >
+        <log><cyclestr>&LOG_DIR;/rocoto_@Y@m@d@H.log</cyclestr></log>
+      {to_rocoto.make_time_xml(indent=1)}
+      {to_rocoto.make_task_xml(indent=1)}
+      </workflow>
+
+  gdas: !Family
+    AlarmName: gdas
+    dump_waiter: *dump_waiter_task
+
+    ecflow_def: |
+      edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
+      edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+      edit PROJ '%PROJENVIR%'
+      edit MODEL_NAME 'gdas' 
+
+    prep: !Task
+      <<: *exclusive_task_template
+      Trigger: !Depend  up.gdas.post.at('-6:00:00') & dump_waiter.updated_status
+      resources: !calc ( doc.resources.run_prep )
+
+    enkf: !Family
+      eobs: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend  ( up.prep & epos.at('-6:00:00') )
+        resources: !calc ( doc.resources.run_eobs )
+
+      eomg: !TaskArray
+        Trigger: !Depend eobs
+        Dimensions:
+          groupid: !calc tools.seq(1,doc.settings.ENKF_INNOVATE_GROUPS,1)
+        grp: !TaskElement
+          <<: *exclusive_task_template
+          resources: !calc ( doc.resources.run_eomg )
+          J_JOB: eomg
+          Foreach: [ groupid ]
+          Name: !expand "grp{idx.groupid}"
+          ecflow_def: !calc more_vars
+          rocoto_more_vars: !calc more_vars
+          more_vars: !expand |
+            {metasched.defenvar("ENSGRP",idx.groupid)}
+
+      eupd: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend eomg
+        resources: !calc ( doc.resources.run_eupd )
+
+      ecen: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend ( eupd & up.anal )
+        resources: !calc ( doc.resources.run_ecen )
+
+      efcs: !TaskArray
+        Trigger: !Depend eobs
+        Dimensions:
+          groupid: !calc tools.seq(1,doc.settings.ENKF_FORECAST_GROUPS,1)
+        grp: !TaskElement
+          <<: *exclusive_task_template
+          resources: !calc ( doc.resources.run_eomg )
+          J_JOB: efcs
+          Foreach: [ groupid ]
+          Name: !expand "grp{idx.groupid}"
+          ecflow_def: !calc more_vars
+          rocoto_more_vars: !calc more_vars
+          more_vars: !expand |
+            {metasched.defenvar("ENSGRP",idx.groupid)}
+
+      epos: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend efcs
+        resources: !calc ( doc.resources.run_epos )
+
+    anal: !Task
+      <<: *exclusive_task_template
+      Trigger: !Depend  ( prep & enkf.epos.at('-6:00:00') )
+      resources: !calc ( doc.resources.run_anal )
+
+    fcst: !Task
+      <<: *exclusive_task_template
+      Trigger: !Depend anal
+      resources: !calc ( doc.resources.run_gdasfcst )
+
+    post: !TaskArray
+      Dimensions:
+        groupid: !calc tools.seq(0,5,1)
+      post_el: !TaskElement
+        <<: *exclusive_task_template
+        Foreach: [ groupid ]
+        J_JOB: post
+        Name: !expand "f{idx.groupid*6:03d}"
+        fhrlst: !FirstTrue
+          - when: !calc idx.groupid==0
+            do:   anl
+          - otherwise: !expand "f{idx.groupid*6:03d}"
+        ecflow_def: !calc more_vars
+        rocoto_more_vars: !calc more_vars
+        more_vars: !expand |
+          {metasched.defenvar("FHRGRP",Name)}
+          {metasched.defenvar("FHRLST",fhrlst)}
+
+    vrfy: !Task
+      <<: *exclusive_task_template
+      Trigger: !Depend post
+      resources: !calc ( doc.resources.run_vrfy )
+
+  gfs: !Family
+    AlarmName: gfs
+    ecflow_def: |
+      edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+      edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+      edit PROJ '%PROJENVIR%'
+      edit MODEL_NAME 'gfs'
+
+    dump_waiter: *dump_waiter_task
+
+    prep: !Task
+      <<: *exclusive_task_template
+      Trigger: !Depend  up.gdas.post.at('-6:00:00')
+      resources: !calc ( doc.resources.run_prep )
+    
+    anal: !Task
+      <<: *exclusive_task_template
+      Trigger: !Depend  ( prep & up.gdas.enkf.epos.at('-6:00:00') )
+      resources: !calc ( doc.resources.run_anal )
+
+    fcst: !Task
+      <<: *exclusive_task_template
+      Trigger: !Depend anal
+      resources: !calc ( doc.resources.run_gfsfcst )
+
+    post: !TaskArray
+      Trigger: !Depend ( fcst.is_running() | fcst.is_completed() )
+      Dimensions:
+        groupid: !calc tools.seq(0,5,1)
+      post_el: !TaskElement
+        <<: *exclusive_task_template
+        Foreach: [ groupid ]
+        Name: !expand "f{idx.groupid*6:03d}"
+        J_JOB: post
+        fhrlst: !FirstTrue
+          - when: !calc idx.groupid==0
+            do:   anl
+          - otherwise: !expand "f{idx.groupid*6:03d}"
+        ecflow_def: !calc more_vars
+        rocoto_more_vars: !calc more_vars
+        more_vars: !expand |
+          {metasched.defenvar("FHRGRP",Name)}
+          {metasched.defenvar("FHRLST",fhrlst)}
+    
+    vrfy: !Task
+      <<: *exclusive_task_template
+      Trigger: !Depend post
+      resources: !calc ( doc.resources.run_vrfy )
+
+  archive: !Family
+    gdasarch: !Task
+      <<: *shared_task_template
+      Trigger: !Depend up.gdas.vrfy
+      resources: !calc ( doc.resources.run_arch )
+      Disable: !calc doc.settings.archive_to_hpss
+
+    gfsarch: !Task
+      <<: *shared_task_template
+      Trigger: !Depend up.gfs.vrfy
+      resources: !calc ( doc.resources.run_arch )
+      Disable: !calc doc.settings.archive_to_hpss
+
+    earc: !TaskArray
+      Trigger: !Depend up.gdas.enkf.epos
+      Dimensions:
+        groupid: !calc tools.seq(1,doc.settings.ENKF_ARCHIVE_GROUPS,1)
+      grp: !TaskElement
+        <<: *shared_task_template
+        resources: !calc ( doc.resources.run_arch )
+        J_JOB: earc
+        accounting: *shared_accounting
+        Foreach: [ groupid ]
+        Name: !expand "grp{idx.groupid}"
+        ecflow_def: !calc more_vars
+        rocoto_more_vars: !calc more_vars
+        more_vars: !expand |
+          {metasched.defenvar("ENSGRP",idx.groupid)}
+
+  final: !Task
+    <<: *shared_task_template
+    resources: !calc (doc.resources.run_nothing)
+

@@ -1,0 +1,109 @@
+task_template: &task_template
+
+  Template: *task_validator
+
+  Rocoto: !expand |
+    <command>&HOMEgfs;/jobs/{J_JOB}</command>
+    {sched.rocoto_accounting(accounting,jobname=task_path_var,
+        outerr="<cyclestr>&LOG_DIR;/"+task_path_var+"_t"+"@H"+"z.log</cyclestr>")}
+    {sched.rocoto_resources(resources)}
+    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+    <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
+    <envar><name>CDUMP</name><value>{CDUMP}</value></envar>
+    {rocoto_more_vars}
+
+  rocoto_more_vars: ""
+
+  CDUMP: !calc task_path_list[0]
+
+  # Default resources for a job are serial
+  resources: !calc doc.resources.run_nothing
+
+  ecf_file: !expand |
+    #! /bin/sh
+    {ecf_batch_resources}
+    %include <head.h>
+    %include <envir-xc40.h>
+
+    set -x
+
+    {ecf_resource_more}
+
+    export model=%MODEL_NAME%
+    %include <model_ver.h>
+
+    ############################################################
+    # Load modules
+    ############################################################
+    . $MODULESHOME/init/sh
+    {ecf_module_commands}
+    module list
+
+    #############################################################
+    # WCOSS environment settings
+    #############################################################
+
+    {ecf_environment_settings}
+
+    ###########################################################
+    export cyc=%CYC%
+
+    # CALL executable job script here
+    ${{HOMEgfs}}/jobs/{J_JOB}
+
+    %include <tail.h>
+    %manual
+    {ecf_manual}
+
+  ecf_manual: |
+    # FIXME: Insert manual for this job.
+
+  ecf_module_commands: |-
+    # Add any "module" commands here (switch, load, use, etc.)
+
+  ecf_environment_settings: |-
+    # Set tuning variables like KMP_AFFINITY and OMP_STACKSIZE here.
+
+  ecf_batch_resources: !expand |-
+    {sched.batch_accounting(accounting,jobname=task_path_var,outerr="%ECF_OUT%/"+task_path_var+"_t"+"%CYC%"+"z.log")}
+    {sched.batch_resources(resources)}
+
+  ecf_resource_more: !expand |-
+    {ecf_maybe_ntasks}
+    {ecf_maybe_ptile}
+    {ecf_maybe_threads}
+
+  ecf_maybe_ntasks: !FirstTrue
+    - when: !calc resources.total_ranks()>0
+      do: !expand 'export ntasks={resources.total_ranks()}'
+    - otherwise: "# No MPI in use, so I am not setting $ntasks."
+
+  ecf_maybe_threads: !FirstTrue
+    - when: !calc resources.has_threads()
+      do: !expand 'export threads={resources[0]["OMP_NUM_THREADS"]}'
+    - otherwise: "# No OpenMP in use, so I am not setting $threads"
+
+  ecf_maybe_ptile: !FirstTrue
+    - when: !calc resources.has_threads() or resources.total_ranks()>0
+      do: !expand 'export ptile={sched.max_ranks_per_node(resources)}'
+    - otherwise: "# Neither OpenMP nor MPI are in use, so I am not setting $ptile"
+
+  
+
+shared_accounting: &shared_accounting
+  queue: !calc metasched.varref('QUEUESERV')
+  project: !calc metasched.varref('PROJECT')
+
+exclusive_accounting: &exclusive_accounting
+  queue: !calc metasched.varref('QUEUE')
+  project: !calc metasched.varref('PROJECT')
+
+shared_task_template: &shared_task_template
+  <<: *task_template
+  accounting: *shared_accounting
+  J_JOB: !expand '{tools.to_upper(task_path_list[-1])}.sh'
+
+exclusive_task_template: &exclusive_task_template
+  <<: *task_template
+  accounting: *exclusive_accounting
+  J_JOB: !expand '{tools.to_upper(task_path_list[-1])}.sh'

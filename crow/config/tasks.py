@@ -163,13 +163,16 @@ class SuiteView(Mapping):
         return deps
 
     def get_trigger_dep(self):
-        return self.get('Trigger',TRUE_DEPENDENCY)
+        t=self.get('Trigger',None)
+        return TRUE_DEPENDENCY if t is None else t
 
     def get_complete_dep(self):
-        return self.get('Complete',FALSE_DEPENDENCY)
+        t=self.get('Complete',None)
+        return FALSE_DEPENDENCY if t is None else t
 
     def get_time_dep(self):
-        return self.get('Time',timedelta.min)
+        t=self.get('Time',None)
+        return timedelta.min if t is None else t
 
     def child_iter(self):
         """!Iterates over all tasks and families that are direct 
@@ -278,7 +281,8 @@ class SuiteView(Mapping):
                 return self.suite.Clock
             return default
         try:
-            return self.suite.get_alarm_with_name(self.AlarmName)
+            alarm=self.suite.get_alarm_with_name(self.AlarmName)
+            return alarm
         except KeyError as ke:
             raise ValueError(f'{self.task_path_var}: no alarm with name {self.AlarmName} in suite.')
 

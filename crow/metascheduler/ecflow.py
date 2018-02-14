@@ -1,4 +1,4 @@
-import collections, datetime
+import collections, datetime, re
 from collections import OrderedDict
 
 from io import StringIO
@@ -129,6 +129,14 @@ class ToEcflow(object):
         if 'parallelism' in suite.ecFlow:
             update_globals['parallelism']=suite.ecFlow.parallelism
 
+        cycles_to_write=suite.ecFlow.get('write_cycles',suite.Clock)
+        cycles_to_analyze=suite.ecFlow.get('analyze_cycles',suite.Clock)
+
+        if cycles_to_write not in cycles_to_analyze:
+            raise ValueError(f'ecFlow.write_cycles: Cycles to write must be a subset of cycles to analyze')
+        if cycles_to_analyze not in suite.Clock:
+            raise ValueError(f'ecFlow.analyze_cycles: Cycles to analyze must be a subset of the suite clock.')
+
         self.suite=suite
         self.suite.update_globals(**update_globals)
         self.settings=self.suite.ecFlow
@@ -136,23 +144,33 @@ class ToEcflow(object):
         self.sched=scheduler
         self.clock=copy(self.suite.Clock)
         self.undated=OrderedDict()
-        self.graph=Graph(self.suite,self.clock)
-        if 'cycles_to_generate' in self.suite.ecFlow:
-            self.cycles_to_generate=self.suite.ecFlow.cycles_to_generate
-        else:
-            self.cycles_to_generate=copy(self.clock)
+        self.graph=Graph(self.suite,self.suite.Clock)
+        self.type='ecflow'
+
+    def defenvar(self,name,value):
+        return f"edit {name} '{value!s}'"
+
+    def defvar(self,name,value):
+        return f"edit {name} '{value!s}'"
 
     def varref(self,name):
         return f'%{name}%'
+
+    def _cycles_to_write(self):
+        return self.suite.ecFlow.get('write_cycles',self.suite.Clock)
+
+    def _cycles_to_analyze(self):
+        return self.suite.ecFlow.get('analyze_cycles',self.suite.Clock)
 
     def _select_cycle(self,cycle):
         invalidate_cache(self.suite,recurse=True)
         self.suite.Clock.now = cycle
 
-    def _foreach_cycle(self):
-        """!Iterates over all cycles, ensuring self.suite is correctly set up
-        to handle a cycle within during each iteration."""
-        clock=copy(self.suite.Clock)
+    def _foreach_cycle(self,clock):
+        """!Iterates over all cycles in the clock, ensuring self.suite is
+        correctly set up to handle a cycle within during each
+        iteration.        """
+        clock=copy(clock)
         # Cannot iterate over self.suite.Clock because
         # self.suite.Clock is not a Clock. It is an object that
         # generates a Clock.  Hence, invalidate_cache causes a new
@@ -164,8 +182,7 @@ class ToEcflow(object):
     def _remove_final_task(self):
         if 'final' not in self.suite: return
         assert('final' in self.suite)
-        print(self.suite.final)
-        for cycle in self.clock:
+        for cycle in self._foreach_cycle(self._cycles_to_write()):
             dt=cycle-self.clock.start
             self.graph.force_never_run(self.suite.final.at(dt).path)
 
@@ -175,11 +192,11 @@ class ToEcflow(object):
         self._simplify_job_graph()
 
     def _populate_job_graph(self):
-        for cycle in self._foreach_cycle():
+        for cycle in self._foreach_cycle(self._cycles_to_analyze()):
             self.graph.add_cycle(cycle)
 
     def _simplify_job_graph(self):
-        for cycle in self._foreach_cycle():
+        for cycle in self._foreach_cycle(self._cycles_to_write()):
             self.graph.simplify_cycle(cycle)
 
     def _walk_job_graph(self,cycle,skip_fun=None,enter_fun=None,exit_fun=None):
@@ -202,9 +219,11 @@ class ToEcflow(object):
                 sio.write(f'{self.indent}{line.rstrip()}\n')
 
         def exit_fun(node):
-            indent=max(0,len(node.path)-1)*self.indent
-            nodetype='task' if node.is_task() else 'family'
-            sio.write(f'{indent}end{nodetype}\n')
+            if node.is_family():
+                indent=max(0,len(node.path)-1)*self.indent
+                ended=f'/{suite_name}/{node.view.task_path_str}'
+                ended=re.sub('/+','/',ended)
+                sio.write(f'{indent}endfamily # {ended}\n')
 
         def skip_fun(node):
             return not node.might_complete()
@@ -213,8 +232,13 @@ class ToEcflow(object):
             indent0=max(0,len(node.path)-1)*self.indent
             indent1=max(0,len(node.path))*self.indent
             nodetype='task' if node.is_task() else 'family'
-            sio.write(f'{indent0}{nodetype} {node.path[-1]}\n')
-            
+            sio.write(f'{indent0}{nodetype} {node.path[-1]}')
+            if node.is_family():
+                started=f' # /{suite_name}/{node.view.task_path_str}'
+                started=re.sub('/+','/',started)
+                sio.write(started)
+            sio.write('\n')
+
             if 'ecflow_def' in node.view:
                 for line in node.view.ecflow_def.splitlines():
                     sio.write(f'{indent1}{line.rstrip()}\n')
@@ -240,7 +264,7 @@ class ToEcflow(object):
                                   f'{item.path[-1]}\n')
                     event_number+=1
 
-        sio.write('endsuite\n')
+        sio.write(f'endsuite # /{suite_name}\n')
         suite_def_without_externs=sio.getvalue()
         sio.close()
         sio=StringIO()
@@ -300,7 +324,7 @@ class ToEcflow(object):
         suite_def_files=dict()
         ecf_files=collections.defaultdict(dict)
         self._initialize_graph()
-        for cycle in self._foreach_cycle():
+        for cycle in self._foreach_cycle(self._cycles_to_write()):
             # Figure our where we are making the suite definition file:
             filename=cycle.strftime(self.suite.ecFlow.suite_def_filename)
             if filename in suite_def_files:

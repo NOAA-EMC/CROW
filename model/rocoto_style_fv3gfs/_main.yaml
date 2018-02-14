@@ -1,0 +1,8 @@
+include:
+  - schedulers.yaml
+  - settings.yaml
+  - resources.yaml
+  - validator.yaml
+  - task_template.yaml
+  - dump_waiter.yaml
+  - suite_def.yaml

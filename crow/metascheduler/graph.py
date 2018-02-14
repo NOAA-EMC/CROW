@@ -36,11 +36,11 @@ class Node(object):
         self.time=ZERO_DT
         self.cycle=cycle
         self.alarm=view.get_alarm()
-        if 'Trigger' in view:
+        if 'Trigger' in view and view.Trigger is not None:
             self.trigger=view.Trigger.copy_dependencies()
-        if 'Complete' in view:
+        if 'Complete' in view and view.Complete is not None:
             self.complete=view.Complete.copy_dependencies()
-        if 'Time' in view:
+        if 'Time' in view and view.Time is not None:
             self.time=copy(view.Time)
         self.children=collections.OrderedDict()
 
@@ -52,9 +52,16 @@ class Node(object):
         self.trigger=FALSE_DEPENDENCY
         self.complete=FALSE_DEPENDENCY
 
+    def force_always_complete(self):
+        self.trigger=FALSE_DEPENDENCY
+        self.complete=TRUE_DEPENDENCY
+
     def assume(self,clock,assume_complete=None,assume_never_run=None):
         typecheck('self.alarm',self.alarm,Clock)
         if self.cycle not in self.alarm:
+            self.trigger=FALSE_DEPENDENCY
+            self.complete=FALSE_DEPENDENCY
+        elif self.view.get('Disable',False):
             self.trigger=FALSE_DEPENDENCY
             self.complete=FALSE_DEPENDENCY
         else:
@@ -62,7 +69,6 @@ class Node(object):
                 self.trigger,clock,self.cycle,assume_complete,assume_never_run))
             self.complete=algebra_simplify(algebra_assume(
                 self.complete,clock,self.cycle,assume_complete,assume_never_run))
-
     def is_family(self): return self.view.is_family()
     def is_task(self): return self.view.is_task()
     def has_trigger(self):
@@ -125,10 +131,12 @@ class Graph(object):
                     if node.can_never_complete():
                         for descendent in depth_first_traversal(node):
                             never_run.add(descendent.path)
+                            descendent.force_never_run()
                         changed=True
                     elif node.is_always_complete():
                         for descendent in depth_first_traversal(node):
                             always_complete.add(descendent.path)
+                            descendent.force_always_complete()
                         changed=True
 
     def depth_first_traversal(self,cycle,skip_fun,enter_fun,exit_fun):

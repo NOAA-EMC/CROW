@@ -77,6 +77,11 @@ def command_without_exe(parallelism,jobspec,exe):
     cmd=list(shell_command_obj.command)
     return ' '.join( [ s for s in cmd if s!=exe ] )
 
+def indent(prefix,text):
+    """!Given a multiline string, return a new multiline string with the
+    given prefix prepended to each line.    """
+    return '\n'.join([prefix+L for L in text.splitlines()])
+
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
 CONFIG_TOOLS=crow.tools.ImmutableMapping({
@@ -109,4 +114,5 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'get_scheduler':crow.sysenv.get_scheduler,
     'node_tool_for':crow.sysenv.node_tool_for,
     'command_without_exe':command_without_exe,
+    'indent':indent,
 })

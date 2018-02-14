@@ -1,0 +1,45 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J gdas.enkf.epos
+#BSUB -o %ECF_OUT%/gdas.enkf.epos_t%CYC%z.log
+
+#BSUB -W 0:02
+#BSUB -R rusage[mem=254]
+#BSUB -extsched CRAYLINUX[]
+export NODES=20
+%include <head.h>
+%include <envir-xc40.h>
+
+set -x
+
+export ntasks=80
+export ptile=4
+export threads=2
+
+export model=%MODEL_NAME%
+%include <model_ver.h>
+
+############################################################
+# Load modules
+############################################################
+. $MODULESHOME/init/sh
+# Add any "module" commands here (switch, load, use, etc.)
+module list
+
+#############################################################
+# WCOSS environment settings
+#############################################################
+
+# Set tuning variables like KMP_AFFINITY and OMP_STACKSIZE here.
+
+###########################################################
+export cyc=%CYC%
+
+# CALL executable job script here
+${HOMEgfs}/jobs/EPOS.sh
+
+%include <tail.h>
+%manual
+# FIXME: Insert manual for this job.
+

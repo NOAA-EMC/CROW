@@ -1,7 +1,9 @@
-import sys
+import sys, io
 from datetime import timedelta, datetime
 from io import StringIO
 from copy import copy
+from xml.sax.saxutils import quoteattr, escape
+
 from crow.tools import typecheck
 from collections import namedtuple
 from collections.abc import Sequence, Mapping
@@ -10,7 +12,7 @@ import crow.sysenv
 from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           AndDependency, OrDependency, NotDependency, \
           StateDependency, Dependable, Taskable, Task, \
-          Family, Cycle, RUNNING, COMPLETED, FAILED, \
+          Family, Cycle, RUNNING, COMPLETED, FAILED, invalidate_cache, \
           TRUE_DEPENDENCY, FALSE_DEPENDENCY, SuitePath, TaskExistsDependency, \
           CycleExistsDependency, DataEvent, ShellEvent, EventDependency
 from crow.metascheduler.algebra import simplify
@@ -36,6 +38,18 @@ _ROCOTO_DEP_TAG={ AndDependency:'and',
                  NotDependency:'not' }
 
 _ZERO_DT=timedelta()
+
+def stringify_clock(name,clock,indent):
+    start_time=clock.start.strftime('%Y%m%d%H%M')
+    end_time=clock.end.strftime('%Y%m%d%H%M')
+    step=to_timedelta(clock.step) # convert to python timedelta
+    step=_cycle_offset(step) # convert to rocoto time delta
+    if name:
+        return (f'{indent}<cycledef group="{name}">{start_time} '
+                f'{end_time} {step}</cycledef>\n')
+    else:
+        return (f'{indent}<cycledef>{start_time} {end_time} '
+                f'{step}</cycledef>\n')
 
 def _dep_rel(dt,tree):
     tree.add_time(dt)
@@ -145,18 +159,27 @@ class ToRocoto(object):
                             "must be a string.")
         self.__dummy_var_count=0
         self.__families_with_completes=set()
+        self.__alarms_used=set([""])
+
+    def defenvar(self,name,value):
+        return f'<envar><name>{name}</name><value>{value!s}</value></envar>'
+
+    def defvar(self,name,value):
+        qvalue=quoteattr(str(value))
+        return(f'<!ENTITY {name} {qvalue}>')
 
     def varref(self,name):
         return f'&{name};'
 
     def make_time_xml(self,indent=1):
-        clock=copy(self.suite.Clock)
-        start_time=clock.start.strftime('%Y%m%d%H%M')
-        end_time=clock.end.strftime('%Y%m%d%H%M')
-        step=to_timedelta(clock.step) # convert to python timedelta
-        step=_cycle_offset(step) # convert to rocoto time delta
-        space=self.__spacing
-        return f'{space*indent}<cycledef>{start_time} {end_time} {step}</cycledef>\n'
+        with io.StringIO() as sio:
+            for name in self.__alarms_used:
+                if name:
+                    alarm=self.suite.Alarms[name]
+                else:
+                    alarm=self.suite.Clock
+                sio.write(stringify_clock(name,alarm,indent*self.__spacing))
+            return sio.getvalue()
 
     def make_task_xml(self,indent=1):
         fd=StringIO()
@@ -170,7 +193,7 @@ class ToRocoto(object):
                 self.__families_with_completes.add(family_path)
 
         self._convert_item(fd,max(0,indent-1),self.suite,TRUE_DEPENDENCY,
-                           FALSE_DEPENDENCY,timedelta.min)
+                           FALSE_DEPENDENCY,timedelta.min,'')
         self._handle_final_task(fd,indent)
         result=fd.getvalue()
         fd.close()
@@ -261,6 +284,7 @@ class ToRocoto(object):
                 raise KeyError('%s: %s'%(key,what))
 
     def _record_item(self,view,complete):
+        if view.get('Disable',False):          return
         complete=complete | view.get_complete_dep()
         self.__all_defined.add(view.path)
 
@@ -286,17 +310,24 @@ class ToRocoto(object):
             else:
                 self._record_item(child,complete)
 
-    def _convert_item(self,fd,indent,view,trigger,complete,time):
+    def _convert_item(self,fd,indent,view,trigger,complete,time,alarm_name):
+        if view.get('Disable',False):          return
         trigger=trigger & view.get_trigger_dep()
         complete=complete | view.get_complete_dep()
         time=max(time,view.get_time_dep())
         space=self.__spacing
 
+        if 'AlarmName' in view:
+            if alarm_name:
+                raise ValueError('{view.task_path_var}: nested alarms are not supported in crow.metascheduler.to_rocoto()')
+            else:
+                alarm_name=view.AlarmName
+
         if view.is_task():
             maxtries=int(view.get(
                 'max_tries',self.suite.Rocoto.get('max_tries',0)))
             attr = f' maxtries="{maxtries}"' if maxtries else ''
-            self._write_task_text(fd,attr,indent,view,trigger&~complete,time)
+            self._write_task_text(fd,attr,indent,view,trigger&~complete,time,alarm_name)
             return
 
         self.__dummy_var_count+=1
@@ -318,15 +349,20 @@ class ToRocoto(object):
                         +type(child.viewed).__name__)
                 self.__final_task=child
             else:
-                self._convert_item(fd,indent+1,child,trigger,complete,time)
+                self._convert_item(fd,indent+1,child,trigger,complete,time,alarm_name)
 
         if not isinstance(view,Suite):
             fd.write(f'{space*indent}</metatask>\n')
 
-    def _write_task_text(self,fd,attr,indent,view,dependency,time):
+    def _write_task_text(self,fd,attr,indent,view,dependency,time,alarm_name,
+                         manual_dependency=None):
         path='.'.join(view.path[1:])
         space=self.__spacing
-        fd.write(f'{space*indent}<task name="{path}"{attr}>\n')
+        fd.write(f'{space*indent}<task name="{path}"{attr}')
+        if alarm_name:
+            self.__alarms_used.add(alarm_name)
+            fd.write(f' cycledefs="{alarm_name}"')
+        fd.write('>\n')
 
         dep=self._as_rocoto_dep(dependency,view.path)
 
@@ -335,6 +371,12 @@ class ToRocoto(object):
         if 'Rocoto' in view:
             for line in view.Rocoto.splitlines():
                 fd.write(f'{space*(indent+1)}{line}\n')
+
+        if manual_dependency is not None:
+            for line in manual_dependency.splitlines():
+                fd.write(f'{space*(indent+1)}{line}\n')
+            fd.write(space*indent+'</task>\n')
+            return
 
         if not dep_count:
             fd.write(space*(indent+1) + '<!-- no dependencies -->\n')
@@ -362,9 +404,18 @@ class ToRocoto(object):
                 dep=dep | self.__completes[item_path][1]
         return dep
 
-    def _final_task_deps(self,item):
+    def _final_task_deps(self,item,for_alarm=None,alarm_name=None):
         path=SuitePath(item.path[1:])
         with_completes=self.__families_with_completes
+
+        if for_alarm is not None:
+            if 'AlarmName' in item:
+                if alarm_name:
+                    raise ValueError('{item.task_path_var}: nested alarms are not supported in crow.metascheduler.to_rocoto()')
+                else:
+                    alarm_name=item.AlarmName
+            if alarm_name is not None and alarm_name != for_alarm:
+                return TRUE_DEPENDENCY
 
         if item.is_task():
             dep = item.is_completed()
@@ -395,7 +446,7 @@ class ToRocoto(object):
                 continue
             if not isinstance(subitem,SuiteView):
                 continue
-            subdep=subdep & self._final_task_deps(subitem)
+            subdep=subdep & self._final_task_deps(subitem,for_alarm,alarm_name)
 
         if dep is FALSE_DEPENDENCY:
             dep=subdep
@@ -424,11 +475,44 @@ class ToRocoto(object):
                 'If a workflow suite has any "complete" conditions, '
                 'then it must have a "final" task with no dependencies.')
 
-        # Generate dependency for the final task:
-        dep=self._final_task_deps(self.suite)
+        if len(self.__alarms_used)<2:
+            # There are no alarms in use, so there is only one final task.
+            # Generate dependency for it:
+            fd.write(f'\n{self.__spacing*indent}<!-- The final task dependencies are automatically generated to handle Complate and Trigger conditions. -->\n\n')
+            dep=self._final_task_deps(self.suite)
+            self._write_task_text(fd,' final="true"',indent,final,dep,timedelta.min,'')
+            return
+            
 
-        self._write_task_text(fd,' final="true"',indent,final,dep,timedelta.min)
-        
+        fd.write(f'\n{self.__spacing*indent}<!-- These final tasks are automatically generated to handle Complate and Trigger conditions, and alarms. -->\n\n')
+
+        # There are alarms, so things get... complicated.
+        manual_dependency=f'''<dependency>
+{self.__spacing*indent}<and>
+{self.__spacing*(indent+1)}<!-- All tasks must be complete or invalid for this cycle -->\n'''
+        for alarm_name in self.__alarms_used:
+            this_alarm_final_dep=self._final_task_deps(self.suite,for_alarm=alarm_name)
+            task_name=f'final_for_{alarm_name}' if alarm_name else 'final_no_alarm'
+            new_task=copy(self.suite.final.viewed)
+            new_task['AlarmName']=alarm_name
+            invalidate_cache(new_task)
+            self.suite.viewed[task_name]=new_task
+            new_task_view=self.suite[task_name]
+            del new_task
+            self.__all_defined.add(SuitePath(
+                [_ZERO_DT] + new_task_view.path[1:]))
+            self._write_task_text(fd,' final="true"',indent,new_task_view,
+                                  this_alarm_final_dep,timedelta.min,alarm_name)
+            
+            manual_dependency+=f'''{self.__spacing*(indent+1)}<or>
+{self.__spacing*(indent+2)}<taskdep task="{task_name}"/>
+{self.__spacing*(indent+2)}<not><taskvalid task="{task_name}"/></not>
+{self.__spacing*(indent+1)}</or>\n'''
+        manual_dependency+=f'{self.__spacing*indent}</and>\n</dependency>\n'
+        self._write_task_text(
+            fd,' final="true"',indent,final,
+            TRUE_DEPENDENCY,timedelta.min,'',
+            manual_dependency=manual_dependency)
 def to_rocoto(suite):
     typecheck('suite',suite,Suite)
     return ToRocoto(suite)._expand_workflow_xml()

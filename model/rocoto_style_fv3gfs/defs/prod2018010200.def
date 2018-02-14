@@ -1,0 +1,218 @@
+extern /prod2018010118/gdas/post
+extern /prod2018010118/gdas/enkf/epos
+suite prod2018010200
+  #repeat day 1
+  edit ECF_TRIES '1'
+  #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+  edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
+  edit ECF_KILL_CMD 'lkill %ECF_NAME% %ECF_JOBOUT%'
+  edit ECF_HOME '/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/blah/model/rocoto_style_fv3gfs'
+  #edit ECF_HOME '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3'
+  edit CYC '00'
+  edit ENVIR 'prod'
+  edit E 'jecffv3'
+  #edit QUEUE 'dev'
+  edit PROJENVIR 'GFS-T2O'
+  edit EMCPEN 'ecfgfsfv3'
+  edit DATAROOT '/gpfs/hps2/stmp/emc.glopara/ecfgfsfv3'
+  edit ECF_FILES '/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/blah/model/rocoto_style_fv3gfs/scripts'
+  edit ECF_OUT '/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/blah/model/rocoto_style_fv3gfs/output'
+  edit ECF_LOG '/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/blah/model/rocoto_style_fv3gfs/ecf.log'
+  edit MODEL_NAME 'gfs'
+  
+  edit DUMPDIR '/gpfs/tp1/emc/globaldump'
+  edit QUEUE 'debug'
+  edit COM '/gpfs/hps2/ptmp/emc.glopara/ecfgfsfv3/com'
+  edit QUEUESERV 'dev_transfer'
+  
+  family gdas # /prod2018010200/gdas
+    edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
+    edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+    edit PROJ '%PROJENVIR%'
+    edit MODEL_NAME 'gdas'
+    task dump_waiter
+      event 1 updated_status
+    task prep
+      trigger /prod2018010118/gdas/post == complete and ./dump_waiter:updated_status
+    family enkf # /prod2018010200/gdas/enkf
+      task eobs
+        trigger ../prep == complete and /prod2018010118/gdas/enkf/epos == complete
+      family eomg # /prod2018010200/gdas/enkf/eomg
+        trigger ./eobs == complete
+        task grp1
+          edit ENSGRP '1'
+        task grp2
+          edit ENSGRP '2'
+        task grp3
+          edit ENSGRP '3'
+        task grp4
+          edit ENSGRP '4'
+        task grp5
+          edit ENSGRP '5'
+        task grp6
+          edit ENSGRP '6'
+        task grp7
+          edit ENSGRP '7'
+        task grp8
+          edit ENSGRP '8'
+        task grp9
+          edit ENSGRP '9'
+        task grp10
+          edit ENSGRP '10'
+        task grp11
+          edit ENSGRP '11'
+        task grp12
+          edit ENSGRP '12'
+        task grp13
+          edit ENSGRP '13'
+        task grp14
+          edit ENSGRP '14'
+        task grp15
+          edit ENSGRP '15'
+        task grp16
+          edit ENSGRP '16'
+      endfamily # /prod2018010200/gdas/enkf/eomg
+      task eupd
+        trigger ./eomg == complete
+      task ecen
+        trigger ./eupd == complete and ../anal == complete
+      family efcs # /prod2018010200/gdas/enkf/efcs
+        trigger ./eobs == complete
+        task grp1
+          edit ENSGRP '1'
+        task grp2
+          edit ENSGRP '2'
+        task grp3
+          edit ENSGRP '3'
+        task grp4
+          edit ENSGRP '4'
+        task grp5
+          edit ENSGRP '5'
+        task grp6
+          edit ENSGRP '6'
+        task grp7
+          edit ENSGRP '7'
+        task grp8
+          edit ENSGRP '8'
+        task grp9
+          edit ENSGRP '9'
+        task grp10
+          edit ENSGRP '10'
+        task grp11
+          edit ENSGRP '11'
+        task grp12
+          edit ENSGRP '12'
+        task grp13
+          edit ENSGRP '13'
+        task grp14
+          edit ENSGRP '14'
+        task grp15
+          edit ENSGRP '15'
+        task grp16
+          edit ENSGRP '16'
+      endfamily # /prod2018010200/gdas/enkf/efcs
+      task epos
+        trigger ./efcs == complete
+    endfamily # /prod2018010200/gdas/enkf
+    task anal
+      trigger ./prep == complete and /prod2018010118/gdas/enkf/epos == complete
+    task fcst
+      trigger ./anal == complete
+    family post # /prod2018010200/gdas/post
+      task f000
+        edit FHRGRP 'f000'
+        edit FHRLST 'anl'
+      task f006
+        edit FHRGRP 'f006'
+        edit FHRLST 'f006'
+      task f012
+        edit FHRGRP 'f012'
+        edit FHRLST 'f012'
+      task f018
+        edit FHRGRP 'f018'
+        edit FHRLST 'f018'
+      task f024
+        edit FHRGRP 'f024'
+        edit FHRLST 'f024'
+      task f030
+        edit FHRGRP 'f030'
+        edit FHRLST 'f030'
+    endfamily # /prod2018010200/gdas/post
+    task vrfy
+      trigger ./post == complete
+  endfamily # /prod2018010200/gdas
+  family gfs # /prod2018010200/gfs
+    edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+    edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+    edit PROJ '%PROJENVIR%'
+    edit MODEL_NAME 'gfs'
+    task dump_waiter
+      event 1 updated_status
+    task prep
+      trigger /prod2018010118/gdas/post == complete
+    task anal
+      trigger ./prep == complete and /prod2018010118/gdas/enkf/epos == complete
+    task fcst
+      trigger ./anal == complete
+    family post # /prod2018010200/gfs/post
+      trigger ./fcst == active or ./fcst == complete
+      task f000
+        edit FHRGRP 'f000'
+        edit FHRLST 'anl'
+      task f006
+        edit FHRGRP 'f006'
+        edit FHRLST 'f006'
+      task f012
+        edit FHRGRP 'f012'
+        edit FHRLST 'f012'
+      task f018
+        edit FHRGRP 'f018'
+        edit FHRLST 'f018'
+      task f024
+        edit FHRGRP 'f024'
+        edit FHRLST 'f024'
+      task f030
+        edit FHRGRP 'f030'
+        edit FHRLST 'f030'
+    endfamily # /prod2018010200/gfs/post
+    task vrfy
+      trigger ./post == complete
+  endfamily # /prod2018010200/gfs
+  family archive # /prod2018010200/archive
+    family earc # /prod2018010200/archive/earc
+      trigger ../gdas/enkf/epos == complete
+      task grp1
+        edit ENSGRP '1'
+      task grp2
+        edit ENSGRP '2'
+      task grp3
+        edit ENSGRP '3'
+      task grp4
+        edit ENSGRP '4'
+      task grp5
+        edit ENSGRP '5'
+      task grp6
+        edit ENSGRP '6'
+      task grp7
+        edit ENSGRP '7'
+      task grp8
+        edit ENSGRP '8'
+      task grp9
+        edit ENSGRP '9'
+      task grp10
+        edit ENSGRP '10'
+      task grp11
+        edit ENSGRP '11'
+      task grp12
+        edit ENSGRP '12'
+      task grp13
+        edit ENSGRP '13'
+      task grp14
+        edit ENSGRP '14'
+      task grp15
+        edit ENSGRP '15'
+      task grp16
+        edit ENSGRP '16'
+    endfamily # /prod2018010200/archive/earc
+  endfamily # /prod2018010200/archive
+endsuite # /prod2018010200
