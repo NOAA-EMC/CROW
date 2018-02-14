@@ -6,12 +6,12 @@ resources:
 
   # From if[[...ecen]] block in config.resources:
   run_ecen: !JobRequest
-    - memory: "3072M" 
+    - memory: "254M" 
       walltime: 00:02:00
-      mpi_ranks: 80
+      mpi_ranks: 84
       exe: placeholder
           # max_ppn comes from THEIA.env: 84/12 = 7
-      max_ppn: 4
+      max_ppn: 12
       OMP_NUM_THREADS: 2
 
   run_chgres: !JobRequest
@@ -43,9 +43,9 @@ resources:
   run_eupd: !JobRequest
     - memory: "3072M" 
       walltime: 00:02:00
-      mpi_ranks: !calc 20*12
+      mpi_ranks: !calc 10*12
       exe: placeholder
-      max_ppn: 6
+      max_ppn: 12
       OMP_NUM_THREADS: 2
 
 #  run_enkf: !JobRequest
@@ -63,10 +63,10 @@ resources:
 
   run_epos: !JobRequest
     - memory: "254M"
-      mpi_ranks: 80
+      mpi_ranks: 84
       walltime: 00:02:00
       exe: placeholder
-      max_ppn: 4
+      max_ppn: 12
       OMP_NUM_THREADS: 2
 
   run_prep: !JobRequest
@@ -74,7 +74,7 @@ resources:
       walltime: 00:02:00
       mpi_ranks: 12
       exe: placeholder
-      max_ppn: 2
+      max_ppn: 12
       OMP_NUM_THREADS: max
 
   run_anal: !JobRequest
