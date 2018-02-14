@@ -11,7 +11,7 @@ usage () {
    echo -e "\ttwo arguments (dir) (dir) : does a bitwise compare on the gfs files from the first dir to the second\n"
    echo -e "\tthird optional argument is used when acctually running the script so no promps are given, otherwize the script will report on the settings.\n"
    echo -e "\033[1mEXAMPLE:\033[0m\n\tnohup ./fv3gfs_regression.sh baseline --non-interactive > & fv3gfs_regression_baseline_run.log &\n"
-   echo -e "\033[1mNOTE:\033[0m\n\tSupported CASES are BUILD, C192_C192_low, and C192_C192_high. Any of these CASES are run by using them by names as (str)\n"
+   echo -e "\033[1mNOTE:\033[0m\n\tSupported CASES are BUILD, BUILD_org, C192_C192_low, and C192_C192_high. Any of these CASES are run by using them by names as (str)\n"
    exit
 }
 
@@ -64,7 +64,7 @@ PYTHON_FILE_COMPARE=${PYTHON_FILE_COMPARE:-'TRUE'}
 #CREATE_EXP='FALSE'
 #BUILD='FALSE'
 #RUNROCOTO='FALSE'
-#JOB_LEVEL_CHECK='TRUE'
+JOB_LEVEL_CHECK='TRUE'
 #RZDM_RESULTS='TRUE'
 #PYTHON_FILE_COMPARE='FALSE'
 
@@ -127,6 +127,7 @@ fi
 
 
 # CASE = C192_C192_low
+# HASH for org BUILD branch b169ca6dd3840edb909fefa00292523cdeeda422
 #
 # On disk snapshot for flat master low res
 # =========================================
@@ -145,7 +146,7 @@ pslot="${pslot_basename}_exp_${regressionID}"
 # Check to see if user entered a CASE from regressionID
 CASE=$regressionID
 
-if [[ $CASE == "BUILD" ]]; then
+if [[ $CASE == "BUILD" || $CASE == "BUILD_org" ]]; then
 
  log_message "INFO" "Running special $CASE case"
  regressionID=${CASE}
@@ -153,7 +154,11 @@ if [[ $CASE == "BUILD" ]]; then
  setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
  setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
  config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
- fv3gfs_git_branch='BUILD'
+ if [[ $CASE == "BUILD_org" ]]; then
+    fv3gfs_git_branch='b169ca6dd3840edb909fefa00292523cdeeda422'
+ else
+    fv3gfs_git_branch='BUILD'
+ fi
  EXTRA_SETUP_STRING="--resdet 192 --resens 192 --nens 20 --gfs_cyc 4"
 
 elif [[ $CASE == "C192_C192_low" ]]; then 
@@ -614,7 +619,7 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
      log_message "CRITICAL" "experiment directory $exp_dir_fullpath not found"
     fi
     log_message "INFO" "running regression script on host $HOST"
-    log_message "INTO" "moving to PWD $exp_dir_fullpath to run cycleing in experiment directory"
+    log_message "INTO" "moving to $exp_dir_fullpath to run cycleing in experiment directory"
     cd ${exp_dir_fullpath}
 
     log_message "INFO" "starting to run fv3gfs cycling regression test run using $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
@@ -637,8 +642,6 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
     log_message "INFO" "rocotostat determined that the last cycle in test is: $lastcycle"
 
     cycling_done="FALSE"
-    last_succeeded_checked=""
-    last_succeeded=""
     while [ $cycling_done == "FALSE" ]; do
       lastcycle_state=`$rocotostatcmd -d ${pslot}.db -w ${pslot}.xml -c $lastcycle -s | tail -1 | awk '{print $2}'`
       if [[ $lastcycle_state == "Done" ]]; then
@@ -663,18 +666,14 @@ if [[ $RUNROCOTO == 'TRUE' ]]; then
        log_message "INFO" "Successfully ran: $rocotoruncmd -d ${pslot}.db -w ${pslot}.xml"
        #log_message "INFO" "using job level checking: last succeded task checked: $last_succeeded_checked"
        #log_message "INFO" "using job level checking: last succeded task current: $last_succeeded"
-       if [[ ! -z $last_succeeded ]]; then
+       if [[ ! -z $last_succeeded && ! -z last_succeeded_checked ]]; then
          if [[ $last_succeeded != $last_succeeded_checked ]]; then
                last_succeeded_checked=$last_succeeded
                regressionID=$last_succeeded
                log_message "INFO" "job $last_succeeded just completed successfully" 
                if [[ $JOB_LEVEL_CHECK == 'TRUE' ]]; then
-                 if [[ $PYTHON_FILE_COMPARE == 'TRUE' ]]; then
-                   log_message "WARNING" "python file compare set but does not support job level checking (reverting to bash shell version)"
-                   run_file_compare
-                 fi
-               else
-                run_file_compare_python
+                   #run_file_compare_python
+                   log_message "WARNING" "job level file compare set but does is not supported yet (the message is here to test logic for running it)"
                fi
          fi
        fi
