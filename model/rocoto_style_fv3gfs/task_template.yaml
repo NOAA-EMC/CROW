@@ -15,8 +15,6 @@ task_template: &task_template
     <envar><name>CDUMP</name><value>{CDUMP}</value></envar>
     {rocoto_more_vars}
 
-  rocoto_more_vars: ""
-
   CDUMP: !calc task_path_list[0]
 
   # Default resources for a job are serial
@@ -32,6 +30,19 @@ task_template: &task_template
     export CDATE=%PDY%%CYC%
     export EXPDIR="{doc.settings.EXPDIR}"
 
+  ecf_more_exports: ""
+
+  more_vars: []
+
+  ecf_more_exports: !calc |
+    "\n".join([ tools.expand("export {VAR}=%{VAR}%\n",VAR=V) for V in more_vars ])
+
+  rocoto_more_vars: !calc |
+    "\n".join([ metasched.defenvar(VAR,this[VAR]) for VAR in more_vars ])
+
+  ecflow_def: !calc |
+    "\n".join([ metasched.defenvar(VAR,this[VAR]) for VAR in more_vars ])
+
   ecf_file: !expand |
     #! /bin/sh
     {ecf_batch_resources}
@@ -45,6 +56,8 @@ task_template: &task_template
 
     export HOMEgfs=%HOMEgfs%
     export model=%MODEL_NAME%
+    export CDUMP=$model
+    {ecf_more_exports}
     %include <model_ver.h>
 
     ############################################################

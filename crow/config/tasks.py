@@ -99,10 +99,13 @@ class SuiteView(Mapping):
         self.viewed._path=self.viewed.task_path_var
         if type(self.viewed) in SUITE_CLASS_MAP:
             self.viewed.up=parent
-            self.viewed.this=self
+            self.viewed.this=self.viewed
+        elif not isinstance(self.viewed,Cycle):
+            assert(False)
         self.path=SuitePath(path)
         self.parent=parent
         self.__cache={}
+        assert(isinstance(self.viewed,Cycle) or 'this' in self.viewed)
         if isinstance(self.viewed,Slot):
             locals=multidict(self.parent,self.viewed)
             globals=self.viewed._get_globals()
@@ -110,11 +113,16 @@ class SuiteView(Mapping):
                 if hasattr(v,'_as_dependency'): continue
                 self.viewed[k]=from_config(k,v,globals,locals,self.viewed._path)
         if isinstance(self.viewed,Task):
+            assert(isinstance(self.viewed,Cycle) or 'this' in self.viewed)
             for k,v in self.viewed.items():
-                v=copy(v)
+                copied=False
                 if hasattr(v,"_validate"):
+                    copied=True
+                    v=copy(v)
                     v._validate('suite')
                 if self.__can_wrap(v):
+                    if not copied:
+                        v=copy(v)
                     self.viewed[k]=v
         assert(isinstance(viewed,Cycle) or self.viewed.task_path_var != parent.task_path_var)
 

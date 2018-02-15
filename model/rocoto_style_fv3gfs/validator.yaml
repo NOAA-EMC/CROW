@@ -23,12 +23,25 @@ task_validator: &task_validator !Template
     type: string
     default: ""
 
-  batch_job_command:
+  ecflow_command:
     description: >-
-      Command to execute for this task.  This is dumped into both the
-      ecf file and the Rocoto XML.  Ultimately, it is the "meat" of
-      the task.
+      Command to execute for this task when run in ecflow.  This is
+      inserted into the ecf file.
     type: string
+
+  rocoto_command:
+    description: >-
+      Command to execute for this task when run in rocoto.  This is
+      inserted into the rocoto command tag for the task.
+    type: string
+
+  more_vars:
+    description: >-
+      List of variables that should be added to Rocoto envar blocks,
+      ecflow suite definition edits, and ecf file exports.  Overriding
+      ecflow_def will prevent this from being passed through as edits
+      in the suite definition.
+    type: string list
 
   ecf_environment_settings:
     description: "Tuning variables like KMP_AFFINITY and OMP_STACKSIZE."

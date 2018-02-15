@@ -120,7 +120,6 @@
         <envar><name>CDUMP</name><value>gdas</value></envar>
         <envar><name>FHRGRP</name><value>000</value></envar>
         <envar><name>FHRLST</name><value>anl</value></envar>
-        
         <dependency>
           <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf000.nemsio</cyclestr></datadep>
         </dependency>
@@ -141,7 +140,6 @@
         <envar><name>CDUMP</name><value>gdas</value></envar>
         <envar><name>FHRGRP</name><value>001</value></envar>
         <envar><name>FHRLST</name><value>f000</value></envar>
-        
         <dependency>
           <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf000.nemsio</cyclestr></datadep>
         </dependency>
@@ -162,7 +160,6 @@
         <envar><name>CDUMP</name><value>gdas</value></envar>
         <envar><name>FHRGRP</name><value>002</value></envar>
         <envar><name>FHRLST</name><value>f003</value></envar>
-        
         <dependency>
           <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf003.nemsio</cyclestr></datadep>
         </dependency>
@@ -183,7 +180,6 @@
         <envar><name>CDUMP</name><value>gdas</value></envar>
         <envar><name>FHRGRP</name><value>003</value></envar>
         <envar><name>FHRLST</name><value>f006</value></envar>
-        
         <dependency>
           <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf006.nemsio</cyclestr></datadep>
         </dependency>
@@ -255,7 +251,6 @@
           <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
           <envar><name>CDUMP</name><value>gdas</value></envar>
           <envar><name>ENSGRP</name><value>01</value></envar>
-          
           <dependency>
             <and>
               <or>
@@ -283,7 +278,6 @@
           <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
           <envar><name>CDUMP</name><value>gdas</value></envar>
           <envar><name>ENSGRP</name><value>02</value></envar>
-          
           <dependency>
             <and>
               <or>
@@ -366,7 +360,6 @@
           <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
           <envar><name>CDUMP</name><value>gdas</value></envar>
           <envar><name>ENSGRP</name><value>01</value></envar>
-          
           <dependency>
             <or>
               <taskdep task="gdas.enkf.ecen"/>
@@ -391,7 +384,6 @@
           <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
           <envar><name>CDUMP</name><value>gdas</value></envar>
           <envar><name>ENSGRP</name><value>02</value></envar>
-          
           <dependency>
             <or>
               <taskdep task="gdas.enkf.ecen"/>
@@ -511,7 +503,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>000</value></envar>
         <envar><name>FHRLST</name><value>anl</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf000.nemsio</cyclestr></datadep>
@@ -535,7 +526,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>001</value></envar>
         <envar><name>FHRLST</name><value>f000</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf000.nemsio</cyclestr></datadep>
@@ -559,7 +549,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>002</value></envar>
         <envar><name>FHRLST</name><value>f006</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf006.nemsio</cyclestr></datadep>
@@ -583,7 +572,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>003</value></envar>
         <envar><name>FHRLST</name><value>f012</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf012.nemsio</cyclestr></datadep>
@@ -607,7 +595,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>004</value></envar>
         <envar><name>FHRLST</name><value>f018</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf018.nemsio</cyclestr></datadep>
@@ -631,7 +618,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>005</value></envar>
         <envar><name>FHRLST</name><value>f024</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf024.nemsio</cyclestr></datadep>
@@ -655,7 +641,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>006</value></envar>
         <envar><name>FHRLST</name><value>f030</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf030.nemsio</cyclestr></datadep>
@@ -679,7 +664,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>007</value></envar>
         <envar><name>FHRLST</name><value>f036</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf036.nemsio</cyclestr></datadep>
@@ -703,7 +687,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>008</value></envar>
         <envar><name>FHRLST</name><value>f042</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf042.nemsio</cyclestr></datadep>
@@ -727,7 +710,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>009</value></envar>
         <envar><name>FHRLST</name><value>f048</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf048.nemsio</cyclestr></datadep>
@@ -751,7 +733,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>010</value></envar>
         <envar><name>FHRLST</name><value>f054</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf054.nemsio</cyclestr></datadep>
@@ -775,7 +756,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>011</value></envar>
         <envar><name>FHRLST</name><value>f060</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf060.nemsio</cyclestr></datadep>
@@ -799,7 +779,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>012</value></envar>
         <envar><name>FHRLST</name><value>f066</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf066.nemsio</cyclestr></datadep>
@@ -823,7 +802,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>013</value></envar>
         <envar><name>FHRLST</name><value>f072</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf072.nemsio</cyclestr></datadep>
@@ -847,7 +825,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>014</value></envar>
         <envar><name>FHRLST</name><value>f078</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf078.nemsio</cyclestr></datadep>
@@ -871,7 +848,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>015</value></envar>
         <envar><name>FHRLST</name><value>f084</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf084.nemsio</cyclestr></datadep>
@@ -895,7 +871,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>016</value></envar>
         <envar><name>FHRLST</name><value>f090</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf090.nemsio</cyclestr></datadep>
@@ -919,7 +894,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>017</value></envar>
         <envar><name>FHRLST</name><value>f096</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf096.nemsio</cyclestr></datadep>
@@ -943,7 +917,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>018</value></envar>
         <envar><name>FHRLST</name><value>f102</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf102.nemsio</cyclestr></datadep>
@@ -967,7 +940,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>019</value></envar>
         <envar><name>FHRLST</name><value>f108</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf108.nemsio</cyclestr></datadep>
@@ -991,7 +963,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>020</value></envar>
         <envar><name>FHRLST</name><value>f114</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf114.nemsio</cyclestr></datadep>
@@ -1015,7 +986,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>021</value></envar>
         <envar><name>FHRLST</name><value>f120</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf120.nemsio</cyclestr></datadep>
@@ -1039,7 +1009,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>022</value></envar>
         <envar><name>FHRLST</name><value>f126</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf126.nemsio</cyclestr></datadep>
@@ -1063,7 +1032,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>023</value></envar>
         <envar><name>FHRLST</name><value>f132</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf132.nemsio</cyclestr></datadep>
@@ -1087,7 +1055,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>024</value></envar>
         <envar><name>FHRLST</name><value>f138</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf138.nemsio</cyclestr></datadep>
@@ -1111,7 +1078,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>025</value></envar>
         <envar><name>FHRLST</name><value>f144</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf144.nemsio</cyclestr></datadep>
@@ -1135,7 +1101,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>026</value></envar>
         <envar><name>FHRLST</name><value>f150</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf150.nemsio</cyclestr></datadep>
@@ -1159,7 +1124,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>027</value></envar>
         <envar><name>FHRLST</name><value>f156</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf156.nemsio</cyclestr></datadep>
@@ -1183,7 +1147,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>028</value></envar>
         <envar><name>FHRLST</name><value>f162</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf162.nemsio</cyclestr></datadep>
@@ -1207,7 +1170,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>029</value></envar>
         <envar><name>FHRLST</name><value>f168</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf168.nemsio</cyclestr></datadep>
@@ -1231,7 +1193,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>030</value></envar>
         <envar><name>FHRLST</name><value>f174</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf174.nemsio</cyclestr></datadep>
@@ -1255,7 +1216,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>031</value></envar>
         <envar><name>FHRLST</name><value>f180</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf180.nemsio</cyclestr></datadep>
@@ -1279,7 +1239,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>032</value></envar>
         <envar><name>FHRLST</name><value>f186</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf186.nemsio</cyclestr></datadep>
@@ -1303,7 +1262,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>033</value></envar>
         <envar><name>FHRLST</name><value>f192</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf192.nemsio</cyclestr></datadep>
@@ -1327,7 +1285,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>034</value></envar>
         <envar><name>FHRLST</name><value>f198</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf198.nemsio</cyclestr></datadep>
@@ -1351,7 +1308,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>035</value></envar>
         <envar><name>FHRLST</name><value>f204</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf204.nemsio</cyclestr></datadep>
@@ -1375,7 +1331,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>036</value></envar>
         <envar><name>FHRLST</name><value>f210</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf210.nemsio</cyclestr></datadep>
@@ -1399,7 +1354,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>037</value></envar>
         <envar><name>FHRLST</name><value>f216</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf216.nemsio</cyclestr></datadep>
@@ -1423,7 +1377,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>038</value></envar>
         <envar><name>FHRLST</name><value>f222</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf222.nemsio</cyclestr></datadep>
@@ -1447,7 +1400,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>039</value></envar>
         <envar><name>FHRLST</name><value>f228</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf228.nemsio</cyclestr></datadep>
@@ -1471,7 +1423,6 @@
         <envar><name>CDUMP</name><value>gfs</value></envar>
         <envar><name>FHRGRP</name><value>040</value></envar>
         <envar><name>FHRLST</name><value>f234</value></envar>
-        
         <dependency>
           <and>
             <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf234.nemsio</cyclestr></datadep>
@@ -1519,7 +1470,7 @@
       
       <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
       <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-      <envar><name>CDUMP</name><value>archive</value></envar>
+      <envar><name>CDUMP</name><value>gdas</value></envar>
       
       <dependency>
         <taskdep task="gdas.vrfy"/>
@@ -1541,9 +1492,8 @@
         
         <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
         <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-        <envar><name>CDUMP</name><value>archive</value></envar>
+        <envar><name>CDUMP</name><value>gdas</value></envar>
         <envar><name>ENSGRP</name><value>00</value></envar>
-        
         <dependency>
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
@@ -1562,9 +1512,8 @@
         
         <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
         <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-        <envar><name>CDUMP</name><value>archive</value></envar>
+        <envar><name>CDUMP</name><value>gdas</value></envar>
         <envar><name>ENSGRP</name><value>01</value></envar>
-        
         <dependency>
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
@@ -1583,9 +1532,8 @@
         
         <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
         <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-        <envar><name>CDUMP</name><value>archive</value></envar>
+        <envar><name>CDUMP</name><value>gdas</value></envar>
         <envar><name>ENSGRP</name><value>02</value></envar>
-        
         <dependency>
           <taskdep task="gdas.enkf.epos"/>
         </dependency>
@@ -1605,7 +1553,7 @@
       
       <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
       <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-      <envar><name>CDUMP</name><value>archive</value></envar>
+      <envar><name>CDUMP</name><value>gfs</value></envar>
       
       <dependency>
         <and>
@@ -1632,29 +1580,14 @@
     
     <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
     <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-    <envar><name>CDUMP</name><value>final_no_alarm</value></envar>
-    
-    <!-- no dependencies -->
-  </task>
-  <task name="final_for_gfs" cycledefs="gfs">
-    <command>/bin/true</command>
-    <queue>&QUEUESERV;</queue>
-    <account>&PROJECT;</account>
-    <jobname>final_for_gfs</jobname>
-    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_final_for_gfs.log</cyclestr></join>
-    
-    <walltime>0:02:00</walltime>
-    <memory>300M</memory>
-    <cores>1</cores>
-    <shared></shared>
-    
-    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
-    <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-    <envar><name>CDUMP</name><value>final_for_gfs</value></envar>
+    <envar><name>CDUMP</name><value>gfs</value></envar>
     
     <dependency>
       <and>
-        <metataskdep metatask="gfs"/>
+        <taskdep task="archive.gdasarch"/>
+        <taskdep task="archive.earc.grp00"/>
+        <taskdep task="archive.earc.grp01"/>
+        <taskdep task="archive.earc.grp02"/>
         <or>
           <taskdep task="archive.gfsarch"/>
           <not>
@@ -1678,35 +1611,31 @@
     
     <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
     <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-    <envar><name>CDUMP</name><value>final_for_gdas</value></envar>
+    <envar><name>CDUMP</name><value>gfs</value></envar>
     
     <dependency>
       <and>
         <or>
           <and>
-            <or>
-              <and>
-                <taskdep task="gdas.prep"/>
-                <taskdep task="gdas.anal"/>
-              </and>
-              <not>
-                <cycleexistdep cycle_offset="-06:00:00"/>
-              </not>
-            </or>
-            <taskdep task="gdas.fcst"/>
-            <taskdep task="gdas.post.g000"/>
-            <taskdep task="gdas.post.g001"/>
-            <taskdep task="gdas.post.g002"/>
-            <taskdep task="gdas.post.g003"/>
-            <taskdep task="gdas.vrfy"/>
+            <taskdep task="gdas.prep"/>
+            <taskdep task="gdas.anal"/>
+          </and>
+          <not>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </not>
+        </or>
+        <taskdep task="gdas.fcst"/>
+        <metataskdep metatask="gdas.post"/>
+        <taskdep task="gdas.vrfy"/>
+        <or>
+          <and>
             <or>
               <taskdep task="gdas.enkf.eobs"/>
               <not>
                 <cycleexistdep cycle_offset="-06:00:00"/>
               </not>
             </or>
-            <taskdep task="gdas.enkf.eomg.grp1"/>
-            <taskdep task="gdas.enkf.eomg.grp2"/>
+            <metataskdep metatask="gdas.enkf.eomg"/>
             <or>
               <and>
                 <taskdep task="gdas.enkf.eupd"/>
@@ -1716,72 +1645,49 @@
                 <cycleexistdep cycle_offset="-06:00:00"/>
               </not>
             </or>
-            <taskdep task="gdas.enkf.efcs.grp1"/>
-            <taskdep task="gdas.enkf.efcs.grp2"/>
-            <taskdep task="gdas.enkf.epos"/>
           </and>
-          <and>
-            <or>
-              <and>
-                <taskdep task="gdas.prep"/>
-                <taskdep task="gdas.anal"/>
-              </and>
-              <not>
-                <cycleexistdep cycle_offset="-06:00:00"/>
-              </not>
-            </or>
-            <taskdep task="gdas.fcst"/>
-            <metataskdep metatask="gdas.post"/>
-            <taskdep task="gdas.vrfy"/>
-            <or>
-              <and>
-                <or>
-                  <taskdep task="gdas.enkf.eobs"/>
-                  <not>
-                    <cycleexistdep cycle_offset="-06:00:00"/>
-                  </not>
-                </or>
-                <taskdep task="gdas.enkf.eomg.grp1"/>
-                <taskdep task="gdas.enkf.eomg.grp2"/>
-                <or>
-                  <and>
-                    <taskdep task="gdas.enkf.eupd"/>
-                    <taskdep task="gdas.enkf.ecen"/>
-                  </and>
-                  <not>
-                    <cycleexistdep cycle_offset="-06:00:00"/>
-                  </not>
-                </or>
-                <taskdep task="gdas.enkf.efcs.grp1"/>
-                <taskdep task="gdas.enkf.efcs.grp2"/>
-                <taskdep task="gdas.enkf.epos"/>
-              </and>
-              <and>
-                <or>
-                  <taskdep task="gdas.enkf.eobs"/>
-                  <not>
-                    <cycleexistdep cycle_offset="-06:00:00"/>
-                  </not>
-                </or>
-                <metataskdep metatask="gdas.enkf.eomg"/>
-                <or>
-                  <and>
-                    <taskdep task="gdas.enkf.eupd"/>
-                    <taskdep task="gdas.enkf.ecen"/>
-                  </and>
-                  <not>
-                    <cycleexistdep cycle_offset="-06:00:00"/>
-                  </not>
-                </or>
-                <metataskdep metatask="gdas.enkf.efcs"/>
-                <taskdep task="gdas.enkf.epos"/>
-              </and>
-            </or>
-          </and>
+          <not>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </not>
         </or>
+        <metataskdep metatask="gdas.enkf.efcs"/>
+        <taskdep task="gdas.enkf.epos"/>
         <taskdep task="archive.gdasarch"/>
         <metataskdep metatask="archive.earc"/>
       </and>
+    </dependency>
+  </task>
+  <task name="final_for_gfs" cycledefs="gfs">
+    <command>/bin/true</command>
+    <queue>&QUEUESERV;</queue>
+    <account>&PROJECT;</account>
+    <jobname>final_for_gfs</jobname>
+    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_final_for_gfs.log</cyclestr></join>
+    
+    <walltime>0:02:00</walltime>
+    <memory>300M</memory>
+    <cores>1</cores>
+    <shared></shared>
+    
+    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+    <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+    <envar><name>CDUMP</name><value>gfs</value></envar>
+    
+    <dependency>
+      <or>
+        <and>
+          <metataskdep metatask="gfs"/>
+          <or>
+            <taskdep task="archive.gfsarch"/>
+            <not>
+              <cycleexistdep cycle_offset="-06:00:00"/>
+            </not>
+          </or>
+        </and>
+        <not>
+          <cycleexistdep cycle_offset="-06:00:00"/>
+        </not>
+      </or>
     </dependency>
   </task>
   <task name="final" final="true">
@@ -1798,7 +1704,7 @@
     
     <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
     <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-    <envar><name>CDUMP</name><value>final</value></envar>
+    <envar><name>CDUMP</name><value>gfs</value></envar>
     
     <dependency>
       <and>
@@ -1808,12 +1714,12 @@
           <not><taskvalid task="final_no_alarm"/></not>
         </or>
         <or>
-          <taskdep task="final_for_gfs"/>
-          <not><taskvalid task="final_for_gfs"/></not>
-        </or>
-        <or>
           <taskdep task="final_for_gdas"/>
           <not><taskvalid task="final_for_gdas"/></not>
+        </or>
+        <or>
+          <taskdep task="final_for_gfs"/>
+          <not><taskvalid task="final_for_gfs"/></not>
         </or>
       </and>
     </dependency>

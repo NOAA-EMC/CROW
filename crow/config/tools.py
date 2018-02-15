@@ -82,11 +82,15 @@ def indent(prefix,text):
     given prefix prepended to each line.    """
     return '\n'.join([prefix+L for L in text.splitlines()])
 
+def expand(string,**kwargs):
+    return eval(f"f'''{string}'''",{},kwargs)
+
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
 CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'fort':fort,
     'seq':seq,
+    'expand':expand,
     'crow_install_dir':crow_install_dir,
     'to_upper':(lambda s: s.upper()),
     'to_lower':(lambda s: s.lower()),

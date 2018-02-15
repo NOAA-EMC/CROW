@@ -42,7 +42,9 @@ _logger=logging.getLogger('crow.config')
 class user_error_message(str):
     """!Used to embed assertions in configuration code."""
     def _result(self,globals,locals):
-        raise ConfigUserError(eval("f'''"+self+"'''",globals,locals))
+        c=copy(globals)
+        c['this']=locals
+        raise ConfigUserError(eval("f'''"+self+"'''",c,locals))
     def _is_error(self): pass
 
 class expand(str):
@@ -56,7 +58,9 @@ class expand(str):
         cmd=self
         if cmd[-1] == "'":
             cmd=cmd[:-1] + "\\" + cmd[-1]
-        return eval("f'''"+cmd+"'''",globals,locals)
+        c=copy(globals)
+        c['this']=locals
+        return eval("f'''"+cmd+"'''",c,locals)
 
 #f''''blah bla'h \''''
 
@@ -66,14 +70,15 @@ class strcalc(str):
         return '%s(%s)'%(type(self).__name__,
                          super().__repr__())
     def _result(self,globals,locals):
-        return eval(self,globals,locals)
+        c=copy(globals)
+        c['this']=locals
+        return eval(self,c,locals)
 
 def from_config(key,val,globals,locals,path):
     """!Converts s strcalc cor Conditional to another data type via eval().
     Other types are returned unmodified."""
     try:
         if hasattr(val,'_result'):
-            #_logger.debug(f'{path}: expand {key} with locals {list(locals.keys())}')
             result=val._result(globals,locals)
             return from_config(key,result,globals,locals,path)
         return val

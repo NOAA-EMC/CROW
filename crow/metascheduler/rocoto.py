@@ -74,6 +74,39 @@ def _has_alarms(self,item):
             if _has_alarms(subitem): return True
         return False
 
+def _entirely_in_alarm(item,desired_alarm,recursed_alarm):
+    if 'AlarmName' in item:
+        recursed_alarm=item.AlarmName
+
+    if desired_alarm!=recursed_alarm: return False
+
+    if item.is_family():
+        for subitem in item.child_iter():
+            if item.is_family() or item.is_task():
+                if not _entirely_in_alarm(
+                        subitem,desired_alarm,recursed_alarm):
+                    return False
+    return True
+
+
+def _none_are_in_alarm(item,desired_alarm,recursed_alarm):
+    if 'AlarmName' in item:
+        recursed_alarm=item.AlarmName
+
+    if desired_alarm==recursed_alarm:
+        print(f'NAIA: {item.path}: alarm {recursed_alarm} is in alarm {desired_alarm}')
+        return False
+
+    if item.is_family() or item.is_cycle():
+        for subitem in item.child_iter():
+            if subitem.is_family() or subitem.is_task():
+                if not _none_are_in_alarm(
+                        subitem,desired_alarm,recursed_alarm):
+                    print(f'NAIA: {item.path}: subitem {subitem.path} in alarm {desired_alarm}')
+                    return False
+    print(f'NAIA: {item.path}: self and children not in {desired_alarm}')
+    return True
+
 def stringify_clock(name,clock,indent):
     start_time=clock.start.strftime('%Y%m%d%H%M')
     end_time=clock.end.strftime('%Y%m%d%H%M')
@@ -539,6 +572,22 @@ class ToRocoto(object):
         return dep
 
     def _final_task_deps_for_alarm(self,item,for_alarm,alarm_name=''):
+        # For tasks:
+        #   item is not in alarm 
+        #     OR
+        #   item is complete
+        #     OR
+        #   item completion condition is met
+        #     OR
+        #   item is disabled
+        # For families:
+        #   item completion condition is met
+        #     OR
+        #   item is disabled
+        #     OR
+        #   entirety of family is not in alarm
+        #     OR
+        #   final_task_deps... for any children are not met
         if 'AlarmName' in item:
             alarm_name=item.AlarmName
 
@@ -546,56 +595,54 @@ class ToRocoto(object):
         with_completes=self.__families_with_completes
         with_alarms=self.__families_with_alarms
 
+        # Disabled applies recursively to families, so if this node is
+        # disabled, the netire tree is done:
         if 'Disabled' in item and item.Disabled:
+            print(f'{path}: disabled')
+            return TRUE_DEPENDENCY
+        
+        # If nothing in the entire tree is in the alarm, then we're done.
+        if _none_are_in_alarm(item,for_alarm,alarm_name):
+            print(f'{path}: entire tree is not in alarm')
             return TRUE_DEPENDENCY
 
-        if item.is_task():
-            if alarm_name!=for_alarm:
-                # Assume tasks that are not in this cycle have completed.
-                return TRUE_DEPENDENCY
-            dep = item.is_completed()
+        if len(path)==1 and '_is_final_' in path:
+            # Do not have final tasks depend on one another
+            return TRUE_DEPENDENCY
+        elif path:
+            dep=item.is_completed()
             if item.path in self.__completes:
                 dep = dep | self.__completes[item.path][1]
-            return dep
 
-        # Initial completion dependency is the task or family
-        # completion unless this item is the Suite.  Suites must be
-        # handled differently.
-        if path:
-            if alarm_name==for_alarm:
-                dep = item.is_completed() # Family in alarm
-            else:
-                dep = FALSE_DEPENDENCY # Family not in alarm
+            if item.is_task():
+                # No children.  We're done.
+                print(f'{path}: task dep {dep}')
+                return dep
         else:
-            dep = FALSE_DEPENDENCY   # Suite
+            # This is a suite.
+            dep=FALSE_DEPENDENCY
 
-        if path and path not in with_completes and path not in with_alarms:
-            # Families with no "complete" dependency and no alarms in
-            # their entire tree have no further dependencies to
-            # identify.  Their own completion is the entirety of the
-            # completion dependency.
+        if path and _entirely_in_alarm(item,for_alarm,alarm_name) and \
+           path not in with_completes:
+            # Families with no "complete" dependency in their entire
+            # tree have no further dependencies to identify.  Their
+            # own completion is the entirety of the completion
+            # dependency.
             return dep
 
         subdep=TRUE_DEPENDENCY
         for subitem in item.child_iter():
-            if 'Disabled' in subitem and subitem.Disabled:
-                continue
-            if not path and subitem.path[1:][:5] == [ 'final' ]:
-                # Special case.  Do not include final tasks'
-                # dependencies in the final tasks' dependencies.
-                continue
-            if not subitem.is_task() and not subitem.is_family():
-                continue
-            indep=self._final_task_deps_for_alarm(
+            dep2=self._final_task_deps_for_alarm(
                 subitem,for_alarm,alarm_name)
-            if indep not in [ TRUE_DEPENDENCY, FALSE_DEPENDENCY ]:
-                subdep=subdep & indep
+            subdep=subdep & dep2
+            del dep2
 
-        if dep is FALSE_DEPENDENCY:
+
+        if subdep is not TRUE_DEPENDENCY:
             dep=subdep
-        else:
-            dep=dep | subdep
-
+            if item.path in self.__completes:
+                dep = self.__completes[item.path][1] | subdep
+        print(f'{path}: family or suite dep {dep}')
         return dep
 
     def _handle_final_task(self,fd,indent):
@@ -639,10 +686,12 @@ class ToRocoto(object):
         alarms = set(self.__alarms_used)
         alarms.add('')
         for alarm_name in alarms:
+            print(f'find final for {alarm_name}')
             dep = self._final_task_deps_for_alarm(self.suite,alarm_name)
             dep = simplify(dep)
             task_name=f'final_for_{alarm_name}' if alarm_name else 'final_no_alarm'
             new_task=copy(self.suite.final.viewed)
+            new_task['_is_final_']=True
             new_task['AlarmName']=alarm_name
             invalidate_cache(self.suite,recurse=True)
             self.suite.viewed[task_name]=new_task

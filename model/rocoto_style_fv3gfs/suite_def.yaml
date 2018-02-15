@@ -153,16 +153,12 @@ suite: !Cycle
         Foreach: [ fhr ]
         J_JOB: post.sh
         Name: !expand "g{dimidx.fhr:03d}"
-        fhrgrp: !expand "{dimidx.fhr:03d}"
-        fhrlst: !FirstTrue
+        FHRGRP: !expand "{dimidx.fhr:03d}"
+        FHRLST: !FirstTrue
           - when: !calc dimidx.fhr==0
             do:   anl
           - otherwise: !expand "f{(dimidx.fhr-1)*3:03d}"
-        ecflow_def: !calc more_vars
-        rocoto_more_vars: !calc more_vars
-        more_vars: !expand |
-          {metasched.defenvar("FHRGRP",fhrgrp)}
-          {metasched.defenvar("FHRLST",fhrlst)}
+        more_vars: [ FHRGRP, FHRLST ]
         release_id: !FirstTrue
           - when: !calc dimidx.fhr==0
             do:   "anl"
@@ -193,11 +189,8 @@ suite: !Cycle
           J_JOB: eomg.sh
           Foreach: [ groupid ]
           Name: !expand "grp{dimval.groupid}"
-          ecflow_def: !calc more_vars
-          rocoto_more_vars: !calc more_vars
           ENSGRP: !expand "{dimval.groupid:02d}"
-          more_vars: !expand |
-            {metasched.defenvar("ENSGRP",ENSGRP)}
+          more_vars: [ ENSGRP ]
 
       eupd: !Task
         <<: *exclusive_task_template
@@ -221,11 +214,8 @@ suite: !Cycle
           J_JOB: efcs.sh
           Foreach: [ groupid ]
           Name: !expand "grp{dimval.groupid}"
-          ecflow_def: !calc more_vars
-          rocoto_more_vars: !calc more_vars
           ENSGRP: !expand "{dimval.groupid:02d}"
-          more_vars: !expand |
-            {metasched.defenvar("ENSGRP",ENSGRP)}
+          more_vars: [ ENSGRP ]
 
       epos: !Task
         <<: *exclusive_task_template
@@ -282,9 +272,9 @@ suite: !Cycle
         Foreach: [ fhr  ]
         resources: !calc doc.resources.run_gfspost
         Name: !expand "grp{dimidx.fhr:03d}"
-        fhrgrp: !expand "{dimidx.fhr:03d}"
+        FHRGRP: !expand "{dimidx.fhr:03d}"
         J_JOB: post.sh
-        fhrlst: !FirstTrue
+        FHRLST: !FirstTrue
           - when: !calc dimidx.fhr==0
             do:   anl
           - otherwise: !expand "f{(dimidx.fhr-1)*6:03d}"
@@ -292,12 +282,8 @@ suite: !Cycle
           - when: !calc dimidx.fhr==0
             do:   "00"
           - otherwise: !expand "{(dimidx.fhr-1)*6:02d}"
-        ecflow_def: !calc more_vars
-        rocoto_more_vars: !calc more_vars
+        more_vars: [ FHRGRP, FHRLST ]
         Trigger: !Depend post_manager.depend("release_post{F}",F=[release_id])
-        more_vars: !expand |
-          {metasched.defenvar("FHRGRP",fhrgrp)}
-          {metasched.defenvar("FHRLST",fhrlst)}
     
     vrfy: !Task
       <<: *exclusive_task_template
@@ -312,6 +298,7 @@ suite: !Cycle
       resources: !calc ( doc.resources.run_arch )
       Disable: !calc not doc.settings.archive_to_hpss
       J_JOB: arch.sh
+      CDUMP: gdas
 
     earc: !TaskArray
       AlarmName: gdas
@@ -324,11 +311,9 @@ suite: !Cycle
         J_JOB: earc.sh
         Foreach: [ groupid ]
         Name: !expand "grp{dimval.groupid:02d}"
-        ecflow_def: !calc more_vars
-        rocoto_more_vars: !calc more_vars
+        more_vars: [ ENSGRP ]
         ENSGRP: !expand "{dimval.groupid:02d}"
-        more_vars: !expand |
-          {metasched.defenvar("ENSGRP",ENSGRP)}
+        CDUMP: gdas
 
     gfsarch: !Task
       <<: *service_task_template
@@ -338,9 +323,10 @@ suite: !Cycle
       resources: !calc ( doc.resources.run_arch )
       Disable: !calc not doc.settings.archive_to_hpss
       J_JOB: arch.sh
+      CDUMP: gfs
 
   final: !Task
     <<: *service_task_template
     resources: !calc (doc.resources.run_nothing)
     rocoto_command: /bin/true
-
+    CDUMP: gfs # useless but required

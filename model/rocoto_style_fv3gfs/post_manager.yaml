@@ -2,7 +2,7 @@ post_manager_job_contents: &post_manager_job_contents !expand |
   fhrs='anl {tools.join(up.Dimensions.fhr," ")}'
   CDATE=%PDY%%CYC%
   for fid in $fhrs ; do
-    if [[ "$fhr" == anl ]] ; then
+    if [[ "fid" == anl ]] ; then
       fhr3=f000
       event=release_postanl
     else
@@ -10,7 +10,7 @@ post_manager_job_contents: &post_manager_job_contents !expand |
       event=release_post$fhr3
     fi
 
-    file=%COM%/%CDUMP%.%PDY%/%CYC%/.t%CYC%z.log$fhr3.nemsio
+    file=%COM%/$CDUMP.%PDY%/%CYC%/.t%CYC%z.log$fhr3.nemsio
 
     while ( ! -s "$file" ) ; do
       echo "$file: nope"
