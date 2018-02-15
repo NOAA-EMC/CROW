@@ -86,12 +86,12 @@ PTMP_theia='/scratch4/NCEPDEV/stmp4'
 if [[ -d /scratch4/NCEPDEV ]]; then
   system="theia"
 elif [[ -d /gpfs/hps3 ]]; then
-  system="cray"
+  system="wcoss_cray"
 else
   log_message "CRITICAL" "Unknown machine $system, not supported"
 fi
 
-if [[ $system == "cray" ]]; then
+if [[ $system == "wcoss_cray" ]]; then
  ICS_dir=$ICS_dir_cray
  PTMP=$PTMP_cray
 else
@@ -344,7 +344,7 @@ echo "EDATE  : $edate"
 echo "EXPDIR : $exp_dir_fullpath"
 echo -e "EXTRA  : $EXTRA_SETUP_STRING\n"
 
-if [[ $INTERACTIVE == "TRUE" ]]; then
+if [ $INTERACTIVE == "TRUE" ] || [ $- == *i* ]; then
    while read -n1 -r -p "Are these the correct settings (y/n): " answer
     do
     if [[ $answer == "n" ]]; then
@@ -393,13 +393,17 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     log_message "INFO" "setting up experiment: ${setup_expt} ${exp_setup_string}"
     removed=''
     if [[ -d $exp_dir_fullpath ]]; then
-     removed='it was present but now has been removed'
+     exp_dir_fullpath_movename=$exp_dir_fullpath.$(date +%H%M%S)
+     mv $exp_dir_fullpath $exp_dir_fullpath_movename
+     removed="but it was present so the prior directory was moved to $exp_dir_fullpath_movename"
     fi
     rm -Rf $exp_dir_fullpath
     log_message "INFO" "experiment directory is $exp_dir_fullpath $removed"
     removed=''
     if [[ -d $comrot_test_dir ]]; then
-     removed='it was present but now has been removed'
+     comrot_test_dir_movename=$comrot_test_dir.$(date +%H%M%S)
+     mv $comrot_test_dir $comrot_test_dir_movename
+     removed="but it was present so the prior directory was moved to $comrot_test_dir_movename"
     fi
     rm -Rf $comrot_test_dir
     log_message "INFO" "comrot directory is $comrot_test_dir $removed"
@@ -431,13 +435,22 @@ if [[ $BUILD == 'TRUE' ]]; then
 
    cd ${checkout_dir_basename}/sorc
 
-   sed -i  's/cd gsi.fd/cd gsi.fd\n    checkout DA-FV3-IMPL/' checkout.sh
-   log_message "WARNING" "just updated checkout.sh script and added line to checkout DA-FV3-IMPL branch for gsi instead of master"
+   # This is in BUILD branch for you
+   #sed -i  's/cd gsi.fd/cd gsi.fd\n    checkout DA-FV3-IMPL/' checkout.sh
+   #log_message "WARNING" "just updated checkout.sh script and added line to checkout DA-FV3-IMPL branch for gsi instead of master"
 
    log_message "INFO" "running checkout script: $PWD/checkout.sh $username"
+   export GIT_TERMINAL_PROMPT=0
   ./checkout.sh $username
-   log_message "INFO" "running build script: $PWD/build_all.sh $system"
-  ./build_all.sh ${system}
+   if [[ $CASE=="BASE_org" ]]; then
+     build_all_args='cray'
+   else
+     build_all_args='config=fv3gfs_build.cfg'
+   fi  
+   log_message "INFO" "running build script: $PWD/build_all.sh $build_all_args"
+  ./build_all.sh $build_all_args
+   log_message "INFO" "running link_fv3gfs.sh"
+  ./link_fv3gfs.sh
   num_shared_exec=`ls -1 ../exec | wc -l`
  if [[ $num_shared_exec != $num_expected_exec ]]; then
    log_message "WARNING" "number of executables in shared exec: $num_shared_exec was found and was expecting $num_expected_exec"
