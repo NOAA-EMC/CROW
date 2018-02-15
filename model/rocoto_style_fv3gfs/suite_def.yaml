@@ -49,13 +49,13 @@ suite: !Cycle
     #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
     #edit ECF_KILL_CMD 'lkill %ECF_NAME% %ECF_JOBOUT%'
     edit ECF_HOME '{doc.settings.ECF_HOME}'
+    edit MACHINE 'xc40-dev'
     #edit ECF_HOME '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3'
     edit CYC '{tools.strftime(suite.Clock.now,"%H")}'
     edit PDY '{tools.strftime(suite.Clock.now,"%Y%m%d")}'
     edit ENVIR 'prod'
     edit E 'jecffv3'
     #edit QUEUE 'dev'
-    edit PROJECT '{doc.settings.PROJECT}'
     edit EMCPEN '{doc.settings.experiment_name}'
     edit DATAROOT '{doc.settings.DATAROOT}'
     edit ECF_FILES '{doc.settings.ECF_HOME}'
@@ -69,8 +69,11 @@ suite: !Cycle
 
   common_metasched_vars: !expand |
     {metasched.defvar("QUEUE", doc.settings.QUEUE)}
+    {metasched.defvar("HOMEgfs", doc.settings.HOMEgfs)}
+    {metasched.defvar("QUEUESHARED", doc.settings.QUEUE)}
     {metasched.defvar("COM", doc.settings.COM)}
     {metasched.defvar("QUEUESERV", doc.settings.QUEUESERV)}
+    {metasched.defvar("PROJECT", doc.settings.PROJECT)}
 
   Rocoto:
     scheduler: !calc doc.scheduler
@@ -80,10 +83,8 @@ suite: !Cycle
       <!DOCTYPE workflow [
         <!ENTITY LOG_DIR "{doc.settings.ROCOTO_HOME}/log">
         <!ENTITY TASK_THROTTLE "12">
-        <!ENTITY PROJECT "{doc.settings.PROJECT}">
         <!ENTITY CYCLE_THROTTLE "2">
         <!ENTITY MAX_TRIES "{doc.settings.max_job_tries}">
-        <!ENTITY HOMEgfs "{doc.settings.HOMEgfs}">
         <!ENTITY EXPDIR "{doc.settings.EXPDIR}">
       {tools.indent("  ",suite.common_metasched_vars)}
       ]>
@@ -103,8 +104,6 @@ suite: !Cycle
     dump_waiter: *dump_waiter_task
 
     ecflow_def: |
-      edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
-      edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
       edit MODEL_NAME 'gdas' 
 
     prep: !Task
@@ -232,8 +231,6 @@ suite: !Cycle
     Complete: !Depend ~ suite.has_cycle('-6:00:00')
     AlarmName: gfs
     ecflow_def: |
-      edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
-      edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
       edit MODEL_NAME 'gfs'
 
     dump_waiter: *dump_waiter_task
@@ -303,7 +300,7 @@ suite: !Cycle
 
   archive: !Family
     gdasarch: !Task
-      <<: *shared_task_template
+      <<: *service_task_template
       AlarmName: gdas
       Trigger: !Depend up.gdas.vrfy
       resources: !calc ( doc.resources.run_arch )
@@ -316,10 +313,9 @@ suite: !Cycle
       Dimensions:
         groupid: !calc tools.seq(0,doc.settings.ENKF_ARCHIVE_GROUPS-1,1)
       grp: !TaskElement
-        <<: *shared_task_template
+        <<: *service_task_template
         resources: !calc ( doc.resources.run_arch )
         J_JOB: earc.sh
-        accounting: *shared_accounting
         Foreach: [ groupid ]
         Name: !expand "grp{idx.groupid:02d}"
         ecflow_def: !calc more_vars
@@ -329,7 +325,7 @@ suite: !Cycle
           {metasched.defenvar("ENSGRP",ENSGRP)}
 
     gfsarch: !Task
-      <<: *shared_task_template
+      <<: *service_task_template
       Complete: !Depend ~ suite.has_cycle('-6:00:00')
       AlarmName: gfs
       Trigger: !Depend up.gfs.vrfy
@@ -338,7 +334,7 @@ suite: !Cycle
       J_JOB: arch.sh
 
   final: !Task
-    <<: *shared_task_template
+    <<: *service_task_template
     resources: !calc (doc.resources.run_nothing)
     rocoto_command: /bin/true
 

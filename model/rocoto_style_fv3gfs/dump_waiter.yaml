@@ -1,5 +1,5 @@
 dump_waiter: &dump_waiter_task !Task
-  <<: *exclusive_task_template
+  <<: *shared_task_template
   manual: |
     The dump_waiter task is a special job needed to run this
     workflow outside of the production suite.  It handles the
@@ -30,7 +30,7 @@ dump_waiter: &dump_waiter_task !Task
   # The batch_job_command is dumped into the ecf file where the
   # J-Job would normally be called.  This job is never run by
   # Rocoto, so Rocoto never uses this code block.
-  batch_job_command: !expand |
+  ecflow_command: !expand |
     setpdy.sh
     source ./PDY
     WAITFILE=%DUMPDIR%/${{PDY}}%CYC%/{CDUMP}/{CDUMP}.t%CYC%z.updated.status.tm00.bufr_d
