@@ -3,6 +3,7 @@ task_template: &task_template
   Template: *task_validator
 
   rocoto_command: !expand "&HOMEgfs;/jobs/rocoto/{J_JOB}"
+  ecflow_command: !expand "${{HOMEgfs}}/jobs/rocoto/{J_JOB}"
 
   Rocoto: !expand |
     <command>{rocoto_command}</command>
@@ -21,9 +22,17 @@ task_template: &task_template
   # Default resources for a job are serial
   resources: !calc doc.resources.run_nothing
 
+  ecf_dev_overrides: !expand |
+    # Set data and logs to locations specified in the suite definition.
+    # This is needed when running without write access to the NCO com areas.
+    export DATAROOT=%DATAROOT%
+    export jlogfile=%ECF_OUT%/jlogfile
+    export COMROOT=%COM%
+
   ecf_file: !expand |
     #! /bin/sh
     {ecf_batch_resources}
+    {ecf_dev_overrides}
     %include <head.h>
     %include <envir-xc40.h>
 
@@ -31,6 +40,7 @@ task_template: &task_template
 
     {ecf_resource_more}
 
+    export HOMEgfs=%HOMEgfs%
     export model=%MODEL_NAME%
     %include <model_ver.h>
 
@@ -51,7 +61,7 @@ task_template: &task_template
     export cyc=%CYC%
 
     # CALL executable job script here
-    ${{HOMEgfs}}/jobs/{J_JOB}
+    {ecflow_command}
 
     %include <tail.h>
     %manual
@@ -94,6 +104,10 @@ task_template: &task_template
   
 
 shared_accounting: &shared_accounting
+  queue: !calc metasched.varref('QUEUESHARED')
+  project: !calc metasched.varref('PROJECT')
+
+service_accounting: &service_accounting
   queue: !calc metasched.varref('QUEUESERV')
   project: !calc metasched.varref('PROJECT')
 
@@ -104,6 +118,11 @@ exclusive_accounting: &exclusive_accounting
 shared_task_template: &shared_task_template
   <<: *task_template
   accounting: *shared_accounting
+  J_JOB: !expand '{task_path_list[-1]}.sh'
+
+service_task_template: &service_task_template
+  <<: *task_template
+  accounting: *service_accounting
   J_JOB: !expand '{task_path_list[-1]}.sh'
 
 exclusive_task_template: &exclusive_task_template

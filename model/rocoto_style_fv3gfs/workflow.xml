@@ -2,14 +2,15 @@
 <!DOCTYPE workflow [
   <!ENTITY LOG_DIR "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/blah/model/rocoto_style_fv3gfs/log">
   <!ENTITY TASK_THROTTLE "12">
-  <!ENTITY PROJECT "GFS-T2O">
   <!ENTITY CYCLE_THROTTLE "2">
   <!ENTITY MAX_TRIES "1">
-  <!ENTITY HOMEgfs "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/snapshot_flat/gfs.v15.0.0">
   <!ENTITY EXPDIR "/gpfs/hps3/ptmp/Samuel.Trahan/expdir2/QSLOT">
   <!ENTITY QUEUE "dev">
+  <!ENTITY HOMEgfs "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/snapshot_flat/gfs.v15.0.0">
+  <!ENTITY QUEUESHARED "dev">
   <!ENTITY COM "/gpfs/hps3/ptmp/Samuel.Trahan/comdir2/QSLOT">
   <!ENTITY QUEUESERV "dev_transfer">
+  <!ENTITY PROJECT "GFS-T2O">
 ]>
 <!-- This Rocoto suite definition is automatically generated.
      Changes will be overwritten.  Please edit suite_def.yaml instead. -->
@@ -832,6 +833,24 @@
 
   <!-- These final tasks are automatically generated to handle Complate and Trigger conditions, and alarms. -->
 
+  <task name="final_no_alarm">
+    <command>/bin/true</command>
+    <queue>&QUEUESERV;</queue>
+    <account>&PROJECT;</account>
+    <jobname>final_no_alarm</jobname>
+    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/final_no_alarm.log</cyclestr></join>
+    
+    <walltime>0:02:00</walltime>
+    <memory>300M</memory>
+    <cores>1</cores>
+    <shared></shared>
+    
+    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+    <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+    <envar><name>CDUMP</name><value>final_no_alarm</value></envar>
+    
+    <!-- no dependencies -->
+  </task>
   <task name="final_for_gfs" cycledefs="gfs">
     <command>/bin/true</command>
     <queue>&QUEUESERV;</queue>
@@ -976,24 +995,6 @@
       </and>
     </dependency>
   </task>
-  <task name="final_no_alarm">
-    <command>/bin/true</command>
-    <queue>&QUEUESERV;</queue>
-    <account>&PROJECT;</account>
-    <jobname>final_no_alarm</jobname>
-    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/final_no_alarm.log</cyclestr></join>
-    
-    <walltime>0:02:00</walltime>
-    <memory>300M</memory>
-    <cores>1</cores>
-    <shared></shared>
-    
-    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
-    <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-    <envar><name>CDUMP</name><value>final_no_alarm</value></envar>
-    
-    <!-- no dependencies -->
-  </task>
   <task name="final" final="true">
     <command>/bin/true</command>
     <queue>&QUEUESERV;</queue>
@@ -1014,16 +1015,16 @@
       <and>
         <!-- All tasks must be complete or invalid for this cycle -->
         <or>
+          <taskdep task="final_no_alarm"/>
+          <not><taskvalid task="final_no_alarm"/></not>
+        </or>
+        <or>
           <taskdep task="final_for_gfs"/>
           <not><taskvalid task="final_for_gfs"/></not>
         </or>
         <or>
           <taskdep task="final_for_gdas"/>
           <not><taskvalid task="final_for_gdas"/></not>
-        </or>
-        <or>
-          <taskdep task="final_no_alarm"/>
-          <not><taskvalid task="final_no_alarm"/></not>
         </or>
       </and>
     </dependency>

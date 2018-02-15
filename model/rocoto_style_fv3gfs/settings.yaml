@@ -25,6 +25,7 @@ settings:
   QUEUE: dev
   PROJECT: FV3GFS-T2O
   QUEUESERV: dev_transfer
+  QUEUESHARED: dev_shared
 
   DUMPDIR: "/gpfs/tp1/emc/globaldump"
 
