@@ -442,7 +442,7 @@ if [[ $BUILD == 'TRUE' ]]; then
    log_message "INFO" "running checkout script: $PWD/checkout.sh $username"
    export GIT_TERMINAL_PROMPT=0
   ./checkout.sh $username
-   if [[ $CASE=="BASE_org" ]]; then
+   if [[ $CASE == "BASE_org" ]]; then
      build_all_args='cray'
    else
      build_all_args='config=fv3gfs_build.cfg'
