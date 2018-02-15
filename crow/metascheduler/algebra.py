@@ -13,9 +13,13 @@ __all__=[ 'complexity', 'simplify', 'assume' ]
 def assume(tree,existing_cycles,current_cycle,assume_complete=None,
            assume_never_run=None):
     typecheck('tree',tree,LogicalDependency)
+    #print(f'ASSUME: {tree}')
     if isinstance(tree,CycleExistsDependency):
-        if tree.dt in existing_cycles:
+        rel_cycle=tree.dt+current_cycle
+        if rel_cycle in existing_cycles:
+            #print(f'{rel_cycle}: cylce exists in {existing_cycles}')
             return TRUE_DEPENDENCY
+        print(f'{rel_cycle}: cycle does not exist in {existing_cycles}')
         return FALSE_DEPENDENCY
     elif isinstance(tree,TaskExistsDependency):
         cycle=current_cycle+tree.view.path[0]
@@ -27,11 +31,20 @@ def assume(tree,existing_cycles,current_cycle,assume_complete=None,
             return TRUE_DEPENDENCY
         else:
             return FALSE_DEPENDENCY
-    elif isinstance(tree,AndDependency) or isinstance(tree,OrDependency):
-        return type(tree)( *[
-            assume(d,existing_cycles,current_cycle) for d in tree ])
+    elif isinstance(tree,AndDependency):
+        a=TRUE_DEPENDENCY
+        for d in tree:
+            a=a & assume(d,existing_cycles,current_cycle)
+        print(f'AND: reduced {tree} to {a}')
+        return a
+    elif isinstance(tree,OrDependency):
+        a=FALSE_DEPENDENCY
+        for d in tree:
+            a=a | assume(d,existing_cycles,current_cycle)
+        print(f'OR: reduced {tree} to {a}')
+        return a
     elif isinstance(tree,NotDependency):
-        return NotDependency(assume(tree.depend,existing_cycles,current_cycle))
+        return ~assume(tree.depend,existing_cycles,current_cycle)
     elif isinstance(tree,StateDependency):
         if assume_never_run and assume_never_run(tree.path):
             return FALSE_DEPENDENCY

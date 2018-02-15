@@ -18,15 +18,21 @@ def depth_first_traversal(tree,skip_fun=None,enter_fun=None,
     if memo is None:       memo=set()
     if id(tree) in memo:   return
     memo.add(id(tree))
-    if skip_fun and skip_fun(tree):
-        return
-    if enter_fun:          enter_fun(tree)
+    if skip_fun is not None:
+        if skip_fun(tree):
+            print(f'{tree.path}: skip')
+            return
+        else:
+            print(f'{tree.path}: do not skip')
+    if enter_fun is not None:
+        enter_fun(tree)
     yield tree
     for child in tree:
         for item in depth_first_traversal(
                 child,skip_fun,enter_fun,exit_fun,memo):
             yield item
-    if exit_fun:           exit_fun(tree)
+    if exit_fun is not None:
+        exit_fun(tree)
 
 class Node(object):
     def __init__(self,view,cycle):
@@ -57,6 +63,8 @@ class Node(object):
         self.complete=TRUE_DEPENDENCY
 
     def assume(self,clock,assume_complete=None,assume_never_run=None):
+        trigger0=self.trigger
+        complete0=self.complete
         typecheck('self.alarm',self.alarm,Clock)
         if self.cycle not in self.alarm:
             self.trigger=FALSE_DEPENDENCY
@@ -65,10 +73,19 @@ class Node(object):
             self.trigger=FALSE_DEPENDENCY
             self.complete=FALSE_DEPENDENCY
         else:
+            print(f'{self.path}: simplify trigger={self.trigger}')
+            print(f'{self.path}: simplify complete={self.complete}')
             self.trigger=algebra_simplify(algebra_assume(
                 self.trigger,clock,self.cycle,assume_complete,assume_never_run))
             self.complete=algebra_simplify(algebra_assume(
                 self.complete,clock,self.cycle,assume_complete,assume_never_run))
+            print(f'{self.path}: resulting trigger={self.trigger}')
+            print(f'{self.path}: resulting complete={self.complete}')
+        if trigger0!=self.trigger or complete0!=self.complete:
+            print(f'{self.path}: trigger {trigger0} => {self.trigger}')
+            print(f'{self.path}: complete {complete0} => {self.complete}')
+            return True
+        return False
     def is_family(self): return self.view.is_family()
     def is_task(self): return self.view.is_task()
     def has_trigger(self):
@@ -83,9 +100,12 @@ class Node(object):
         return self.trigger==FALSE_DEPENDENCY and self.complete==FALSE_DEPENDENCY
     def is_always_complete(self):
         return self.complete==TRUE_DEPENDENCY
+    def has_no_dependencies(self):
+        return self.complete in [ TRUE_DEPENDENCY, FALSE_DEPENDENCY ] and \
+            self.trigger in [ TRUE_DEPENDENCY, FALSE_DEPENDENCY ]
     def might_complete(self):
-        return self.trigger is not FALSE_DEPENDENCY or \
-               self.complete is not FALSE_DEPENDENCY
+        return not (self.trigger is FALSE_DEPENDENCY and \
+                    self.complete is FALSE_DEPENDENCY )
     def is_empty(self):
         return self.is_family() and not self.children
     def __copy__(self):
@@ -122,22 +142,43 @@ class Graph(object):
         def fun_assume_never_run(path):
             return path in never_run
 
+        self.__clock.now=cycle
+
         while changed:
             changed=False
             for node in self.__nodes[cycle].values():
-                if node.might_complete():
-                    node.assume(self.__clock,fun_assume_complete,
-                                fun_assume_never_run)
-                    if node.can_never_complete():
-                        for descendent in depth_first_traversal(node):
-                            never_run.add(descendent.path)
-                            descendent.force_never_run()
-                        changed=True
-                    elif node.is_always_complete():
-                        for descendent in depth_first_traversal(node):
-                            always_complete.add(descendent.path)
-                            descendent.force_always_complete()
-                        changed=True
+                print(f'{node.path}: trigger {node.trigger}')
+                print(f'{node.path}: complete {node.complete}')
+                if node.is_always_complete():
+                    print(f'{node.path}: is always complete')
+                    continue
+                if node.can_never_complete():
+                    print(f'{node.path}: can never complete')
+                    continue
+                if node.has_no_dependencies():
+                    print(f'{node.path}: has no dependencies')
+                    continue
+                if node.assume(self.__clock,fun_assume_complete,
+                               fun_assume_never_run):
+                    print(f'{node.path}: assumptions changed trigger or complete')
+                    changed=True
+                if node.can_never_complete():
+                    never_run.add(node.path)
+                    print(f'{node.path}: can never complete')
+                    for descendent in depth_first_traversal(node):
+                        print(f'{node.path}: descendent {descendent.path} can never complete')
+                        never_run.add(descendent.path)
+                        descendent.force_never_run()
+                    changed=True
+                    assert(not node.might_complete())
+                elif node.is_always_complete():
+                    print(f'{node.path}: is always complete')
+                    for descendent in depth_first_traversal(node):
+                        always_complete.add(node.path)
+                        print(f'{node.path}: descendent {descendent.path} is always complete')
+                        always_complete.add(descendent.path)
+                        descendent.force_always_complete()
+                    changed=True
 
     def depth_first_traversal(self,cycle,skip_fun,enter_fun,exit_fun):
         if cycle not in self.__cycles:

@@ -69,7 +69,8 @@ class SuiteView(Mapping):
                 '_more_globals'])
     def __init__(self,suite,viewed,path,parent,
                  task_array_dimensions=None,
-                 task_array_indices=None):
+                 task_array_dimval=None,
+                 task_array_dimidx=None):
         # assert(isinstance(suite,Suite))
         # assert(isinstance(viewed,dict_eval))
         assert(hasattr(self,'_iter_raw'))
@@ -80,11 +81,16 @@ class SuiteView(Mapping):
                 task_array_dimensions)
         else:
             self.task_array_dimensions=OrderedDict()
-        if task_array_indices:
-            self.task_array_indices=OrderedDict(
-                task_array_indices)
+        if task_array_dimidx:
+            self.task_array_dimidx=OrderedDict(
+                task_array_dimidx)
         else:
-            self.task_array_indices=OrderedDict()
+            self.task_array_dimidx=OrderedDict()
+        if task_array_dimval:
+            self.task_array_dimval=OrderedDict(
+                task_array_dimval)
+        else:
+            self.task_array_dimval=OrderedDict()
         self.suite=suite
         self.viewed=viewed
         self.viewed.task_path_list=path[1:]
@@ -670,7 +676,7 @@ class Family(Taskable): pass
 class Cycle(dict_eval): pass
 
 class TaskArrayElement(dict_eval):
-    def _duplicate(self,parent,dimensions,indices):
+    def _duplicate(self,parent,dimensions,dimval,dimidx):
         child_dimensions=dimensions
         if 'Foreach' in self:
             typecheck(f'{self._path}.Foreach',self.Foreach,Sequence,'sequence')
@@ -683,19 +689,28 @@ class TaskArrayElement(dict_eval):
             dimensions=d2
         dict_iter=[{}]
         if dimensions:
-            dict_iter=subdict_iter(dimensions)
-        for more_indices in dict_iter:
-            child_indices=copy(indices)
-            child_indices.update(more_indices)
+            dimensions_to_dimidx=dict()
+            for k,v in dimensions.items():
+                dimensions_to_dimidx[k]=[n for n in range(len(v))]
+            dict_iter=subdict_iter(dimensions_to_dimidx)
+        for more_dimidx in dict_iter:
+            child_dimidx=copy(dimidx)
+            child_dimidx.update(more_dimidx)
+            child_dimval=dict()
+            for i_dimname,i_dimidx in child_dimidx.items():
+                child_dimval[i_dimname]=dimensions[i_dimname][i_dimidx]
             cls=ARRAY_ELEMENT_TYPE_MAP[type(self)]
             t=cls(self._raw_child(),globals=self._globals())
             t._path=self._path # used if Name is missing
-            t['idx']=dict_eval(child_indices)
+            t['dimlist']=dimensions
+            t['dimval']=dict_eval(child_dimval)
+            t['dimidx']=dict_eval(child_dimidx)
             name=t.Name
             t._path=f'{parent._path}.{name}'
             for k,v in self._raw_child().items():
                 if hasattr(v,'_duplicate'):
-                    for name2,content2 in v._duplicate(t,child_dimensions,indices):
+                    for name2,content2 in v._duplicate(
+                            t,child_dimensions,dimval,dimidx):
                         t[name2]=content2
             yield name,t
 
@@ -703,7 +718,7 @@ class DataEventElement(TaskArrayElement): pass
 class ShellEventElement(TaskArrayElement): pass
 class TaskElement(TaskArrayElement): pass
 
-    # def _duplicate(self,dimensions,indices):
+    # def _duplicate(self,dimensions,dimval):
     #     if 'Foreach' in self:
     #         typecheck(f'{self._path}.Foreach',self.Foreach,Sequence,'sequence')
     #         d2=dict()
@@ -716,12 +731,12 @@ class TaskElement(TaskArrayElement): pass
     #     dict_iter=[{}]
     #     if dimensions:
     #         dict_iter=subdict_iter(dimensions)
-    #     for more_indices in dict_iter:
-    #         child_indices=copy(indices)
-    #         child_indices.update(more_indices)
+    #     for more_dimval in dict_iter:
+    #         child_dimval=copy(dimval)
+    #         child_dimval.update(more_dimval)
     #         t=Task(self._raw_child(),globals=self._globals())
     #         t._path=self._path # used if Name is missing
-    #         t['idx']=dict_eval(child_indices)
+    #         t['idx']=dict_eval(child_dimval)
     #         name=t.Name
     #         t._path=f'{self._path}.{name}'
     #         yield name,t
@@ -730,7 +745,8 @@ class TaskArray(dict_eval):
     def _generate(self,parent_view):
         f=Family(self._raw_child(),path=self._path,globals=self._globals())
         dimensions=copy(parent_view.task_array_dimensions)
-        indices=copy(parent_view.task_array_indices)
+        dimidx=copy(parent_view.task_array_dimidx)
+        dimval=copy(parent_view.task_array_dimval)
         child_dimensions=self.Dimensions
         dimensions.update(child_dimensions)
         for dimname,dimlist in child_dimensions.items():
@@ -738,7 +754,7 @@ class TaskArray(dict_eval):
                 raise TypeError(f'{self._path}: dimension {dimname} is not a list (is type {type(dimlist).__name__}).')
         for k,v in self._raw_child().items():
             if hasattr(v,'_duplicate'):
-                for name,content in v._duplicate(f,child_dimensions,indices):
+                for name,content in v._duplicate(f,child_dimensions,dimval,dimidx):
                     f[name]=content
             else:
                 f[k]=v
@@ -757,7 +773,7 @@ ARRAY_ELEMENT_TYPE_MAP={
 # class TaskArray(TaskableGenerator):
 #     def __init__(self,*args,**kwargs):
 #         super().init(*args,**kwargs)
-#         Indices=self.Indices
+#         Dimval=self.Dimval
 #         varname=Index[0]
 #         if not isinstance(varname,str):
 #             raise TypeError('Index first argument should be a string variable '

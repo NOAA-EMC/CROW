@@ -276,17 +276,16 @@ class ToRocoto(object):
             # Node is not defined, so assume it is complete
             dep_path=SuitePath([_ZERO_DT] + tree.view.path[1:])
             if dep_path not in self.__all_defined:
-                return TRUE_DEPENDENCY
+                tree=TRUE_DEPENDENCY
         elif isinstance(tree,NotDependency):
-            return ( ~ self.remove_undefined_tasks(tree.depend) )
+            tree=~ self.remove_undefined_tasks(tree.depend)
         elif isinstance(tree,AndDependency) or isinstance(tree,OrDependency):
             deplist = [ self.remove_undefined_tasks(t) for t in tree ]
-            return type(tree)(*deplist)
+            tree=type(tree)(*deplist)
         return tree
 
     def _rocotoify_dep(self,dep,defining_path):
         typecheck('dep',dep,LogicalDependency)
-        dep=self.remove_undefined_tasks(dep)
         try:
             if dep in self.__rocotoified:
                 return self.__rocotoified[dep]
@@ -302,10 +301,12 @@ class ToRocoto(object):
         if isinstance(dep,StateDependency):
             dep_path=SuitePath([_ZERO_DT] + dep.view.path[1:])
             if dep_path not in self.__all_defined:
-                raise ValueError(
-                    f'/{"/".join(defining_path[1:])}: '
-                    'has a dependency on undefined task '
-                    f'/{"/".join(dep_path[1:])}')
+                #_logger.info(
+                    #f'/{"/".join(defining_path[1:])}: '
+                    #'has a dependency on undefined task '
+                    #f'/{"/".join(dep_path[1:])}')
+
+                return TRUE_DEPENDENCY
 
 
         if isinstance(dep,StateDependency) and not dep.view.is_task() and \
@@ -323,14 +324,16 @@ class ToRocoto(object):
                     return dep | _dep_rel(dep.view.path[0],self._rocotoify_dep(
                         self._completes_for(dep.view),defining_path))
             elif SuitePath(dep.view.path[1:]) in self.__families_with_completes:
-                deplist=list()
+                deplist=TRUE_DEPENDENCY
                 for t in dep.view.walk_task_tree():
                     if t.is_task():
-                        deplist.append(_dep_rel(dep.view.path[0],self._rocotoify_dep(
-                            t.is_completed(),defining_path)))
-                return AndDependency(*deplist)  | _dep_rel(dep.path[0], \
+                        deplist = deplist & \
+                                  _dep_rel(dep.view.path[0],self._rocotoify_dep(
+                                      t.is_completed(),defining_path))
+                deplist = deplist  | _dep_rel(dep.path[0], \
                       self._rocotoify_dep(self._completes_for(dep.view),
                                           defining_path))
+                return deplist
         elif isinstance(dep,NotDependency):
             return NotDependency(self._rocotoify_dep(dep.depend,defining_path))
         elif isinstance(dep,OrDependency) or isinstance(dep,AndDependency):
@@ -341,6 +344,7 @@ class ToRocoto(object):
 
     def _as_rocoto_dep(self,dep,defining_path):
         dep=dep.copy_dependencies()
+        dep=self.remove_undefined_tasks(dep)
         dep=self._rocotoify_dep(dep,defining_path)
         dep=simplify(dep)
         return dep
@@ -361,11 +365,11 @@ class ToRocoto(object):
 
     def _record_item(self,view,complete,alarm_name):
         if view.get('Disable',False):          return
-        complete=complete | view.get_complete_dep()
+        my_completes = view.get_complete_dep()
         self.__all_defined.add(view.path)
 
-        if complete is not FALSE_DEPENDENCY:
-            complete=complete | view.get_complete_dep()
+        if my_completes is not FALSE_DEPENDENCY:
+            complete=complete | my_completes
             self.__completes[view.path]=[view, complete]
 
         if 'AlarmName' in view:
@@ -405,13 +409,15 @@ class ToRocoto(object):
                 raise ValueError('{view.task_path_var}: nested alarms are not supported in crow.metascheduler.to_rocoto()')
             else:
                 alarm_name=view.AlarmName
-            
+
+        dep=trigger&~complete
+        dep=simplify(dep)
 
         if view.is_task():
             maxtries=int(view.get(
                 'max_tries',self.suite.Rocoto.get('max_tries',0)))
             attr = f' maxtries="{maxtries}"' if maxtries else ''
-            self._write_task_text(fd,attr,indent,view,trigger&~complete,time,alarm_name)
+            self._write_task_text(fd,attr,indent,view,dep,time,alarm_name)
             return
 
         self.__dummy_var_count+=1
@@ -448,7 +454,7 @@ class ToRocoto(object):
             fd.write(f' cycledefs="{alarm_name}"')
         fd.write('>\n')
 
-        dep=self._as_rocoto_dep(dependency,view.path)
+        dep=self._as_rocoto_dep(simplify(dependency),view.path)
 
         dep_count = ( dep != TRUE_DEPENDENCY ) + ( time>timedelta.min )
 
@@ -641,8 +647,6 @@ class ToRocoto(object):
             invalidate_cache(self.suite,recurse=True)
             self.suite.viewed[task_name]=new_task
             new_task_view=self.suite[task_name]
-            #print(f'[[[{type(self.suite.viewed._raw("final")._raw("Rocoto"))}]]] =>\n[[[{self.suite.viewed._raw("final")}]]]')
-            #print(f'[[[{type(new_task._raw("Rocoto"))}]]] =>\n[[[{new_task.Rocoto}]]]')
             del new_task
             self.__all_defined.add(SuitePath(
                 [_ZERO_DT] + new_task_view.path[1:]))

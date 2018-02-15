@@ -22,6 +22,13 @@ ECFLOW_STATE_MAP={ COMPLETED:'complete',
                    RUNNING:'active',
                    FAILED:'aborted' }
 
+def skip_fun(node):
+    print(f'{node.path}: skip? trigger={node.trigger}')
+    print(f'{node.path}: skip? complete={node.complete}')
+    print(f'{node.path}: skip? might_complete={node.might_complete()}')
+    print(f'{node.path}: skip? is_always_complete={node.is_always_complete()}')
+    return not node.might_complete() or node.is_always_complete()
+
 def relative_path(start,dest):
     """Used to generate relative paths for ecflow.  Removes common
     path components and adds ".." components to go up one or more
@@ -202,6 +209,7 @@ class ToEcflow(object):
 
     def _simplify_job_graph(self):
         for cycle in self._foreach_cycle(self._cycles_to_write()):
+            print(f'{cycle}: simplify cycle')
             self.graph.simplify_cycle(cycle)
 
     def _walk_job_graph(self,cycle,skip_fun=None,enter_fun=None,exit_fun=None):
@@ -229,9 +237,6 @@ class ToEcflow(object):
                 ended=f'/{suite_name}/{node.view.task_path_str}'
                 ended=re.sub('/+','/',ended)
                 sio.write(f'{indent}endfamily # {ended}\n')
-
-        def skip_fun(node):
-            return not node.might_complete()
 
         for node in self._walk_job_graph(cycle,skip_fun=skip_fun,exit_fun=exit_fun):
             indent0=max(0,len(node.path)-1)*self.indent
@@ -290,7 +295,7 @@ class ToEcflow(object):
     def _make_task_ecf_files(self,ecf_files,ecf_file_set,
                                ecf_file_path,task):
         dt=self.suite.Clock.now-self.suite.Clock.start
-        if not self.graph.might_complete(task.at(dt).path):
+        if skip_fun(self.graph.get_node(task.at(dt).path)):
             return
         ecf_file_set=task.get('ecf_file_set',ecf_file_set)
         ecf_file_path=ecf_file_path+[task.path[-1]]
@@ -302,7 +307,7 @@ class ToEcflow(object):
     def _make_family_ecf_files(self,ecf_files,ecf_file_set,
                                ecf_file_path,family):
         dt=self.suite.Clock.now-self.suite.Clock.start
-        if not self.graph.might_complete(family.at(dt).path):
+        if skip_fun(self.graph.get_node(family.at(dt).path)):
             return
         ecf_file_set=family.get('ecf_file_set',ecf_file_set)
         ecf_file_path=ecf_file_path+[family.path[-1]]
