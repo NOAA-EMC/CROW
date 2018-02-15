@@ -38,4 +38,5 @@ dump_waiter: &dump_waiter_task !Task
       echo "$WAITFILE: nope"
       sleep 37
     done
+    echo "$WAITFILE: yup"
     ecflow_client --event updated_status

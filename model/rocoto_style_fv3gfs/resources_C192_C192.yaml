@@ -36,7 +36,7 @@ resources:
 
   run_eomg: !JobRequest
     - memory: "3072M"
-      walltime: !timedelta "01:00:00"
+      walltime: !timedelta "02:00:00"
       mpi_ranks: !calc 6*12
       exe: placeholder
       max_ppn: 6
@@ -105,7 +105,7 @@ resources:
     - mpi_ranks: !calc >-
          doc.settings.layout_x*doc.settings.layout_y*6
          + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
-      walltime: !timedelta "06:00:00"
+      walltime: !timedelta "01:30:00"
       max_ppn: 12
       memory: "1024M"
 

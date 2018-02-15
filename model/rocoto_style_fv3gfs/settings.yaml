@@ -3,11 +3,11 @@
 initial_directory: !calc ( tools.realpath(tools.abspath(".")) )
 
 settings:
-  HOMEgfs: "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/snapshot_flat/gfs.v15.0.0"
-  COM: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/comdir2/{experiment_name}'
-  EXPDIR: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/expdir2/{experiment_name}'
+  HOMEgfs: "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/snapshot_master_20180209/gfs.v15.0.0/"
+  COM: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/comdir/{experiment_name}'
+  EXPDIR: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/expdir/{experiment_name}'
   DATAROOT: !expand '/gpfs/hps2/stmp/emc.glopara/{experiment_name}'
-  experiment_name: QSLOT
+  experiment_name: !calc doc.sys_argv_1
 
   NMEM_ENKF: 80
   ENKF_GROUPS: 2
@@ -34,7 +34,9 @@ settings:
   start_date_gfs: !calc ( start_date+tools.to_timedelta('6:00:00') )
   end_date_gfs: !calc end_date
   interval_gfs: !timedelta "12:00:00"
-  forecast_hours: !calc tools.seq(0,120,1)+tools.seq(123,240,3)+tools.seq(240,384,12)
+  #forecast_hours: !calc tools.seq(0,120,1)+tools.seq(123,240,3)+tools.seq(240,384,12)
+  forecast_hours: !calc tools.seq(0,240,6)
+  gdas_hours: !calc tools.seq(0,9,3)
 
   max_job_tries: 1
   realtime: False

@@ -3,12 +3,13 @@
   <!ENTITY LOG_DIR "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/blah/model/rocoto_style_fv3gfs/log">
   <!ENTITY TASK_THROTTLE "12">
   <!ENTITY CYCLE_THROTTLE "2">
+  <!ENTITY PSLOT "RSLOT2">
   <!ENTITY MAX_TRIES "1">
-  <!ENTITY EXPDIR "/gpfs/hps3/ptmp/Samuel.Trahan/expdir2/QSLOT">
+  <!ENTITY EXPDIR "/gpfs/hps3/ptmp/Samuel.Trahan/expdir/RSLOT2">
   <!ENTITY QUEUE "dev">
-  <!ENTITY HOMEgfs "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/snapshot_flat/gfs.v15.0.0">
+  <!ENTITY HOMEgfs "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/snapshot_master_20180209/gfs.v15.0.0/">
   <!ENTITY QUEUESHARED "dev">
-  <!ENTITY COM "/gpfs/hps3/ptmp/Samuel.Trahan/comdir2/QSLOT">
+  <!ENTITY COM "/gpfs/hps3/ptmp/Samuel.Trahan/comdir/RSLOT2">
   <!ENTITY QUEUESERV "dev_transfer">
   <!ENTITY PROJECT "GFS-T2O">
 ]>
@@ -31,7 +32,7 @@
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gdas.prep</jobname>
-      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.prep.log</cyclestr></join>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.prep.log</cyclestr></join>
       
       <walltime>0:15:00</walltime>
       <memory>3072M</memory>
@@ -54,7 +55,7 @@
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gdas.anal</jobname>
-      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.anal.log</cyclestr></join>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.anal.log</cyclestr></join>
       
       <walltime>1:30:00</walltime>
       <memory>3072M</memory>
@@ -82,7 +83,7 @@
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gdas.fcst</jobname>
-      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.fcst.log</cyclestr></join>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.fcst.log</cyclestr></join>
       
       <walltime>0:15:00</walltime>
       <memory>1024M</memory>
@@ -108,7 +109,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.post.g000</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.post.g000.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.post.g000.log</cyclestr></join>
         
         <walltime>0:30:00</walltime>
         <memory>3072M</memory>
@@ -129,7 +130,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.post.g001</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.post.g001.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.post.g001.log</cyclestr></join>
         
         <walltime>0:30:00</walltime>
         <memory>3072M</memory>
@@ -150,7 +151,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.post.g002</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.post.g002.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.post.g002.log</cyclestr></join>
         
         <walltime>0:30:00</walltime>
         <memory>3072M</memory>
@@ -171,7 +172,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.post.g003</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.post.g003.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.post.g003.log</cyclestr></join>
         
         <walltime>0:30:00</walltime>
         <memory>3072M</memory>
@@ -187,34 +188,13 @@
           <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf006.nemsio</cyclestr></datadep>
         </dependency>
       </task>
-      <task name="gdas.post.g004" maxtries="1" cycledefs="gdas">
-        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
-        <queue>&QUEUE;</queue>
-        <account>&PROJECT;</account>
-        <jobname>gdas.post.g004</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.post.g004.log</cyclestr></join>
-        
-        <walltime>0:30:00</walltime>
-        <memory>3072M</memory>
-        <nodes>6:ppn=12</nodes>
-        
-        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
-        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-        <envar><name>CDUMP</name><value>gdas</value></envar>
-        <envar><name>FHRGRP</name><value>004</value></envar>
-        <envar><name>FHRLST</name><value>f009</value></envar>
-        
-        <dependency>
-          <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf009.nemsio</cyclestr></datadep>
-        </dependency>
-      </task>
     </metatask>
     <task name="gdas.vrfy" maxtries="1" cycledefs="gdas">
       <command>&HOMEgfs;/jobs/rocoto/vrfy.sh</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gdas.vrfy</jobname>
-      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.vrfy.log</cyclestr></join>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.vrfy.log</cyclestr></join>
       
       <walltime>3:00:00</walltime>
       <memory>3072M</memory>
@@ -235,7 +215,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.enkf.eobs</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.enkf.eobs.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.enkf.eobs.log</cyclestr></join>
         
         <walltime>0:45:00</walltime>
         <memory>3072M</memory>
@@ -265,9 +245,9 @@
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.eomg.grp1</jobname>
-          <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.enkf.eomg.grp1.log</cyclestr></join>
+          <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.enkf.eomg.grp1.log</cyclestr></join>
           
-          <walltime>1:00:00</walltime>
+          <walltime>2:00:00</walltime>
           <memory>3072M</memory>
           <nodes>12:ppn=6</nodes>
           
@@ -293,9 +273,9 @@
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.eomg.grp2</jobname>
-          <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.enkf.eomg.grp2.log</cyclestr></join>
+          <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.enkf.eomg.grp2.log</cyclestr></join>
           
-          <walltime>1:00:00</walltime>
+          <walltime>2:00:00</walltime>
           <memory>3072M</memory>
           <nodes>12:ppn=6</nodes>
           
@@ -322,7 +302,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.enkf.eupd</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.enkf.eupd.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.enkf.eupd.log</cyclestr></join>
         
         <walltime>0:30:00</walltime>
         <memory>3072M</memory>
@@ -334,15 +314,7 @@
         
         <dependency>
           <and>
-            <or>
-              <and>
-                <taskdep task="gdas.enkf.eomg.grp1"/>
-                <taskdep task="gdas.enkf.eomg.grp2"/>
-              </and>
-              <not>
-                <cycleexistdep cycle_offset="-06:00:00"/>
-              </not>
-            </or>
+            <metataskdep metatask="gdas.enkf.eomg"/>
             <cycleexistdep cycle_offset="-06:00:00"/>
           </and>
         </dependency>
@@ -352,7 +324,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.enkf.ecen</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.enkf.ecen.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.enkf.ecen.log</cyclestr></join>
         
         <walltime>0:30:00</walltime>
         <memory>254M</memory>
@@ -384,7 +356,7 @@
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.efcs.grp1</jobname>
-          <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.enkf.efcs.grp1.log</cyclestr></join>
+          <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.enkf.efcs.grp1.log</cyclestr></join>
           
           <walltime>1:00:00</walltime>
           <memory>254M</memory>
@@ -409,7 +381,7 @@
           <queue>&QUEUE;</queue>
           <account>&PROJECT;</account>
           <jobname>gdas.enkf.efcs.grp2</jobname>
-          <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.enkf.efcs.grp2.log</cyclestr></join>
+          <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.enkf.efcs.grp2.log</cyclestr></join>
           
           <walltime>1:00:00</walltime>
           <memory>254M</memory>
@@ -435,7 +407,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gdas.enkf.epos</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gdas.enkf.epos.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.enkf.epos.log</cyclestr></join>
         
         <walltime>0:30:00</walltime>
         <memory>254M</memory>
@@ -458,7 +430,7 @@
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gfs.prep</jobname>
-      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gfs.prep.log</cyclestr></join>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.prep.log</cyclestr></join>
       
       <walltime>0:15:00</walltime>
       <memory>3072M</memory>
@@ -481,7 +453,7 @@
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gfs.anal</jobname>
-      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gfs.anal.log</cyclestr></join>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.anal.log</cyclestr></join>
       
       <walltime>1:30:00</walltime>
       <memory>3072M</memory>
@@ -493,12 +465,7 @@
       
       <dependency>
         <and>
-          <or>
-            <taskdep task="gfs.prep"/>
-            <not>
-              <cycleexistdep cycle_offset="-06:00:00"/>
-            </not>
-          </or>
+          <taskdep task="gfs.prep"/>
           <taskdep task="gdas.enkf.epos" cycle_offset="-06:00:00"/>
           <cycleexistdep cycle_offset="-06:00:00"/>
         </and>
@@ -509,9 +476,9 @@
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gfs.fcst</jobname>
-      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gfs.fcst.log</cyclestr></join>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.fcst.log</cyclestr></join>
       
-      <walltime>6:00:00</walltime>
+      <walltime>1:30:00</walltime>
       <memory>1024M</memory>
       <nodes>16:ppn=12</nodes>
       
@@ -521,12 +488,7 @@
       
       <dependency>
         <and>
-          <or>
-            <taskdep task="gfs.anal"/>
-            <not>
-              <cycleexistdep cycle_offset="-06:00:00"/>
-            </not>
-          </or>
+          <taskdep task="gfs.anal"/>
           <cycleexistdep cycle_offset="-06:00:00"/>
         </and>
       </dependency>
@@ -538,7 +500,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.post.grp000</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gfs.post.grp000.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp000.log</cyclestr></join>
         
         <walltime>1:00:00</walltime>
         <memory>3072M</memory>
@@ -562,7 +524,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.post.grp001</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gfs.post.grp001.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp001.log</cyclestr></join>
         
         <walltime>1:00:00</walltime>
         <memory>3072M</memory>
@@ -586,7 +548,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.post.grp002</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gfs.post.grp002.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp002.log</cyclestr></join>
         
         <walltime>1:00:00</walltime>
         <memory>3072M</memory>
@@ -610,7 +572,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.post.grp003</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gfs.post.grp003.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp003.log</cyclestr></join>
         
         <walltime>1:00:00</walltime>
         <memory>3072M</memory>
@@ -634,7 +596,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.post.grp004</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gfs.post.grp004.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp004.log</cyclestr></join>
         
         <walltime>1:00:00</walltime>
         <memory>3072M</memory>
@@ -658,7 +620,7 @@
         <queue>&QUEUE;</queue>
         <account>&PROJECT;</account>
         <jobname>gfs.post.grp005</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gfs.post.grp005.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp005.log</cyclestr></join>
         
         <walltime>1:00:00</walltime>
         <memory>3072M</memory>
@@ -677,13 +639,853 @@
           </and>
         </dependency>
       </task>
+      <task name="gfs.post.grp006" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp006</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp006.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>006</value></envar>
+        <envar><name>FHRLST</name><value>f030</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf030.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp007" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp007</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp007.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>007</value></envar>
+        <envar><name>FHRLST</name><value>f036</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf036.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp008" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp008</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp008.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>008</value></envar>
+        <envar><name>FHRLST</name><value>f042</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf042.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp009" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp009</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp009.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>009</value></envar>
+        <envar><name>FHRLST</name><value>f048</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf048.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp010" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp010</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp010.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>010</value></envar>
+        <envar><name>FHRLST</name><value>f054</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf054.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp011" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp011</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp011.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>011</value></envar>
+        <envar><name>FHRLST</name><value>f060</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf060.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp012" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp012</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp012.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>012</value></envar>
+        <envar><name>FHRLST</name><value>f066</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf066.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp013" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp013</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp013.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>013</value></envar>
+        <envar><name>FHRLST</name><value>f072</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf072.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp014" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp014</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp014.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>014</value></envar>
+        <envar><name>FHRLST</name><value>f078</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf078.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp015" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp015</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp015.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>015</value></envar>
+        <envar><name>FHRLST</name><value>f084</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf084.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp016" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp016</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp016.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>016</value></envar>
+        <envar><name>FHRLST</name><value>f090</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf090.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp017" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp017</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp017.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>017</value></envar>
+        <envar><name>FHRLST</name><value>f096</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf096.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp018" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp018</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp018.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>018</value></envar>
+        <envar><name>FHRLST</name><value>f102</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf102.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp019" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp019</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp019.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>019</value></envar>
+        <envar><name>FHRLST</name><value>f108</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf108.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp020" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp020</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp020.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>020</value></envar>
+        <envar><name>FHRLST</name><value>f114</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf114.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp021" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp021</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp021.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>021</value></envar>
+        <envar><name>FHRLST</name><value>f120</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf120.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp022" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp022</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp022.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>022</value></envar>
+        <envar><name>FHRLST</name><value>f126</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf126.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp023" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp023</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp023.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>023</value></envar>
+        <envar><name>FHRLST</name><value>f132</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf132.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp024" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp024</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp024.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>024</value></envar>
+        <envar><name>FHRLST</name><value>f138</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf138.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp025" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp025</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp025.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>025</value></envar>
+        <envar><name>FHRLST</name><value>f144</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf144.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp026" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp026</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp026.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>026</value></envar>
+        <envar><name>FHRLST</name><value>f150</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf150.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp027" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp027</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp027.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>027</value></envar>
+        <envar><name>FHRLST</name><value>f156</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf156.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp028" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp028</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp028.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>028</value></envar>
+        <envar><name>FHRLST</name><value>f162</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf162.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp029" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp029</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp029.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>029</value></envar>
+        <envar><name>FHRLST</name><value>f168</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf168.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp030" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp030</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp030.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>030</value></envar>
+        <envar><name>FHRLST</name><value>f174</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf174.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp031" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp031</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp031.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>031</value></envar>
+        <envar><name>FHRLST</name><value>f180</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf180.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp032" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp032</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp032.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>032</value></envar>
+        <envar><name>FHRLST</name><value>f186</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf186.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp033" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp033</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp033.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>033</value></envar>
+        <envar><name>FHRLST</name><value>f192</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf192.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp034" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp034</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp034.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>034</value></envar>
+        <envar><name>FHRLST</name><value>f198</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf198.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp035" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp035</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp035.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>035</value></envar>
+        <envar><name>FHRLST</name><value>f204</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf204.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp036" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp036</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp036.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>036</value></envar>
+        <envar><name>FHRLST</name><value>f210</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf210.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp037" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp037</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp037.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>037</value></envar>
+        <envar><name>FHRLST</name><value>f216</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf216.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp038" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp038</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp038.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>038</value></envar>
+        <envar><name>FHRLST</name><value>f222</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf222.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp039" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp039</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp039.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>039</value></envar>
+        <envar><name>FHRLST</name><value>f228</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf228.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.grp040" maxtries="1" cycledefs="gfs">
+        <command>&HOMEgfs;/jobs/rocoto/post.sh</command>
+        <queue>&QUEUE;</queue>
+        <account>&PROJECT;</account>
+        <jobname>gfs.post.grp040</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp040.log</cyclestr></join>
+        
+        <walltime>1:00:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>CDUMP</name><value>gfs</value></envar>
+        <envar><name>FHRGRP</name><value>040</value></envar>
+        <envar><name>FHRLST</name><value>f234</value></envar>
+        
+        <dependency>
+          <and>
+            <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf234.nemsio</cyclestr></datadep>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
     </metatask>
     <task name="gfs.vrfy" maxtries="1" cycledefs="gfs">
       <command>&HOMEgfs;/jobs/rocoto/vrfy.sh</command>
       <queue>&QUEUE;</queue>
       <account>&PROJECT;</account>
       <jobname>gfs.vrfy</jobname>
-      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/gfs.vrfy.log</cyclestr></join>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.vrfy.log</cyclestr></join>
       
       <walltime>6:00:00</walltime>
       <memory>3072M</memory>
@@ -695,19 +1497,7 @@
       
       <dependency>
         <and>
-          <or>
-            <and>
-              <taskdep task="gfs.post.grp000"/>
-              <taskdep task="gfs.post.grp001"/>
-              <taskdep task="gfs.post.grp002"/>
-              <taskdep task="gfs.post.grp003"/>
-              <taskdep task="gfs.post.grp004"/>
-              <taskdep task="gfs.post.grp005"/>
-            </and>
-            <not>
-              <cycleexistdep cycle_offset="-06:00:00"/>
-            </not>
-          </or>
+          <metataskdep metatask="gfs.post"/>
           <cycleexistdep cycle_offset="-06:00:00"/>
         </and>
       </dependency>
@@ -720,7 +1510,7 @@
       <queue>&QUEUESERV;</queue>
       <account>&PROJECT;</account>
       <jobname>archive.gdasarch</jobname>
-      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/archive.gdasarch.log</cyclestr></join>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_archive.gdasarch.log</cyclestr></join>
       
       <walltime>6:00:00</walltime>
       <memory>3072M</memory>
@@ -742,7 +1532,7 @@
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
         <jobname>archive.earc.grp00</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/archive.earc.grp00.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_archive.earc.grp00.log</cyclestr></join>
         
         <walltime>6:00:00</walltime>
         <memory>3072M</memory>
@@ -763,7 +1553,7 @@
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
         <jobname>archive.earc.grp01</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/archive.earc.grp01.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_archive.earc.grp01.log</cyclestr></join>
         
         <walltime>6:00:00</walltime>
         <memory>3072M</memory>
@@ -784,7 +1574,7 @@
         <queue>&QUEUESERV;</queue>
         <account>&PROJECT;</account>
         <jobname>archive.earc.grp02</jobname>
-        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/archive.earc.grp02.log</cyclestr></join>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_archive.earc.grp02.log</cyclestr></join>
         
         <walltime>6:00:00</walltime>
         <memory>3072M</memory>
@@ -806,7 +1596,7 @@
       <queue>&QUEUESERV;</queue>
       <account>&PROJECT;</account>
       <jobname>archive.gfsarch</jobname>
-      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/archive.gfsarch.log</cyclestr></join>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_archive.gfsarch.log</cyclestr></join>
       
       <walltime>6:00:00</walltime>
       <memory>3072M</memory>
@@ -819,12 +1609,7 @@
       
       <dependency>
         <and>
-          <or>
-            <taskdep task="gfs.vrfy"/>
-            <not>
-              <cycleexistdep cycle_offset="-06:00:00"/>
-            </not>
-          </or>
+          <taskdep task="gfs.vrfy"/>
           <cycleexistdep cycle_offset="-06:00:00"/>
         </and>
       </dependency>
@@ -838,7 +1623,7 @@
     <queue>&QUEUESERV;</queue>
     <account>&PROJECT;</account>
     <jobname>final_no_alarm</jobname>
-    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/final_no_alarm.log</cyclestr></join>
+    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_final_no_alarm.log</cyclestr></join>
     
     <walltime>0:02:00</walltime>
     <memory>300M</memory>
@@ -856,7 +1641,7 @@
     <queue>&QUEUESERV;</queue>
     <account>&PROJECT;</account>
     <jobname>final_for_gfs</jobname>
-    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/final_for_gfs.log</cyclestr></join>
+    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_final_for_gfs.log</cyclestr></join>
     
     <walltime>0:02:00</walltime>
     <memory>300M</memory>
@@ -868,24 +1653,15 @@
     <envar><name>CDUMP</name><value>final_for_gfs</value></envar>
     
     <dependency>
-      <or>
-        <and>
-          <taskdep task="gfs.prep"/>
-          <taskdep task="gfs.anal"/>
-          <taskdep task="gfs.fcst"/>
-          <taskdep task="gfs.post.grp000"/>
-          <taskdep task="gfs.post.grp001"/>
-          <taskdep task="gfs.post.grp002"/>
-          <taskdep task="gfs.post.grp003"/>
-          <taskdep task="gfs.post.grp004"/>
-          <taskdep task="gfs.post.grp005"/>
-          <taskdep task="gfs.vrfy"/>
+      <and>
+        <metataskdep metatask="gfs"/>
+        <or>
           <taskdep task="archive.gfsarch"/>
-        </and>
-        <not>
-          <cycleexistdep cycle_offset="-06:00:00"/>
-        </not>
-      </or>
+          <not>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </not>
+        </or>
+      </and>
     </dependency>
   </task>
   <task name="final_for_gdas" cycledefs="gdas">
@@ -893,7 +1669,7 @@
     <queue>&QUEUESERV;</queue>
     <account>&PROJECT;</account>
     <jobname>final_for_gdas</jobname>
-    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/final_for_gdas.log</cyclestr></join>
+    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_final_for_gdas.log</cyclestr></join>
     
     <walltime>0:02:00</walltime>
     <memory>300M</memory>
@@ -922,13 +1698,17 @@
             <taskdep task="gdas.post.g001"/>
             <taskdep task="gdas.post.g002"/>
             <taskdep task="gdas.post.g003"/>
-            <taskdep task="gdas.post.g004"/>
             <taskdep task="gdas.vrfy"/>
             <or>
+              <taskdep task="gdas.enkf.eobs"/>
+              <not>
+                <cycleexistdep cycle_offset="-06:00:00"/>
+              </not>
+            </or>
+            <taskdep task="gdas.enkf.eomg.grp1"/>
+            <taskdep task="gdas.enkf.eomg.grp2"/>
+            <or>
               <and>
-                <taskdep task="gdas.enkf.eobs"/>
-                <taskdep task="gdas.enkf.eomg.grp1"/>
-                <taskdep task="gdas.enkf.eomg.grp2"/>
                 <taskdep task="gdas.enkf.eupd"/>
                 <taskdep task="gdas.enkf.ecen"/>
               </and>
@@ -956,10 +1736,15 @@
             <or>
               <and>
                 <or>
+                  <taskdep task="gdas.enkf.eobs"/>
+                  <not>
+                    <cycleexistdep cycle_offset="-06:00:00"/>
+                  </not>
+                </or>
+                <taskdep task="gdas.enkf.eomg.grp1"/>
+                <taskdep task="gdas.enkf.eomg.grp2"/>
+                <or>
                   <and>
-                    <taskdep task="gdas.enkf.eobs"/>
-                    <taskdep task="gdas.enkf.eomg.grp1"/>
-                    <taskdep task="gdas.enkf.eomg.grp2"/>
                     <taskdep task="gdas.enkf.eupd"/>
                     <taskdep task="gdas.enkf.ecen"/>
                   </and>
@@ -973,10 +1758,14 @@
               </and>
               <and>
                 <or>
+                  <taskdep task="gdas.enkf.eobs"/>
+                  <not>
+                    <cycleexistdep cycle_offset="-06:00:00"/>
+                  </not>
+                </or>
+                <metataskdep metatask="gdas.enkf.eomg"/>
+                <or>
                   <and>
-                    <taskdep task="gdas.enkf.eobs"/>
-                    <taskdep task="gdas.enkf.eomg.grp1"/>
-                    <taskdep task="gdas.enkf.eomg.grp2"/>
                     <taskdep task="gdas.enkf.eupd"/>
                     <taskdep task="gdas.enkf.ecen"/>
                   </and>
@@ -1000,7 +1789,7 @@
     <queue>&QUEUESERV;</queue>
     <account>&PROJECT;</account>
     <jobname>final</jobname>
-    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/final.log</cyclestr></join>
+    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_final.log</cyclestr></join>
     
     <walltime>0:02:00</walltime>
     <memory>300M</memory>
