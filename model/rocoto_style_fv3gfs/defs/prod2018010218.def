@@ -11,6 +11,7 @@ suite prod2018010218
   edit ECF_HOME '/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/blah/model/rocoto_style_fv3gfs'
   #edit ECF_HOME '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3'
   edit CYC '18'
+  edit PDY '20180102'
   edit ENVIR 'prod'
   edit E 'jecffv3'
   #edit QUEUE 'dev'

@@ -2,7 +2,7 @@
 #BSUB -q %QUEUE%
 #BSUB -P %PROJECT%
 #BSUB -J gfs.vrfy
-#BSUB -o %ECF_OUT%/gfs.vrfy_t%CYC%z.log
+#BSUB -o %ECF_OUT%/%PDY%/%CYC%/gfs.vrfy.log
 
 #BSUB -W 6:00
 #BSUB -R rusage[mem=3072]

@@ -45,6 +45,7 @@ suite: !Cycle
     edit ECF_HOME '{doc.settings.ECF_HOME}'
     #edit ECF_HOME '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3'
     edit CYC '{tools.strftime(suite.Clock.now,"%H")}'
+    edit PDY '{tools.strftime(suite.Clock.now,"%Y%m%d")}'
     edit ENVIR 'prod'
     edit E 'jecffv3'
     #edit QUEUE 'dev'

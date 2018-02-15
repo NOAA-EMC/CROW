@@ -2,7 +2,7 @@
 #BSUB -q %QUEUE%
 #BSUB -P %PROJECT%
 #BSUB -J gdas.vrfy
-#BSUB -o %ECF_OUT%/gdas.vrfy_t%CYC%z.log
+#BSUB -o %ECF_OUT%/%PDY%/%CYC%/gdas.vrfy.log
 
 #BSUB -W 3:00
 #BSUB -R rusage[mem=3072]

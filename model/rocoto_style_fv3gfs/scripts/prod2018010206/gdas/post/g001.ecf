@@ -2,7 +2,7 @@
 #BSUB -q %QUEUE%
 #BSUB -P %PROJECT%
 #BSUB -J gdas.post.g001
-#BSUB -o %ECF_OUT%/gdas.post.g001_t%CYC%z.log
+#BSUB -o %ECF_OUT%/%PDY%/%CYC%/gdas.post.g001.log
 
 #BSUB -W 0:30
 #BSUB -R rusage[mem=3072]

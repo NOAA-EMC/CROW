@@ -2,7 +2,7 @@
 #BSUB -q %QUEUE%
 #BSUB -P %PROJECT%
 #BSUB -J gfs.fcst
-#BSUB -o %ECF_OUT%/gfs.fcst_t%CYC%z.log
+#BSUB -o %ECF_OUT%/%PDY%/%CYC%/gfs.fcst.log
 
 #BSUB -W 6:00
 #BSUB -R rusage[mem=1024]

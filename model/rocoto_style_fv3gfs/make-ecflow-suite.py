@@ -20,14 +20,11 @@ for deffile in suite_defs.keys():
     #print(f'=== contents of suite def {defname}\n{suite_defs[defname]}')
     filename=os.path.join('defs',deffile)
     make_parent_dir(filename)
-    dirname=os.path.dirname(filename)
-    if dirname and not os.path.exists(dirname):
-        os.makedirs(os.path.dirname(filename))
     with open(filename,'wt') as fd:
         fd.write(defcontents)
 
     for setname in ecf_files:
-        print(f'ecf file set {setname}:\n')
+        print(f'ecf file set {setname}:')
         for filename in ecf_files[setname]:
             full_fn=os.path.join('scripts',defname,filename)+'.ecf'
             print(f'  file {full_fn}')

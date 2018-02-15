@@ -2,7 +2,7 @@
 #BSUB -q %QUEUE%
 #BSUB -P %PROJECT%
 #BSUB -J gfs.anal
-#BSUB -o %ECF_OUT%/gfs.anal_t%CYC%z.log
+#BSUB -o %ECF_OUT%/%PDY%/%CYC%/gfs.anal.log
 
 #BSUB -W 1:30
 #BSUB -R rusage[mem=3072]

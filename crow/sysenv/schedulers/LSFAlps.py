@@ -19,7 +19,7 @@ class Scheduler(BaseScheduler):
         self.settings=dict(settings)
         self.settings.update(kwargs)
         self.nodes=GenericNodeSpec(settings)
-        self.rocoto_name='lsf'
+        self.rocoto_name='lsfcray'
         self.indent_text=str(settings.get('indent_text','  '))
 
     def max_ranks_per_node(self,spec):
@@ -191,7 +191,15 @@ class Scheduler(BaseScheduler):
                 # This is an MPI program.
                 nodes_ranks=self.nodes.to_nodes_ppn(spec)
                 requested_nodes=sum([ n for n,p in nodes_ranks ])
-            sio.write(f'{indent*space}<nodes>{requested_nodes}:ppn={nodesize}</nodes>')
+
+            nodes_ranks=self.nodes.to_nodes_ppn(
+                spec,can_merge_ranks=lambda x,y: False)
+            
+            sio.write(indent*space+'<nodes>' \
+                + '+'.join([f'{max(n,1)}:ppn={max(p,1)}' for n,p in nodes_ranks ]) \
+                + '</nodes>\n')
+
+            #sio.write(f'{indent*space}<nodes>{requested_nodes}:ppn={nodesize}</nodes>')
         ret=sio.getvalue()
         sio.close()
         return ret

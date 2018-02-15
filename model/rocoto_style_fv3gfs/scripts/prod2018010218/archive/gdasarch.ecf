@@ -2,7 +2,7 @@
 #BSUB -q %QUEUESERV%
 #BSUB -P %PROJECT%
 #BSUB -J archive.gdasarch
-#BSUB -o %ECF_OUT%/archive.gdasarch_t%CYC%z.log
+#BSUB -o %ECF_OUT%/%PDY%/%CYC%/archive.gdasarch.log
 
 #BSUB -W 6:00
 #BSUB -R rusage[mem=3072]

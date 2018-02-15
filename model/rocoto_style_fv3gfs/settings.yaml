@@ -3,6 +3,12 @@
 initial_directory: !calc ( tools.realpath(tools.abspath(".")) )
 
 settings:
+  HOMEgfs: "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/snapshot_flat/gfs.v15.0.0"
+  COM: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/comdir2/{experiment_name}'
+  EXPDIR: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/expdir2/{experiment_name}'
+  DATAROOT: !expand '/gpfs/hps2/stmp/emc.glopara/{experiment_name}'
+  experiment_name: ecfgfsfv3
+
   NMEM_ENKF: 80
   ENKF_GROUPS: 2
 
@@ -12,19 +18,14 @@ settings:
 
   ECF_HOME: !calc ( doc.initial_directory )
   ROCOTO_HOME: !calc ( doc.initial_directory )
-  HOMEgfs: "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/snapshot_flat/gfs.v15.0.0"
   layout_x: 4
   layout_y: 6
   WRITE_GROUP: 2
   WRTTASK_PER_GROUP: 24
-  experiment_name: ecfgfsfv3
   QUEUE: dev
   PROJECT: GFS-T2O
   QUEUESERV: dev_transfer
 
-  COM: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/comdir2/{experiment_name}'
-  EXPDIR: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/expdir2/{experiment_name}'
-  DATAROOT: !expand '/gpfs/hps2/stmp/emc.glopara/{experiment_name}'
   DUMPDIR: "/gpfs/tp1/emc/globaldump"
 
   start_date: 2018-01-05t00:00:00

@@ -2,7 +2,7 @@
 #BSUB -q %QUEUE%
 #BSUB -P %PROJECT%
 #BSUB -J gdas.enkf.eupd
-#BSUB -o %ECF_OUT%/gdas.enkf.eupd_t%CYC%z.log
+#BSUB -o %ECF_OUT%/%PDY%/%CYC%/gdas.enkf.eupd.log
 
 #BSUB -W 0:30
 #BSUB -R rusage[mem=3072]
