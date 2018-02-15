@@ -4,17 +4,17 @@
 #BSUB -J gdas.enkf.eupd
 #BSUB -o %ECF_OUT%/gdas.enkf.eupd_t%CYC%z.log
 
-#BSUB -W 0:02
+#BSUB -W 0:30
 #BSUB -R rusage[mem=3072]
 #BSUB -extsched CRAYLINUX[]
-export NODES=40
+export NODES=10
 %include <head.h>
 %include <envir-xc40.h>
 
 set -x
 
-export ntasks=240
-export ptile=6
+export ntasks=120
+export ptile=12
 export threads=2
 
 export model=%MODEL_NAME%
@@ -37,7 +37,7 @@ module list
 export cyc=%CYC%
 
 # CALL executable job script here
-${HOMEgfs}/jobs/EUPD.sh
+${HOMEgfs}/jobs/eupd.sh
 
 %include <tail.h>
 %manual

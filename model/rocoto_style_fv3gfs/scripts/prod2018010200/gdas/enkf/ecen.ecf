@@ -4,17 +4,17 @@
 #BSUB -J gdas.enkf.ecen
 #BSUB -o %ECF_OUT%/gdas.enkf.ecen_t%CYC%z.log
 
-#BSUB -W 0:02
-#BSUB -R rusage[mem=3072]
+#BSUB -W 0:30
+#BSUB -R rusage[mem=254]
 #BSUB -extsched CRAYLINUX[]
-export NODES=20
+export NODES=7
 %include <head.h>
 %include <envir-xc40.h>
 
 set -x
 
-export ntasks=80
-export ptile=4
+export ntasks=84
+export ptile=12
 export threads=2
 
 export model=%MODEL_NAME%
@@ -37,7 +37,7 @@ module list
 export cyc=%CYC%
 
 # CALL executable job script here
-${HOMEgfs}/jobs/ECEN.sh
+${HOMEgfs}/jobs/ecen.sh
 
 %include <tail.h>
 %manual

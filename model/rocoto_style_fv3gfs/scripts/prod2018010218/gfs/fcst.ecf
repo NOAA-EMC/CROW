@@ -4,16 +4,16 @@
 #BSUB -J gfs.fcst
 #BSUB -o %ECF_OUT%/gfs.fcst_t%CYC%z.log
 
-#BSUB -W 0:02
+#BSUB -W 6:00
 #BSUB -R rusage[mem=1024]
 #BSUB -extsched CRAYLINUX[]
-export NODES=12
+export NODES=16
 %include <head.h>
 %include <envir-xc40.h>
 
 set -x
 
-export ntasks=144
+export ntasks=192
 export ptile=12
 # No OpenMP in use, so I am not setting $threads
 
@@ -37,7 +37,7 @@ module list
 export cyc=%CYC%
 
 # CALL executable job script here
-${HOMEgfs}/jobs/FCST.sh
+${HOMEgfs}/jobs/fcst.sh
 
 %include <tail.h>
 %manual

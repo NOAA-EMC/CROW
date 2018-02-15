@@ -4,6 +4,7 @@
 #BSUB -J gfs.dump_waiter
 #BSUB -o %ECF_OUT%/gfs.dump_waiter_t%CYC%z.log
 
+#BSUB -W 0:02
 #BSUB -R rusage[mem=300]
 #BSUB -extsched CRAYLINUX[]
 export NODES=1
@@ -36,7 +37,7 @@ module list
 export cyc=%CYC%
 
 # CALL executable job script here
-${HOMEgfs}/jobs/DUMP_WAITER.sh
+${HOMEgfs}/jobs/dump_waiter.sh
 
 %include <tail.h>
 %manual

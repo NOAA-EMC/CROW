@@ -204,6 +204,8 @@ class dict_eval(MutableMapping):
         r._deepcopy_privates_from(memo,self)
         return r
     def __setitem__(self,k,v):  
+        if 'final' in self._path and k=='Rocoto':
+            assert(isinstance(v,expand))
         self.__child[k]=v
         self.__cache[k]=v
     def __delitem__(self,k): del(self.__child[k], self.__cache[k])

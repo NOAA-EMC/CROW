@@ -4,7 +4,7 @@
 #BSUB -J archive.gdasarch
 #BSUB -o %ECF_OUT%/archive.gdasarch_t%CYC%z.log
 
-#BSUB -W 0:02
+#BSUB -W 6:00
 #BSUB -R rusage[mem=3072]
 #BSUB -n 1
 
@@ -37,7 +37,7 @@ module list
 export cyc=%CYC%
 
 # CALL executable job script here
-${HOMEgfs}/jobs/GDASARCH.sh
+${HOMEgfs}/jobs/gdasarch.sh
 
 %include <tail.h>
 %manual

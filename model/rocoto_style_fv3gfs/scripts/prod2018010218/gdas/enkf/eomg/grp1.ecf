@@ -4,7 +4,7 @@
 #BSUB -J gdas.enkf.eomg.grp1
 #BSUB -o %ECF_OUT%/gdas.enkf.eomg.grp1_t%CYC%z.log
 
-#BSUB -W 0:02
+#BSUB -W 1:00
 #BSUB -R rusage[mem=3072]
 #BSUB -extsched CRAYLINUX[]
 export NODES=12
@@ -37,7 +37,7 @@ module list
 export cyc=%CYC%
 
 # CALL executable job script here
-${HOMEgfs}/jobs/eomg
+${HOMEgfs}/jobs/eomg.sh
 
 %include <tail.h>
 %manual

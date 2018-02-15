@@ -4,18 +4,18 @@
 #BSUB -J gdas.prep
 #BSUB -o %ECF_OUT%/gdas.prep_t%CYC%z.log
 
-#BSUB -W 0:02
+#BSUB -W 0:15
 #BSUB -R rusage[mem=3072]
 #BSUB -extsched CRAYLINUX[]
-export NODES=3
+export NODES=1
 %include <head.h>
 %include <envir-xc40.h>
 
 set -x
 
-export ntasks=6
-export ptile=2
-export threads=9223372036854775807
+export ntasks=12
+export ptile=24
+# No OpenMP in use, so I am not setting $threads
 
 export model=%MODEL_NAME%
 %include <model_ver.h>
@@ -37,7 +37,7 @@ module list
 export cyc=%CYC%
 
 # CALL executable job script here
-${HOMEgfs}/jobs/PREP.sh
+${HOMEgfs}/jobs/prep.sh
 
 %include <tail.h>
 %manual

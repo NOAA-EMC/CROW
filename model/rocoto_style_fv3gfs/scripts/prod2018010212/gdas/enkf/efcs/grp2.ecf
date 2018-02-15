@@ -4,18 +4,18 @@
 #BSUB -J gdas.enkf.efcs.grp2
 #BSUB -o %ECF_OUT%/gdas.enkf.efcs.grp2_t%CYC%z.log
 
-#BSUB -W 0:02
-#BSUB -R rusage[mem=3072]
+#BSUB -W 1:00
+#BSUB -R rusage[mem=254]
 #BSUB -extsched CRAYLINUX[]
-export NODES=12
+export NODES=16
 %include <head.h>
 %include <envir-xc40.h>
 
 set -x
 
-export ntasks=72
-export ptile=6
-export threads=2
+export ntasks=192
+export ptile=12
+# No OpenMP in use, so I am not setting $threads
 
 export model=%MODEL_NAME%
 %include <model_ver.h>
@@ -37,7 +37,7 @@ module list
 export cyc=%CYC%
 
 # CALL executable job script here
-${HOMEgfs}/jobs/efcs
+${HOMEgfs}/jobs/efcs.sh
 
 %include <tail.h>
 %manual

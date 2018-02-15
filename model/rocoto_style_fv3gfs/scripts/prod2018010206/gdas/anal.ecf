@@ -4,18 +4,18 @@
 #BSUB -J gdas.anal
 #BSUB -o %ECF_OUT%/gdas.anal_t%CYC%z.log
 
-#BSUB -W 0:02
+#BSUB -W 1:30
 #BSUB -R rusage[mem=3072]
 #BSUB -extsched CRAYLINUX[]
-export NODES=60
+export NODES=24
 %include <head.h>
 %include <envir-xc40.h>
 
 set -x
 
-export ntasks=360
+export ntasks=144
 export ptile=6
-export threads=2
+# No OpenMP in use, so I am not setting $threads
 
 export model=%MODEL_NAME%
 %include <model_ver.h>
@@ -37,7 +37,7 @@ module list
 export cyc=%CYC%
 
 # CALL executable job script here
-${HOMEgfs}/jobs/ANAL.sh
+${HOMEgfs}/jobs/anal.sh
 
 %include <tail.h>
 %manual

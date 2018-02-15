@@ -7,7 +7,7 @@ resources:
   # From if[[...ecen]] block in config.resources:
   run_ecen: !JobRequest
     - memory: "254M" 
-      walltime: 00:02:00
+      walltime: !timedelta "00:30:00"
       mpi_ranks: 84
       exe: placeholder
           # max_ppn comes from THEIA.env: 84/12 = 7
@@ -23,10 +23,11 @@ resources:
   run_nothing: !JobRequest # Special placeholder for "do nothing"
     - memory: "300M"
       exe: nothing
+      walltime: !timedelta "00:02:00"
 
   run_eobs: !JobRequest
     - memory: "3072M" 
-      walltime: 00:02:00
+      walltime: !timedelta "00:45:00"
       mpi_ranks: !calc 12*6
       exe: placeholder
       max_ppn: 6
@@ -34,7 +35,7 @@ resources:
 
   run_eomg: !JobRequest
     - memory: "3072M"
-      walltime: 00:02:00
+      walltime: !timedelta "01:00:00"
       mpi_ranks: !calc 6*12
       exe: placeholder
       max_ppn: 6
@@ -42,7 +43,7 @@ resources:
 
   run_eupd: !JobRequest
     - memory: "3072M" 
-      walltime: 00:02:00
+      walltime: !timedelta "00:30:00"
       mpi_ranks: !calc 10*12
       exe: placeholder
       max_ppn: 12
@@ -56,34 +57,33 @@ resources:
 #        OMP_NUM_THREADS: 4
 
   run_efcs: !JobRequest
-    - walltime: 00:02:00
-      mpi_ranks: !calc "doc.settings.layout_x*doc.settings.layout_y*6"
+    - walltime: !timedelta "01:00:00"
+      mpi_ranks: !calc >-
+         doc.settings.layout_x*doc.settings.layout_y*6
+         + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
       max_ppn: 12
       memory: "254M"
 
   run_epos: !JobRequest
     - memory: "254M"
       mpi_ranks: 84
-      walltime: 00:02:00
+      walltime: !timedelta "00:30:00"
       exe: placeholder
       max_ppn: 12
       OMP_NUM_THREADS: 2
 
   run_prep: !JobRequest
     - memory: "3072M"
-      walltime: 00:02:00
+      walltime: !timedelta "00:15:00"
       mpi_ranks: 12
       exe: placeholder
-      max_ppn: 12
-      OMP_NUM_THREADS: max
 
   run_anal: !JobRequest
     - memory: "3072M" 
       mpi_ranks: 144
-      walltime: 00:02:00
+      walltime: !timedelta "1:30:00"
       exe: placeholder
       max_ppn: 6
-      OMP_NUM_THREADS: 2
 
 #  run_gsi: !JobRequest
 #    pi_ranks: !calc 24*6
@@ -93,21 +93,25 @@ resources:
 #        OMP_NUM_THREADS: 4
 
   run_gdasfcst: !JobRequest
-    - mpi_ranks: !calc "doc.settings.layout_x*doc.settings.layout_y*6"
-      walltime: 00:02:00
+    - mpi_ranks: !calc >-
+         doc.settings.layout_x*doc.settings.layout_y*6
+         + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
+      walltime: !timedelta "00:15:00"
       max_ppn: 12
       memory: "1024M"
 
   run_gfsfcst: !JobRequest
-    - mpi_ranks: !calc "doc.settings.layout_x*doc.settings.layout_y*6"
-      walltime: 00:02:00
+    - mpi_ranks: !calc >-
+         doc.settings.layout_x*doc.settings.layout_y*6
+         + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
+      walltime: !timedelta "06:00:00"
       max_ppn: 12
       memory: "1024M"
 
   run_gdaspost: !JobRequest
     - memory: "3072M"
       mpi_ranks: 72
-      walltime: 00:02:00
+      walltime: !timedelta "00:30:00"
       exe: placeholder
       max_ppn: 12
       OMP_NUM_THREADS: 1
@@ -115,15 +119,22 @@ resources:
   run_gfspost: !JobRequest
     - memory: "3072M"
       mpi_ranks: 72
-      walltime: 00:02:00
+      walltime: !timedelta "01:00:00"
       exe: placeholder
       max_ppn: 12
       OMP_NUM_THREADS: 1
 
-  run_vrfy: !JobRequest
+  run_gfsvrfy: !JobRequest
     - memory: "3072M" 
       mpi_ranks: 1
-      walltime: 00:02:00
+      walltime: !timedelta "06:00:00"
+      exe: placeholder
+      max_ppn: 1
+
+  run_gdasvrfy: !JobRequest
+    - memory: "3072M" 
+      mpi_ranks: 1
+      walltime: !timedelta "03:00:00"
       exe: placeholder
       max_ppn: 1
 
@@ -131,7 +142,7 @@ resources:
     - memory: "3072M"
       exclusive: false
       mpi_ranks: 1
-      walltime: 00:02:00
+      walltime: !timedelta "06:00:00"
       exe: placeholder
       max_ppn: 1
       OMP_NUM_THREADS: 2
@@ -139,19 +150,17 @@ resources:
   run_final: !JobRequest
     - memory: "2M"
       mpi_ranks: 1
-      walltime: 00:01:00
+      walltime: !timedelta "00:01:00"
       exe: placeholder
       max_ppn: 1
       OMP_NUM_THREADS: 2
 
-#  run_earc: !JobRequest
-#    emory: "3072M"
-#    mpi_ranks: 1
-#    walltime: 00:15:00
-#    resources:  !JobRequest
-#      - exe: placeholder
-#        max_ppn: 1
-#        OMP_NUM_THREADS: 2
+  run_earc: !JobRequest
+    - memory: "3072M"
+      mpi_ranks: 1
+      walltime: !timedelta "06:00:00"
+      exe: placeholder
+      max_ppn: 1
 
   run_fv3ic: !JobRequest
     - memory: "3072M" 

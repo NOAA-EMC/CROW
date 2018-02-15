@@ -2,13 +2,15 @@ task_template: &task_template
 
   Template: *task_validator
 
+  rocoto_command: !expand "&HOMEgfs;/jobs/rocoto/{J_JOB}"
+
   Rocoto: !expand |
-    <command>&HOMEgfs;/jobs/{J_JOB}</command>
+    <command>{rocoto_command}</command>
     {sched.rocoto_accounting(accounting,jobname=task_path_var,
         outerr="<cyclestr>&LOG_DIR;/"+task_path_var+"_t"+"@H"+"z.log</cyclestr>")}
     {sched.rocoto_resources(resources)}
     <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
-    <envar><name>EXPDIR</name><value>EXPDIR</value></envar>
+    <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
     <envar><name>CDUMP</name><value>{CDUMP}</value></envar>
     {rocoto_more_vars}
 
@@ -101,9 +103,9 @@ exclusive_accounting: &exclusive_accounting
 shared_task_template: &shared_task_template
   <<: *task_template
   accounting: *shared_accounting
-  J_JOB: !expand '{tools.to_upper(task_path_list[-1])}.sh'
+  J_JOB: !expand '{task_path_list[-1]}.sh'
 
 exclusive_task_template: &exclusive_task_template
   <<: *task_template
   accounting: *exclusive_accounting
-  J_JOB: !expand '{tools.to_upper(task_path_list[-1])}.sh'
+  J_JOB: !expand '{task_path_list[-1]}.sh'

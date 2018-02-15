@@ -1,6 +1,8 @@
 extern /prod2018010206/gdas/post
 extern /prod2018010206/gdas/enkf/epos
 suite prod2018010212
+  # This ecflow suite definition is automatically generated.
+  # Changes will be overwritten.  Please edit suite_def.yaml instead.
   #repeat day 1
   edit ECF_TRIES '1'
   #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
@@ -21,8 +23,8 @@ suite prod2018010212
   edit MODEL_NAME 'gfs'
   
   edit DUMPDIR '/gpfs/tp1/emc/globaldump'
-  edit QUEUE 'debug'
-  edit COM '/gpfs/hps2/ptmp/emc.glopara/ecfgfsfv3/com'
+  edit QUEUE 'dev'
+  edit COM '/gpfs/hps3/ptmp/Samuel.Trahan/comdir2/ecfgfsfv3'
   edit QUEUESERV 'dev_transfer'
   
   family gdas # /prod2018010212/gdas
@@ -34,86 +36,6 @@ suite prod2018010212
       event 1 updated_status
     task prep
       trigger /prod2018010206/gdas/post == complete and ./dump_waiter:updated_status
-    family enkf # /prod2018010212/gdas/enkf
-      task eobs
-        trigger ../prep == complete and /prod2018010206/gdas/enkf/epos == complete
-      family eomg # /prod2018010212/gdas/enkf/eomg
-        trigger ./eobs == complete
-        task grp1
-          edit ENSGRP '1'
-        task grp2
-          edit ENSGRP '2'
-        task grp3
-          edit ENSGRP '3'
-        task grp4
-          edit ENSGRP '4'
-        task grp5
-          edit ENSGRP '5'
-        task grp6
-          edit ENSGRP '6'
-        task grp7
-          edit ENSGRP '7'
-        task grp8
-          edit ENSGRP '8'
-        task grp9
-          edit ENSGRP '9'
-        task grp10
-          edit ENSGRP '10'
-        task grp11
-          edit ENSGRP '11'
-        task grp12
-          edit ENSGRP '12'
-        task grp13
-          edit ENSGRP '13'
-        task grp14
-          edit ENSGRP '14'
-        task grp15
-          edit ENSGRP '15'
-        task grp16
-          edit ENSGRP '16'
-      endfamily # /prod2018010212/gdas/enkf/eomg
-      task eupd
-        trigger ./eomg == complete
-      task ecen
-        trigger ./eupd == complete and ../anal == complete
-      family efcs # /prod2018010212/gdas/enkf/efcs
-        trigger ./eobs == complete
-        task grp1
-          edit ENSGRP '1'
-        task grp2
-          edit ENSGRP '2'
-        task grp3
-          edit ENSGRP '3'
-        task grp4
-          edit ENSGRP '4'
-        task grp5
-          edit ENSGRP '5'
-        task grp6
-          edit ENSGRP '6'
-        task grp7
-          edit ENSGRP '7'
-        task grp8
-          edit ENSGRP '8'
-        task grp9
-          edit ENSGRP '9'
-        task grp10
-          edit ENSGRP '10'
-        task grp11
-          edit ENSGRP '11'
-        task grp12
-          edit ENSGRP '12'
-        task grp13
-          edit ENSGRP '13'
-        task grp14
-          edit ENSGRP '14'
-        task grp15
-          edit ENSGRP '15'
-        task grp16
-          edit ENSGRP '16'
-      endfamily # /prod2018010212/gdas/enkf/efcs
-      task epos
-        trigger ./efcs == complete
-    endfamily # /prod2018010212/gdas/enkf
     task anal
       trigger ./prep == complete and /prod2018010206/gdas/enkf/epos == complete
     task fcst
@@ -128,33 +50,61 @@ suite prod2018010212
         event 5 release_post03
         event 6 release_post04
         event 7 release_post05
-      task f000
-        edit FHRGRP 'f000'
+        event 8 release_post06
+        event 9 release_post07
+        event 10 release_post08
+        event 11 release_post09
+      task g000
+        edit FHRGRP '000'
         edit FHRLST 'anl'
         trigger ./post_manager:release_post00
-      task f006
-        edit FHRGRP 'f006'
-        edit FHRLST 'f006'
+      task g001
+        edit FHRGRP '001'
+        edit FHRLST 'f000'
         trigger ./post_manager:release_post01
-      task f012
-        edit FHRGRP 'f012'
-        edit FHRLST 'f012'
+      task g002
+        edit FHRGRP '002'
+        edit FHRLST 'f003'
         trigger ./post_manager:release_post02
-      task f018
-        edit FHRGRP 'f018'
-        edit FHRLST 'f018'
+      task g003
+        edit FHRGRP '003'
+        edit FHRLST 'f006'
         trigger ./post_manager:release_post03
-      task f024
-        edit FHRGRP 'f024'
-        edit FHRLST 'f024'
+      task g004
+        edit FHRGRP '004'
+        edit FHRLST 'f009'
         trigger ./post_manager:release_post04
-      task f030
-        edit FHRGRP 'f030'
-        edit FHRLST 'f030'
+      task g005
+        edit FHRGRP '005'
+        edit FHRLST 'f012'
         trigger ./post_manager:release_post05
     endfamily # /prod2018010212/gdas/post
     task vrfy
       trigger ./post == complete
+    family enkf # /prod2018010212/gdas/enkf
+      task eobs
+        trigger ../prep == complete and /prod2018010206/gdas/enkf/epos == complete
+      family eomg # /prod2018010212/gdas/enkf/eomg
+        trigger ./eobs == complete
+        task grp1
+          edit ENSGRP '01'
+        task grp2
+          edit ENSGRP '02'
+      endfamily # /prod2018010212/gdas/enkf/eomg
+      task eupd
+        trigger ./eomg == complete
+      task ecen
+        trigger ./eupd == complete and ../anal == complete
+      family efcs # /prod2018010212/gdas/enkf/efcs
+        trigger ./ecen == complete
+        task grp1
+          edit ENSGRP '01'
+        task grp2
+          edit ENSGRP '02'
+      endfamily # /prod2018010212/gdas/enkf/efcs
+      task epos
+        trigger ./efcs == complete
+    endfamily # /prod2018010212/gdas/enkf
   endfamily # /prod2018010212/gdas
   family gfs # /prod2018010212/gfs
     edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
@@ -164,7 +114,7 @@ suite prod2018010212
     task dump_waiter
       event 1 updated_status
     task prep
-      trigger /prod2018010206/gdas/post == complete
+      trigger /prod2018010206/gdas/post == complete and ./dump_waiter:updated_status
     task anal
       trigger ./prep == complete and /prod2018010206/gdas/enkf/epos == complete
     task fcst
@@ -353,23 +303,23 @@ suite prod2018010212
       task grp001
         edit FHRGRP '001'
         edit FHRLST 'f000'
-        trigger ./post_manager:release_post01
+        trigger ./post_manager:release_post00
       task grp002
         edit FHRGRP '002'
         edit FHRLST 'f006'
-        trigger ./post_manager:release_post02
+        trigger ./post_manager:release_post06
       task grp003
         edit FHRGRP '003'
         edit FHRLST 'f012'
-        trigger ./post_manager:release_post03
+        trigger ./post_manager:release_post12
       task grp004
         edit FHRGRP '004'
         edit FHRLST 'f018'
-        trigger ./post_manager:release_post04
+        trigger ./post_manager:release_post18
       task grp005
         edit FHRGRP '005'
         edit FHRLST 'f024'
-        trigger ./post_manager:release_post05
+        trigger ./post_manager:release_post24
     endfamily # /prod2018010212/gfs/post
     task vrfy
       trigger ./post == complete
@@ -377,42 +327,16 @@ suite prod2018010212
   family archive # /prod2018010212/archive
     task gdasarch
       trigger ../gdas/vrfy == complete
-    task gfsarch
-      trigger ../gfs/vrfy == complete
     family earc # /prod2018010212/archive/earc
       trigger ../gdas/enkf/epos == complete
-      task grp1
-        edit ENSGRP '1'
-      task grp2
-        edit ENSGRP '2'
-      task grp3
-        edit ENSGRP '3'
-      task grp4
-        edit ENSGRP '4'
-      task grp5
-        edit ENSGRP '5'
-      task grp6
-        edit ENSGRP '6'
-      task grp7
-        edit ENSGRP '7'
-      task grp8
-        edit ENSGRP '8'
-      task grp9
-        edit ENSGRP '9'
-      task grp10
-        edit ENSGRP '10'
-      task grp11
-        edit ENSGRP '11'
-      task grp12
-        edit ENSGRP '12'
-      task grp13
-        edit ENSGRP '13'
-      task grp14
-        edit ENSGRP '14'
-      task grp15
-        edit ENSGRP '15'
-      task grp16
-        edit ENSGRP '16'
+      task grp00
+        edit ENSGRP '00'
+      task grp01
+        edit ENSGRP '01'
+      task grp02
+        edit ENSGRP '02'
     endfamily # /prod2018010212/archive/earc
+    task gfsarch
+      trigger ../gfs/vrfy == complete
   endfamily # /prod2018010212/archive
 endsuite # /prod2018010212

@@ -96,13 +96,13 @@ class SuiteView(Mapping):
                 v=copy(v)
                 if hasattr(v,"_validate"):
                     v._validate('suite')
-                self.viewed[k]=v
+                if self.__can_wrap(v):
+                    self.viewed[k]=v
         if type(self.viewed) in SUITE_CLASS_MAP:
             self.viewed.up=parent
             self.viewed.this=self
         self.path=SuitePath(path)
         self.parent=parent
-        self._is_suite_view=True
         self.__cache={}
         if isinstance(self.viewed,Slot):
             locals=multidict(self.parent,self.viewed)
@@ -111,6 +111,8 @@ class SuiteView(Mapping):
                 if hasattr(v,'_as_dependency'): continue
                 self.viewed[k]=from_config(k,v,globals,locals,self.viewed._path)
         assert(isinstance(viewed,Cycle) or self.viewed.task_path_var != parent.task_path_var)
+
+    def _is_suite_view(self): pass
 
     def _raw(self,key):
         return self.viewed._raw(key)
@@ -181,9 +183,10 @@ class SuiteView(Mapping):
             if var=='up': continue
             if var=='this': continue
             if hasattr(rawval,'_as_dependency'): continue
-            val=self[var]
-            if hasattr(val,'_is_suite_view'):
-                yield val
+            if self.__can_wrap(rawval):
+                yield self[var]
+            #if hasattr(val,'_is_suite_view'):
+            #    yield val
 
     def walk_task_tree(self):
         """!Iterates over the entire tree of descendants below this
@@ -239,6 +242,11 @@ class SuiteView(Mapping):
         self.__cache[key]=val
         return val
 
+    def __can_wrap(self,obj):
+        return( isinstance(obj,Cycle) or \
+                hasattr(obj,'_generate') or \
+                type(obj) in SUITE_CLASS_MAP )
+
     def __wrap(self,key,obj):
         if isinstance(obj,Cycle):
             # Reset path when we see a cycle
@@ -250,6 +258,9 @@ class SuiteView(Mapping):
         elif type(obj) in SUITE_CLASS_MAP:
             view_class=SUITE_CLASS_MAP[type(obj)]
             obj=copy(obj)
+            if 'Rocoto' in obj and key=='final':
+                assert(type(obj._raw("Rocoto"))!=str)
+                #print(f'{key}.Rocoto: {type(obj._raw("Rocoto"))}')
             self.viewed[key]=obj
             return view_class(self.suite,obj,self.path+[key],self)
         return obj
@@ -405,7 +416,7 @@ class Message(str):
     def _as_dependency(self,globals,locals,path):
         try:
             return eval(self,globals,locals)
-        except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
+        except(ValueError,SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
             raise DependError(f'!Message {self}: {ke}')
 
 class Depend(str):
@@ -414,7 +425,7 @@ class Depend(str):
             result=eval(self,globals,locals)
             result=as_dependency(result,path)
             return result
-        except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
+        except(ValueError,SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
             raise DependError(f'!Depend {self}: {ke}')
 
 def as_dependency(obj,path=MISSING,state=COMPLETED):

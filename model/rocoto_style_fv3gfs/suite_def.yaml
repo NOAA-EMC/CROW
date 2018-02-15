@@ -76,6 +76,7 @@ suite: !Cycle
         <!ENTITY CYCLE_THROTTLE "2">
         <!ENTITY MAX_TRIES "{doc.settings.max_job_tries}">
         <!ENTITY HOMEgfs "{doc.settings.HOMEgfs}">
+        <!ENTITY EXPDIR "{doc.settings.EXPDIR}">
       {tools.indent("  ",suite.common_metasched_vars)}
       ]>
       <!-- This Rocoto suite definition is automatically generated.
@@ -104,57 +105,6 @@ suite: !Cycle
       Trigger: !Depend  up.gdas.post.at('-6:00:00') & dump_waiter.updated_status
       resources: !calc ( doc.resources.run_prep )
 
-    enkf: !Family
-      eobs: !Task
-        <<: *exclusive_task_template
-        Trigger: !Depend  ( up.prep & epos.at('-6:00:00') )
-        resources: !calc ( doc.resources.run_eobs )
-
-      eomg: !TaskArray
-        Trigger: !Depend eobs
-        Dimensions:
-          groupid: !calc tools.seq(1,doc.settings.ENKF_INNOVATE_GROUPS,1)
-        grp: !TaskElement
-          <<: *exclusive_task_template
-          resources: !calc ( doc.resources.run_eomg )
-          J_JOB: eomg
-          Foreach: [ groupid ]
-          Name: !expand "grp{idx.groupid}"
-          ecflow_def: !calc more_vars
-          rocoto_more_vars: !calc more_vars
-          more_vars: !expand |
-            {metasched.defenvar("ENSGRP",idx.groupid)}
-
-      eupd: !Task
-        <<: *exclusive_task_template
-        Trigger: !Depend eomg
-        resources: !calc ( doc.resources.run_eupd )
-
-      ecen: !Task
-        <<: *exclusive_task_template
-        Trigger: !Depend ( eupd & up.anal )
-        resources: !calc ( doc.resources.run_ecen )
-
-      efcs: !TaskArray
-        Trigger: !Depend eobs
-        Dimensions:
-          groupid: !calc tools.seq(1,doc.settings.ENKF_FORECAST_GROUPS,1)
-        grp: !TaskElement
-          <<: *exclusive_task_template
-          resources: !calc ( doc.resources.run_eomg )
-          J_JOB: efcs
-          Foreach: [ groupid ]
-          Name: !expand "grp{idx.groupid}"
-          ecflow_def: !calc more_vars
-          rocoto_more_vars: !calc more_vars
-          more_vars: !expand |
-            {metasched.defenvar("ENSGRP",idx.groupid)}
-
-      epos: !Task
-        <<: *exclusive_task_template
-        Trigger: !Depend efcs
-        resources: !calc ( doc.resources.run_epos )
-
     anal: !Task
       <<: *exclusive_task_template
       Trigger: !Depend  ( prep & enkf.epos.at('-6:00:00') )
@@ -167,7 +117,8 @@ suite: !Cycle
 
     post: !TaskArray
       Dimensions:
-        fhr: !calc tools.seq(0,5,1)
+        groupid: !calc tools.seq(0,5,1)
+        fhr: !calc tools.seq(0,9,1)
       post_manager_el: !TaskElement
         <<: *exclusive_task_template
         Trigger: !Depend ( up.fcst.is_running() | up.fcst.is_completed() )
@@ -186,24 +137,79 @@ suite: !Cycle
         
       post_el: !TaskElement
         <<: *exclusive_task_template
-        Foreach: [ fhr ]
-        J_JOB: post
-        Name: !expand "f{idx.fhr*6:03d}"
+        Foreach: [ groupid ]
+        J_JOB: post.sh
+        Name: !expand "g{idx.groupid:03d}"
+        fhrgrp: !expand "{idx.groupid:03d}"
         fhrlst: !FirstTrue
-          - when: !calc idx.fhr==0
+          - when: !calc idx.groupid==0
             do:   anl
-          - otherwise: !expand "f{idx.fhr*6:03d}"
+          - otherwise: !expand "f{(idx.groupid-1)*3:03d}"
         ecflow_def: !calc more_vars
         rocoto_more_vars: !calc more_vars
         more_vars: !expand |
-          {metasched.defenvar("FHRGRP",Name)}
+          {metasched.defenvar("FHRGRP",fhrgrp)}
           {metasched.defenvar("FHRLST",fhrlst)}
-        Trigger: !Depend post_manager.depend("release_post{F:02d}",F=idx.fhr)
+        Trigger: !Depend post_manager.depend("release_post{F:02d}",F=[idx.groupid])
+        resources: !calc doc.resources.run_gdaspost
 
     vrfy: !Task
       <<: *exclusive_task_template
       Trigger: !Depend post
-      resources: !calc ( doc.resources.run_vrfy )
+      resources: !calc ( doc.resources.run_gdasvrfy )
+
+    enkf: !Family
+      eobs: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend  ( up.prep & epos.at('-6:00:00') )
+        resources: !calc ( doc.resources.run_eobs )
+
+      eomg: !TaskArray
+        Trigger: !Depend eobs
+        Dimensions:
+          groupid: !calc tools.seq(1,doc.settings.ENKF_INNOVATE_GROUPS,1)
+        grp: !TaskElement
+          <<: *exclusive_task_template
+          resources: !calc ( doc.resources.run_eomg )
+          J_JOB: eomg.sh
+          Foreach: [ groupid ]
+          Name: !expand "grp{idx.groupid}"
+          ecflow_def: !calc more_vars
+          rocoto_more_vars: !calc more_vars
+          ENSGRP: !expand "{idx.groupid:02d}"
+          more_vars: !expand |
+            {metasched.defenvar("ENSGRP",ENSGRP)}
+
+      eupd: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend eomg
+        resources: !calc ( doc.resources.run_eupd )
+
+      ecen: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend ( eupd & up.anal )
+        resources: !calc ( doc.resources.run_ecen )
+
+      efcs: !TaskArray
+        Trigger: !Depend ( ecen | ~ suite.has_cycle('-6:00:00') )
+        Dimensions:
+          groupid: !calc tools.seq(1,doc.settings.ENKF_FORECAST_GROUPS,1)
+        grp: !TaskElement
+          <<: *exclusive_task_template
+          resources: !calc ( doc.resources.run_efcs )
+          J_JOB: efcs.sh
+          Foreach: [ groupid ]
+          Name: !expand "grp{idx.groupid}"
+          ecflow_def: !calc more_vars
+          rocoto_more_vars: !calc more_vars
+          ENSGRP: !expand "{idx.groupid:02d}"
+          more_vars: !expand |
+            {metasched.defenvar("ENSGRP",ENSGRP)}
+
+      epos: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend efcs
+        resources: !calc ( doc.resources.run_epos )
 
   gfs: !Family
     AlarmName: gfs
@@ -217,8 +223,8 @@ suite: !Cycle
 
     prep: !Task
       <<: *exclusive_task_template
-      Trigger: !Depend  up.gdas.post.at('-6:00:00')
       resources: !calc ( doc.resources.run_prep )
+      Trigger: !Depend  up.gdas.post.at('-6:00:00') & dump_waiter.updated_status
     
     anal: !Task
       <<: *exclusive_task_template
@@ -237,6 +243,7 @@ suite: !Cycle
 
       post_manager_el: !TaskElement
         <<: *exclusive_task_template
+        Disable: !calc metasched.type == 'rocoto'
         Trigger: !Depend ( up.fcst.is_running() | up.fcst.is_completed() )
         Foreach: [ fhr ]
         J_JOB: post_manager
@@ -256,14 +263,18 @@ suite: !Cycle
         resources: !calc doc.resources.run_gfspost
         Name: !expand "grp{idx.groupid:03d}"
         fhrgrp: !expand "{idx.groupid:03d}"
-        J_JOB: post
+        J_JOB: post.sh
         fhrlst: !FirstTrue
           - when: !calc idx.groupid==0
             do:   anl
           - otherwise: !expand "f{(idx.groupid-1)*6:03d}"
+        release_id: !FirstTrue
+          - when: !calc idx.groupid==0
+            do:   "00"
+          - otherwise: !expand "{(idx.groupid-1)*6:02d}"
         ecflow_def: !calc more_vars
         rocoto_more_vars: !calc more_vars
-        Trigger: !Depend post_manager.depend("release_post{F:02d}",F=idx.groupid)
+        Trigger: !Depend post_manager.depend("release_post{F}",F=[release_id])
         more_vars: !expand |
           {metasched.defenvar("FHRGRP",fhrgrp)}
           {metasched.defenvar("FHRLST",fhrlst)}
@@ -271,7 +282,7 @@ suite: !Cycle
     vrfy: !Task
       <<: *exclusive_task_template
       Trigger: !Depend post
-      resources: !calc ( doc.resources.run_vrfy )
+      resources: !calc ( doc.resources.run_gfsvrfy )
 
   archive: !Family
     gdasarch: !Task
@@ -281,6 +292,24 @@ suite: !Cycle
       resources: !calc ( doc.resources.run_arch )
       Disable: !calc not doc.settings.archive_to_hpss
 
+    earc: !TaskArray
+      AlarmName: gdas
+      Trigger: !Depend up.gdas.enkf.epos
+      Dimensions:
+        groupid: !calc tools.seq(0,doc.settings.ENKF_ARCHIVE_GROUPS-1,1)
+      grp: !TaskElement
+        <<: *shared_task_template
+        resources: !calc ( doc.resources.run_arch )
+        J_JOB: earc.sh
+        accounting: *shared_accounting
+        Foreach: [ groupid ]
+        Name: !expand "grp{idx.groupid:02d}"
+        ecflow_def: !calc more_vars
+        rocoto_more_vars: !calc more_vars
+        ENSGRP: !expand "{idx.groupid:02d}"
+        more_vars: !expand |
+          {metasched.defenvar("ENSGRP",ENSGRP)}
+
     gfsarch: !Task
       <<: *shared_task_template
       AlarmName: gfs
@@ -288,24 +317,8 @@ suite: !Cycle
       resources: !calc ( doc.resources.run_arch )
       Disable: !calc not doc.settings.archive_to_hpss
 
-    earc: !TaskArray
-      AlarmName: gdas
-      Trigger: !Depend up.gdas.enkf.epos
-      Dimensions:
-        groupid: !calc tools.seq(1,doc.settings.ENKF_ARCHIVE_GROUPS,1)
-      grp: !TaskElement
-        <<: *shared_task_template
-        resources: !calc ( doc.resources.run_arch )
-        J_JOB: earc
-        accounting: *shared_accounting
-        Foreach: [ groupid ]
-        Name: !expand "grp{idx.groupid}"
-        ecflow_def: !calc more_vars
-        rocoto_more_vars: !calc more_vars
-        more_vars: !expand |
-          {metasched.defenvar("ENSGRP",idx.groupid)}
-
   final: !Task
     <<: *shared_task_template
     resources: !calc (doc.resources.run_nothing)
+    rocoto_command: /bin/true
 

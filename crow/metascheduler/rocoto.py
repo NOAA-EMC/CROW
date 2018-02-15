@@ -221,13 +221,15 @@ class ToRocoto(object):
         return f'&{name};'
 
     def make_time_xml(self,indent=1):
+        alarms = set([''])
         with io.StringIO() as sio:
-            for name in self.__alarms_used:
-                if name:
-                    alarm=self.suite.Alarms[name]
-                else:
-                    alarm=self.suite.Clock
-                sio.write(stringify_clock(name,alarm,indent*self.__spacing))
+            if 'Alarms' in self.suite:
+                for name,alarm in self.suite.Alarms.items():
+                    if isinstance(alarm,crow.tools.Clock):
+                        sio.write(stringify_clock(
+                            name,alarm,indent*self.__spacing))
+
+            sio.write(stringify_clock(None,alarm,indent*self.__spacing))
             return sio.getvalue()
 
     def make_task_xml(self,indent=1):
@@ -266,15 +268,13 @@ class ToRocoto(object):
 
     def remove_undefined_tasks(self,tree):
         typecheck('tree',tree,LogicalDependency) 
+        # NOTE: Do not remove event dependencies for undefined tasks.
+        # They are critical to allow ecflow to use a task that waits
+        # for data and sets an event while rocoto uses a data event
+        # with no task.
         if isinstance(tree,StateDependency):
             # Node is not defined, so assume it is complete
             dep_path=SuitePath([_ZERO_DT] + tree.view.path[1:])
-            if dep_path not in self.__all_defined:
-                return TRUE_DEPENDENCY
-        elif isinstance(tree,EventDependency):
-            # Node in which this event resides is not defined, so
-            # assume it is set
-            dep_path=SuitePath([_ZERO_DT] + tree.event.up.path[1:])
             if dep_path not in self.__all_defined:
                 return TRUE_DEPENDENCY
         elif isinstance(tree,NotDependency):
@@ -638,14 +638,16 @@ class ToRocoto(object):
             task_name=f'final_for_{alarm_name}' if alarm_name else 'final_no_alarm'
             new_task=copy(self.suite.final.viewed)
             new_task['AlarmName']=alarm_name
-            invalidate_cache(new_task)
+            invalidate_cache(self.suite,recurse=True)
             self.suite.viewed[task_name]=new_task
             new_task_view=self.suite[task_name]
+            #print(f'[[[{type(self.suite.viewed._raw("final")._raw("Rocoto"))}]]] =>\n[[[{self.suite.viewed._raw("final")}]]]')
+            #print(f'[[[{type(new_task._raw("Rocoto"))}]]] =>\n[[[{new_task.Rocoto}]]]')
             del new_task
             self.__all_defined.add(SuitePath(
                 [_ZERO_DT] + new_task_view.path[1:]))
             assert( dep is not FALSE_DEPENDENCY )
-            self._write_task_text(fd,' final="true"',indent,new_task_view,
+            self._write_task_text(fd,'',indent,new_task_view,
                                   dep,timedelta.min,alarm_name)
             
             manual_dependency+=f'''{self.__spacing*(indent+1)}<or>
