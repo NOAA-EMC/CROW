@@ -48,6 +48,8 @@ class user_error_message(str):
 class expand(str):
     """!Represents a literal format string."""
     def _result(self,globals,locals):
+        if(self == '--{up}--'):
+            assert('up' in locals)
         if "'''" in self:
             raise ValueError("!expand strings cannot include three single "
                              f"quotes in a row ('''): {self[:80]}")

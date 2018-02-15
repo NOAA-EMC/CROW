@@ -97,13 +97,6 @@ class SuiteView(Mapping):
         self.viewed.task_path_str='/'+'/'.join(path[1:])
         self.viewed.task_path_var='.'.join(path[1:])
         self.viewed._path=self.viewed.task_path_var
-        if isinstance(self.viewed,Task):
-            for k,v in self.viewed.items():
-                v=copy(v)
-                if hasattr(v,"_validate"):
-                    v._validate('suite')
-                if self.__can_wrap(v):
-                    self.viewed[k]=v
         if type(self.viewed) in SUITE_CLASS_MAP:
             self.viewed.up=parent
             self.viewed.this=self
@@ -116,6 +109,13 @@ class SuiteView(Mapping):
             for k,v in self.viewed._raw_child().items():
                 if hasattr(v,'_as_dependency'): continue
                 self.viewed[k]=from_config(k,v,globals,locals,self.viewed._path)
+        if isinstance(self.viewed,Task):
+            for k,v in self.viewed.items():
+                v=copy(v)
+                if hasattr(v,"_validate"):
+                    v._validate('suite')
+                if self.__can_wrap(v):
+                    self.viewed[k]=v
         assert(isinstance(viewed,Cycle) or self.viewed.task_path_var != parent.task_path_var)
 
     def _is_suite_view(self): pass
@@ -702,7 +702,7 @@ class TaskArrayElement(dict_eval):
             cls=ARRAY_ELEMENT_TYPE_MAP[type(self)]
             t=cls(self._raw_child(),globals=self._globals())
             t._path=self._path # used if Name is missing
-            t['dimlist']=dimensions
+            t['dimlist']=dict_eval(dimensions)
             t['dimval']=dict_eval(child_dimval)
             t['dimidx']=dict_eval(child_dimidx)
             name=t.Name

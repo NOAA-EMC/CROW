@@ -136,6 +136,7 @@ suite: !Cycle
         Disable: !calc metasched.type=='rocoto'
         Foreach: []
         J_JOB: post_manager
+        ecflow_command: *post_manager_job_contents
         Name: post_manager
         release_postanl: !DataEvent
           file: !expand >-
@@ -145,7 +146,8 @@ suite: !Cycle
           Foreach: [ fhr ]
           file: !expand >
             {metasched.varref("COM")}/{up.CDUMP}.{metasched.datestring("%Y%m%d/%H/")}{up.CDUMP}.t{metasched.datestring("%H")}z.logf{dimval.fhr:03d}.nemsio
-        
+        # NOTE: the above files must match post_manager.yaml
+
       post_el: !TaskElement
         <<: *exclusive_task_template
         Foreach: [ fhr ]
@@ -261,7 +263,8 @@ suite: !Cycle
         <<: *exclusive_task_template
         Disable: !calc metasched.type == 'rocoto'
         Trigger: !Depend ( up.fcst.is_running() | up.fcst.is_completed() )
-        Foreach: [ fhr ]
+        Foreach: [ ]
+        ecflow_command: *post_manager_job_contents
         J_JOB: post_manager
         Name: post_manager
         release_postanl: !DataEvent
@@ -272,6 +275,7 @@ suite: !Cycle
           Foreach: [ fhr ]
           file: !expand >-
             {metasched.varref("COM")}/{up.CDUMP}.{metasched.datestring("%Y%m%d/%H/")}{up.CDUMP}.t{metasched.datestring("%H")}z.logf{dimval.fhr:03d}.nemsio
+        # NOTE: the above files must match post_manager.yaml
 
       post_el: !TaskElement
         <<: *exclusive_task_template

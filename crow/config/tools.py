@@ -21,7 +21,7 @@ def to_YMDH(d): return d.strftime('%Y%m%d%H')
 def to_YMD(d): return d.strftime('%Y%m%d')
 def from_YMDH(d): return datetime.datetime.strptime(d,'%Y%m%d%H')
 def from_YMD(d): return datetime.datetime.strptime(d,'%Y%m%d')
-def join(L,J): return J.join(L)
+def join(L,J): return J.join([str(i) for i in L])
 def seq(start,end,step):
     return [ r for r in range(start,end+1,step) ]
 

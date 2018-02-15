@@ -3,6 +3,7 @@ include:
   - settings.yaml
   - resources_C192_C192.yaml
   - validator.yaml
+  - post_manager.yaml
   - task_template.yaml
   - dump_waiter.yaml
   - suite_def.yaml
