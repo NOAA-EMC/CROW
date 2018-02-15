@@ -11,7 +11,7 @@
   <!ENTITY QUEUESHARED "dev">
   <!ENTITY COM "/gpfs/hps3/ptmp/Samuel.Trahan/comdir/RSLOT2">
   <!ENTITY QUEUESERV "dev_transfer">
-  <!ENTITY PROJECT "GFS-T2O">
+  <!ENTITY PROJECT "FV3GFS-T2O">
 ]>
 <!-- This Rocoto suite definition is automatically generated.
      Changes will be overwritten.  Please edit suite_def.yaml instead. -->

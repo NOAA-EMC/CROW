@@ -102,10 +102,13 @@ suite: !Cycle
 
   gdas: !Family
     AlarmName: gdas
-    dump_waiter: *dump_waiter_task
 
     ecflow_def: |
       edit MODEL_NAME 'gdas' 
+
+    dump_waiter: !Task
+      <<: *dump_waiter_task
+      Complete: !Depend ~ suite.has_cycle('-6:00:00') 
 
     prep: !Task
       <<: *exclusive_task_template

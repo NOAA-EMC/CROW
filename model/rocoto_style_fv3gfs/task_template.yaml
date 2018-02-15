@@ -79,7 +79,7 @@ task_template: &task_template
     # Set tuning variables like KMP_AFFINITY and OMP_STACKSIZE here.
 
   ecf_batch_resources: !expand |-
-    {sched.batch_accounting(accounting,jobname=task_path_var,outerr="%ECF_OUT%/%PDY%%CYC%_"+task_path_var+".log")}
+    {sched.batch_accounting(accounting,jobname=task_path_var,outerr="%ECF_OUT%/%EMCPEN%_%PDY%%CYC%_"+task_path_var+".log")}
     {sched.batch_resources(resources)}
 
   ecf_resource_more: !expand |-
