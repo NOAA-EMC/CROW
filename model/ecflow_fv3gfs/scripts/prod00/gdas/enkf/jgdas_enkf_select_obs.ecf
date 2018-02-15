@@ -43,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGDAS_ENKF_SELECT_OBS
 %manual
 # FIXME: Insert manual for this job.
 
+%end

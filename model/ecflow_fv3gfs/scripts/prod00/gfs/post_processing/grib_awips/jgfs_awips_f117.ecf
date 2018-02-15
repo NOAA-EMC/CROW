@@ -4,6 +4,7 @@
 #BSUB -J gfs.post_processing.grib_awips.jgfs_awips_f117
 #BSUB -o %ECF_OUT%/gfs.post_processing.grib_awips.jgfs_awips_f117_t%CYC%z.log
 
+#BSUB -W 0:05
 #BSUB -R rusage[mem=300]
 #BSUB -extsched CRAYLINUX[]
 export NODES=1
@@ -42,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGFS_AWIPS_F117
 %manual
 # FIXME: Insert manual for this job.
 
+%end

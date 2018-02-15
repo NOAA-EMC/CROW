@@ -1,0 +1,19 @@
+%comment - ecf user variables
+ECF_LOGHOST = ldecflow1
+ECF_OUT = /gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts//output
+ECF_VERSION = 4.5.0
+PROJECT = HUR-T2O
+QUEUE = debug
+%end - ecf user variables
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %PROJECT%
+#BSUB -J final
+#BSUB -o %ECF_OUT%/final.log
+#BSUB -W 0:05
+#BSUB -R rusage[mem=3072]
+#BSUB -n 1
+
+%include <head.h>
+echo ${JOBgfs}/final
+%include <tail.h>

@@ -4,6 +4,7 @@
 #BSUB -J gfs.post_processing.awips_1p0deg.jgfs_awips_f264
 #BSUB -o %ECF_OUT%/gfs.post_processing.awips_1p0deg.jgfs_awips_f264_t%CYC%z.log
 
+#BSUB -W 0:05
 #BSUB -R rusage[mem=300]
 #BSUB -extsched CRAYLINUX[]
 export NODES=1
@@ -42,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGFS_AWIPS_F264
 %manual
 # FIXME: Insert manual for this job.
 
+%end

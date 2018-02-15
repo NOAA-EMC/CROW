@@ -43,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGDAS_ENKF_UPDATE
 %manual
 # FIXME: Insert manual for this job.
 
+%end

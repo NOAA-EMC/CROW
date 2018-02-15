@@ -4,18 +4,18 @@
 #BSUB -J gfs.jgfs_analysis
 #BSUB -o %ECF_OUT%/gfs.jgfs_analysis_t%CYC%z.log
 
-#BSUB -W 0:02
-#BSUB -R rusage[mem=3072]
+#BSUB -W 0:05
+#BSUB -R rusage[mem=300]
 #BSUB -extsched CRAYLINUX[]
-export NODES=60
+export NODES=1
 %include <head.h>
 %include <envir-xc40.h>
 
 set -x
 
-export ntasks=360
-export ptile=6
-export threads=2
+# No MPI in use, so I am not setting $ntasks.
+# Neither OpenMP nor MPI are in use, so I am not setting $ptile
+# No OpenMP in use, so I am not setting $threads
 
 export model=%MODEL_NAME%
 %include <model_ver.h>
@@ -43,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGFS_ANALYSIS
 %manual
 # FIXME: Insert manual for this job.
 
+%end

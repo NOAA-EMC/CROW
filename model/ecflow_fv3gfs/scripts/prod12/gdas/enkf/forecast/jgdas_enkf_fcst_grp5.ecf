@@ -43,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGLOBAL_FORECAST
 %manual
 # FIXME: Insert manual for this job.
 
+%end

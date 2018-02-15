@@ -4,6 +4,7 @@
 #BSUB -J gfs.dump.jgfs_tropcy_qc_reloc
 #BSUB -o %ECF_OUT%/gfs.dump.jgfs_tropcy_qc_reloc_t%CYC%z.log
 
+#BSUB -W 0:05
 #BSUB -R rusage[mem=300]
 #BSUB -extsched CRAYLINUX[]
 export NODES=1
@@ -42,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGFS_TROPCY_QC_RELOC
 %manual
 # FIXME: Insert manual for this job.
 
+%end

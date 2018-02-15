@@ -43,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGDAS_ENKF_INFLATE_RECENTER
 %manual
 # FIXME: Insert manual for this job.
 
+%end

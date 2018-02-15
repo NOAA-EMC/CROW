@@ -60,6 +60,7 @@ suite: !Cycle
     edit CYC '{tools.strftime(suite.Clock.now,"%H")}'
     edit ENVIR 'prod'
     edit PROJ '{doc.settings.PROJECT}'
+    edit PROJECT '{doc.settings.PROJECT}'
     edit E 'jecffv3'
     #edit QUEUE 'dev'
     edit QUEUE '{doc.settings.QUEUE}'
@@ -116,9 +117,10 @@ suite: !Cycle
 
     jgfs_analysis: !Task
       <<: *exclusive_task_template
-      #Trigger: !Depend ( prep.jgfs_prep & prep.jgfs_emcsfc_sfc_prep  & up.gdas.enkf.jgdas_enkf_post.at('-6:00:00') )
-      Trigger: !Depend ( prep.jgfs_prep & prep.jgfs_emcsfc_sfc_prep )
-      resources: !calc ( doc.resource_demo.run_anal )
+      Trigger: !Depend ( prep.jgfs_prep & prep.jgfs_emcsfc_sfc_prep  & up.gdas.enkf.jgdas_enkf_post.at('-6:00:00') )
+      #Trigger: !Depend ( prep.jgfs_prep & prep.jgfs_emcsfc_sfc_prep )
+      #resources: !calc ( doc.resource_demo.run_anal )
+      resources: !calc ( doc.resource_demo.run_nothing )
 
     jgfs_vminmon: !Task
       <<: *exclusive_task_template
@@ -129,13 +131,15 @@ suite: !Cycle
       jgfs_forecast_high: !Task
         <<: *exclusive_task_template
         Trigger: !Depend up.jgfs_analysis
-        resources: !calc ( doc.resource_demo.run_gfsfcst )
+        #resources: !calc ( doc.resource_demo.run_gfsfcst )
+        resources: !calc ( doc.resource_demo.run_nothing )
         J_JOB: JGLOBAL_FORECAST
 
       jgfs_forecast_low: !Task
         <<: *exclusive_task_template
         Trigger: !Depend jgfs_forecast_high
-        resources: !calc ( doc.resource_demo.run_gfsfcst )
+        #resources: !calc ( doc.resource_demo.run_gfsfcst )
+        resources: !calc ( doc.resource_demo.run_nothing )
         J_JOB: JGLOBAL_FORECAST
 
     sminit_guam: !Family
@@ -150,12 +154,6 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_nothing )
 
     post_processing: !Family
-      #This is a dummy task as a placeholder
-      dummy: !Task
-        <<: *exclusive_task_template
-        Trigger: !Depend up.forecast
-        resources: !calc ( doc.resource_demo.run_nothing )
-
       fax: !Family
         jgfs_fax_f00: !Task
           ecflow_def: |
@@ -254,7 +252,7 @@ suite: !Cycle
       awips_1p0deg: !TaskArray
         Dimensions:
           fhr: !calc doc.settings.forecast_hours
-        ecflow_def: |
+        ecflow_def: !expand |
           edit RES '1p0deg'
           edit RESC '1P0DEG'
           #edit ECF_FILES '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3/scripts/gfs/post_processing/awips'
@@ -272,7 +270,7 @@ suite: !Cycle
       awips_20km: !TaskArray
         Dimensions:
           fhr: !calc doc.settings.forecast_hours
-        ecflow_def: |
+        ecflow_def: !expand |
           edit RES '20km'
           edit RESC '20KM'
           #edit ECF_FILES '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3/scripts/gfs/post_processing/awips'
@@ -286,6 +284,8 @@ suite: !Cycle
           resources: !calc ( doc.resource_demo.run_nothing )
           ecflow_def: !expand |
             edit FCSTHR '{idx.fhr:03d}'
+
+    #endfamily post_processing
 
     post: !TaskArray
       Dimensions:
@@ -315,8 +315,8 @@ suite: !Cycle
         <<: *exclusive_task_template
         Name: !expand jgfs_post_f{idx.fhr:02d}
         ecflow_def: !expand |
-          edit FHR: 'f{idx.fhr:02d}'
-          edit HR: '{idx.fhr:02d}'
+          edit FHR 'f{idx.fhr:02d}'
+          edit HR '{idx.fhr:02d}'
         Trigger: !Depend jgfs_post_manager.depend('release_post{N:02d}',N=idx.fhr)
         resources: !calc ( doc.resource_demo.run_nothing )
 
@@ -324,6 +324,7 @@ suite: !Cycle
         <<: *exclusive_task_template
         Trigger: !Depend ( jgfs_post_f336 & jgfs_post_f348 & jgfs_post_f360 & jgfs_post_f372 & jgfs_post_f384 )
         resources: !calc ( doc.resource_demo.run_nothing )
+    #endfamily post
 
     prdgen: !TaskArray
       Dimensions:
@@ -341,26 +342,32 @@ suite: !Cycle
           Foreach: [ fhr ]
           file: "/dev/null"
 
-      pgrb_f: !TaskElement
+      jgfs_npoess_pgrb2_0p5deg: !Task
         <<: *exclusive_task_template
-        Foreach: [ fhr ]
-        Name: !expand "jgfs_pgrb2_f{idx.fhr:02d}"
+        Trigger: !Depend ( up.post )
         resources: !calc ( doc.resource_demo.run_gfspost )
-        J_JOB: JGLOBAL_POST
-        ecflow_def: !expand |
-          edit FHR '{idx.fhr:02d}'
-          edit HR '{idx.fhr:02d}'
 
       jgfs_pgrb2_anl: !Task
         <<: *exclusive_task_template
+        Trigger: !Depend ( up.post.jgfs_post_anl.release_pgrb2_anl )
         resources: !calc ( doc.resource_demo.run_gfspost )
         J_JOB: JGLOBAL_POST
         ecflow_def: !expand |
           edit FHR 'anl'
           edit HR 'anl'
 
-      #Need to add other tasks in this prdgen family
-
+      pgrb2_f: !TaskElement
+        <<: *exclusive_task_template
+        Foreach: [ fhr ]
+        Name: !expand "jgfs_pgrb2_f{idx.fhr:02d}"
+        Trigger: !Depend >-
+          jgfs_pgrb2_manager.depend('release_pgrb2_{N:02d}',N=idx.fhr) 
+          & up.post.depend('jgfs_post_f{N:02d}',N=idx.fhr)
+        resources: !calc ( doc.resource_demo.run_gfspost )
+        J_JOB: JGLOBAL_POST
+        ecflow_def: !expand |
+          edit FHR '{idx.fhr:02d}'
+          edit HR '{idx.fhr:02d}'
     #endfamily prdgen
 
     gempak: !Family
@@ -371,6 +378,7 @@ suite: !Cycle
 
       jgfs_gempak_ncdc: !Task
         <<: *exclusive_task_template
+        #Trigger: !Depend jgfs_gempak.is_running()
         Trigger: !Depend jgfs_gempak.is_running() | jgfs_gempak.is_completed()
         resources: !calc ( doc.resource_demo.run_nothing )
 
@@ -384,16 +392,16 @@ suite: !Cycle
         Trigger: !Depend up.jgfs_analysis
         resources: !calc ( doc.resource_demo.run_nothing )
 
-#     jgfs_pgrb2_spec_gempak: !Task
-#       <<: *exclusive_task_template
-#       Trigger: !Depend up.post.jgfs_pgrb2_spec_post
-#       resources: !calc ( doc.resource_demo.run_nothing )
+      jgfs_pgrb2_spec_gempak: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend up.post.jgfs_pgrb2_spec_post
+        resources: !calc ( doc.resource_demo.run_nothing )
     #endfamily gempak
-
   #endfamily gfs
 
   gdas: !Family
-    ecflow_def: |
+    ecflow_def: !expand |
+      #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
       edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
       edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
       edit PROJ '%PROJENVIR%'
@@ -437,6 +445,7 @@ suite: !Cycle
         release_sfcprep: !DataEvent {file="/dev/null"}
         #Time: !timedelta +6:20:00
         resources: !calc ( doc.resource_demo.run_nothing )
+    #endfamily dump
 
     prep: !Family
       jgdas_emcsfc_sfc_prep: !Task
@@ -445,9 +454,9 @@ suite: !Cycle
         resources: !calc ( doc.resource_demo.run_nothing )
 
       jgdas_prep: !Task
-        #Trigger: !Depend (up.dump.jgdas_dump & up.dump.jgdas_tropcy_qc_reloc & up.gdas.post.at('-6:00:00') )
         <<: *exclusive_task_template
-        Trigger: !Depend ( up.dump.jgdas_dump & up.dump.jgdas_tropcy_qc_reloc )
+        Trigger: !Depend (up.dump.jgdas_dump & up.dump.jgdas_tropcy_qc_reloc & up.up.gdas.post.at('-6:00:00') )
+        #Trigger: !Depend ( up.dump.jgdas_dump & up.dump.jgdas_tropcy_qc_reloc )
         resources: !calc ( doc.resource_demo.run_prep )
 
       jgdas_prep_post: !Task
@@ -458,10 +467,11 @@ suite: !Cycle
     analysis: !Family
       jgdas_analysis_high: !Task
         <<: *exclusive_task_template
-        #Trigger: !Depend ( up.prep.jgdas_prep & up.prep.jgdas_emcsfc_sfc_prep & up.enkf.jgdas_enkf_post.at('-6:00:00') )
-        Trigger: !Depend ( up.prep.jgdas_prep & up.prep.jgdas_emcsfc_sfc_prep )
+        Trigger: !Depend ( up.prep.jgdas_prep & up.prep.jgdas_emcsfc_sfc_prep & up.enkf.jgdas_enkf_post.at('-6:00:00') )
+        #Trigger: !Depend ( up.prep.jgdas_prep & up.prep.jgdas_emcsfc_sfc_prep )
         release_fcst: !DataEvent {file="/dev/null"}
-        resources: !calc ( doc.resource_demo.run_anal )
+        #resources: !calc ( doc.resource_demo.run_anal )
+        resources: !calc ( doc.resource_demo.run_nothing )
 
     forecast: !Family
       #jgdas_forecast_high: !Task
@@ -475,7 +485,8 @@ suite: !Cycle
         <<: *exclusive_task_template
         Trigger: !Depend ( up.analysis.jgdas_analysis_high.release_fcst & up.enkf.innovate )
         release_fcst: !DataEvent {file="/dev/null"}
-        resources: !calc ( doc.resource_demo.run_gdasfcst )
+        #resources: !calc ( doc.resource_demo.run_gdasfcst )
+        resources: !calc ( doc.resource_demo.run_nothing )
         J_JOB: JGLOBAL_FORECAST
 
     post_processing: !Family
@@ -525,6 +536,7 @@ suite: !Cycle
       jgdas_enkf_select_obs: !Task
         <<: *exclusive_task_template
         Trigger: !Depend  ( up.prep.jgdas_prep & jgdas_enkf_post.at('-6:00:00') )
+        #Trigger: !Depend  ( up.prep.jgdas_prep )
         resources: !calc ( doc.resource_demo.run_eobs )
 
       innovate: !TaskArray
@@ -565,19 +577,19 @@ suite: !Cycle
         <<: *exclusive_task_template
         Trigger: !Depend forecast
         resources: !calc ( doc.resource_demo.run_epos )
-
     #endfamily enkf
-
   #endfamily gdas
 
   cycle_end: !Task
-   ecflow_def: !expand |
-     edit ECF_JOB_CMD '%ECF_JOB% 1> %ECF_JOBOUT% 2>&1'
-     edit ECF_PASS 'FREE'
-   <<: *exclusive_task_template
-   #time 23:00
-   #Time: !timedelta +23:00:00
-   resources: !calc ( doc.resource_demo.run_nothing )
+    ecflow_def: !expand |
+      #edit ECF_JOB_CMD '%ECF_JOB% 1> %ECF_JOBOUT% 2>&1'
+      #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+      edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
+      edit ECF_PASS 'FREE'
+    <<: *exclusive_task_template
+    #time 23:00
+    #Time: !timedelta +23:00:00
+    resources: !calc ( doc.resource_demo.run_nothing )
 
   #hpss archive tasks are run in the hpss_archive suite 
   #archive: !Family

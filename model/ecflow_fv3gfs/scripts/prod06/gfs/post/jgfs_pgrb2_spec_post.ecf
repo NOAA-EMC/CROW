@@ -4,6 +4,7 @@
 #BSUB -J gfs.post.jgfs_pgrb2_spec_post
 #BSUB -o %ECF_OUT%/gfs.post.jgfs_pgrb2_spec_post_t%CYC%z.log
 
+#BSUB -W 0:05
 #BSUB -R rusage[mem=300]
 #BSUB -extsched CRAYLINUX[]
 export NODES=1
@@ -42,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGFS_PGRB2_SPEC_POST
 %manual
 # FIXME: Insert manual for this job.
 
+%end

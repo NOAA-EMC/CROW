@@ -1,4 +1,5 @@
 extern /prod18/gdas/enkf/jgdas_enkf_post
+extern /prod18/gdas/post
 suite prod00
   repeat day 1
   edit ECF_TRIES '1'
@@ -10,6 +11,7 @@ suite prod00
   edit CYC '00'
   edit ENVIR 'prod'
   edit PROJ 'GFS-T2O'
+  edit PROJECT 'GFS-T2O'
   edit E 'jecffv3'
   #edit QUEUE 'dev'
   edit QUEUE 'debug'
@@ -24,2287 +26,1721 @@ suite prod00
   edit ECF_OUT '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/output'
   edit ECF_LOG '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/ecf.log'
   edit MODEL_NAME 'gfs'
-  family gfs
+  family gfs # /prod00/gfs
     edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
     edit ECF_FILES '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts'
     edit PROJ '%PROJENVIR%'
     edit MODEL_NAME 'gfs'
-    family dump
+    family dump # /prod00/gfs/dump
       task jgfs_tropcy_qc_reloc
         trigger ./jgfs_dump == complete
         event 1 jtwc_bull_email
-      endtask
       task jgfs_dump
         event 1 release_sfcprep
-      endtask
-    endfamily
-    family prep
+    endfamily # /prod00/gfs/dump
+    family prep # /prod00/gfs/prep
       task jgfs_emcsfc_sfc_prep
         trigger ../dump/jgfs_dump:release_sfcprep
-      endtask
       task jgfs_prep
         trigger ../dump == complete
-      endtask
       task jgfs_prep_post
         trigger ../jgfs_analysis == complete
-      endtask
-    endfamily
+    endfamily # /prod00/gfs/prep
     task jgfs_analysis
-      trigger ./prep/jgfs_prep == complete and ./prep/jgfs_emcsfc_sfc_prep == complete
-    endtask
+      trigger ./prep/jgfs_prep == complete and ./prep/jgfs_emcsfc_sfc_prep == complete and /prod18/gdas/enkf/jgdas_enkf_post == complete
     task jgfs_vminmon
       trigger ./jgfs_analysis == complete
-    endtask
-    family forecast
+    family forecast # /prod00/gfs/forecast
       task jgfs_forecast_high
         trigger ../jgfs_analysis == complete
-      endtask
       task jgfs_forecast_low
         trigger ./jgfs_forecast_high == complete
-      endtask
-    endfamily
-    family sminit_guam
+    endfamily # /prod00/gfs/forecast
+    family sminit_guam # /prod00/gfs/sminit_guam
       task jgfs_sminit_guam_even
         trigger ../post/jgfs_post_anl == active or ../post/jgfs_post_anl == complete
-      endtask
       task jgfs_sminit_guam_odd
         trigger ../post/jgfs_post_anl == active or ../post/jgfs_post_anl == complete
-      endtask
-    endfamily
-    family post_processing
-      task dummy
-        trigger ../forecast == complete
-      endtask
-      family fax
+    endfamily # /prod00/gfs/sminit_guam
+    family post_processing # /prod00/gfs/post_processing
+      family fax # /prod00/gfs/post_processing/fax
         task jgfs_fax_f00
           edit FCSTHR '00'
           trigger ../../prdgen/jgfs_pgrb2_f00 == complete and ../../prdgen/jgfs_pgrb2_anl == complete
-        endtask
         task jgfs_fax_anl
           edit FCSTHR 'anl'
           trigger ../../prdgen/jgfs_pgrb2_anl == complete
-        endtask
         task jgfs_fax_wafs_f12
           edit FCSTHR '12'
           trigger ../../prdgen/jgfs_pgrb2_f12 == complete
-        endtask
         task jgfs_fax_wafs_f24
           edit FCSTHR '24'
           trigger ../../prdgen/jgfs_pgrb2_f24 == complete
-        endtask
         task jgfs_fax_wafs_f36
           edit FCSTHR '36'
           trigger ../../prdgen/jgfs_pgrb2_f36 == complete
-        endtask
-      endfamily
-      family grib_wafs
+      endfamily # /prod00/gfs/post_processing/fax
+      family grib_wafs # /prod00/gfs/post_processing/grib_wafs
         task jgfs_wafs_f00
           edit FCSTHR '00'
           trigger ../../prdgen/jgfs_pgrb2_f00 == complete and ../../prdgen/jgfs_pgrb2_f120 == complete and ../grib2_wafs/jgfs_wafs_grib2 == complete
-        endtask
         task jgfs_wafs_f06
           edit FCSTHR '06'
           trigger ../../prdgen/jgfs_pgrb2_f06 == complete and ./jgfs_wafs_f00 == complete
-        endtask
         task jgfs_wafs_f12
           edit FCSTHR '12'
           trigger ../../prdgen/jgfs_pgrb2_f12 == complete and ./jgfs_wafs_f06 == complete
-        endtask
         task jgfs_wafs_f18
           edit FCSTHR '18'
           trigger ../../prdgen/jgfs_pgrb2_f18 == complete and ./jgfs_wafs_f12 == complete
-        endtask
         task jgfs_wafs_f24
           edit FCSTHR '24'
           trigger ../../prdgen/jgfs_pgrb2_f24 == complete and ./jgfs_wafs_f18 == complete
-        endtask
         task jgfs_wafs_f30
           edit FCSTHR '30'
           trigger ../../prdgen/jgfs_pgrb2_f30 == complete and ./jgfs_wafs_f24 == complete
-        endtask
         task jgfs_wafs_f36
           edit FCSTHR '36'
           trigger ../../prdgen/jgfs_pgrb2_f36 == complete and ./jgfs_wafs_f30 == complete
-        endtask
         task jgfs_wafs_f42
           edit FCSTHR '42'
           trigger ../../prdgen/jgfs_pgrb2_f42 == complete and ./jgfs_wafs_f36 == complete
-        endtask
         task jgfs_wafs_f48
           edit FCSTHR '48'
           trigger ../../prdgen/jgfs_pgrb2_f48 == complete and ./jgfs_wafs_f42 == complete
-        endtask
         task jgfs_wafs_f54
           edit FCSTHR '54'
           trigger ../../prdgen/jgfs_pgrb2_f54 == complete and ./jgfs_wafs_f48 == complete
-        endtask
         task jgfs_wafs_f60
           edit FCSTHR '60'
           trigger ../../prdgen/jgfs_pgrb2_f60 == complete and ./jgfs_wafs_f54 == complete
-        endtask
         task jgfs_wafs_f66
           edit FCSTHR '66'
           trigger ../../prdgen/jgfs_pgrb2_f66 == complete and ./jgfs_wafs_f60 == complete
-        endtask
         task jgfs_wafs_f72
           edit FCSTHR '72'
           trigger ../../prdgen/jgfs_pgrb2_f72 == complete and ./jgfs_wafs_f66 == complete
-        endtask
         task jgfs_wafs_f78
           edit FCSTHR '78'
           trigger ../../prdgen/jgfs_pgrb2_f78 == complete and ./jgfs_wafs_f72 == complete
-        endtask
         task jgfs_wafs_f84
           edit FCSTHR '84'
           trigger ../../prdgen/jgfs_pgrb2_f84 == complete and ./jgfs_wafs_f78 == complete
-        endtask
         task jgfs_wafs_f90
           edit FCSTHR '90'
           trigger ../../prdgen/jgfs_pgrb2_f90 == complete and ./jgfs_wafs_f84 == complete
-        endtask
         task jgfs_wafs_f96
           edit FCSTHR '96'
           trigger ../../prdgen/jgfs_pgrb2_f96 == complete and ./jgfs_wafs_f90 == complete
-        endtask
         task jgfs_wafs_f102
           edit FCSTHR '102'
           trigger ../../prdgen/jgfs_pgrb2_f102 == complete and ./jgfs_wafs_f96 == complete
-        endtask
         task jgfs_wafs_f108
           edit FCSTHR '108'
           trigger ../../prdgen/jgfs_pgrb2_f108 == complete and ./jgfs_wafs_f102 == complete
-        endtask
         task jgfs_wafs_f114
           edit FCSTHR '114'
           trigger ../../prdgen/jgfs_pgrb2_f114 == complete and ./jgfs_wafs_f108 == complete
-        endtask
         task jgfs_wafs_f120
           edit FCSTHR '120'
           trigger ../../prdgen/jgfs_pgrb2_f120 == complete and ./jgfs_wafs_f114 == complete
-        endtask
-      endfamily
-      family bufr_sounding
+      endfamily # /prod00/gfs/post_processing/grib_wafs
+      family bufr_sounding # /prod00/gfs/post_processing/bufr_sounding
         task jgfs_postsnd
           trigger ../../post/jgfs_post_manager:release_post00
-        endtask
-      endfamily
-      family bulletins
+      endfamily # /prod00/gfs/post_processing/bufr_sounding
+      family bulletins # /prod00/gfs/post_processing/bulletins
         task jgfs_fbwind
           trigger ../../post/jgfs_post_f06 == complete and ../../post/jgfs_post_f12 == complete and ../../post/jgfs_post_f24 == complete
-        endtask
         task jgfs_cyclone_tracker
           trigger ../../post/jgfs_post_f00 == complete and ../../post/jgfs_post_f06 == complete and ../../post/jgfs_post_f12 == complete and ../../post/jgfs_post_f18 == complete and ../../post/jgfs_post_f24 == complete and ../../post/jgfs_post_f30 == complete and ../../post/jgfs_post_f36 == complete and ../../post/jgfs_post_f42 == complete and ../../post/jgfs_post_f48 == complete and ../../post/jgfs_post_f54 == complete and ../../post/jgfs_post_f60 == complete and ../../post/jgfs_post_f66 == complete and ../../post/jgfs_post_f72 == complete and ../../post/jgfs_post_f78 == complete and ../../post/jgfs_post_f84 == complete and ../../post/jgfs_post_f90 == complete and ../../post/jgfs_post_f96 == complete and ../../post/jgfs_post_f102 == complete and ../../post/jgfs_post_f108 == complete and ../../post/jgfs_post_f114 == complete and ../../post/jgfs_post_f120 == complete and ../../post/jgfs_post_f126 == complete and ../../post/jgfs_post_f132 == complete and ../../post/jgfs_post_f138 == complete and ../../post/jgfs_post_f144 == complete and ../../post/jgfs_post_f150 == complete and ../../post/jgfs_post_f156 == complete and ../../post/jgfs_post_f162 == complete and ../../post/jgfs_post_f168 == complete and ../../post/jgfs_post_f174 == complete and ../../post/jgfs_post_f180 == complete and ../../prdgen/jgfs_pgrb2_f00 == complete and ../../prdgen/jgfs_pgrb2_f06 == complete and ../../prdgen/jgfs_pgrb2_f12 == complete and ../../prdgen/jgfs_pgrb2_f18 == complete and ../../prdgen/jgfs_pgrb2_f24 == complete and ../../prdgen/jgfs_pgrb2_f30 == complete and ../../prdgen/jgfs_pgrb2_f36 == complete and ../../prdgen/jgfs_pgrb2_f42 == complete and ../../prdgen/jgfs_pgrb2_f48 == complete and ../../prdgen/jgfs_pgrb2_f54 == complete and ../../prdgen/jgfs_pgrb2_f60 == complete and ../../prdgen/jgfs_pgrb2_f66 == complete and ../../prdgen/jgfs_pgrb2_f72 == complete and ../../prdgen/jgfs_pgrb2_f78 == complete and ../../prdgen/jgfs_pgrb2_f84 == complete and ../../prdgen/jgfs_pgrb2_f90 == complete and ../../prdgen/jgfs_pgrb2_f96 == complete and ../../prdgen/jgfs_pgrb2_f102 == complete and ../../prdgen/jgfs_pgrb2_f108 == complete and ../../prdgen/jgfs_pgrb2_f114 == complete and ../../prdgen/jgfs_pgrb2_f120 == complete and ../../prdgen/jgfs_pgrb2_f126 == complete and ../../prdgen/jgfs_pgrb2_f132 == complete and ../../prdgen/jgfs_pgrb2_f138 == complete and ../../prdgen/jgfs_pgrb2_f144 == complete and ../../prdgen/jgfs_pgrb2_f150 == complete and ../../prdgen/jgfs_pgrb2_f156 == complete and ../../prdgen/jgfs_pgrb2_f162 == complete and ../../prdgen/jgfs_pgrb2_f168 == complete and ../../prdgen/jgfs_pgrb2_f174 == complete and ../../prdgen/jgfs_pgrb2_f180 == complete
-        endtask
-      endfamily
-      family grib2_wafs
+      endfamily # /prod00/gfs/post_processing/bulletins
+      family grib2_wafs # /prod00/gfs/post_processing/grib2_wafs
         task jgfs_wafs_grib2
           trigger ../../prdgen/jgfs_pgrb2_f00 == complete
-        endtask
         task jgfs_wafs_blending
           trigger ./jgfs_wafs_grib2 == complete
-        endtask
-      endfamily
-      family grib_awips
+      endfamily # /prod00/gfs/post_processing/grib2_wafs
+      family grib_awips # /prod00/gfs/post_processing/grib_awips
         task jgfs_awips_f00
           edit FCSTHR '00'
           trigger ../../prdgen/jgfs_pgrb2_f00 == complete
-        endtask
         task jgfs_awips_f01
           edit FCSTHR '01'
           trigger ../../prdgen/jgfs_pgrb2_f01 == complete
-        endtask
         task jgfs_awips_f02
           edit FCSTHR '02'
           trigger ../../prdgen/jgfs_pgrb2_f02 == complete
-        endtask
         task jgfs_awips_f03
           edit FCSTHR '03'
           trigger ../../prdgen/jgfs_pgrb2_f03 == complete
-        endtask
         task jgfs_awips_f04
           edit FCSTHR '04'
           trigger ../../prdgen/jgfs_pgrb2_f04 == complete
-        endtask
         task jgfs_awips_f05
           edit FCSTHR '05'
           trigger ../../prdgen/jgfs_pgrb2_f05 == complete
-        endtask
         task jgfs_awips_f06
           edit FCSTHR '06'
           trigger ../../prdgen/jgfs_pgrb2_f06 == complete
-        endtask
         task jgfs_awips_f07
           edit FCSTHR '07'
           trigger ../../prdgen/jgfs_pgrb2_f07 == complete
-        endtask
         task jgfs_awips_f08
           edit FCSTHR '08'
           trigger ../../prdgen/jgfs_pgrb2_f08 == complete
-        endtask
         task jgfs_awips_f09
           edit FCSTHR '09'
           trigger ../../prdgen/jgfs_pgrb2_f09 == complete
-        endtask
         task jgfs_awips_f10
           edit FCSTHR '10'
           trigger ../../prdgen/jgfs_pgrb2_f10 == complete
-        endtask
         task jgfs_awips_f11
           edit FCSTHR '11'
           trigger ../../prdgen/jgfs_pgrb2_f11 == complete
-        endtask
         task jgfs_awips_f12
           edit FCSTHR '12'
           trigger ../../prdgen/jgfs_pgrb2_f12 == complete
-        endtask
         task jgfs_awips_f13
           edit FCSTHR '13'
           trigger ../../prdgen/jgfs_pgrb2_f13 == complete
-        endtask
         task jgfs_awips_f14
           edit FCSTHR '14'
           trigger ../../prdgen/jgfs_pgrb2_f14 == complete
-        endtask
         task jgfs_awips_f15
           edit FCSTHR '15'
           trigger ../../prdgen/jgfs_pgrb2_f15 == complete
-        endtask
         task jgfs_awips_f16
           edit FCSTHR '16'
           trigger ../../prdgen/jgfs_pgrb2_f16 == complete
-        endtask
         task jgfs_awips_f17
           edit FCSTHR '17'
           trigger ../../prdgen/jgfs_pgrb2_f17 == complete
-        endtask
         task jgfs_awips_f18
           edit FCSTHR '18'
           trigger ../../prdgen/jgfs_pgrb2_f18 == complete
-        endtask
         task jgfs_awips_f19
           edit FCSTHR '19'
           trigger ../../prdgen/jgfs_pgrb2_f19 == complete
-        endtask
         task jgfs_awips_f20
           edit FCSTHR '20'
           trigger ../../prdgen/jgfs_pgrb2_f20 == complete
-        endtask
         task jgfs_awips_f21
           edit FCSTHR '21'
           trigger ../../prdgen/jgfs_pgrb2_f21 == complete
-        endtask
         task jgfs_awips_f22
           edit FCSTHR '22'
           trigger ../../prdgen/jgfs_pgrb2_f22 == complete
-        endtask
         task jgfs_awips_f23
           edit FCSTHR '23'
           trigger ../../prdgen/jgfs_pgrb2_f23 == complete
-        endtask
         task jgfs_awips_f24
           edit FCSTHR '24'
           trigger ../../prdgen/jgfs_pgrb2_f24 == complete
-        endtask
         task jgfs_awips_f25
           edit FCSTHR '25'
           trigger ../../prdgen/jgfs_pgrb2_f25 == complete
-        endtask
         task jgfs_awips_f26
           edit FCSTHR '26'
           trigger ../../prdgen/jgfs_pgrb2_f26 == complete
-        endtask
         task jgfs_awips_f27
           edit FCSTHR '27'
           trigger ../../prdgen/jgfs_pgrb2_f27 == complete
-        endtask
         task jgfs_awips_f28
           edit FCSTHR '28'
           trigger ../../prdgen/jgfs_pgrb2_f28 == complete
-        endtask
         task jgfs_awips_f29
           edit FCSTHR '29'
           trigger ../../prdgen/jgfs_pgrb2_f29 == complete
-        endtask
         task jgfs_awips_f30
           edit FCSTHR '30'
           trigger ../../prdgen/jgfs_pgrb2_f30 == complete
-        endtask
         task jgfs_awips_f31
           edit FCSTHR '31'
           trigger ../../prdgen/jgfs_pgrb2_f31 == complete
-        endtask
         task jgfs_awips_f32
           edit FCSTHR '32'
           trigger ../../prdgen/jgfs_pgrb2_f32 == complete
-        endtask
         task jgfs_awips_f33
           edit FCSTHR '33'
           trigger ../../prdgen/jgfs_pgrb2_f33 == complete
-        endtask
         task jgfs_awips_f34
           edit FCSTHR '34'
           trigger ../../prdgen/jgfs_pgrb2_f34 == complete
-        endtask
         task jgfs_awips_f35
           edit FCSTHR '35'
           trigger ../../prdgen/jgfs_pgrb2_f35 == complete
-        endtask
         task jgfs_awips_f36
           edit FCSTHR '36'
           trigger ../../prdgen/jgfs_pgrb2_f36 == complete
-        endtask
         task jgfs_awips_f37
           edit FCSTHR '37'
           trigger ../../prdgen/jgfs_pgrb2_f37 == complete
-        endtask
         task jgfs_awips_f38
           edit FCSTHR '38'
           trigger ../../prdgen/jgfs_pgrb2_f38 == complete
-        endtask
         task jgfs_awips_f39
           edit FCSTHR '39'
           trigger ../../prdgen/jgfs_pgrb2_f39 == complete
-        endtask
         task jgfs_awips_f40
           edit FCSTHR '40'
           trigger ../../prdgen/jgfs_pgrb2_f40 == complete
-        endtask
         task jgfs_awips_f41
           edit FCSTHR '41'
           trigger ../../prdgen/jgfs_pgrb2_f41 == complete
-        endtask
         task jgfs_awips_f42
           edit FCSTHR '42'
           trigger ../../prdgen/jgfs_pgrb2_f42 == complete
-        endtask
         task jgfs_awips_f43
           edit FCSTHR '43'
           trigger ../../prdgen/jgfs_pgrb2_f43 == complete
-        endtask
         task jgfs_awips_f44
           edit FCSTHR '44'
           trigger ../../prdgen/jgfs_pgrb2_f44 == complete
-        endtask
         task jgfs_awips_f45
           edit FCSTHR '45'
           trigger ../../prdgen/jgfs_pgrb2_f45 == complete
-        endtask
         task jgfs_awips_f46
           edit FCSTHR '46'
           trigger ../../prdgen/jgfs_pgrb2_f46 == complete
-        endtask
         task jgfs_awips_f47
           edit FCSTHR '47'
           trigger ../../prdgen/jgfs_pgrb2_f47 == complete
-        endtask
         task jgfs_awips_f48
           edit FCSTHR '48'
           trigger ../../prdgen/jgfs_pgrb2_f48 == complete
-        endtask
         task jgfs_awips_f49
           edit FCSTHR '49'
           trigger ../../prdgen/jgfs_pgrb2_f49 == complete
-        endtask
         task jgfs_awips_f50
           edit FCSTHR '50'
           trigger ../../prdgen/jgfs_pgrb2_f50 == complete
-        endtask
         task jgfs_awips_f51
           edit FCSTHR '51'
           trigger ../../prdgen/jgfs_pgrb2_f51 == complete
-        endtask
         task jgfs_awips_f52
           edit FCSTHR '52'
           trigger ../../prdgen/jgfs_pgrb2_f52 == complete
-        endtask
         task jgfs_awips_f53
           edit FCSTHR '53'
           trigger ../../prdgen/jgfs_pgrb2_f53 == complete
-        endtask
         task jgfs_awips_f54
           edit FCSTHR '54'
           trigger ../../prdgen/jgfs_pgrb2_f54 == complete
-        endtask
         task jgfs_awips_f55
           edit FCSTHR '55'
           trigger ../../prdgen/jgfs_pgrb2_f55 == complete
-        endtask
         task jgfs_awips_f56
           edit FCSTHR '56'
           trigger ../../prdgen/jgfs_pgrb2_f56 == complete
-        endtask
         task jgfs_awips_f57
           edit FCSTHR '57'
           trigger ../../prdgen/jgfs_pgrb2_f57 == complete
-        endtask
         task jgfs_awips_f58
           edit FCSTHR '58'
           trigger ../../prdgen/jgfs_pgrb2_f58 == complete
-        endtask
         task jgfs_awips_f59
           edit FCSTHR '59'
           trigger ../../prdgen/jgfs_pgrb2_f59 == complete
-        endtask
         task jgfs_awips_f60
           edit FCSTHR '60'
           trigger ../../prdgen/jgfs_pgrb2_f60 == complete
-        endtask
         task jgfs_awips_f61
           edit FCSTHR '61'
           trigger ../../prdgen/jgfs_pgrb2_f61 == complete
-        endtask
         task jgfs_awips_f62
           edit FCSTHR '62'
           trigger ../../prdgen/jgfs_pgrb2_f62 == complete
-        endtask
         task jgfs_awips_f63
           edit FCSTHR '63'
           trigger ../../prdgen/jgfs_pgrb2_f63 == complete
-        endtask
         task jgfs_awips_f64
           edit FCSTHR '64'
           trigger ../../prdgen/jgfs_pgrb2_f64 == complete
-        endtask
         task jgfs_awips_f65
           edit FCSTHR '65'
           trigger ../../prdgen/jgfs_pgrb2_f65 == complete
-        endtask
         task jgfs_awips_f66
           edit FCSTHR '66'
           trigger ../../prdgen/jgfs_pgrb2_f66 == complete
-        endtask
         task jgfs_awips_f67
           edit FCSTHR '67'
           trigger ../../prdgen/jgfs_pgrb2_f67 == complete
-        endtask
         task jgfs_awips_f68
           edit FCSTHR '68'
           trigger ../../prdgen/jgfs_pgrb2_f68 == complete
-        endtask
         task jgfs_awips_f69
           edit FCSTHR '69'
           trigger ../../prdgen/jgfs_pgrb2_f69 == complete
-        endtask
         task jgfs_awips_f70
           edit FCSTHR '70'
           trigger ../../prdgen/jgfs_pgrb2_f70 == complete
-        endtask
         task jgfs_awips_f71
           edit FCSTHR '71'
           trigger ../../prdgen/jgfs_pgrb2_f71 == complete
-        endtask
         task jgfs_awips_f72
           edit FCSTHR '72'
           trigger ../../prdgen/jgfs_pgrb2_f72 == complete
-        endtask
         task jgfs_awips_f73
           edit FCSTHR '73'
           trigger ../../prdgen/jgfs_pgrb2_f73 == complete
-        endtask
         task jgfs_awips_f74
           edit FCSTHR '74'
           trigger ../../prdgen/jgfs_pgrb2_f74 == complete
-        endtask
         task jgfs_awips_f75
           edit FCSTHR '75'
           trigger ../../prdgen/jgfs_pgrb2_f75 == complete
-        endtask
         task jgfs_awips_f76
           edit FCSTHR '76'
           trigger ../../prdgen/jgfs_pgrb2_f76 == complete
-        endtask
         task jgfs_awips_f77
           edit FCSTHR '77'
           trigger ../../prdgen/jgfs_pgrb2_f77 == complete
-        endtask
         task jgfs_awips_f78
           edit FCSTHR '78'
           trigger ../../prdgen/jgfs_pgrb2_f78 == complete
-        endtask
         task jgfs_awips_f79
           edit FCSTHR '79'
           trigger ../../prdgen/jgfs_pgrb2_f79 == complete
-        endtask
         task jgfs_awips_f80
           edit FCSTHR '80'
           trigger ../../prdgen/jgfs_pgrb2_f80 == complete
-        endtask
         task jgfs_awips_f81
           edit FCSTHR '81'
           trigger ../../prdgen/jgfs_pgrb2_f81 == complete
-        endtask
         task jgfs_awips_f82
           edit FCSTHR '82'
           trigger ../../prdgen/jgfs_pgrb2_f82 == complete
-        endtask
         task jgfs_awips_f83
           edit FCSTHR '83'
           trigger ../../prdgen/jgfs_pgrb2_f83 == complete
-        endtask
         task jgfs_awips_f84
           edit FCSTHR '84'
           trigger ../../prdgen/jgfs_pgrb2_f84 == complete
-        endtask
         task jgfs_awips_f85
           edit FCSTHR '85'
           trigger ../../prdgen/jgfs_pgrb2_f85 == complete
-        endtask
         task jgfs_awips_f86
           edit FCSTHR '86'
           trigger ../../prdgen/jgfs_pgrb2_f86 == complete
-        endtask
         task jgfs_awips_f87
           edit FCSTHR '87'
           trigger ../../prdgen/jgfs_pgrb2_f87 == complete
-        endtask
         task jgfs_awips_f88
           edit FCSTHR '88'
           trigger ../../prdgen/jgfs_pgrb2_f88 == complete
-        endtask
         task jgfs_awips_f89
           edit FCSTHR '89'
           trigger ../../prdgen/jgfs_pgrb2_f89 == complete
-        endtask
         task jgfs_awips_f90
           edit FCSTHR '90'
           trigger ../../prdgen/jgfs_pgrb2_f90 == complete
-        endtask
         task jgfs_awips_f91
           edit FCSTHR '91'
           trigger ../../prdgen/jgfs_pgrb2_f91 == complete
-        endtask
         task jgfs_awips_f92
           edit FCSTHR '92'
           trigger ../../prdgen/jgfs_pgrb2_f92 == complete
-        endtask
         task jgfs_awips_f93
           edit FCSTHR '93'
           trigger ../../prdgen/jgfs_pgrb2_f93 == complete
-        endtask
         task jgfs_awips_f94
           edit FCSTHR '94'
           trigger ../../prdgen/jgfs_pgrb2_f94 == complete
-        endtask
         task jgfs_awips_f95
           edit FCSTHR '95'
           trigger ../../prdgen/jgfs_pgrb2_f95 == complete
-        endtask
         task jgfs_awips_f96
           edit FCSTHR '96'
           trigger ../../prdgen/jgfs_pgrb2_f96 == complete
-        endtask
         task jgfs_awips_f97
           edit FCSTHR '97'
           trigger ../../prdgen/jgfs_pgrb2_f97 == complete
-        endtask
         task jgfs_awips_f98
           edit FCSTHR '98'
           trigger ../../prdgen/jgfs_pgrb2_f98 == complete
-        endtask
         task jgfs_awips_f99
           edit FCSTHR '99'
           trigger ../../prdgen/jgfs_pgrb2_f99 == complete
-        endtask
         task jgfs_awips_f100
           edit FCSTHR '100'
           trigger ../../prdgen/jgfs_pgrb2_f100 == complete
-        endtask
         task jgfs_awips_f101
           edit FCSTHR '101'
           trigger ../../prdgen/jgfs_pgrb2_f101 == complete
-        endtask
         task jgfs_awips_f102
           edit FCSTHR '102'
           trigger ../../prdgen/jgfs_pgrb2_f102 == complete
-        endtask
         task jgfs_awips_f103
           edit FCSTHR '103'
           trigger ../../prdgen/jgfs_pgrb2_f103 == complete
-        endtask
         task jgfs_awips_f104
           edit FCSTHR '104'
           trigger ../../prdgen/jgfs_pgrb2_f104 == complete
-        endtask
         task jgfs_awips_f105
           edit FCSTHR '105'
           trigger ../../prdgen/jgfs_pgrb2_f105 == complete
-        endtask
         task jgfs_awips_f106
           edit FCSTHR '106'
           trigger ../../prdgen/jgfs_pgrb2_f106 == complete
-        endtask
         task jgfs_awips_f107
           edit FCSTHR '107'
           trigger ../../prdgen/jgfs_pgrb2_f107 == complete
-        endtask
         task jgfs_awips_f108
           edit FCSTHR '108'
           trigger ../../prdgen/jgfs_pgrb2_f108 == complete
-        endtask
         task jgfs_awips_f109
           edit FCSTHR '109'
           trigger ../../prdgen/jgfs_pgrb2_f109 == complete
-        endtask
         task jgfs_awips_f110
           edit FCSTHR '110'
           trigger ../../prdgen/jgfs_pgrb2_f110 == complete
-        endtask
         task jgfs_awips_f111
           edit FCSTHR '111'
           trigger ../../prdgen/jgfs_pgrb2_f111 == complete
-        endtask
         task jgfs_awips_f112
           edit FCSTHR '112'
           trigger ../../prdgen/jgfs_pgrb2_f112 == complete
-        endtask
         task jgfs_awips_f113
           edit FCSTHR '113'
           trigger ../../prdgen/jgfs_pgrb2_f113 == complete
-        endtask
         task jgfs_awips_f114
           edit FCSTHR '114'
           trigger ../../prdgen/jgfs_pgrb2_f114 == complete
-        endtask
         task jgfs_awips_f115
           edit FCSTHR '115'
           trigger ../../prdgen/jgfs_pgrb2_f115 == complete
-        endtask
         task jgfs_awips_f116
           edit FCSTHR '116'
           trigger ../../prdgen/jgfs_pgrb2_f116 == complete
-        endtask
         task jgfs_awips_f117
           edit FCSTHR '117'
           trigger ../../prdgen/jgfs_pgrb2_f117 == complete
-        endtask
         task jgfs_awips_f118
           edit FCSTHR '118'
           trigger ../../prdgen/jgfs_pgrb2_f118 == complete
-        endtask
         task jgfs_awips_f119
           edit FCSTHR '119'
           trigger ../../prdgen/jgfs_pgrb2_f119 == complete
-        endtask
         task jgfs_awips_f120
           edit FCSTHR '120'
           trigger ../../prdgen/jgfs_pgrb2_f120 == complete
-        endtask
         task jgfs_awips_f123
           edit FCSTHR '123'
           trigger ../../prdgen/jgfs_pgrb2_f123 == complete
-        endtask
         task jgfs_awips_f126
           edit FCSTHR '126'
           trigger ../../prdgen/jgfs_pgrb2_f126 == complete
-        endtask
         task jgfs_awips_f129
           edit FCSTHR '129'
           trigger ../../prdgen/jgfs_pgrb2_f129 == complete
-        endtask
         task jgfs_awips_f132
           edit FCSTHR '132'
           trigger ../../prdgen/jgfs_pgrb2_f132 == complete
-        endtask
         task jgfs_awips_f135
           edit FCSTHR '135'
           trigger ../../prdgen/jgfs_pgrb2_f135 == complete
-        endtask
         task jgfs_awips_f138
           edit FCSTHR '138'
           trigger ../../prdgen/jgfs_pgrb2_f138 == complete
-        endtask
         task jgfs_awips_f141
           edit FCSTHR '141'
           trigger ../../prdgen/jgfs_pgrb2_f141 == complete
-        endtask
         task jgfs_awips_f144
           edit FCSTHR '144'
           trigger ../../prdgen/jgfs_pgrb2_f144 == complete
-        endtask
         task jgfs_awips_f147
           edit FCSTHR '147'
           trigger ../../prdgen/jgfs_pgrb2_f147 == complete
-        endtask
         task jgfs_awips_f150
           edit FCSTHR '150'
           trigger ../../prdgen/jgfs_pgrb2_f150 == complete
-        endtask
         task jgfs_awips_f153
           edit FCSTHR '153'
           trigger ../../prdgen/jgfs_pgrb2_f153 == complete
-        endtask
         task jgfs_awips_f156
           edit FCSTHR '156'
           trigger ../../prdgen/jgfs_pgrb2_f156 == complete
-        endtask
         task jgfs_awips_f159
           edit FCSTHR '159'
           trigger ../../prdgen/jgfs_pgrb2_f159 == complete
-        endtask
         task jgfs_awips_f162
           edit FCSTHR '162'
           trigger ../../prdgen/jgfs_pgrb2_f162 == complete
-        endtask
         task jgfs_awips_f165
           edit FCSTHR '165'
           trigger ../../prdgen/jgfs_pgrb2_f165 == complete
-        endtask
         task jgfs_awips_f168
           edit FCSTHR '168'
           trigger ../../prdgen/jgfs_pgrb2_f168 == complete
-        endtask
         task jgfs_awips_f171
           edit FCSTHR '171'
           trigger ../../prdgen/jgfs_pgrb2_f171 == complete
-        endtask
         task jgfs_awips_f174
           edit FCSTHR '174'
           trigger ../../prdgen/jgfs_pgrb2_f174 == complete
-        endtask
         task jgfs_awips_f177
           edit FCSTHR '177'
           trigger ../../prdgen/jgfs_pgrb2_f177 == complete
-        endtask
         task jgfs_awips_f180
           edit FCSTHR '180'
           trigger ../../prdgen/jgfs_pgrb2_f180 == complete
-        endtask
         task jgfs_awips_f183
           edit FCSTHR '183'
           trigger ../../prdgen/jgfs_pgrb2_f183 == complete
-        endtask
         task jgfs_awips_f186
           edit FCSTHR '186'
           trigger ../../prdgen/jgfs_pgrb2_f186 == complete
-        endtask
         task jgfs_awips_f189
           edit FCSTHR '189'
           trigger ../../prdgen/jgfs_pgrb2_f189 == complete
-        endtask
         task jgfs_awips_f192
           edit FCSTHR '192'
           trigger ../../prdgen/jgfs_pgrb2_f192 == complete
-        endtask
         task jgfs_awips_f195
           edit FCSTHR '195'
           trigger ../../prdgen/jgfs_pgrb2_f195 == complete
-        endtask
         task jgfs_awips_f198
           edit FCSTHR '198'
           trigger ../../prdgen/jgfs_pgrb2_f198 == complete
-        endtask
         task jgfs_awips_f201
           edit FCSTHR '201'
           trigger ../../prdgen/jgfs_pgrb2_f201 == complete
-        endtask
         task jgfs_awips_f204
           edit FCSTHR '204'
           trigger ../../prdgen/jgfs_pgrb2_f204 == complete
-        endtask
         task jgfs_awips_f207
           edit FCSTHR '207'
           trigger ../../prdgen/jgfs_pgrb2_f207 == complete
-        endtask
         task jgfs_awips_f210
           edit FCSTHR '210'
           trigger ../../prdgen/jgfs_pgrb2_f210 == complete
-        endtask
         task jgfs_awips_f213
           edit FCSTHR '213'
           trigger ../../prdgen/jgfs_pgrb2_f213 == complete
-        endtask
         task jgfs_awips_f216
           edit FCSTHR '216'
           trigger ../../prdgen/jgfs_pgrb2_f216 == complete
-        endtask
         task jgfs_awips_f219
           edit FCSTHR '219'
           trigger ../../prdgen/jgfs_pgrb2_f219 == complete
-        endtask
         task jgfs_awips_f222
           edit FCSTHR '222'
           trigger ../../prdgen/jgfs_pgrb2_f222 == complete
-        endtask
         task jgfs_awips_f225
           edit FCSTHR '225'
           trigger ../../prdgen/jgfs_pgrb2_f225 == complete
-        endtask
         task jgfs_awips_f228
           edit FCSTHR '228'
           trigger ../../prdgen/jgfs_pgrb2_f228 == complete
-        endtask
         task jgfs_awips_f231
           edit FCSTHR '231'
           trigger ../../prdgen/jgfs_pgrb2_f231 == complete
-        endtask
         task jgfs_awips_f234
           edit FCSTHR '234'
           trigger ../../prdgen/jgfs_pgrb2_f234 == complete
-        endtask
         task jgfs_awips_f237
           edit FCSTHR '237'
           trigger ../../prdgen/jgfs_pgrb2_f237 == complete
-        endtask
         task jgfs_awips_f240
           edit FCSTHR '240'
           trigger ../../prdgen/jgfs_pgrb2_f240 == complete
-        endtask
         task jgfs_awips_f252
           edit FCSTHR '252'
           trigger ../../prdgen/jgfs_pgrb2_f252 == complete
-        endtask
         task jgfs_awips_f264
           edit FCSTHR '264'
           trigger ../../prdgen/jgfs_pgrb2_f264 == complete
-        endtask
         task jgfs_awips_f276
           edit FCSTHR '276'
           trigger ../../prdgen/jgfs_pgrb2_f276 == complete
-        endtask
         task jgfs_awips_f288
           edit FCSTHR '288'
           trigger ../../prdgen/jgfs_pgrb2_f288 == complete
-        endtask
         task jgfs_awips_f300
           edit FCSTHR '300'
           trigger ../../prdgen/jgfs_pgrb2_f300 == complete
-        endtask
         task jgfs_awips_f312
           edit FCSTHR '312'
           trigger ../../prdgen/jgfs_pgrb2_f312 == complete
-        endtask
         task jgfs_awips_f324
           edit FCSTHR '324'
           trigger ../../prdgen/jgfs_pgrb2_f324 == complete
-        endtask
         task jgfs_awips_f336
           edit FCSTHR '336'
           trigger ../../prdgen/jgfs_pgrb2_f336 == complete
-        endtask
         task jgfs_awips_f348
           edit FCSTHR '348'
           trigger ../../prdgen/jgfs_pgrb2_f348 == complete
-        endtask
         task jgfs_awips_f360
           edit FCSTHR '360'
           trigger ../../prdgen/jgfs_pgrb2_f360 == complete
-        endtask
         task jgfs_awips_f372
           edit FCSTHR '372'
           trigger ../../prdgen/jgfs_pgrb2_f372 == complete
-        endtask
         task jgfs_awips_f384
           edit FCSTHR '384'
           trigger ../../prdgen/jgfs_pgrb2_f384 == complete
-        endtask
-      endfamily
-      family awips_1p0deg
+      endfamily # /prod00/gfs/post_processing/grib_awips
+      family awips_1p0deg # /prod00/gfs/post_processing/awips_1p0deg
         edit RES '1p0deg'
         edit RESC '1P0DEG'
         #edit ECF_FILES '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3/scripts/gfs/post_processing/awips'
-        edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+        edit ECF_FILES '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts'
         task jgfs_awips_f000
           edit FCSTHR '000'
           trigger ../../prdgen/jgfs_pgrb2_f00 == complete
-        endtask
         task jgfs_awips_f001
           edit FCSTHR '001'
           trigger ../../prdgen/jgfs_pgrb2_f01 == complete
-        endtask
         task jgfs_awips_f002
           edit FCSTHR '002'
           trigger ../../prdgen/jgfs_pgrb2_f02 == complete
-        endtask
         task jgfs_awips_f003
           edit FCSTHR '003'
           trigger ../../prdgen/jgfs_pgrb2_f03 == complete
-        endtask
         task jgfs_awips_f004
           edit FCSTHR '004'
           trigger ../../prdgen/jgfs_pgrb2_f04 == complete
-        endtask
         task jgfs_awips_f005
           edit FCSTHR '005'
           trigger ../../prdgen/jgfs_pgrb2_f05 == complete
-        endtask
         task jgfs_awips_f006
           edit FCSTHR '006'
           trigger ../../prdgen/jgfs_pgrb2_f06 == complete
-        endtask
         task jgfs_awips_f007
           edit FCSTHR '007'
           trigger ../../prdgen/jgfs_pgrb2_f07 == complete
-        endtask
         task jgfs_awips_f008
           edit FCSTHR '008'
           trigger ../../prdgen/jgfs_pgrb2_f08 == complete
-        endtask
         task jgfs_awips_f009
           edit FCSTHR '009'
           trigger ../../prdgen/jgfs_pgrb2_f09 == complete
-        endtask
         task jgfs_awips_f010
           edit FCSTHR '010'
           trigger ../../prdgen/jgfs_pgrb2_f10 == complete
-        endtask
         task jgfs_awips_f011
           edit FCSTHR '011'
           trigger ../../prdgen/jgfs_pgrb2_f11 == complete
-        endtask
         task jgfs_awips_f012
           edit FCSTHR '012'
           trigger ../../prdgen/jgfs_pgrb2_f12 == complete
-        endtask
         task jgfs_awips_f013
           edit FCSTHR '013'
           trigger ../../prdgen/jgfs_pgrb2_f13 == complete
-        endtask
         task jgfs_awips_f014
           edit FCSTHR '014'
           trigger ../../prdgen/jgfs_pgrb2_f14 == complete
-        endtask
         task jgfs_awips_f015
           edit FCSTHR '015'
           trigger ../../prdgen/jgfs_pgrb2_f15 == complete
-        endtask
         task jgfs_awips_f016
           edit FCSTHR '016'
           trigger ../../prdgen/jgfs_pgrb2_f16 == complete
-        endtask
         task jgfs_awips_f017
           edit FCSTHR '017'
           trigger ../../prdgen/jgfs_pgrb2_f17 == complete
-        endtask
         task jgfs_awips_f018
           edit FCSTHR '018'
           trigger ../../prdgen/jgfs_pgrb2_f18 == complete
-        endtask
         task jgfs_awips_f019
           edit FCSTHR '019'
           trigger ../../prdgen/jgfs_pgrb2_f19 == complete
-        endtask
         task jgfs_awips_f020
           edit FCSTHR '020'
           trigger ../../prdgen/jgfs_pgrb2_f20 == complete
-        endtask
         task jgfs_awips_f021
           edit FCSTHR '021'
           trigger ../../prdgen/jgfs_pgrb2_f21 == complete
-        endtask
         task jgfs_awips_f022
           edit FCSTHR '022'
           trigger ../../prdgen/jgfs_pgrb2_f22 == complete
-        endtask
         task jgfs_awips_f023
           edit FCSTHR '023'
           trigger ../../prdgen/jgfs_pgrb2_f23 == complete
-        endtask
         task jgfs_awips_f024
           edit FCSTHR '024'
           trigger ../../prdgen/jgfs_pgrb2_f24 == complete
-        endtask
         task jgfs_awips_f025
           edit FCSTHR '025'
           trigger ../../prdgen/jgfs_pgrb2_f25 == complete
-        endtask
         task jgfs_awips_f026
           edit FCSTHR '026'
           trigger ../../prdgen/jgfs_pgrb2_f26 == complete
-        endtask
         task jgfs_awips_f027
           edit FCSTHR '027'
           trigger ../../prdgen/jgfs_pgrb2_f27 == complete
-        endtask
         task jgfs_awips_f028
           edit FCSTHR '028'
           trigger ../../prdgen/jgfs_pgrb2_f28 == complete
-        endtask
         task jgfs_awips_f029
           edit FCSTHR '029'
           trigger ../../prdgen/jgfs_pgrb2_f29 == complete
-        endtask
         task jgfs_awips_f030
           edit FCSTHR '030'
           trigger ../../prdgen/jgfs_pgrb2_f30 == complete
-        endtask
         task jgfs_awips_f031
           edit FCSTHR '031'
           trigger ../../prdgen/jgfs_pgrb2_f31 == complete
-        endtask
         task jgfs_awips_f032
           edit FCSTHR '032'
           trigger ../../prdgen/jgfs_pgrb2_f32 == complete
-        endtask
         task jgfs_awips_f033
           edit FCSTHR '033'
           trigger ../../prdgen/jgfs_pgrb2_f33 == complete
-        endtask
         task jgfs_awips_f034
           edit FCSTHR '034'
           trigger ../../prdgen/jgfs_pgrb2_f34 == complete
-        endtask
         task jgfs_awips_f035
           edit FCSTHR '035'
           trigger ../../prdgen/jgfs_pgrb2_f35 == complete
-        endtask
         task jgfs_awips_f036
           edit FCSTHR '036'
           trigger ../../prdgen/jgfs_pgrb2_f36 == complete
-        endtask
         task jgfs_awips_f037
           edit FCSTHR '037'
           trigger ../../prdgen/jgfs_pgrb2_f37 == complete
-        endtask
         task jgfs_awips_f038
           edit FCSTHR '038'
           trigger ../../prdgen/jgfs_pgrb2_f38 == complete
-        endtask
         task jgfs_awips_f039
           edit FCSTHR '039'
           trigger ../../prdgen/jgfs_pgrb2_f39 == complete
-        endtask
         task jgfs_awips_f040
           edit FCSTHR '040'
           trigger ../../prdgen/jgfs_pgrb2_f40 == complete
-        endtask
         task jgfs_awips_f041
           edit FCSTHR '041'
           trigger ../../prdgen/jgfs_pgrb2_f41 == complete
-        endtask
         task jgfs_awips_f042
           edit FCSTHR '042'
           trigger ../../prdgen/jgfs_pgrb2_f42 == complete
-        endtask
         task jgfs_awips_f043
           edit FCSTHR '043'
           trigger ../../prdgen/jgfs_pgrb2_f43 == complete
-        endtask
         task jgfs_awips_f044
           edit FCSTHR '044'
           trigger ../../prdgen/jgfs_pgrb2_f44 == complete
-        endtask
         task jgfs_awips_f045
           edit FCSTHR '045'
           trigger ../../prdgen/jgfs_pgrb2_f45 == complete
-        endtask
         task jgfs_awips_f046
           edit FCSTHR '046'
           trigger ../../prdgen/jgfs_pgrb2_f46 == complete
-        endtask
         task jgfs_awips_f047
           edit FCSTHR '047'
           trigger ../../prdgen/jgfs_pgrb2_f47 == complete
-        endtask
         task jgfs_awips_f048
           edit FCSTHR '048'
           trigger ../../prdgen/jgfs_pgrb2_f48 == complete
-        endtask
         task jgfs_awips_f049
           edit FCSTHR '049'
           trigger ../../prdgen/jgfs_pgrb2_f49 == complete
-        endtask
         task jgfs_awips_f050
           edit FCSTHR '050'
           trigger ../../prdgen/jgfs_pgrb2_f50 == complete
-        endtask
         task jgfs_awips_f051
           edit FCSTHR '051'
           trigger ../../prdgen/jgfs_pgrb2_f51 == complete
-        endtask
         task jgfs_awips_f052
           edit FCSTHR '052'
           trigger ../../prdgen/jgfs_pgrb2_f52 == complete
-        endtask
         task jgfs_awips_f053
           edit FCSTHR '053'
           trigger ../../prdgen/jgfs_pgrb2_f53 == complete
-        endtask
         task jgfs_awips_f054
           edit FCSTHR '054'
           trigger ../../prdgen/jgfs_pgrb2_f54 == complete
-        endtask
         task jgfs_awips_f055
           edit FCSTHR '055'
           trigger ../../prdgen/jgfs_pgrb2_f55 == complete
-        endtask
         task jgfs_awips_f056
           edit FCSTHR '056'
           trigger ../../prdgen/jgfs_pgrb2_f56 == complete
-        endtask
         task jgfs_awips_f057
           edit FCSTHR '057'
           trigger ../../prdgen/jgfs_pgrb2_f57 == complete
-        endtask
         task jgfs_awips_f058
           edit FCSTHR '058'
           trigger ../../prdgen/jgfs_pgrb2_f58 == complete
-        endtask
         task jgfs_awips_f059
           edit FCSTHR '059'
           trigger ../../prdgen/jgfs_pgrb2_f59 == complete
-        endtask
         task jgfs_awips_f060
           edit FCSTHR '060'
           trigger ../../prdgen/jgfs_pgrb2_f60 == complete
-        endtask
         task jgfs_awips_f061
           edit FCSTHR '061'
           trigger ../../prdgen/jgfs_pgrb2_f61 == complete
-        endtask
         task jgfs_awips_f062
           edit FCSTHR '062'
           trigger ../../prdgen/jgfs_pgrb2_f62 == complete
-        endtask
         task jgfs_awips_f063
           edit FCSTHR '063'
           trigger ../../prdgen/jgfs_pgrb2_f63 == complete
-        endtask
         task jgfs_awips_f064
           edit FCSTHR '064'
           trigger ../../prdgen/jgfs_pgrb2_f64 == complete
-        endtask
         task jgfs_awips_f065
           edit FCSTHR '065'
           trigger ../../prdgen/jgfs_pgrb2_f65 == complete
-        endtask
         task jgfs_awips_f066
           edit FCSTHR '066'
           trigger ../../prdgen/jgfs_pgrb2_f66 == complete
-        endtask
         task jgfs_awips_f067
           edit FCSTHR '067'
           trigger ../../prdgen/jgfs_pgrb2_f67 == complete
-        endtask
         task jgfs_awips_f068
           edit FCSTHR '068'
           trigger ../../prdgen/jgfs_pgrb2_f68 == complete
-        endtask
         task jgfs_awips_f069
           edit FCSTHR '069'
           trigger ../../prdgen/jgfs_pgrb2_f69 == complete
-        endtask
         task jgfs_awips_f070
           edit FCSTHR '070'
           trigger ../../prdgen/jgfs_pgrb2_f70 == complete
-        endtask
         task jgfs_awips_f071
           edit FCSTHR '071'
           trigger ../../prdgen/jgfs_pgrb2_f71 == complete
-        endtask
         task jgfs_awips_f072
           edit FCSTHR '072'
           trigger ../../prdgen/jgfs_pgrb2_f72 == complete
-        endtask
         task jgfs_awips_f073
           edit FCSTHR '073'
           trigger ../../prdgen/jgfs_pgrb2_f73 == complete
-        endtask
         task jgfs_awips_f074
           edit FCSTHR '074'
           trigger ../../prdgen/jgfs_pgrb2_f74 == complete
-        endtask
         task jgfs_awips_f075
           edit FCSTHR '075'
           trigger ../../prdgen/jgfs_pgrb2_f75 == complete
-        endtask
         task jgfs_awips_f076
           edit FCSTHR '076'
           trigger ../../prdgen/jgfs_pgrb2_f76 == complete
-        endtask
         task jgfs_awips_f077
           edit FCSTHR '077'
           trigger ../../prdgen/jgfs_pgrb2_f77 == complete
-        endtask
         task jgfs_awips_f078
           edit FCSTHR '078'
           trigger ../../prdgen/jgfs_pgrb2_f78 == complete
-        endtask
         task jgfs_awips_f079
           edit FCSTHR '079'
           trigger ../../prdgen/jgfs_pgrb2_f79 == complete
-        endtask
         task jgfs_awips_f080
           edit FCSTHR '080'
           trigger ../../prdgen/jgfs_pgrb2_f80 == complete
-        endtask
         task jgfs_awips_f081
           edit FCSTHR '081'
           trigger ../../prdgen/jgfs_pgrb2_f81 == complete
-        endtask
         task jgfs_awips_f082
           edit FCSTHR '082'
           trigger ../../prdgen/jgfs_pgrb2_f82 == complete
-        endtask
         task jgfs_awips_f083
           edit FCSTHR '083'
           trigger ../../prdgen/jgfs_pgrb2_f83 == complete
-        endtask
         task jgfs_awips_f084
           edit FCSTHR '084'
           trigger ../../prdgen/jgfs_pgrb2_f84 == complete
-        endtask
         task jgfs_awips_f085
           edit FCSTHR '085'
           trigger ../../prdgen/jgfs_pgrb2_f85 == complete
-        endtask
         task jgfs_awips_f086
           edit FCSTHR '086'
           trigger ../../prdgen/jgfs_pgrb2_f86 == complete
-        endtask
         task jgfs_awips_f087
           edit FCSTHR '087'
           trigger ../../prdgen/jgfs_pgrb2_f87 == complete
-        endtask
         task jgfs_awips_f088
           edit FCSTHR '088'
           trigger ../../prdgen/jgfs_pgrb2_f88 == complete
-        endtask
         task jgfs_awips_f089
           edit FCSTHR '089'
           trigger ../../prdgen/jgfs_pgrb2_f89 == complete
-        endtask
         task jgfs_awips_f090
           edit FCSTHR '090'
           trigger ../../prdgen/jgfs_pgrb2_f90 == complete
-        endtask
         task jgfs_awips_f091
           edit FCSTHR '091'
           trigger ../../prdgen/jgfs_pgrb2_f91 == complete
-        endtask
         task jgfs_awips_f092
           edit FCSTHR '092'
           trigger ../../prdgen/jgfs_pgrb2_f92 == complete
-        endtask
         task jgfs_awips_f093
           edit FCSTHR '093'
           trigger ../../prdgen/jgfs_pgrb2_f93 == complete
-        endtask
         task jgfs_awips_f094
           edit FCSTHR '094'
           trigger ../../prdgen/jgfs_pgrb2_f94 == complete
-        endtask
         task jgfs_awips_f095
           edit FCSTHR '095'
           trigger ../../prdgen/jgfs_pgrb2_f95 == complete
-        endtask
         task jgfs_awips_f096
           edit FCSTHR '096'
           trigger ../../prdgen/jgfs_pgrb2_f96 == complete
-        endtask
         task jgfs_awips_f097
           edit FCSTHR '097'
           trigger ../../prdgen/jgfs_pgrb2_f97 == complete
-        endtask
         task jgfs_awips_f098
           edit FCSTHR '098'
           trigger ../../prdgen/jgfs_pgrb2_f98 == complete
-        endtask
         task jgfs_awips_f099
           edit FCSTHR '099'
           trigger ../../prdgen/jgfs_pgrb2_f99 == complete
-        endtask
         task jgfs_awips_f100
           edit FCSTHR '100'
           trigger ../../prdgen/jgfs_pgrb2_f100 == complete
-        endtask
         task jgfs_awips_f101
           edit FCSTHR '101'
           trigger ../../prdgen/jgfs_pgrb2_f101 == complete
-        endtask
         task jgfs_awips_f102
           edit FCSTHR '102'
           trigger ../../prdgen/jgfs_pgrb2_f102 == complete
-        endtask
         task jgfs_awips_f103
           edit FCSTHR '103'
           trigger ../../prdgen/jgfs_pgrb2_f103 == complete
-        endtask
         task jgfs_awips_f104
           edit FCSTHR '104'
           trigger ../../prdgen/jgfs_pgrb2_f104 == complete
-        endtask
         task jgfs_awips_f105
           edit FCSTHR '105'
           trigger ../../prdgen/jgfs_pgrb2_f105 == complete
-        endtask
         task jgfs_awips_f106
           edit FCSTHR '106'
           trigger ../../prdgen/jgfs_pgrb2_f106 == complete
-        endtask
         task jgfs_awips_f107
           edit FCSTHR '107'
           trigger ../../prdgen/jgfs_pgrb2_f107 == complete
-        endtask
         task jgfs_awips_f108
           edit FCSTHR '108'
           trigger ../../prdgen/jgfs_pgrb2_f108 == complete
-        endtask
         task jgfs_awips_f109
           edit FCSTHR '109'
           trigger ../../prdgen/jgfs_pgrb2_f109 == complete
-        endtask
         task jgfs_awips_f110
           edit FCSTHR '110'
           trigger ../../prdgen/jgfs_pgrb2_f110 == complete
-        endtask
         task jgfs_awips_f111
           edit FCSTHR '111'
           trigger ../../prdgen/jgfs_pgrb2_f111 == complete
-        endtask
         task jgfs_awips_f112
           edit FCSTHR '112'
           trigger ../../prdgen/jgfs_pgrb2_f112 == complete
-        endtask
         task jgfs_awips_f113
           edit FCSTHR '113'
           trigger ../../prdgen/jgfs_pgrb2_f113 == complete
-        endtask
         task jgfs_awips_f114
           edit FCSTHR '114'
           trigger ../../prdgen/jgfs_pgrb2_f114 == complete
-        endtask
         task jgfs_awips_f115
           edit FCSTHR '115'
           trigger ../../prdgen/jgfs_pgrb2_f115 == complete
-        endtask
         task jgfs_awips_f116
           edit FCSTHR '116'
           trigger ../../prdgen/jgfs_pgrb2_f116 == complete
-        endtask
         task jgfs_awips_f117
           edit FCSTHR '117'
           trigger ../../prdgen/jgfs_pgrb2_f117 == complete
-        endtask
         task jgfs_awips_f118
           edit FCSTHR '118'
           trigger ../../prdgen/jgfs_pgrb2_f118 == complete
-        endtask
         task jgfs_awips_f119
           edit FCSTHR '119'
           trigger ../../prdgen/jgfs_pgrb2_f119 == complete
-        endtask
         task jgfs_awips_f120
           edit FCSTHR '120'
           trigger ../../prdgen/jgfs_pgrb2_f120 == complete
-        endtask
         task jgfs_awips_f123
           edit FCSTHR '123'
           trigger ../../prdgen/jgfs_pgrb2_f123 == complete
-        endtask
         task jgfs_awips_f126
           edit FCSTHR '126'
           trigger ../../prdgen/jgfs_pgrb2_f126 == complete
-        endtask
         task jgfs_awips_f129
           edit FCSTHR '129'
           trigger ../../prdgen/jgfs_pgrb2_f129 == complete
-        endtask
         task jgfs_awips_f132
           edit FCSTHR '132'
           trigger ../../prdgen/jgfs_pgrb2_f132 == complete
-        endtask
         task jgfs_awips_f135
           edit FCSTHR '135'
           trigger ../../prdgen/jgfs_pgrb2_f135 == complete
-        endtask
         task jgfs_awips_f138
           edit FCSTHR '138'
           trigger ../../prdgen/jgfs_pgrb2_f138 == complete
-        endtask
         task jgfs_awips_f141
           edit FCSTHR '141'
           trigger ../../prdgen/jgfs_pgrb2_f141 == complete
-        endtask
         task jgfs_awips_f144
           edit FCSTHR '144'
           trigger ../../prdgen/jgfs_pgrb2_f144 == complete
-        endtask
         task jgfs_awips_f147
           edit FCSTHR '147'
           trigger ../../prdgen/jgfs_pgrb2_f147 == complete
-        endtask
         task jgfs_awips_f150
           edit FCSTHR '150'
           trigger ../../prdgen/jgfs_pgrb2_f150 == complete
-        endtask
         task jgfs_awips_f153
           edit FCSTHR '153'
           trigger ../../prdgen/jgfs_pgrb2_f153 == complete
-        endtask
         task jgfs_awips_f156
           edit FCSTHR '156'
           trigger ../../prdgen/jgfs_pgrb2_f156 == complete
-        endtask
         task jgfs_awips_f159
           edit FCSTHR '159'
           trigger ../../prdgen/jgfs_pgrb2_f159 == complete
-        endtask
         task jgfs_awips_f162
           edit FCSTHR '162'
           trigger ../../prdgen/jgfs_pgrb2_f162 == complete
-        endtask
         task jgfs_awips_f165
           edit FCSTHR '165'
           trigger ../../prdgen/jgfs_pgrb2_f165 == complete
-        endtask
         task jgfs_awips_f168
           edit FCSTHR '168'
           trigger ../../prdgen/jgfs_pgrb2_f168 == complete
-        endtask
         task jgfs_awips_f171
           edit FCSTHR '171'
           trigger ../../prdgen/jgfs_pgrb2_f171 == complete
-        endtask
         task jgfs_awips_f174
           edit FCSTHR '174'
           trigger ../../prdgen/jgfs_pgrb2_f174 == complete
-        endtask
         task jgfs_awips_f177
           edit FCSTHR '177'
           trigger ../../prdgen/jgfs_pgrb2_f177 == complete
-        endtask
         task jgfs_awips_f180
           edit FCSTHR '180'
           trigger ../../prdgen/jgfs_pgrb2_f180 == complete
-        endtask
         task jgfs_awips_f183
           edit FCSTHR '183'
           trigger ../../prdgen/jgfs_pgrb2_f183 == complete
-        endtask
         task jgfs_awips_f186
           edit FCSTHR '186'
           trigger ../../prdgen/jgfs_pgrb2_f186 == complete
-        endtask
         task jgfs_awips_f189
           edit FCSTHR '189'
           trigger ../../prdgen/jgfs_pgrb2_f189 == complete
-        endtask
         task jgfs_awips_f192
           edit FCSTHR '192'
           trigger ../../prdgen/jgfs_pgrb2_f192 == complete
-        endtask
         task jgfs_awips_f195
           edit FCSTHR '195'
           trigger ../../prdgen/jgfs_pgrb2_f195 == complete
-        endtask
         task jgfs_awips_f198
           edit FCSTHR '198'
           trigger ../../prdgen/jgfs_pgrb2_f198 == complete
-        endtask
         task jgfs_awips_f201
           edit FCSTHR '201'
           trigger ../../prdgen/jgfs_pgrb2_f201 == complete
-        endtask
         task jgfs_awips_f204
           edit FCSTHR '204'
           trigger ../../prdgen/jgfs_pgrb2_f204 == complete
-        endtask
         task jgfs_awips_f207
           edit FCSTHR '207'
           trigger ../../prdgen/jgfs_pgrb2_f207 == complete
-        endtask
         task jgfs_awips_f210
           edit FCSTHR '210'
           trigger ../../prdgen/jgfs_pgrb2_f210 == complete
-        endtask
         task jgfs_awips_f213
           edit FCSTHR '213'
           trigger ../../prdgen/jgfs_pgrb2_f213 == complete
-        endtask
         task jgfs_awips_f216
           edit FCSTHR '216'
           trigger ../../prdgen/jgfs_pgrb2_f216 == complete
-        endtask
         task jgfs_awips_f219
           edit FCSTHR '219'
           trigger ../../prdgen/jgfs_pgrb2_f219 == complete
-        endtask
         task jgfs_awips_f222
           edit FCSTHR '222'
           trigger ../../prdgen/jgfs_pgrb2_f222 == complete
-        endtask
         task jgfs_awips_f225
           edit FCSTHR '225'
           trigger ../../prdgen/jgfs_pgrb2_f225 == complete
-        endtask
         task jgfs_awips_f228
           edit FCSTHR '228'
           trigger ../../prdgen/jgfs_pgrb2_f228 == complete
-        endtask
         task jgfs_awips_f231
           edit FCSTHR '231'
           trigger ../../prdgen/jgfs_pgrb2_f231 == complete
-        endtask
         task jgfs_awips_f234
           edit FCSTHR '234'
           trigger ../../prdgen/jgfs_pgrb2_f234 == complete
-        endtask
         task jgfs_awips_f237
           edit FCSTHR '237'
           trigger ../../prdgen/jgfs_pgrb2_f237 == complete
-        endtask
         task jgfs_awips_f240
           edit FCSTHR '240'
           trigger ../../prdgen/jgfs_pgrb2_f240 == complete
-        endtask
         task jgfs_awips_f252
           edit FCSTHR '252'
           trigger ../../prdgen/jgfs_pgrb2_f252 == complete
-        endtask
         task jgfs_awips_f264
           edit FCSTHR '264'
           trigger ../../prdgen/jgfs_pgrb2_f264 == complete
-        endtask
         task jgfs_awips_f276
           edit FCSTHR '276'
           trigger ../../prdgen/jgfs_pgrb2_f276 == complete
-        endtask
         task jgfs_awips_f288
           edit FCSTHR '288'
           trigger ../../prdgen/jgfs_pgrb2_f288 == complete
-        endtask
         task jgfs_awips_f300
           edit FCSTHR '300'
           trigger ../../prdgen/jgfs_pgrb2_f300 == complete
-        endtask
         task jgfs_awips_f312
           edit FCSTHR '312'
           trigger ../../prdgen/jgfs_pgrb2_f312 == complete
-        endtask
         task jgfs_awips_f324
           edit FCSTHR '324'
           trigger ../../prdgen/jgfs_pgrb2_f324 == complete
-        endtask
         task jgfs_awips_f336
           edit FCSTHR '336'
           trigger ../../prdgen/jgfs_pgrb2_f336 == complete
-        endtask
         task jgfs_awips_f348
           edit FCSTHR '348'
           trigger ../../prdgen/jgfs_pgrb2_f348 == complete
-        endtask
         task jgfs_awips_f360
           edit FCSTHR '360'
           trigger ../../prdgen/jgfs_pgrb2_f360 == complete
-        endtask
         task jgfs_awips_f372
           edit FCSTHR '372'
           trigger ../../prdgen/jgfs_pgrb2_f372 == complete
-        endtask
         task jgfs_awips_f384
           edit FCSTHR '384'
           trigger ../../prdgen/jgfs_pgrb2_f384 == complete
-        endtask
-      endfamily
-      family awips_20km
+      endfamily # /prod00/gfs/post_processing/awips_1p0deg
+      family awips_20km # /prod00/gfs/post_processing/awips_20km
         edit RES '20km'
         edit RESC '20KM'
         #edit ECF_FILES '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3/scripts/gfs/post_processing/awips'
-        edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+        edit ECF_FILES '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts'
         task jgfs_awips_f000
           edit FCSTHR '000'
           trigger ../../prdgen/jgfs_pgrb2_f00 == complete
-        endtask
         task jgfs_awips_f001
           edit FCSTHR '001'
           trigger ../../prdgen/jgfs_pgrb2_f01 == complete
-        endtask
         task jgfs_awips_f002
           edit FCSTHR '002'
           trigger ../../prdgen/jgfs_pgrb2_f02 == complete
-        endtask
         task jgfs_awips_f003
           edit FCSTHR '003'
           trigger ../../prdgen/jgfs_pgrb2_f03 == complete
-        endtask
         task jgfs_awips_f004
           edit FCSTHR '004'
           trigger ../../prdgen/jgfs_pgrb2_f04 == complete
-        endtask
         task jgfs_awips_f005
           edit FCSTHR '005'
           trigger ../../prdgen/jgfs_pgrb2_f05 == complete
-        endtask
         task jgfs_awips_f006
           edit FCSTHR '006'
           trigger ../../prdgen/jgfs_pgrb2_f06 == complete
-        endtask
         task jgfs_awips_f007
           edit FCSTHR '007'
           trigger ../../prdgen/jgfs_pgrb2_f07 == complete
-        endtask
         task jgfs_awips_f008
           edit FCSTHR '008'
           trigger ../../prdgen/jgfs_pgrb2_f08 == complete
-        endtask
         task jgfs_awips_f009
           edit FCSTHR '009'
           trigger ../../prdgen/jgfs_pgrb2_f09 == complete
-        endtask
         task jgfs_awips_f010
           edit FCSTHR '010'
           trigger ../../prdgen/jgfs_pgrb2_f10 == complete
-        endtask
         task jgfs_awips_f011
           edit FCSTHR '011'
           trigger ../../prdgen/jgfs_pgrb2_f11 == complete
-        endtask
         task jgfs_awips_f012
           edit FCSTHR '012'
           trigger ../../prdgen/jgfs_pgrb2_f12 == complete
-        endtask
         task jgfs_awips_f013
           edit FCSTHR '013'
           trigger ../../prdgen/jgfs_pgrb2_f13 == complete
-        endtask
         task jgfs_awips_f014
           edit FCSTHR '014'
           trigger ../../prdgen/jgfs_pgrb2_f14 == complete
-        endtask
         task jgfs_awips_f015
           edit FCSTHR '015'
           trigger ../../prdgen/jgfs_pgrb2_f15 == complete
-        endtask
         task jgfs_awips_f016
           edit FCSTHR '016'
           trigger ../../prdgen/jgfs_pgrb2_f16 == complete
-        endtask
         task jgfs_awips_f017
           edit FCSTHR '017'
           trigger ../../prdgen/jgfs_pgrb2_f17 == complete
-        endtask
         task jgfs_awips_f018
           edit FCSTHR '018'
           trigger ../../prdgen/jgfs_pgrb2_f18 == complete
-        endtask
         task jgfs_awips_f019
           edit FCSTHR '019'
           trigger ../../prdgen/jgfs_pgrb2_f19 == complete
-        endtask
         task jgfs_awips_f020
           edit FCSTHR '020'
           trigger ../../prdgen/jgfs_pgrb2_f20 == complete
-        endtask
         task jgfs_awips_f021
           edit FCSTHR '021'
           trigger ../../prdgen/jgfs_pgrb2_f21 == complete
-        endtask
         task jgfs_awips_f022
           edit FCSTHR '022'
           trigger ../../prdgen/jgfs_pgrb2_f22 == complete
-        endtask
         task jgfs_awips_f023
           edit FCSTHR '023'
           trigger ../../prdgen/jgfs_pgrb2_f23 == complete
-        endtask
         task jgfs_awips_f024
           edit FCSTHR '024'
           trigger ../../prdgen/jgfs_pgrb2_f24 == complete
-        endtask
         task jgfs_awips_f025
           edit FCSTHR '025'
           trigger ../../prdgen/jgfs_pgrb2_f25 == complete
-        endtask
         task jgfs_awips_f026
           edit FCSTHR '026'
           trigger ../../prdgen/jgfs_pgrb2_f26 == complete
-        endtask
         task jgfs_awips_f027
           edit FCSTHR '027'
           trigger ../../prdgen/jgfs_pgrb2_f27 == complete
-        endtask
         task jgfs_awips_f028
           edit FCSTHR '028'
           trigger ../../prdgen/jgfs_pgrb2_f28 == complete
-        endtask
         task jgfs_awips_f029
           edit FCSTHR '029'
           trigger ../../prdgen/jgfs_pgrb2_f29 == complete
-        endtask
         task jgfs_awips_f030
           edit FCSTHR '030'
           trigger ../../prdgen/jgfs_pgrb2_f30 == complete
-        endtask
         task jgfs_awips_f031
           edit FCSTHR '031'
           trigger ../../prdgen/jgfs_pgrb2_f31 == complete
-        endtask
         task jgfs_awips_f032
           edit FCSTHR '032'
           trigger ../../prdgen/jgfs_pgrb2_f32 == complete
-        endtask
         task jgfs_awips_f033
           edit FCSTHR '033'
           trigger ../../prdgen/jgfs_pgrb2_f33 == complete
-        endtask
         task jgfs_awips_f034
           edit FCSTHR '034'
           trigger ../../prdgen/jgfs_pgrb2_f34 == complete
-        endtask
         task jgfs_awips_f035
           edit FCSTHR '035'
           trigger ../../prdgen/jgfs_pgrb2_f35 == complete
-        endtask
         task jgfs_awips_f036
           edit FCSTHR '036'
           trigger ../../prdgen/jgfs_pgrb2_f36 == complete
-        endtask
         task jgfs_awips_f037
           edit FCSTHR '037'
           trigger ../../prdgen/jgfs_pgrb2_f37 == complete
-        endtask
         task jgfs_awips_f038
           edit FCSTHR '038'
           trigger ../../prdgen/jgfs_pgrb2_f38 == complete
-        endtask
         task jgfs_awips_f039
           edit FCSTHR '039'
           trigger ../../prdgen/jgfs_pgrb2_f39 == complete
-        endtask
         task jgfs_awips_f040
           edit FCSTHR '040'
           trigger ../../prdgen/jgfs_pgrb2_f40 == complete
-        endtask
         task jgfs_awips_f041
           edit FCSTHR '041'
           trigger ../../prdgen/jgfs_pgrb2_f41 == complete
-        endtask
         task jgfs_awips_f042
           edit FCSTHR '042'
           trigger ../../prdgen/jgfs_pgrb2_f42 == complete
-        endtask
         task jgfs_awips_f043
           edit FCSTHR '043'
           trigger ../../prdgen/jgfs_pgrb2_f43 == complete
-        endtask
         task jgfs_awips_f044
           edit FCSTHR '044'
           trigger ../../prdgen/jgfs_pgrb2_f44 == complete
-        endtask
         task jgfs_awips_f045
           edit FCSTHR '045'
           trigger ../../prdgen/jgfs_pgrb2_f45 == complete
-        endtask
         task jgfs_awips_f046
           edit FCSTHR '046'
           trigger ../../prdgen/jgfs_pgrb2_f46 == complete
-        endtask
         task jgfs_awips_f047
           edit FCSTHR '047'
           trigger ../../prdgen/jgfs_pgrb2_f47 == complete
-        endtask
         task jgfs_awips_f048
           edit FCSTHR '048'
           trigger ../../prdgen/jgfs_pgrb2_f48 == complete
-        endtask
         task jgfs_awips_f049
           edit FCSTHR '049'
           trigger ../../prdgen/jgfs_pgrb2_f49 == complete
-        endtask
         task jgfs_awips_f050
           edit FCSTHR '050'
           trigger ../../prdgen/jgfs_pgrb2_f50 == complete
-        endtask
         task jgfs_awips_f051
           edit FCSTHR '051'
           trigger ../../prdgen/jgfs_pgrb2_f51 == complete
-        endtask
         task jgfs_awips_f052
           edit FCSTHR '052'
           trigger ../../prdgen/jgfs_pgrb2_f52 == complete
-        endtask
         task jgfs_awips_f053
           edit FCSTHR '053'
           trigger ../../prdgen/jgfs_pgrb2_f53 == complete
-        endtask
         task jgfs_awips_f054
           edit FCSTHR '054'
           trigger ../../prdgen/jgfs_pgrb2_f54 == complete
-        endtask
         task jgfs_awips_f055
           edit FCSTHR '055'
           trigger ../../prdgen/jgfs_pgrb2_f55 == complete
-        endtask
         task jgfs_awips_f056
           edit FCSTHR '056'
           trigger ../../prdgen/jgfs_pgrb2_f56 == complete
-        endtask
         task jgfs_awips_f057
           edit FCSTHR '057'
           trigger ../../prdgen/jgfs_pgrb2_f57 == complete
-        endtask
         task jgfs_awips_f058
           edit FCSTHR '058'
           trigger ../../prdgen/jgfs_pgrb2_f58 == complete
-        endtask
         task jgfs_awips_f059
           edit FCSTHR '059'
           trigger ../../prdgen/jgfs_pgrb2_f59 == complete
-        endtask
         task jgfs_awips_f060
           edit FCSTHR '060'
           trigger ../../prdgen/jgfs_pgrb2_f60 == complete
-        endtask
         task jgfs_awips_f061
           edit FCSTHR '061'
           trigger ../../prdgen/jgfs_pgrb2_f61 == complete
-        endtask
         task jgfs_awips_f062
           edit FCSTHR '062'
           trigger ../../prdgen/jgfs_pgrb2_f62 == complete
-        endtask
         task jgfs_awips_f063
           edit FCSTHR '063'
           trigger ../../prdgen/jgfs_pgrb2_f63 == complete
-        endtask
         task jgfs_awips_f064
           edit FCSTHR '064'
           trigger ../../prdgen/jgfs_pgrb2_f64 == complete
-        endtask
         task jgfs_awips_f065
           edit FCSTHR '065'
           trigger ../../prdgen/jgfs_pgrb2_f65 == complete
-        endtask
         task jgfs_awips_f066
           edit FCSTHR '066'
           trigger ../../prdgen/jgfs_pgrb2_f66 == complete
-        endtask
         task jgfs_awips_f067
           edit FCSTHR '067'
           trigger ../../prdgen/jgfs_pgrb2_f67 == complete
-        endtask
         task jgfs_awips_f068
           edit FCSTHR '068'
           trigger ../../prdgen/jgfs_pgrb2_f68 == complete
-        endtask
         task jgfs_awips_f069
           edit FCSTHR '069'
           trigger ../../prdgen/jgfs_pgrb2_f69 == complete
-        endtask
         task jgfs_awips_f070
           edit FCSTHR '070'
           trigger ../../prdgen/jgfs_pgrb2_f70 == complete
-        endtask
         task jgfs_awips_f071
           edit FCSTHR '071'
           trigger ../../prdgen/jgfs_pgrb2_f71 == complete
-        endtask
         task jgfs_awips_f072
           edit FCSTHR '072'
           trigger ../../prdgen/jgfs_pgrb2_f72 == complete
-        endtask
         task jgfs_awips_f073
           edit FCSTHR '073'
           trigger ../../prdgen/jgfs_pgrb2_f73 == complete
-        endtask
         task jgfs_awips_f074
           edit FCSTHR '074'
           trigger ../../prdgen/jgfs_pgrb2_f74 == complete
-        endtask
         task jgfs_awips_f075
           edit FCSTHR '075'
           trigger ../../prdgen/jgfs_pgrb2_f75 == complete
-        endtask
         task jgfs_awips_f076
           edit FCSTHR '076'
           trigger ../../prdgen/jgfs_pgrb2_f76 == complete
-        endtask
         task jgfs_awips_f077
           edit FCSTHR '077'
           trigger ../../prdgen/jgfs_pgrb2_f77 == complete
-        endtask
         task jgfs_awips_f078
           edit FCSTHR '078'
           trigger ../../prdgen/jgfs_pgrb2_f78 == complete
-        endtask
         task jgfs_awips_f079
           edit FCSTHR '079'
           trigger ../../prdgen/jgfs_pgrb2_f79 == complete
-        endtask
         task jgfs_awips_f080
           edit FCSTHR '080'
           trigger ../../prdgen/jgfs_pgrb2_f80 == complete
-        endtask
         task jgfs_awips_f081
           edit FCSTHR '081'
           trigger ../../prdgen/jgfs_pgrb2_f81 == complete
-        endtask
         task jgfs_awips_f082
           edit FCSTHR '082'
           trigger ../../prdgen/jgfs_pgrb2_f82 == complete
-        endtask
         task jgfs_awips_f083
           edit FCSTHR '083'
           trigger ../../prdgen/jgfs_pgrb2_f83 == complete
-        endtask
         task jgfs_awips_f084
           edit FCSTHR '084'
           trigger ../../prdgen/jgfs_pgrb2_f84 == complete
-        endtask
         task jgfs_awips_f085
           edit FCSTHR '085'
           trigger ../../prdgen/jgfs_pgrb2_f85 == complete
-        endtask
         task jgfs_awips_f086
           edit FCSTHR '086'
           trigger ../../prdgen/jgfs_pgrb2_f86 == complete
-        endtask
         task jgfs_awips_f087
           edit FCSTHR '087'
           trigger ../../prdgen/jgfs_pgrb2_f87 == complete
-        endtask
         task jgfs_awips_f088
           edit FCSTHR '088'
           trigger ../../prdgen/jgfs_pgrb2_f88 == complete
-        endtask
         task jgfs_awips_f089
           edit FCSTHR '089'
           trigger ../../prdgen/jgfs_pgrb2_f89 == complete
-        endtask
         task jgfs_awips_f090
           edit FCSTHR '090'
           trigger ../../prdgen/jgfs_pgrb2_f90 == complete
-        endtask
         task jgfs_awips_f091
           edit FCSTHR '091'
           trigger ../../prdgen/jgfs_pgrb2_f91 == complete
-        endtask
         task jgfs_awips_f092
           edit FCSTHR '092'
           trigger ../../prdgen/jgfs_pgrb2_f92 == complete
-        endtask
         task jgfs_awips_f093
           edit FCSTHR '093'
           trigger ../../prdgen/jgfs_pgrb2_f93 == complete
-        endtask
         task jgfs_awips_f094
           edit FCSTHR '094'
           trigger ../../prdgen/jgfs_pgrb2_f94 == complete
-        endtask
         task jgfs_awips_f095
           edit FCSTHR '095'
           trigger ../../prdgen/jgfs_pgrb2_f95 == complete
-        endtask
         task jgfs_awips_f096
           edit FCSTHR '096'
           trigger ../../prdgen/jgfs_pgrb2_f96 == complete
-        endtask
         task jgfs_awips_f097
           edit FCSTHR '097'
           trigger ../../prdgen/jgfs_pgrb2_f97 == complete
-        endtask
         task jgfs_awips_f098
           edit FCSTHR '098'
           trigger ../../prdgen/jgfs_pgrb2_f98 == complete
-        endtask
         task jgfs_awips_f099
           edit FCSTHR '099'
           trigger ../../prdgen/jgfs_pgrb2_f99 == complete
-        endtask
         task jgfs_awips_f100
           edit FCSTHR '100'
           trigger ../../prdgen/jgfs_pgrb2_f100 == complete
-        endtask
         task jgfs_awips_f101
           edit FCSTHR '101'
           trigger ../../prdgen/jgfs_pgrb2_f101 == complete
-        endtask
         task jgfs_awips_f102
           edit FCSTHR '102'
           trigger ../../prdgen/jgfs_pgrb2_f102 == complete
-        endtask
         task jgfs_awips_f103
           edit FCSTHR '103'
           trigger ../../prdgen/jgfs_pgrb2_f103 == complete
-        endtask
         task jgfs_awips_f104
           edit FCSTHR '104'
           trigger ../../prdgen/jgfs_pgrb2_f104 == complete
-        endtask
         task jgfs_awips_f105
           edit FCSTHR '105'
           trigger ../../prdgen/jgfs_pgrb2_f105 == complete
-        endtask
         task jgfs_awips_f106
           edit FCSTHR '106'
           trigger ../../prdgen/jgfs_pgrb2_f106 == complete
-        endtask
         task jgfs_awips_f107
           edit FCSTHR '107'
           trigger ../../prdgen/jgfs_pgrb2_f107 == complete
-        endtask
         task jgfs_awips_f108
           edit FCSTHR '108'
           trigger ../../prdgen/jgfs_pgrb2_f108 == complete
-        endtask
         task jgfs_awips_f109
           edit FCSTHR '109'
           trigger ../../prdgen/jgfs_pgrb2_f109 == complete
-        endtask
         task jgfs_awips_f110
           edit FCSTHR '110'
           trigger ../../prdgen/jgfs_pgrb2_f110 == complete
-        endtask
         task jgfs_awips_f111
           edit FCSTHR '111'
           trigger ../../prdgen/jgfs_pgrb2_f111 == complete
-        endtask
         task jgfs_awips_f112
           edit FCSTHR '112'
           trigger ../../prdgen/jgfs_pgrb2_f112 == complete
-        endtask
         task jgfs_awips_f113
           edit FCSTHR '113'
           trigger ../../prdgen/jgfs_pgrb2_f113 == complete
-        endtask
         task jgfs_awips_f114
           edit FCSTHR '114'
           trigger ../../prdgen/jgfs_pgrb2_f114 == complete
-        endtask
         task jgfs_awips_f115
           edit FCSTHR '115'
           trigger ../../prdgen/jgfs_pgrb2_f115 == complete
-        endtask
         task jgfs_awips_f116
           edit FCSTHR '116'
           trigger ../../prdgen/jgfs_pgrb2_f116 == complete
-        endtask
         task jgfs_awips_f117
           edit FCSTHR '117'
           trigger ../../prdgen/jgfs_pgrb2_f117 == complete
-        endtask
         task jgfs_awips_f118
           edit FCSTHR '118'
           trigger ../../prdgen/jgfs_pgrb2_f118 == complete
-        endtask
         task jgfs_awips_f119
           edit FCSTHR '119'
           trigger ../../prdgen/jgfs_pgrb2_f119 == complete
-        endtask
         task jgfs_awips_f120
           edit FCSTHR '120'
           trigger ../../prdgen/jgfs_pgrb2_f120 == complete
-        endtask
         task jgfs_awips_f123
           edit FCSTHR '123'
           trigger ../../prdgen/jgfs_pgrb2_f123 == complete
-        endtask
         task jgfs_awips_f126
           edit FCSTHR '126'
           trigger ../../prdgen/jgfs_pgrb2_f126 == complete
-        endtask
         task jgfs_awips_f129
           edit FCSTHR '129'
           trigger ../../prdgen/jgfs_pgrb2_f129 == complete
-        endtask
         task jgfs_awips_f132
           edit FCSTHR '132'
           trigger ../../prdgen/jgfs_pgrb2_f132 == complete
-        endtask
         task jgfs_awips_f135
           edit FCSTHR '135'
           trigger ../../prdgen/jgfs_pgrb2_f135 == complete
-        endtask
         task jgfs_awips_f138
           edit FCSTHR '138'
           trigger ../../prdgen/jgfs_pgrb2_f138 == complete
-        endtask
         task jgfs_awips_f141
           edit FCSTHR '141'
           trigger ../../prdgen/jgfs_pgrb2_f141 == complete
-        endtask
         task jgfs_awips_f144
           edit FCSTHR '144'
           trigger ../../prdgen/jgfs_pgrb2_f144 == complete
-        endtask
         task jgfs_awips_f147
           edit FCSTHR '147'
           trigger ../../prdgen/jgfs_pgrb2_f147 == complete
-        endtask
         task jgfs_awips_f150
           edit FCSTHR '150'
           trigger ../../prdgen/jgfs_pgrb2_f150 == complete
-        endtask
         task jgfs_awips_f153
           edit FCSTHR '153'
           trigger ../../prdgen/jgfs_pgrb2_f153 == complete
-        endtask
         task jgfs_awips_f156
           edit FCSTHR '156'
           trigger ../../prdgen/jgfs_pgrb2_f156 == complete
-        endtask
         task jgfs_awips_f159
           edit FCSTHR '159'
           trigger ../../prdgen/jgfs_pgrb2_f159 == complete
-        endtask
         task jgfs_awips_f162
           edit FCSTHR '162'
           trigger ../../prdgen/jgfs_pgrb2_f162 == complete
-        endtask
         task jgfs_awips_f165
           edit FCSTHR '165'
           trigger ../../prdgen/jgfs_pgrb2_f165 == complete
-        endtask
         task jgfs_awips_f168
           edit FCSTHR '168'
           trigger ../../prdgen/jgfs_pgrb2_f168 == complete
-        endtask
         task jgfs_awips_f171
           edit FCSTHR '171'
           trigger ../../prdgen/jgfs_pgrb2_f171 == complete
-        endtask
         task jgfs_awips_f174
           edit FCSTHR '174'
           trigger ../../prdgen/jgfs_pgrb2_f174 == complete
-        endtask
         task jgfs_awips_f177
           edit FCSTHR '177'
           trigger ../../prdgen/jgfs_pgrb2_f177 == complete
-        endtask
         task jgfs_awips_f180
           edit FCSTHR '180'
           trigger ../../prdgen/jgfs_pgrb2_f180 == complete
-        endtask
         task jgfs_awips_f183
           edit FCSTHR '183'
           trigger ../../prdgen/jgfs_pgrb2_f183 == complete
-        endtask
         task jgfs_awips_f186
           edit FCSTHR '186'
           trigger ../../prdgen/jgfs_pgrb2_f186 == complete
-        endtask
         task jgfs_awips_f189
           edit FCSTHR '189'
           trigger ../../prdgen/jgfs_pgrb2_f189 == complete
-        endtask
         task jgfs_awips_f192
           edit FCSTHR '192'
           trigger ../../prdgen/jgfs_pgrb2_f192 == complete
-        endtask
         task jgfs_awips_f195
           edit FCSTHR '195'
           trigger ../../prdgen/jgfs_pgrb2_f195 == complete
-        endtask
         task jgfs_awips_f198
           edit FCSTHR '198'
           trigger ../../prdgen/jgfs_pgrb2_f198 == complete
-        endtask
         task jgfs_awips_f201
           edit FCSTHR '201'
           trigger ../../prdgen/jgfs_pgrb2_f201 == complete
-        endtask
         task jgfs_awips_f204
           edit FCSTHR '204'
           trigger ../../prdgen/jgfs_pgrb2_f204 == complete
-        endtask
         task jgfs_awips_f207
           edit FCSTHR '207'
           trigger ../../prdgen/jgfs_pgrb2_f207 == complete
-        endtask
         task jgfs_awips_f210
           edit FCSTHR '210'
           trigger ../../prdgen/jgfs_pgrb2_f210 == complete
-        endtask
         task jgfs_awips_f213
           edit FCSTHR '213'
           trigger ../../prdgen/jgfs_pgrb2_f213 == complete
-        endtask
         task jgfs_awips_f216
           edit FCSTHR '216'
           trigger ../../prdgen/jgfs_pgrb2_f216 == complete
-        endtask
         task jgfs_awips_f219
           edit FCSTHR '219'
           trigger ../../prdgen/jgfs_pgrb2_f219 == complete
-        endtask
         task jgfs_awips_f222
           edit FCSTHR '222'
           trigger ../../prdgen/jgfs_pgrb2_f222 == complete
-        endtask
         task jgfs_awips_f225
           edit FCSTHR '225'
           trigger ../../prdgen/jgfs_pgrb2_f225 == complete
-        endtask
         task jgfs_awips_f228
           edit FCSTHR '228'
           trigger ../../prdgen/jgfs_pgrb2_f228 == complete
-        endtask
         task jgfs_awips_f231
           edit FCSTHR '231'
           trigger ../../prdgen/jgfs_pgrb2_f231 == complete
-        endtask
         task jgfs_awips_f234
           edit FCSTHR '234'
           trigger ../../prdgen/jgfs_pgrb2_f234 == complete
-        endtask
         task jgfs_awips_f237
           edit FCSTHR '237'
           trigger ../../prdgen/jgfs_pgrb2_f237 == complete
-        endtask
         task jgfs_awips_f240
           edit FCSTHR '240'
           trigger ../../prdgen/jgfs_pgrb2_f240 == complete
-        endtask
         task jgfs_awips_f252
           edit FCSTHR '252'
           trigger ../../prdgen/jgfs_pgrb2_f252 == complete
-        endtask
         task jgfs_awips_f264
           edit FCSTHR '264'
           trigger ../../prdgen/jgfs_pgrb2_f264 == complete
-        endtask
         task jgfs_awips_f276
           edit FCSTHR '276'
           trigger ../../prdgen/jgfs_pgrb2_f276 == complete
-        endtask
         task jgfs_awips_f288
           edit FCSTHR '288'
           trigger ../../prdgen/jgfs_pgrb2_f288 == complete
-        endtask
         task jgfs_awips_f300
           edit FCSTHR '300'
           trigger ../../prdgen/jgfs_pgrb2_f300 == complete
-        endtask
         task jgfs_awips_f312
           edit FCSTHR '312'
           trigger ../../prdgen/jgfs_pgrb2_f312 == complete
-        endtask
         task jgfs_awips_f324
           edit FCSTHR '324'
           trigger ../../prdgen/jgfs_pgrb2_f324 == complete
-        endtask
         task jgfs_awips_f336
           edit FCSTHR '336'
           trigger ../../prdgen/jgfs_pgrb2_f336 == complete
-        endtask
         task jgfs_awips_f348
           edit FCSTHR '348'
           trigger ../../prdgen/jgfs_pgrb2_f348 == complete
-        endtask
         task jgfs_awips_f360
           edit FCSTHR '360'
           trigger ../../prdgen/jgfs_pgrb2_f360 == complete
-        endtask
         task jgfs_awips_f372
           edit FCSTHR '372'
           trigger ../../prdgen/jgfs_pgrb2_f372 == complete
-        endtask
         task jgfs_awips_f384
           edit FCSTHR '384'
           trigger ../../prdgen/jgfs_pgrb2_f384 == complete
-        endtask
-      endfamily
-    endfamily
-    family post
+      endfamily # /prod00/gfs/post_processing/awips_20km
+    endfamily # /prod00/gfs/post_processing
+    family post # /prod00/gfs/post
       task jgfs_post_anl
         edit FHR 'anl'
         edit HR 'anl'
         trigger ./jgfs_post_manager:release_postanl
         event 1 release_pgrb2_anl
-      endtask
       task jgfs_pgrb2_spec_post
         trigger ./jgfs_post_f336 == complete and ./jgfs_post_f348 == complete and ./jgfs_post_f360 == complete and ./jgfs_post_f372 == complete and ./jgfs_post_f384 == complete
-      endtask
       task jgfs_post_manager
         trigger ../jgfs_analysis == complete and ../forecast == complete
         event 1 release_postanl
@@ -2481,878 +1917,706 @@ suite prod00
         event 172 release_post360
         event 173 release_post372
         event 174 release_post384
-      endtask
       task jgfs_post_f00
-        edit FHR: 'f00'
-        edit HR: '00'
+        edit FHR 'f00'
+        edit HR '00'
         trigger ./jgfs_post_manager:release_post00
-      endtask
       task jgfs_post_f01
-        edit FHR: 'f01'
-        edit HR: '01'
+        edit FHR 'f01'
+        edit HR '01'
         trigger ./jgfs_post_manager:release_post01
-      endtask
       task jgfs_post_f02
-        edit FHR: 'f02'
-        edit HR: '02'
+        edit FHR 'f02'
+        edit HR '02'
         trigger ./jgfs_post_manager:release_post02
-      endtask
       task jgfs_post_f03
-        edit FHR: 'f03'
-        edit HR: '03'
+        edit FHR 'f03'
+        edit HR '03'
         trigger ./jgfs_post_manager:release_post03
-      endtask
       task jgfs_post_f04
-        edit FHR: 'f04'
-        edit HR: '04'
+        edit FHR 'f04'
+        edit HR '04'
         trigger ./jgfs_post_manager:release_post04
-      endtask
       task jgfs_post_f05
-        edit FHR: 'f05'
-        edit HR: '05'
+        edit FHR 'f05'
+        edit HR '05'
         trigger ./jgfs_post_manager:release_post05
-      endtask
       task jgfs_post_f06
-        edit FHR: 'f06'
-        edit HR: '06'
+        edit FHR 'f06'
+        edit HR '06'
         trigger ./jgfs_post_manager:release_post06
-      endtask
       task jgfs_post_f07
-        edit FHR: 'f07'
-        edit HR: '07'
+        edit FHR 'f07'
+        edit HR '07'
         trigger ./jgfs_post_manager:release_post07
-      endtask
       task jgfs_post_f08
-        edit FHR: 'f08'
-        edit HR: '08'
+        edit FHR 'f08'
+        edit HR '08'
         trigger ./jgfs_post_manager:release_post08
-      endtask
       task jgfs_post_f09
-        edit FHR: 'f09'
-        edit HR: '09'
+        edit FHR 'f09'
+        edit HR '09'
         trigger ./jgfs_post_manager:release_post09
-      endtask
       task jgfs_post_f10
-        edit FHR: 'f10'
-        edit HR: '10'
+        edit FHR 'f10'
+        edit HR '10'
         trigger ./jgfs_post_manager:release_post10
-      endtask
       task jgfs_post_f11
-        edit FHR: 'f11'
-        edit HR: '11'
+        edit FHR 'f11'
+        edit HR '11'
         trigger ./jgfs_post_manager:release_post11
-      endtask
       task jgfs_post_f12
-        edit FHR: 'f12'
-        edit HR: '12'
+        edit FHR 'f12'
+        edit HR '12'
         trigger ./jgfs_post_manager:release_post12
-      endtask
       task jgfs_post_f13
-        edit FHR: 'f13'
-        edit HR: '13'
+        edit FHR 'f13'
+        edit HR '13'
         trigger ./jgfs_post_manager:release_post13
-      endtask
       task jgfs_post_f14
-        edit FHR: 'f14'
-        edit HR: '14'
+        edit FHR 'f14'
+        edit HR '14'
         trigger ./jgfs_post_manager:release_post14
-      endtask
       task jgfs_post_f15
-        edit FHR: 'f15'
-        edit HR: '15'
+        edit FHR 'f15'
+        edit HR '15'
         trigger ./jgfs_post_manager:release_post15
-      endtask
       task jgfs_post_f16
-        edit FHR: 'f16'
-        edit HR: '16'
+        edit FHR 'f16'
+        edit HR '16'
         trigger ./jgfs_post_manager:release_post16
-      endtask
       task jgfs_post_f17
-        edit FHR: 'f17'
-        edit HR: '17'
+        edit FHR 'f17'
+        edit HR '17'
         trigger ./jgfs_post_manager:release_post17
-      endtask
       task jgfs_post_f18
-        edit FHR: 'f18'
-        edit HR: '18'
+        edit FHR 'f18'
+        edit HR '18'
         trigger ./jgfs_post_manager:release_post18
-      endtask
       task jgfs_post_f19
-        edit FHR: 'f19'
-        edit HR: '19'
+        edit FHR 'f19'
+        edit HR '19'
         trigger ./jgfs_post_manager:release_post19
-      endtask
       task jgfs_post_f20
-        edit FHR: 'f20'
-        edit HR: '20'
+        edit FHR 'f20'
+        edit HR '20'
         trigger ./jgfs_post_manager:release_post20
-      endtask
       task jgfs_post_f21
-        edit FHR: 'f21'
-        edit HR: '21'
+        edit FHR 'f21'
+        edit HR '21'
         trigger ./jgfs_post_manager:release_post21
-      endtask
       task jgfs_post_f22
-        edit FHR: 'f22'
-        edit HR: '22'
+        edit FHR 'f22'
+        edit HR '22'
         trigger ./jgfs_post_manager:release_post22
-      endtask
       task jgfs_post_f23
-        edit FHR: 'f23'
-        edit HR: '23'
+        edit FHR 'f23'
+        edit HR '23'
         trigger ./jgfs_post_manager:release_post23
-      endtask
       task jgfs_post_f24
-        edit FHR: 'f24'
-        edit HR: '24'
+        edit FHR 'f24'
+        edit HR '24'
         trigger ./jgfs_post_manager:release_post24
-      endtask
       task jgfs_post_f25
-        edit FHR: 'f25'
-        edit HR: '25'
+        edit FHR 'f25'
+        edit HR '25'
         trigger ./jgfs_post_manager:release_post25
-      endtask
       task jgfs_post_f26
-        edit FHR: 'f26'
-        edit HR: '26'
+        edit FHR 'f26'
+        edit HR '26'
         trigger ./jgfs_post_manager:release_post26
-      endtask
       task jgfs_post_f27
-        edit FHR: 'f27'
-        edit HR: '27'
+        edit FHR 'f27'
+        edit HR '27'
         trigger ./jgfs_post_manager:release_post27
-      endtask
       task jgfs_post_f28
-        edit FHR: 'f28'
-        edit HR: '28'
+        edit FHR 'f28'
+        edit HR '28'
         trigger ./jgfs_post_manager:release_post28
-      endtask
       task jgfs_post_f29
-        edit FHR: 'f29'
-        edit HR: '29'
+        edit FHR 'f29'
+        edit HR '29'
         trigger ./jgfs_post_manager:release_post29
-      endtask
       task jgfs_post_f30
-        edit FHR: 'f30'
-        edit HR: '30'
+        edit FHR 'f30'
+        edit HR '30'
         trigger ./jgfs_post_manager:release_post30
-      endtask
       task jgfs_post_f31
-        edit FHR: 'f31'
-        edit HR: '31'
+        edit FHR 'f31'
+        edit HR '31'
         trigger ./jgfs_post_manager:release_post31
-      endtask
       task jgfs_post_f32
-        edit FHR: 'f32'
-        edit HR: '32'
+        edit FHR 'f32'
+        edit HR '32'
         trigger ./jgfs_post_manager:release_post32
-      endtask
       task jgfs_post_f33
-        edit FHR: 'f33'
-        edit HR: '33'
+        edit FHR 'f33'
+        edit HR '33'
         trigger ./jgfs_post_manager:release_post33
-      endtask
       task jgfs_post_f34
-        edit FHR: 'f34'
-        edit HR: '34'
+        edit FHR 'f34'
+        edit HR '34'
         trigger ./jgfs_post_manager:release_post34
-      endtask
       task jgfs_post_f35
-        edit FHR: 'f35'
-        edit HR: '35'
+        edit FHR 'f35'
+        edit HR '35'
         trigger ./jgfs_post_manager:release_post35
-      endtask
       task jgfs_post_f36
-        edit FHR: 'f36'
-        edit HR: '36'
+        edit FHR 'f36'
+        edit HR '36'
         trigger ./jgfs_post_manager:release_post36
-      endtask
       task jgfs_post_f37
-        edit FHR: 'f37'
-        edit HR: '37'
+        edit FHR 'f37'
+        edit HR '37'
         trigger ./jgfs_post_manager:release_post37
-      endtask
       task jgfs_post_f38
-        edit FHR: 'f38'
-        edit HR: '38'
+        edit FHR 'f38'
+        edit HR '38'
         trigger ./jgfs_post_manager:release_post38
-      endtask
       task jgfs_post_f39
-        edit FHR: 'f39'
-        edit HR: '39'
+        edit FHR 'f39'
+        edit HR '39'
         trigger ./jgfs_post_manager:release_post39
-      endtask
       task jgfs_post_f40
-        edit FHR: 'f40'
-        edit HR: '40'
+        edit FHR 'f40'
+        edit HR '40'
         trigger ./jgfs_post_manager:release_post40
-      endtask
       task jgfs_post_f41
-        edit FHR: 'f41'
-        edit HR: '41'
+        edit FHR 'f41'
+        edit HR '41'
         trigger ./jgfs_post_manager:release_post41
-      endtask
       task jgfs_post_f42
-        edit FHR: 'f42'
-        edit HR: '42'
+        edit FHR 'f42'
+        edit HR '42'
         trigger ./jgfs_post_manager:release_post42
-      endtask
       task jgfs_post_f43
-        edit FHR: 'f43'
-        edit HR: '43'
+        edit FHR 'f43'
+        edit HR '43'
         trigger ./jgfs_post_manager:release_post43
-      endtask
       task jgfs_post_f44
-        edit FHR: 'f44'
-        edit HR: '44'
+        edit FHR 'f44'
+        edit HR '44'
         trigger ./jgfs_post_manager:release_post44
-      endtask
       task jgfs_post_f45
-        edit FHR: 'f45'
-        edit HR: '45'
+        edit FHR 'f45'
+        edit HR '45'
         trigger ./jgfs_post_manager:release_post45
-      endtask
       task jgfs_post_f46
-        edit FHR: 'f46'
-        edit HR: '46'
+        edit FHR 'f46'
+        edit HR '46'
         trigger ./jgfs_post_manager:release_post46
-      endtask
       task jgfs_post_f47
-        edit FHR: 'f47'
-        edit HR: '47'
+        edit FHR 'f47'
+        edit HR '47'
         trigger ./jgfs_post_manager:release_post47
-      endtask
       task jgfs_post_f48
-        edit FHR: 'f48'
-        edit HR: '48'
+        edit FHR 'f48'
+        edit HR '48'
         trigger ./jgfs_post_manager:release_post48
-      endtask
       task jgfs_post_f49
-        edit FHR: 'f49'
-        edit HR: '49'
+        edit FHR 'f49'
+        edit HR '49'
         trigger ./jgfs_post_manager:release_post49
-      endtask
       task jgfs_post_f50
-        edit FHR: 'f50'
-        edit HR: '50'
+        edit FHR 'f50'
+        edit HR '50'
         trigger ./jgfs_post_manager:release_post50
-      endtask
       task jgfs_post_f51
-        edit FHR: 'f51'
-        edit HR: '51'
+        edit FHR 'f51'
+        edit HR '51'
         trigger ./jgfs_post_manager:release_post51
-      endtask
       task jgfs_post_f52
-        edit FHR: 'f52'
-        edit HR: '52'
+        edit FHR 'f52'
+        edit HR '52'
         trigger ./jgfs_post_manager:release_post52
-      endtask
       task jgfs_post_f53
-        edit FHR: 'f53'
-        edit HR: '53'
+        edit FHR 'f53'
+        edit HR '53'
         trigger ./jgfs_post_manager:release_post53
-      endtask
       task jgfs_post_f54
-        edit FHR: 'f54'
-        edit HR: '54'
+        edit FHR 'f54'
+        edit HR '54'
         trigger ./jgfs_post_manager:release_post54
-      endtask
       task jgfs_post_f55
-        edit FHR: 'f55'
-        edit HR: '55'
+        edit FHR 'f55'
+        edit HR '55'
         trigger ./jgfs_post_manager:release_post55
-      endtask
       task jgfs_post_f56
-        edit FHR: 'f56'
-        edit HR: '56'
+        edit FHR 'f56'
+        edit HR '56'
         trigger ./jgfs_post_manager:release_post56
-      endtask
       task jgfs_post_f57
-        edit FHR: 'f57'
-        edit HR: '57'
+        edit FHR 'f57'
+        edit HR '57'
         trigger ./jgfs_post_manager:release_post57
-      endtask
       task jgfs_post_f58
-        edit FHR: 'f58'
-        edit HR: '58'
+        edit FHR 'f58'
+        edit HR '58'
         trigger ./jgfs_post_manager:release_post58
-      endtask
       task jgfs_post_f59
-        edit FHR: 'f59'
-        edit HR: '59'
+        edit FHR 'f59'
+        edit HR '59'
         trigger ./jgfs_post_manager:release_post59
-      endtask
       task jgfs_post_f60
-        edit FHR: 'f60'
-        edit HR: '60'
+        edit FHR 'f60'
+        edit HR '60'
         trigger ./jgfs_post_manager:release_post60
-      endtask
       task jgfs_post_f61
-        edit FHR: 'f61'
-        edit HR: '61'
+        edit FHR 'f61'
+        edit HR '61'
         trigger ./jgfs_post_manager:release_post61
-      endtask
       task jgfs_post_f62
-        edit FHR: 'f62'
-        edit HR: '62'
+        edit FHR 'f62'
+        edit HR '62'
         trigger ./jgfs_post_manager:release_post62
-      endtask
       task jgfs_post_f63
-        edit FHR: 'f63'
-        edit HR: '63'
+        edit FHR 'f63'
+        edit HR '63'
         trigger ./jgfs_post_manager:release_post63
-      endtask
       task jgfs_post_f64
-        edit FHR: 'f64'
-        edit HR: '64'
+        edit FHR 'f64'
+        edit HR '64'
         trigger ./jgfs_post_manager:release_post64
-      endtask
       task jgfs_post_f65
-        edit FHR: 'f65'
-        edit HR: '65'
+        edit FHR 'f65'
+        edit HR '65'
         trigger ./jgfs_post_manager:release_post65
-      endtask
       task jgfs_post_f66
-        edit FHR: 'f66'
-        edit HR: '66'
+        edit FHR 'f66'
+        edit HR '66'
         trigger ./jgfs_post_manager:release_post66
-      endtask
       task jgfs_post_f67
-        edit FHR: 'f67'
-        edit HR: '67'
+        edit FHR 'f67'
+        edit HR '67'
         trigger ./jgfs_post_manager:release_post67
-      endtask
       task jgfs_post_f68
-        edit FHR: 'f68'
-        edit HR: '68'
+        edit FHR 'f68'
+        edit HR '68'
         trigger ./jgfs_post_manager:release_post68
-      endtask
       task jgfs_post_f69
-        edit FHR: 'f69'
-        edit HR: '69'
+        edit FHR 'f69'
+        edit HR '69'
         trigger ./jgfs_post_manager:release_post69
-      endtask
       task jgfs_post_f70
-        edit FHR: 'f70'
-        edit HR: '70'
+        edit FHR 'f70'
+        edit HR '70'
         trigger ./jgfs_post_manager:release_post70
-      endtask
       task jgfs_post_f71
-        edit FHR: 'f71'
-        edit HR: '71'
+        edit FHR 'f71'
+        edit HR '71'
         trigger ./jgfs_post_manager:release_post71
-      endtask
       task jgfs_post_f72
-        edit FHR: 'f72'
-        edit HR: '72'
+        edit FHR 'f72'
+        edit HR '72'
         trigger ./jgfs_post_manager:release_post72
-      endtask
       task jgfs_post_f73
-        edit FHR: 'f73'
-        edit HR: '73'
+        edit FHR 'f73'
+        edit HR '73'
         trigger ./jgfs_post_manager:release_post73
-      endtask
       task jgfs_post_f74
-        edit FHR: 'f74'
-        edit HR: '74'
+        edit FHR 'f74'
+        edit HR '74'
         trigger ./jgfs_post_manager:release_post74
-      endtask
       task jgfs_post_f75
-        edit FHR: 'f75'
-        edit HR: '75'
+        edit FHR 'f75'
+        edit HR '75'
         trigger ./jgfs_post_manager:release_post75
-      endtask
       task jgfs_post_f76
-        edit FHR: 'f76'
-        edit HR: '76'
+        edit FHR 'f76'
+        edit HR '76'
         trigger ./jgfs_post_manager:release_post76
-      endtask
       task jgfs_post_f77
-        edit FHR: 'f77'
-        edit HR: '77'
+        edit FHR 'f77'
+        edit HR '77'
         trigger ./jgfs_post_manager:release_post77
-      endtask
       task jgfs_post_f78
-        edit FHR: 'f78'
-        edit HR: '78'
+        edit FHR 'f78'
+        edit HR '78'
         trigger ./jgfs_post_manager:release_post78
-      endtask
       task jgfs_post_f79
-        edit FHR: 'f79'
-        edit HR: '79'
+        edit FHR 'f79'
+        edit HR '79'
         trigger ./jgfs_post_manager:release_post79
-      endtask
       task jgfs_post_f80
-        edit FHR: 'f80'
-        edit HR: '80'
+        edit FHR 'f80'
+        edit HR '80'
         trigger ./jgfs_post_manager:release_post80
-      endtask
       task jgfs_post_f81
-        edit FHR: 'f81'
-        edit HR: '81'
+        edit FHR 'f81'
+        edit HR '81'
         trigger ./jgfs_post_manager:release_post81
-      endtask
       task jgfs_post_f82
-        edit FHR: 'f82'
-        edit HR: '82'
+        edit FHR 'f82'
+        edit HR '82'
         trigger ./jgfs_post_manager:release_post82
-      endtask
       task jgfs_post_f83
-        edit FHR: 'f83'
-        edit HR: '83'
+        edit FHR 'f83'
+        edit HR '83'
         trigger ./jgfs_post_manager:release_post83
-      endtask
       task jgfs_post_f84
-        edit FHR: 'f84'
-        edit HR: '84'
+        edit FHR 'f84'
+        edit HR '84'
         trigger ./jgfs_post_manager:release_post84
-      endtask
       task jgfs_post_f85
-        edit FHR: 'f85'
-        edit HR: '85'
+        edit FHR 'f85'
+        edit HR '85'
         trigger ./jgfs_post_manager:release_post85
-      endtask
       task jgfs_post_f86
-        edit FHR: 'f86'
-        edit HR: '86'
+        edit FHR 'f86'
+        edit HR '86'
         trigger ./jgfs_post_manager:release_post86
-      endtask
       task jgfs_post_f87
-        edit FHR: 'f87'
-        edit HR: '87'
+        edit FHR 'f87'
+        edit HR '87'
         trigger ./jgfs_post_manager:release_post87
-      endtask
       task jgfs_post_f88
-        edit FHR: 'f88'
-        edit HR: '88'
+        edit FHR 'f88'
+        edit HR '88'
         trigger ./jgfs_post_manager:release_post88
-      endtask
       task jgfs_post_f89
-        edit FHR: 'f89'
-        edit HR: '89'
+        edit FHR 'f89'
+        edit HR '89'
         trigger ./jgfs_post_manager:release_post89
-      endtask
       task jgfs_post_f90
-        edit FHR: 'f90'
-        edit HR: '90'
+        edit FHR 'f90'
+        edit HR '90'
         trigger ./jgfs_post_manager:release_post90
-      endtask
       task jgfs_post_f91
-        edit FHR: 'f91'
-        edit HR: '91'
+        edit FHR 'f91'
+        edit HR '91'
         trigger ./jgfs_post_manager:release_post91
-      endtask
       task jgfs_post_f92
-        edit FHR: 'f92'
-        edit HR: '92'
+        edit FHR 'f92'
+        edit HR '92'
         trigger ./jgfs_post_manager:release_post92
-      endtask
       task jgfs_post_f93
-        edit FHR: 'f93'
-        edit HR: '93'
+        edit FHR 'f93'
+        edit HR '93'
         trigger ./jgfs_post_manager:release_post93
-      endtask
       task jgfs_post_f94
-        edit FHR: 'f94'
-        edit HR: '94'
+        edit FHR 'f94'
+        edit HR '94'
         trigger ./jgfs_post_manager:release_post94
-      endtask
       task jgfs_post_f95
-        edit FHR: 'f95'
-        edit HR: '95'
+        edit FHR 'f95'
+        edit HR '95'
         trigger ./jgfs_post_manager:release_post95
-      endtask
       task jgfs_post_f96
-        edit FHR: 'f96'
-        edit HR: '96'
+        edit FHR 'f96'
+        edit HR '96'
         trigger ./jgfs_post_manager:release_post96
-      endtask
       task jgfs_post_f97
-        edit FHR: 'f97'
-        edit HR: '97'
+        edit FHR 'f97'
+        edit HR '97'
         trigger ./jgfs_post_manager:release_post97
-      endtask
       task jgfs_post_f98
-        edit FHR: 'f98'
-        edit HR: '98'
+        edit FHR 'f98'
+        edit HR '98'
         trigger ./jgfs_post_manager:release_post98
-      endtask
       task jgfs_post_f99
-        edit FHR: 'f99'
-        edit HR: '99'
+        edit FHR 'f99'
+        edit HR '99'
         trigger ./jgfs_post_manager:release_post99
-      endtask
       task jgfs_post_f100
-        edit FHR: 'f100'
-        edit HR: '100'
+        edit FHR 'f100'
+        edit HR '100'
         trigger ./jgfs_post_manager:release_post100
-      endtask
       task jgfs_post_f101
-        edit FHR: 'f101'
-        edit HR: '101'
+        edit FHR 'f101'
+        edit HR '101'
         trigger ./jgfs_post_manager:release_post101
-      endtask
       task jgfs_post_f102
-        edit FHR: 'f102'
-        edit HR: '102'
+        edit FHR 'f102'
+        edit HR '102'
         trigger ./jgfs_post_manager:release_post102
-      endtask
       task jgfs_post_f103
-        edit FHR: 'f103'
-        edit HR: '103'
+        edit FHR 'f103'
+        edit HR '103'
         trigger ./jgfs_post_manager:release_post103
-      endtask
       task jgfs_post_f104
-        edit FHR: 'f104'
-        edit HR: '104'
+        edit FHR 'f104'
+        edit HR '104'
         trigger ./jgfs_post_manager:release_post104
-      endtask
       task jgfs_post_f105
-        edit FHR: 'f105'
-        edit HR: '105'
+        edit FHR 'f105'
+        edit HR '105'
         trigger ./jgfs_post_manager:release_post105
-      endtask
       task jgfs_post_f106
-        edit FHR: 'f106'
-        edit HR: '106'
+        edit FHR 'f106'
+        edit HR '106'
         trigger ./jgfs_post_manager:release_post106
-      endtask
       task jgfs_post_f107
-        edit FHR: 'f107'
-        edit HR: '107'
+        edit FHR 'f107'
+        edit HR '107'
         trigger ./jgfs_post_manager:release_post107
-      endtask
       task jgfs_post_f108
-        edit FHR: 'f108'
-        edit HR: '108'
+        edit FHR 'f108'
+        edit HR '108'
         trigger ./jgfs_post_manager:release_post108
-      endtask
       task jgfs_post_f109
-        edit FHR: 'f109'
-        edit HR: '109'
+        edit FHR 'f109'
+        edit HR '109'
         trigger ./jgfs_post_manager:release_post109
-      endtask
       task jgfs_post_f110
-        edit FHR: 'f110'
-        edit HR: '110'
+        edit FHR 'f110'
+        edit HR '110'
         trigger ./jgfs_post_manager:release_post110
-      endtask
       task jgfs_post_f111
-        edit FHR: 'f111'
-        edit HR: '111'
+        edit FHR 'f111'
+        edit HR '111'
         trigger ./jgfs_post_manager:release_post111
-      endtask
       task jgfs_post_f112
-        edit FHR: 'f112'
-        edit HR: '112'
+        edit FHR 'f112'
+        edit HR '112'
         trigger ./jgfs_post_manager:release_post112
-      endtask
       task jgfs_post_f113
-        edit FHR: 'f113'
-        edit HR: '113'
+        edit FHR 'f113'
+        edit HR '113'
         trigger ./jgfs_post_manager:release_post113
-      endtask
       task jgfs_post_f114
-        edit FHR: 'f114'
-        edit HR: '114'
+        edit FHR 'f114'
+        edit HR '114'
         trigger ./jgfs_post_manager:release_post114
-      endtask
       task jgfs_post_f115
-        edit FHR: 'f115'
-        edit HR: '115'
+        edit FHR 'f115'
+        edit HR '115'
         trigger ./jgfs_post_manager:release_post115
-      endtask
       task jgfs_post_f116
-        edit FHR: 'f116'
-        edit HR: '116'
+        edit FHR 'f116'
+        edit HR '116'
         trigger ./jgfs_post_manager:release_post116
-      endtask
       task jgfs_post_f117
-        edit FHR: 'f117'
-        edit HR: '117'
+        edit FHR 'f117'
+        edit HR '117'
         trigger ./jgfs_post_manager:release_post117
-      endtask
       task jgfs_post_f118
-        edit FHR: 'f118'
-        edit HR: '118'
+        edit FHR 'f118'
+        edit HR '118'
         trigger ./jgfs_post_manager:release_post118
-      endtask
       task jgfs_post_f119
-        edit FHR: 'f119'
-        edit HR: '119'
+        edit FHR 'f119'
+        edit HR '119'
         trigger ./jgfs_post_manager:release_post119
-      endtask
       task jgfs_post_f120
-        edit FHR: 'f120'
-        edit HR: '120'
+        edit FHR 'f120'
+        edit HR '120'
         trigger ./jgfs_post_manager:release_post120
-      endtask
       task jgfs_post_f123
-        edit FHR: 'f123'
-        edit HR: '123'
+        edit FHR 'f123'
+        edit HR '123'
         trigger ./jgfs_post_manager:release_post123
-      endtask
       task jgfs_post_f126
-        edit FHR: 'f126'
-        edit HR: '126'
+        edit FHR 'f126'
+        edit HR '126'
         trigger ./jgfs_post_manager:release_post126
-      endtask
       task jgfs_post_f129
-        edit FHR: 'f129'
-        edit HR: '129'
+        edit FHR 'f129'
+        edit HR '129'
         trigger ./jgfs_post_manager:release_post129
-      endtask
       task jgfs_post_f132
-        edit FHR: 'f132'
-        edit HR: '132'
+        edit FHR 'f132'
+        edit HR '132'
         trigger ./jgfs_post_manager:release_post132
-      endtask
       task jgfs_post_f135
-        edit FHR: 'f135'
-        edit HR: '135'
+        edit FHR 'f135'
+        edit HR '135'
         trigger ./jgfs_post_manager:release_post135
-      endtask
       task jgfs_post_f138
-        edit FHR: 'f138'
-        edit HR: '138'
+        edit FHR 'f138'
+        edit HR '138'
         trigger ./jgfs_post_manager:release_post138
-      endtask
       task jgfs_post_f141
-        edit FHR: 'f141'
-        edit HR: '141'
+        edit FHR 'f141'
+        edit HR '141'
         trigger ./jgfs_post_manager:release_post141
-      endtask
       task jgfs_post_f144
-        edit FHR: 'f144'
-        edit HR: '144'
+        edit FHR 'f144'
+        edit HR '144'
         trigger ./jgfs_post_manager:release_post144
-      endtask
       task jgfs_post_f147
-        edit FHR: 'f147'
-        edit HR: '147'
+        edit FHR 'f147'
+        edit HR '147'
         trigger ./jgfs_post_manager:release_post147
-      endtask
       task jgfs_post_f150
-        edit FHR: 'f150'
-        edit HR: '150'
+        edit FHR 'f150'
+        edit HR '150'
         trigger ./jgfs_post_manager:release_post150
-      endtask
       task jgfs_post_f153
-        edit FHR: 'f153'
-        edit HR: '153'
+        edit FHR 'f153'
+        edit HR '153'
         trigger ./jgfs_post_manager:release_post153
-      endtask
       task jgfs_post_f156
-        edit FHR: 'f156'
-        edit HR: '156'
+        edit FHR 'f156'
+        edit HR '156'
         trigger ./jgfs_post_manager:release_post156
-      endtask
       task jgfs_post_f159
-        edit FHR: 'f159'
-        edit HR: '159'
+        edit FHR 'f159'
+        edit HR '159'
         trigger ./jgfs_post_manager:release_post159
-      endtask
       task jgfs_post_f162
-        edit FHR: 'f162'
-        edit HR: '162'
+        edit FHR 'f162'
+        edit HR '162'
         trigger ./jgfs_post_manager:release_post162
-      endtask
       task jgfs_post_f165
-        edit FHR: 'f165'
-        edit HR: '165'
+        edit FHR 'f165'
+        edit HR '165'
         trigger ./jgfs_post_manager:release_post165
-      endtask
       task jgfs_post_f168
-        edit FHR: 'f168'
-        edit HR: '168'
+        edit FHR 'f168'
+        edit HR '168'
         trigger ./jgfs_post_manager:release_post168
-      endtask
       task jgfs_post_f171
-        edit FHR: 'f171'
-        edit HR: '171'
+        edit FHR 'f171'
+        edit HR '171'
         trigger ./jgfs_post_manager:release_post171
-      endtask
       task jgfs_post_f174
-        edit FHR: 'f174'
-        edit HR: '174'
+        edit FHR 'f174'
+        edit HR '174'
         trigger ./jgfs_post_manager:release_post174
-      endtask
       task jgfs_post_f177
-        edit FHR: 'f177'
-        edit HR: '177'
+        edit FHR 'f177'
+        edit HR '177'
         trigger ./jgfs_post_manager:release_post177
-      endtask
       task jgfs_post_f180
-        edit FHR: 'f180'
-        edit HR: '180'
+        edit FHR 'f180'
+        edit HR '180'
         trigger ./jgfs_post_manager:release_post180
-      endtask
       task jgfs_post_f183
-        edit FHR: 'f183'
-        edit HR: '183'
+        edit FHR 'f183'
+        edit HR '183'
         trigger ./jgfs_post_manager:release_post183
-      endtask
       task jgfs_post_f186
-        edit FHR: 'f186'
-        edit HR: '186'
+        edit FHR 'f186'
+        edit HR '186'
         trigger ./jgfs_post_manager:release_post186
-      endtask
       task jgfs_post_f189
-        edit FHR: 'f189'
-        edit HR: '189'
+        edit FHR 'f189'
+        edit HR '189'
         trigger ./jgfs_post_manager:release_post189
-      endtask
       task jgfs_post_f192
-        edit FHR: 'f192'
-        edit HR: '192'
+        edit FHR 'f192'
+        edit HR '192'
         trigger ./jgfs_post_manager:release_post192
-      endtask
       task jgfs_post_f195
-        edit FHR: 'f195'
-        edit HR: '195'
+        edit FHR 'f195'
+        edit HR '195'
         trigger ./jgfs_post_manager:release_post195
-      endtask
       task jgfs_post_f198
-        edit FHR: 'f198'
-        edit HR: '198'
+        edit FHR 'f198'
+        edit HR '198'
         trigger ./jgfs_post_manager:release_post198
-      endtask
       task jgfs_post_f201
-        edit FHR: 'f201'
-        edit HR: '201'
+        edit FHR 'f201'
+        edit HR '201'
         trigger ./jgfs_post_manager:release_post201
-      endtask
       task jgfs_post_f204
-        edit FHR: 'f204'
-        edit HR: '204'
+        edit FHR 'f204'
+        edit HR '204'
         trigger ./jgfs_post_manager:release_post204
-      endtask
       task jgfs_post_f207
-        edit FHR: 'f207'
-        edit HR: '207'
+        edit FHR 'f207'
+        edit HR '207'
         trigger ./jgfs_post_manager:release_post207
-      endtask
       task jgfs_post_f210
-        edit FHR: 'f210'
-        edit HR: '210'
+        edit FHR 'f210'
+        edit HR '210'
         trigger ./jgfs_post_manager:release_post210
-      endtask
       task jgfs_post_f213
-        edit FHR: 'f213'
-        edit HR: '213'
+        edit FHR 'f213'
+        edit HR '213'
         trigger ./jgfs_post_manager:release_post213
-      endtask
       task jgfs_post_f216
-        edit FHR: 'f216'
-        edit HR: '216'
+        edit FHR 'f216'
+        edit HR '216'
         trigger ./jgfs_post_manager:release_post216
-      endtask
       task jgfs_post_f219
-        edit FHR: 'f219'
-        edit HR: '219'
+        edit FHR 'f219'
+        edit HR '219'
         trigger ./jgfs_post_manager:release_post219
-      endtask
       task jgfs_post_f222
-        edit FHR: 'f222'
-        edit HR: '222'
+        edit FHR 'f222'
+        edit HR '222'
         trigger ./jgfs_post_manager:release_post222
-      endtask
       task jgfs_post_f225
-        edit FHR: 'f225'
-        edit HR: '225'
+        edit FHR 'f225'
+        edit HR '225'
         trigger ./jgfs_post_manager:release_post225
-      endtask
       task jgfs_post_f228
-        edit FHR: 'f228'
-        edit HR: '228'
+        edit FHR 'f228'
+        edit HR '228'
         trigger ./jgfs_post_manager:release_post228
-      endtask
       task jgfs_post_f231
-        edit FHR: 'f231'
-        edit HR: '231'
+        edit FHR 'f231'
+        edit HR '231'
         trigger ./jgfs_post_manager:release_post231
-      endtask
       task jgfs_post_f234
-        edit FHR: 'f234'
-        edit HR: '234'
+        edit FHR 'f234'
+        edit HR '234'
         trigger ./jgfs_post_manager:release_post234
-      endtask
       task jgfs_post_f237
-        edit FHR: 'f237'
-        edit HR: '237'
+        edit FHR 'f237'
+        edit HR '237'
         trigger ./jgfs_post_manager:release_post237
-      endtask
       task jgfs_post_f240
-        edit FHR: 'f240'
-        edit HR: '240'
+        edit FHR 'f240'
+        edit HR '240'
         trigger ./jgfs_post_manager:release_post240
-      endtask
       task jgfs_post_f252
-        edit FHR: 'f252'
-        edit HR: '252'
+        edit FHR 'f252'
+        edit HR '252'
         trigger ./jgfs_post_manager:release_post252
-      endtask
       task jgfs_post_f264
-        edit FHR: 'f264'
-        edit HR: '264'
+        edit FHR 'f264'
+        edit HR '264'
         trigger ./jgfs_post_manager:release_post264
-      endtask
       task jgfs_post_f276
-        edit FHR: 'f276'
-        edit HR: '276'
+        edit FHR 'f276'
+        edit HR '276'
         trigger ./jgfs_post_manager:release_post276
-      endtask
       task jgfs_post_f288
-        edit FHR: 'f288'
-        edit HR: '288'
+        edit FHR 'f288'
+        edit HR '288'
         trigger ./jgfs_post_manager:release_post288
-      endtask
       task jgfs_post_f300
-        edit FHR: 'f300'
-        edit HR: '300'
+        edit FHR 'f300'
+        edit HR '300'
         trigger ./jgfs_post_manager:release_post300
-      endtask
       task jgfs_post_f312
-        edit FHR: 'f312'
-        edit HR: '312'
+        edit FHR 'f312'
+        edit HR '312'
         trigger ./jgfs_post_manager:release_post312
-      endtask
       task jgfs_post_f324
-        edit FHR: 'f324'
-        edit HR: '324'
+        edit FHR 'f324'
+        edit HR '324'
         trigger ./jgfs_post_manager:release_post324
-      endtask
       task jgfs_post_f336
-        edit FHR: 'f336'
-        edit HR: '336'
+        edit FHR 'f336'
+        edit HR '336'
         trigger ./jgfs_post_manager:release_post336
-      endtask
       task jgfs_post_f348
-        edit FHR: 'f348'
-        edit HR: '348'
+        edit FHR 'f348'
+        edit HR '348'
         trigger ./jgfs_post_manager:release_post348
-      endtask
       task jgfs_post_f360
-        edit FHR: 'f360'
-        edit HR: '360'
+        edit FHR 'f360'
+        edit HR '360'
         trigger ./jgfs_post_manager:release_post360
-      endtask
       task jgfs_post_f372
-        edit FHR: 'f372'
-        edit HR: '372'
+        edit FHR 'f372'
+        edit HR '372'
         trigger ./jgfs_post_manager:release_post372
-      endtask
       task jgfs_post_f384
-        edit FHR: 'f384'
-        edit HR: '384'
+        edit FHR 'f384'
+        edit HR '384'
         trigger ./jgfs_post_manager:release_post384
-      endtask
-    endfamily
-    family prdgen
+    endfamily # /prod00/gfs/post
+    family prdgen # /prod00/gfs/prdgen
+      task jgfs_npoess_pgrb2_0p5deg
+        trigger ../post == complete
       task jgfs_pgrb2_anl
         edit FHR 'anl'
         edit HR 'anl'
-      endtask
+        trigger ../post/jgfs_post_anl:release_pgrb2_anl
       task jgfs_pgrb2_manager
         trigger ../post == complete
         event 2 release_pgrb2_00
@@ -3528,839 +2792,803 @@ suite prod00
         event 172 release_pgrb2_360
         event 173 release_pgrb2_372
         event 174 release_pgrb2_384
-      endtask
       task jgfs_pgrb2_f00
         edit FHR '00'
         edit HR '00'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_00 and ../post/jgfs_post_f00 == complete
       task jgfs_pgrb2_f01
         edit FHR '01'
         edit HR '01'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_01 and ../post/jgfs_post_f01 == complete
       task jgfs_pgrb2_f02
         edit FHR '02'
         edit HR '02'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_02 and ../post/jgfs_post_f02 == complete
       task jgfs_pgrb2_f03
         edit FHR '03'
         edit HR '03'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_03 and ../post/jgfs_post_f03 == complete
       task jgfs_pgrb2_f04
         edit FHR '04'
         edit HR '04'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_04 and ../post/jgfs_post_f04 == complete
       task jgfs_pgrb2_f05
         edit FHR '05'
         edit HR '05'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_05 and ../post/jgfs_post_f05 == complete
       task jgfs_pgrb2_f06
         edit FHR '06'
         edit HR '06'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_06 and ../post/jgfs_post_f06 == complete
       task jgfs_pgrb2_f07
         edit FHR '07'
         edit HR '07'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_07 and ../post/jgfs_post_f07 == complete
       task jgfs_pgrb2_f08
         edit FHR '08'
         edit HR '08'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_08 and ../post/jgfs_post_f08 == complete
       task jgfs_pgrb2_f09
         edit FHR '09'
         edit HR '09'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_09 and ../post/jgfs_post_f09 == complete
       task jgfs_pgrb2_f10
         edit FHR '10'
         edit HR '10'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_10 and ../post/jgfs_post_f10 == complete
       task jgfs_pgrb2_f11
         edit FHR '11'
         edit HR '11'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_11 and ../post/jgfs_post_f11 == complete
       task jgfs_pgrb2_f12
         edit FHR '12'
         edit HR '12'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_12 and ../post/jgfs_post_f12 == complete
       task jgfs_pgrb2_f13
         edit FHR '13'
         edit HR '13'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_13 and ../post/jgfs_post_f13 == complete
       task jgfs_pgrb2_f14
         edit FHR '14'
         edit HR '14'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_14 and ../post/jgfs_post_f14 == complete
       task jgfs_pgrb2_f15
         edit FHR '15'
         edit HR '15'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_15 and ../post/jgfs_post_f15 == complete
       task jgfs_pgrb2_f16
         edit FHR '16'
         edit HR '16'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_16 and ../post/jgfs_post_f16 == complete
       task jgfs_pgrb2_f17
         edit FHR '17'
         edit HR '17'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_17 and ../post/jgfs_post_f17 == complete
       task jgfs_pgrb2_f18
         edit FHR '18'
         edit HR '18'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_18 and ../post/jgfs_post_f18 == complete
       task jgfs_pgrb2_f19
         edit FHR '19'
         edit HR '19'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_19 and ../post/jgfs_post_f19 == complete
       task jgfs_pgrb2_f20
         edit FHR '20'
         edit HR '20'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_20 and ../post/jgfs_post_f20 == complete
       task jgfs_pgrb2_f21
         edit FHR '21'
         edit HR '21'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_21 and ../post/jgfs_post_f21 == complete
       task jgfs_pgrb2_f22
         edit FHR '22'
         edit HR '22'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_22 and ../post/jgfs_post_f22 == complete
       task jgfs_pgrb2_f23
         edit FHR '23'
         edit HR '23'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_23 and ../post/jgfs_post_f23 == complete
       task jgfs_pgrb2_f24
         edit FHR '24'
         edit HR '24'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_24 and ../post/jgfs_post_f24 == complete
       task jgfs_pgrb2_f25
         edit FHR '25'
         edit HR '25'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_25 and ../post/jgfs_post_f25 == complete
       task jgfs_pgrb2_f26
         edit FHR '26'
         edit HR '26'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_26 and ../post/jgfs_post_f26 == complete
       task jgfs_pgrb2_f27
         edit FHR '27'
         edit HR '27'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_27 and ../post/jgfs_post_f27 == complete
       task jgfs_pgrb2_f28
         edit FHR '28'
         edit HR '28'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_28 and ../post/jgfs_post_f28 == complete
       task jgfs_pgrb2_f29
         edit FHR '29'
         edit HR '29'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_29 and ../post/jgfs_post_f29 == complete
       task jgfs_pgrb2_f30
         edit FHR '30'
         edit HR '30'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_30 and ../post/jgfs_post_f30 == complete
       task jgfs_pgrb2_f31
         edit FHR '31'
         edit HR '31'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_31 and ../post/jgfs_post_f31 == complete
       task jgfs_pgrb2_f32
         edit FHR '32'
         edit HR '32'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_32 and ../post/jgfs_post_f32 == complete
       task jgfs_pgrb2_f33
         edit FHR '33'
         edit HR '33'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_33 and ../post/jgfs_post_f33 == complete
       task jgfs_pgrb2_f34
         edit FHR '34'
         edit HR '34'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_34 and ../post/jgfs_post_f34 == complete
       task jgfs_pgrb2_f35
         edit FHR '35'
         edit HR '35'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_35 and ../post/jgfs_post_f35 == complete
       task jgfs_pgrb2_f36
         edit FHR '36'
         edit HR '36'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_36 and ../post/jgfs_post_f36 == complete
       task jgfs_pgrb2_f37
         edit FHR '37'
         edit HR '37'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_37 and ../post/jgfs_post_f37 == complete
       task jgfs_pgrb2_f38
         edit FHR '38'
         edit HR '38'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_38 and ../post/jgfs_post_f38 == complete
       task jgfs_pgrb2_f39
         edit FHR '39'
         edit HR '39'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_39 and ../post/jgfs_post_f39 == complete
       task jgfs_pgrb2_f40
         edit FHR '40'
         edit HR '40'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_40 and ../post/jgfs_post_f40 == complete
       task jgfs_pgrb2_f41
         edit FHR '41'
         edit HR '41'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_41 and ../post/jgfs_post_f41 == complete
       task jgfs_pgrb2_f42
         edit FHR '42'
         edit HR '42'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_42 and ../post/jgfs_post_f42 == complete
       task jgfs_pgrb2_f43
         edit FHR '43'
         edit HR '43'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_43 and ../post/jgfs_post_f43 == complete
       task jgfs_pgrb2_f44
         edit FHR '44'
         edit HR '44'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_44 and ../post/jgfs_post_f44 == complete
       task jgfs_pgrb2_f45
         edit FHR '45'
         edit HR '45'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_45 and ../post/jgfs_post_f45 == complete
       task jgfs_pgrb2_f46
         edit FHR '46'
         edit HR '46'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_46 and ../post/jgfs_post_f46 == complete
       task jgfs_pgrb2_f47
         edit FHR '47'
         edit HR '47'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_47 and ../post/jgfs_post_f47 == complete
       task jgfs_pgrb2_f48
         edit FHR '48'
         edit HR '48'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_48 and ../post/jgfs_post_f48 == complete
       task jgfs_pgrb2_f49
         edit FHR '49'
         edit HR '49'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_49 and ../post/jgfs_post_f49 == complete
       task jgfs_pgrb2_f50
         edit FHR '50'
         edit HR '50'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_50 and ../post/jgfs_post_f50 == complete
       task jgfs_pgrb2_f51
         edit FHR '51'
         edit HR '51'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_51 and ../post/jgfs_post_f51 == complete
       task jgfs_pgrb2_f52
         edit FHR '52'
         edit HR '52'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_52 and ../post/jgfs_post_f52 == complete
       task jgfs_pgrb2_f53
         edit FHR '53'
         edit HR '53'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_53 and ../post/jgfs_post_f53 == complete
       task jgfs_pgrb2_f54
         edit FHR '54'
         edit HR '54'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_54 and ../post/jgfs_post_f54 == complete
       task jgfs_pgrb2_f55
         edit FHR '55'
         edit HR '55'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_55 and ../post/jgfs_post_f55 == complete
       task jgfs_pgrb2_f56
         edit FHR '56'
         edit HR '56'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_56 and ../post/jgfs_post_f56 == complete
       task jgfs_pgrb2_f57
         edit FHR '57'
         edit HR '57'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_57 and ../post/jgfs_post_f57 == complete
       task jgfs_pgrb2_f58
         edit FHR '58'
         edit HR '58'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_58 and ../post/jgfs_post_f58 == complete
       task jgfs_pgrb2_f59
         edit FHR '59'
         edit HR '59'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_59 and ../post/jgfs_post_f59 == complete
       task jgfs_pgrb2_f60
         edit FHR '60'
         edit HR '60'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_60 and ../post/jgfs_post_f60 == complete
       task jgfs_pgrb2_f61
         edit FHR '61'
         edit HR '61'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_61 and ../post/jgfs_post_f61 == complete
       task jgfs_pgrb2_f62
         edit FHR '62'
         edit HR '62'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_62 and ../post/jgfs_post_f62 == complete
       task jgfs_pgrb2_f63
         edit FHR '63'
         edit HR '63'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_63 and ../post/jgfs_post_f63 == complete
       task jgfs_pgrb2_f64
         edit FHR '64'
         edit HR '64'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_64 and ../post/jgfs_post_f64 == complete
       task jgfs_pgrb2_f65
         edit FHR '65'
         edit HR '65'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_65 and ../post/jgfs_post_f65 == complete
       task jgfs_pgrb2_f66
         edit FHR '66'
         edit HR '66'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_66 and ../post/jgfs_post_f66 == complete
       task jgfs_pgrb2_f67
         edit FHR '67'
         edit HR '67'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_67 and ../post/jgfs_post_f67 == complete
       task jgfs_pgrb2_f68
         edit FHR '68'
         edit HR '68'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_68 and ../post/jgfs_post_f68 == complete
       task jgfs_pgrb2_f69
         edit FHR '69'
         edit HR '69'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_69 and ../post/jgfs_post_f69 == complete
       task jgfs_pgrb2_f70
         edit FHR '70'
         edit HR '70'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_70 and ../post/jgfs_post_f70 == complete
       task jgfs_pgrb2_f71
         edit FHR '71'
         edit HR '71'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_71 and ../post/jgfs_post_f71 == complete
       task jgfs_pgrb2_f72
         edit FHR '72'
         edit HR '72'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_72 and ../post/jgfs_post_f72 == complete
       task jgfs_pgrb2_f73
         edit FHR '73'
         edit HR '73'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_73 and ../post/jgfs_post_f73 == complete
       task jgfs_pgrb2_f74
         edit FHR '74'
         edit HR '74'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_74 and ../post/jgfs_post_f74 == complete
       task jgfs_pgrb2_f75
         edit FHR '75'
         edit HR '75'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_75 and ../post/jgfs_post_f75 == complete
       task jgfs_pgrb2_f76
         edit FHR '76'
         edit HR '76'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_76 and ../post/jgfs_post_f76 == complete
       task jgfs_pgrb2_f77
         edit FHR '77'
         edit HR '77'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_77 and ../post/jgfs_post_f77 == complete
       task jgfs_pgrb2_f78
         edit FHR '78'
         edit HR '78'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_78 and ../post/jgfs_post_f78 == complete
       task jgfs_pgrb2_f79
         edit FHR '79'
         edit HR '79'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_79 and ../post/jgfs_post_f79 == complete
       task jgfs_pgrb2_f80
         edit FHR '80'
         edit HR '80'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_80 and ../post/jgfs_post_f80 == complete
       task jgfs_pgrb2_f81
         edit FHR '81'
         edit HR '81'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_81 and ../post/jgfs_post_f81 == complete
       task jgfs_pgrb2_f82
         edit FHR '82'
         edit HR '82'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_82 and ../post/jgfs_post_f82 == complete
       task jgfs_pgrb2_f83
         edit FHR '83'
         edit HR '83'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_83 and ../post/jgfs_post_f83 == complete
       task jgfs_pgrb2_f84
         edit FHR '84'
         edit HR '84'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_84 and ../post/jgfs_post_f84 == complete
       task jgfs_pgrb2_f85
         edit FHR '85'
         edit HR '85'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_85 and ../post/jgfs_post_f85 == complete
       task jgfs_pgrb2_f86
         edit FHR '86'
         edit HR '86'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_86 and ../post/jgfs_post_f86 == complete
       task jgfs_pgrb2_f87
         edit FHR '87'
         edit HR '87'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_87 and ../post/jgfs_post_f87 == complete
       task jgfs_pgrb2_f88
         edit FHR '88'
         edit HR '88'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_88 and ../post/jgfs_post_f88 == complete
       task jgfs_pgrb2_f89
         edit FHR '89'
         edit HR '89'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_89 and ../post/jgfs_post_f89 == complete
       task jgfs_pgrb2_f90
         edit FHR '90'
         edit HR '90'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_90 and ../post/jgfs_post_f90 == complete
       task jgfs_pgrb2_f91
         edit FHR '91'
         edit HR '91'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_91 and ../post/jgfs_post_f91 == complete
       task jgfs_pgrb2_f92
         edit FHR '92'
         edit HR '92'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_92 and ../post/jgfs_post_f92 == complete
       task jgfs_pgrb2_f93
         edit FHR '93'
         edit HR '93'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_93 and ../post/jgfs_post_f93 == complete
       task jgfs_pgrb2_f94
         edit FHR '94'
         edit HR '94'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_94 and ../post/jgfs_post_f94 == complete
       task jgfs_pgrb2_f95
         edit FHR '95'
         edit HR '95'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_95 and ../post/jgfs_post_f95 == complete
       task jgfs_pgrb2_f96
         edit FHR '96'
         edit HR '96'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_96 and ../post/jgfs_post_f96 == complete
       task jgfs_pgrb2_f97
         edit FHR '97'
         edit HR '97'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_97 and ../post/jgfs_post_f97 == complete
       task jgfs_pgrb2_f98
         edit FHR '98'
         edit HR '98'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_98 and ../post/jgfs_post_f98 == complete
       task jgfs_pgrb2_f99
         edit FHR '99'
         edit HR '99'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_99 and ../post/jgfs_post_f99 == complete
       task jgfs_pgrb2_f100
         edit FHR '100'
         edit HR '100'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_100 and ../post/jgfs_post_f100 == complete
       task jgfs_pgrb2_f101
         edit FHR '101'
         edit HR '101'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_101 and ../post/jgfs_post_f101 == complete
       task jgfs_pgrb2_f102
         edit FHR '102'
         edit HR '102'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_102 and ../post/jgfs_post_f102 == complete
       task jgfs_pgrb2_f103
         edit FHR '103'
         edit HR '103'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_103 and ../post/jgfs_post_f103 == complete
       task jgfs_pgrb2_f104
         edit FHR '104'
         edit HR '104'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_104 and ../post/jgfs_post_f104 == complete
       task jgfs_pgrb2_f105
         edit FHR '105'
         edit HR '105'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_105 and ../post/jgfs_post_f105 == complete
       task jgfs_pgrb2_f106
         edit FHR '106'
         edit HR '106'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_106 and ../post/jgfs_post_f106 == complete
       task jgfs_pgrb2_f107
         edit FHR '107'
         edit HR '107'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_107 and ../post/jgfs_post_f107 == complete
       task jgfs_pgrb2_f108
         edit FHR '108'
         edit HR '108'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_108 and ../post/jgfs_post_f108 == complete
       task jgfs_pgrb2_f109
         edit FHR '109'
         edit HR '109'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_109 and ../post/jgfs_post_f109 == complete
       task jgfs_pgrb2_f110
         edit FHR '110'
         edit HR '110'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_110 and ../post/jgfs_post_f110 == complete
       task jgfs_pgrb2_f111
         edit FHR '111'
         edit HR '111'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_111 and ../post/jgfs_post_f111 == complete
       task jgfs_pgrb2_f112
         edit FHR '112'
         edit HR '112'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_112 and ../post/jgfs_post_f112 == complete
       task jgfs_pgrb2_f113
         edit FHR '113'
         edit HR '113'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_113 and ../post/jgfs_post_f113 == complete
       task jgfs_pgrb2_f114
         edit FHR '114'
         edit HR '114'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_114 and ../post/jgfs_post_f114 == complete
       task jgfs_pgrb2_f115
         edit FHR '115'
         edit HR '115'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_115 and ../post/jgfs_post_f115 == complete
       task jgfs_pgrb2_f116
         edit FHR '116'
         edit HR '116'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_116 and ../post/jgfs_post_f116 == complete
       task jgfs_pgrb2_f117
         edit FHR '117'
         edit HR '117'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_117 and ../post/jgfs_post_f117 == complete
       task jgfs_pgrb2_f118
         edit FHR '118'
         edit HR '118'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_118 and ../post/jgfs_post_f118 == complete
       task jgfs_pgrb2_f119
         edit FHR '119'
         edit HR '119'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_119 and ../post/jgfs_post_f119 == complete
       task jgfs_pgrb2_f120
         edit FHR '120'
         edit HR '120'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_120 and ../post/jgfs_post_f120 == complete
       task jgfs_pgrb2_f123
         edit FHR '123'
         edit HR '123'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_123 and ../post/jgfs_post_f123 == complete
       task jgfs_pgrb2_f126
         edit FHR '126'
         edit HR '126'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_126 and ../post/jgfs_post_f126 == complete
       task jgfs_pgrb2_f129
         edit FHR '129'
         edit HR '129'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_129 and ../post/jgfs_post_f129 == complete
       task jgfs_pgrb2_f132
         edit FHR '132'
         edit HR '132'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_132 and ../post/jgfs_post_f132 == complete
       task jgfs_pgrb2_f135
         edit FHR '135'
         edit HR '135'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_135 and ../post/jgfs_post_f135 == complete
       task jgfs_pgrb2_f138
         edit FHR '138'
         edit HR '138'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_138 and ../post/jgfs_post_f138 == complete
       task jgfs_pgrb2_f141
         edit FHR '141'
         edit HR '141'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_141 and ../post/jgfs_post_f141 == complete
       task jgfs_pgrb2_f144
         edit FHR '144'
         edit HR '144'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_144 and ../post/jgfs_post_f144 == complete
       task jgfs_pgrb2_f147
         edit FHR '147'
         edit HR '147'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_147 and ../post/jgfs_post_f147 == complete
       task jgfs_pgrb2_f150
         edit FHR '150'
         edit HR '150'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_150 and ../post/jgfs_post_f150 == complete
       task jgfs_pgrb2_f153
         edit FHR '153'
         edit HR '153'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_153 and ../post/jgfs_post_f153 == complete
       task jgfs_pgrb2_f156
         edit FHR '156'
         edit HR '156'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_156 and ../post/jgfs_post_f156 == complete
       task jgfs_pgrb2_f159
         edit FHR '159'
         edit HR '159'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_159 and ../post/jgfs_post_f159 == complete
       task jgfs_pgrb2_f162
         edit FHR '162'
         edit HR '162'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_162 and ../post/jgfs_post_f162 == complete
       task jgfs_pgrb2_f165
         edit FHR '165'
         edit HR '165'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_165 and ../post/jgfs_post_f165 == complete
       task jgfs_pgrb2_f168
         edit FHR '168'
         edit HR '168'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_168 and ../post/jgfs_post_f168 == complete
       task jgfs_pgrb2_f171
         edit FHR '171'
         edit HR '171'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_171 and ../post/jgfs_post_f171 == complete
       task jgfs_pgrb2_f174
         edit FHR '174'
         edit HR '174'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_174 and ../post/jgfs_post_f174 == complete
       task jgfs_pgrb2_f177
         edit FHR '177'
         edit HR '177'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_177 and ../post/jgfs_post_f177 == complete
       task jgfs_pgrb2_f180
         edit FHR '180'
         edit HR '180'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_180 and ../post/jgfs_post_f180 == complete
       task jgfs_pgrb2_f183
         edit FHR '183'
         edit HR '183'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_183 and ../post/jgfs_post_f183 == complete
       task jgfs_pgrb2_f186
         edit FHR '186'
         edit HR '186'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_186 and ../post/jgfs_post_f186 == complete
       task jgfs_pgrb2_f189
         edit FHR '189'
         edit HR '189'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_189 and ../post/jgfs_post_f189 == complete
       task jgfs_pgrb2_f192
         edit FHR '192'
         edit HR '192'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_192 and ../post/jgfs_post_f192 == complete
       task jgfs_pgrb2_f195
         edit FHR '195'
         edit HR '195'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_195 and ../post/jgfs_post_f195 == complete
       task jgfs_pgrb2_f198
         edit FHR '198'
         edit HR '198'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_198 and ../post/jgfs_post_f198 == complete
       task jgfs_pgrb2_f201
         edit FHR '201'
         edit HR '201'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_201 and ../post/jgfs_post_f201 == complete
       task jgfs_pgrb2_f204
         edit FHR '204'
         edit HR '204'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_204 and ../post/jgfs_post_f204 == complete
       task jgfs_pgrb2_f207
         edit FHR '207'
         edit HR '207'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_207 and ../post/jgfs_post_f207 == complete
       task jgfs_pgrb2_f210
         edit FHR '210'
         edit HR '210'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_210 and ../post/jgfs_post_f210 == complete
       task jgfs_pgrb2_f213
         edit FHR '213'
         edit HR '213'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_213 and ../post/jgfs_post_f213 == complete
       task jgfs_pgrb2_f216
         edit FHR '216'
         edit HR '216'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_216 and ../post/jgfs_post_f216 == complete
       task jgfs_pgrb2_f219
         edit FHR '219'
         edit HR '219'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_219 and ../post/jgfs_post_f219 == complete
       task jgfs_pgrb2_f222
         edit FHR '222'
         edit HR '222'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_222 and ../post/jgfs_post_f222 == complete
       task jgfs_pgrb2_f225
         edit FHR '225'
         edit HR '225'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_225 and ../post/jgfs_post_f225 == complete
       task jgfs_pgrb2_f228
         edit FHR '228'
         edit HR '228'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_228 and ../post/jgfs_post_f228 == complete
       task jgfs_pgrb2_f231
         edit FHR '231'
         edit HR '231'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_231 and ../post/jgfs_post_f231 == complete
       task jgfs_pgrb2_f234
         edit FHR '234'
         edit HR '234'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_234 and ../post/jgfs_post_f234 == complete
       task jgfs_pgrb2_f237
         edit FHR '237'
         edit HR '237'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_237 and ../post/jgfs_post_f237 == complete
       task jgfs_pgrb2_f240
         edit FHR '240'
         edit HR '240'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_240 and ../post/jgfs_post_f240 == complete
       task jgfs_pgrb2_f252
         edit FHR '252'
         edit HR '252'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_252 and ../post/jgfs_post_f252 == complete
       task jgfs_pgrb2_f264
         edit FHR '264'
         edit HR '264'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_264 and ../post/jgfs_post_f264 == complete
       task jgfs_pgrb2_f276
         edit FHR '276'
         edit HR '276'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_276 and ../post/jgfs_post_f276 == complete
       task jgfs_pgrb2_f288
         edit FHR '288'
         edit HR '288'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_288 and ../post/jgfs_post_f288 == complete
       task jgfs_pgrb2_f300
         edit FHR '300'
         edit HR '300'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_300 and ../post/jgfs_post_f300 == complete
       task jgfs_pgrb2_f312
         edit FHR '312'
         edit HR '312'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_312 and ../post/jgfs_post_f312 == complete
       task jgfs_pgrb2_f324
         edit FHR '324'
         edit HR '324'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_324 and ../post/jgfs_post_f324 == complete
       task jgfs_pgrb2_f336
         edit FHR '336'
         edit HR '336'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_336 and ../post/jgfs_post_f336 == complete
       task jgfs_pgrb2_f348
         edit FHR '348'
         edit HR '348'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_348 and ../post/jgfs_post_f348 == complete
       task jgfs_pgrb2_f360
         edit FHR '360'
         edit HR '360'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_360 and ../post/jgfs_post_f360 == complete
       task jgfs_pgrb2_f372
         edit FHR '372'
         edit HR '372'
-      endtask
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_372 and ../post/jgfs_post_f372 == complete
       task jgfs_pgrb2_f384
         edit FHR '384'
         edit HR '384'
-      endtask
-    endfamily
-    family gempak
+        trigger ./jgfs_pgrb2_manager:release_pgrb2_384 and ../post/jgfs_post_f384 == complete
+    endfamily # /prod00/gfs/prdgen
+    family gempak # /prod00/gfs/gempak
       task jgfs_gempak_upapgif
         trigger ../dump/jgfs_dump == complete
-      endtask
       task jgfs_gempak_ncdc
         trigger ./jgfs_gempak == active or ./jgfs_gempak == complete
-      endtask
       task jgfs_gempak
         trigger ../jgfs_analysis == complete
-      endtask
       task jgfs_gempak_meta
         trigger ../jgfs_analysis == complete
-      endtask
-    endfamily
-  endfamily
-  family gdas
+      task jgfs_pgrb2_spec_gempak
+        trigger ../post/jgfs_pgrb2_spec_post == complete
+    endfamily # /prod00/gfs/gempak
+  endfamily # /prod00/gfs
+  family gdas # /prod00/gdas
+    #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
     edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
-    edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
+    edit ECF_FILES '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs/scripts'
     edit PROJ '%PROJENVIR%'
     edit MODEL_NAME 'gdas'
     task jgdas_verfrad
       trigger ./enkf == complete
-    endtask
     task jgdas_vminmon
       trigger ./analysis/jgdas_analysis_high == complete
-    endtask
-    family dump
+    family dump # /prod00/gdas/dump
       task jgdas_ics
         event 1 release_gdas00_ics
-      endtask
       task jgdas_tropcy_qc_reloc
         trigger ./jgdas_dump == complete
-      endtask
       task jgdas_dump
         event 1 release_sfcprep
-      endtask
-    endfamily
-    family prep
+    endfamily # /prod00/gdas/dump
+    family prep # /prod00/gdas/prep
       task jgdas_emcsfc_sfc_prep
         trigger ../dump/jgdas_dump:release_sfcprep
-      endtask
       task jgdas_prep
-        trigger ../dump/jgdas_dump == complete and ../dump/jgdas_tropcy_qc_reloc == complete
-      endtask
+        trigger ../dump/jgdas_dump == complete and ../dump/jgdas_tropcy_qc_reloc == complete and /prod18/gdas/post == complete
       task jgdas_prep_post
         trigger ../analysis/jgdas_analysis_high == complete
-      endtask
-    endfamily
-    family analysis
+    endfamily # /prod00/gdas/prep
+    family analysis # /prod00/gdas/analysis
       task jgdas_analysis_high
-        trigger ../prep/jgdas_prep == complete and ../prep/jgdas_emcsfc_sfc_prep == complete
+        trigger ../prep/jgdas_prep == complete and ../prep/jgdas_emcsfc_sfc_prep == complete and /prod18/gdas/enkf/jgdas_enkf_post == complete
         event 1 release_fcst
-      endtask
-    endfamily
-    family forecast
+    endfamily # /prod00/gdas/analysis
+    family forecast # /prod00/gdas/forecast
       task jgdas_forecast
         trigger ../analysis/jgdas_analysis_high:release_fcst and ../enkf/innovate == complete
         event 1 release_fcst
-      endtask
-    endfamily
-    family post_processing
-      family bulletins
+    endfamily # /prod00/gdas/forecast
+    family post_processing # /prod00/gdas/post_processing
+      family bulletins # /prod00/gdas/post_processing/bulletins
         task jgdas_mknavybulls
           trigger ../../dump/jgdas_dump == complete
-        endtask
-      endfamily
-    endfamily
-    family gempak
+      endfamily # /prod00/gdas/post_processing/bulletins
+    endfamily # /prod00/gdas/post_processing
+    family gempak # /prod00/gdas/gempak
       task jgdas_gempak
         trigger ../forecast/jgdas_forecast == complete
-      endtask
       task jgdas_gempak_meta
         trigger ./jgdas_gempak == complete
-      endtask
       task jgdas_gempak_ncdc
         trigger ./jgdas_gempak == complete
-      endtask
-    endfamily
-    family post
+    endfamily # /prod00/gdas/gempak
+    family post # /prod00/gdas/post
       task jgdas_post
         trigger ../forecast/jgdas_forecast == complete
-      endtask
-    endfamily
-    family enkf
+    endfamily # /prod00/gdas/post
+    family enkf # /prod00/gdas/enkf
       task jgdas_enkf_select_obs
         trigger ../prep/jgdas_prep == complete and /prod18/gdas/enkf/jgdas_enkf_post == complete
-      endtask
-      family innovate
+      family innovate # /prod00/gdas/enkf/innovate
         trigger ./jgdas_enkf_select_obs == complete
         task jgdas_enkf_innovate_obs_grp1
-        endtask
         task jgdas_enkf_innovate_obs_grp2
-        endtask
         task jgdas_enkf_innovate_obs_grp3
-        endtask
         task jgdas_enkf_innovate_obs_grp4
-        endtask
         task jgdas_enkf_innovate_obs_grp5
-        endtask
         task jgdas_enkf_innovate_obs_grp6
-        endtask
         task jgdas_enkf_innovate_obs_grp7
-        endtask
         task jgdas_enkf_innovate_obs_grp8
-        endtask
-      endfamily
+      endfamily # /prod00/gdas/enkf/innovate
       task jgdas_enkf_update
         edit ECF_PASS 'FREE'
         trigger ./innovate == complete
-      endtask
       task jgdas_enkf_inflate_recenter
         trigger ./jgdas_enkf_update == complete and ../analysis/jgdas_analysis_high == complete
-      endtask
-      family forecast
+      family forecast # /prod00/gdas/enkf/forecast
         trigger ./jgdas_enkf_inflate_recenter == complete
         task jgdas_enkf_fcst_grp1
-        endtask
         task jgdas_enkf_fcst_grp2
-        endtask
         task jgdas_enkf_fcst_grp3
-        endtask
         task jgdas_enkf_fcst_grp4
-        endtask
         task jgdas_enkf_fcst_grp5
-        endtask
         task jgdas_enkf_fcst_grp6
-        endtask
         task jgdas_enkf_fcst_grp7
-        endtask
         task jgdas_enkf_fcst_grp8
-        endtask
-      endfamily
+      endfamily # /prod00/gdas/enkf/forecast
       task jgdas_enkf_post
         trigger ./forecast == complete
-      endtask
-    endfamily
-  endfamily
+    endfamily # /prod00/gdas/enkf
+  endfamily # /prod00/gdas
   task cycle_end
-    edit ECF_JOB_CMD '%ECF_JOB% 1> %ECF_JOBOUT% 2>&1'
+    #edit ECF_JOB_CMD '%ECF_JOB% 1> %ECF_JOBOUT% 2>&1'
+    #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
+    edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
     edit ECF_PASS 'FREE'
-  endtask
-endsuite
+endsuite # /prod00

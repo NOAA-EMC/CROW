@@ -4,17 +4,17 @@
 #BSUB -J gfs.forecast.jgfs_forecast_low
 #BSUB -o %ECF_OUT%/gfs.forecast.jgfs_forecast_low_t%CYC%z.log
 
-#BSUB -W 0:02
-#BSUB -R rusage[mem=1024]
+#BSUB -W 0:05
+#BSUB -R rusage[mem=300]
 #BSUB -extsched CRAYLINUX[]
-export NODES=64
+export NODES=1
 %include <head.h>
 %include <envir-xc40.h>
 
 set -x
 
-export ntasks=768
-export ptile=12
+# No MPI in use, so I am not setting $ntasks.
+# Neither OpenMP nor MPI are in use, so I am not setting $ptile
 # No OpenMP in use, so I am not setting $threads
 
 export model=%MODEL_NAME%
@@ -43,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGLOBAL_FORECAST
 %manual
 # FIXME: Insert manual for this job.
 
+%end

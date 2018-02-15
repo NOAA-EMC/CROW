@@ -4,6 +4,7 @@
 #BSUB -J gfs.jgfs_vminmon
 #BSUB -o %ECF_OUT%/gfs.jgfs_vminmon_t%CYC%z.log
 
+#BSUB -W 0:05
 #BSUB -R rusage[mem=300]
 #BSUB -extsched CRAYLINUX[]
 export NODES=1
@@ -42,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGFS_VMINMON
 %manual
 # FIXME: Insert manual for this job.
 
+%end

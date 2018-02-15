@@ -4,6 +4,7 @@
 #BSUB -J gdas.dump.jgdas_ics
 #BSUB -o %ECF_OUT%/gdas.dump.jgdas_ics_t%CYC%z.log
 
+#BSUB -W 0:05
 #BSUB -R rusage[mem=300]
 #BSUB -extsched CRAYLINUX[]
 export NODES=1
@@ -42,3 +43,4 @@ echo ${HOMEgfs}/jobs/JGDAS_ICS
 %manual
 # FIXME: Insert manual for this job.
 
+%end
