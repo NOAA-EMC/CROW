@@ -5,7 +5,7 @@ initial_directory: !calc ( tools.realpath(tools.abspath(".")) )
 settings:
   HOMEgfs: "/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.v15.0.0"
   COM: !expand '/gpfs/hps2/ptmp/$USER/{experiment_name}'
-  EXPDIR: !expand '/gpfs/hps3/emc/global/noscrub/$USER/para_fv3gfs/{experiment_name}'
+  EXPDIR: !expand '/gpfs/hps3/emc/global/noscrub/$USER/{experiment_name}'
   DATAROOT: !expand '/gpfs/hps2/stmp/$USER/{experiment_name}'
   experiment_name: QSLOT
 
