@@ -24,6 +24,7 @@ resources:
     - memory: "300M"
       exe: nothing
       walltime: !timedelta "00:02:00"
+      exclusive: false
 
   run_eobs: !JobRequest
     - memory: "3072M" 

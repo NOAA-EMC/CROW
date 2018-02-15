@@ -3,8 +3,8 @@ scheduler: !calc |
                       doc.scheduler_settings)
 suite: !Cycle
   Clock: !Clock
-    start: 2018-01-01T00:00:00
-    end: 2018-01-02T18:00:00
+    start: !calc doc.settings.start_date
+    end: !calc doc.settings.end_date
     step: !timedelta "6:00:00"
 
   Alarms:
@@ -17,22 +17,28 @@ suite: !Cycle
       end: !calc suite.Clock.end
       step: !calc suite.Clock.step
     gfs: !Clock
-      start: !calc suite.Clock.start
-      end: !calc suite.Clock.end
-      step: !calc suite.Clock.step*2
+      start: !calc doc.settings.start_date_gfs
+      end: !calc doc.settings.end_date_gfs
+      step: !calc doc.settings.interval_gfs
 
   ecFlow:
     suite_def_filename: "prod%Y%m%d%H.def"
     suite_name: "prod%Y%m%d%H"
     scheduler: !calc doc.scheduler
-    write_cycles: !Clock
-      start: 2018-01-02T00:00:00
-      end: 2018-01-02T18:00:00
-      step: !timedelta "6:00:00"
-    analyze_cycles: !Clock
-      start: 2018-01-02T00:00:00
-      end: 2018-01-02T18:00:00
-      step: !timedelta "6:00:00"
+
+    # write_cycles/analyze_cycles: Use these to generate a subset of
+    # the cycles in ecFlow.  Make sure analyze_cycles starts at least
+    # one cycle before write_cycles so that dependencies are
+    # processed.
+
+    # write_cycles: !Clock
+    #   start: 2018-01-02T00:00:00
+    #   end: 2018-01-02T18:00:00
+    #   step: !timedelta "6:00:00"
+    # analyze_cycles: !Clock
+    #   start: 2018-01-02T00:00:00
+    #   end: 2018-01-02T18:00:00
+    #   step: !timedelta "6:00:00"
 
   ecflow_def: !expand |
     # This ecflow suite definition is automatically generated.
@@ -40,8 +46,8 @@ suite: !Cycle
     #repeat day 1
     edit ECF_TRIES '{doc.settings.max_job_tries}'
     #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
-    edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
-    edit ECF_KILL_CMD 'lkill %ECF_NAME% %ECF_JOBOUT%'
+    #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
+    #edit ECF_KILL_CMD 'lkill %ECF_NAME% %ECF_JOBOUT%'
     edit ECF_HOME '{doc.settings.ECF_HOME}'
     #edit ECF_HOME '/gpfs/hps3/emc/global/noscrub/emc.glopara/ecflow/fv3'
     edit CYC '{tools.strftime(suite.Clock.now,"%H")}'
@@ -49,11 +55,12 @@ suite: !Cycle
     edit ENVIR 'prod'
     edit E 'jecffv3'
     #edit QUEUE 'dev'
-    edit PROJENVIR '{doc.settings.PROJECT}'
+    edit PROJECT '{doc.settings.PROJECT}'
     edit EMCPEN '{doc.settings.experiment_name}'
     edit DATAROOT '{doc.settings.DATAROOT}'
-    edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
-    edit ECF_OUT '{doc.settings.ECF_HOME}/output'
+    edit ECF_FILES '{doc.settings.ECF_HOME}'
+    #edit ECF_JOBOUT '%ECF_HOME%/%ECF_NAME%.%ECF_TRYNO%'
+    edit ECF_OUT '{doc.settings.ECF_HOME}'
     edit ECF_LOG '{doc.settings.ECF_HOME}/ecf.log'
     edit MODEL_NAME 'gfs'
 
@@ -72,7 +79,7 @@ suite: !Cycle
       <?xml version="1.0"?>
       <!DOCTYPE workflow [
         <!ENTITY LOG_DIR "{doc.settings.ROCOTO_HOME}/log">
-        <!ENTITY TASK_THROTTLE "5">
+        <!ENTITY TASK_THROTTLE "12">
         <!ENTITY PROJECT "{doc.settings.PROJECT}">
         <!ENTITY CYCLE_THROTTLE "2">
         <!ENTITY MAX_TRIES "{doc.settings.max_job_tries}">
@@ -98,17 +105,18 @@ suite: !Cycle
     ecflow_def: |
       edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
       edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
-      edit PROJ '%PROJENVIR%'
       edit MODEL_NAME 'gdas' 
 
     prep: !Task
       <<: *exclusive_task_template
       Trigger: !Depend  up.gdas.post.at('-6:00:00') & dump_waiter.updated_status
+      Complete: !Depend ~ suite.has_cycle('-6:00:00') 
       resources: !calc ( doc.resources.run_prep )
 
     anal: !Task
       <<: *exclusive_task_template
       Trigger: !Depend  ( prep & enkf.epos.at('-6:00:00') )
+      Complete: !Depend ~ suite.has_cycle('-6:00:00')
       resources: !calc ( doc.resources.run_anal )
 
     fcst: !Task
@@ -118,7 +126,7 @@ suite: !Cycle
 
     post: !TaskArray
       Dimensions:
-        groupid: !calc tools.seq(0,5,1)
+        groupid: !calc tools.seq(0,4,1)
         fhr: !calc tools.seq(0,9,1)
       post_manager_el: !TaskElement
         <<: *exclusive_task_template
@@ -151,7 +159,11 @@ suite: !Cycle
         more_vars: !expand |
           {metasched.defenvar("FHRGRP",fhrgrp)}
           {metasched.defenvar("FHRLST",fhrlst)}
-        Trigger: !Depend post_manager.depend("release_post{F:02d}",F=[idx.groupid])
+        release_id: !FirstTrue
+          - when: !calc idx.groupid==0
+            do:   "anl"
+          - otherwise: !expand "{(idx.groupid-1)*3:02d}"
+        Trigger: !Depend post_manager.depend("release_post{F}",F=[release_id])
         resources: !calc doc.resources.run_gdaspost
 
     vrfy: !Task
@@ -163,10 +175,12 @@ suite: !Cycle
       eobs: !Task
         <<: *exclusive_task_template
         Trigger: !Depend  ( up.prep & epos.at('-6:00:00') )
+        Complete: !Depend ~ suite.has_cycle('-6:00:00')
         resources: !calc ( doc.resources.run_eobs )
 
       eomg: !TaskArray
         Trigger: !Depend eobs
+        Complete: !Depend ~ suite.has_cycle('-6:00:00')
         Dimensions:
           groupid: !calc tools.seq(1,doc.settings.ENKF_INNOVATE_GROUPS,1)
         grp: !TaskElement
@@ -184,11 +198,13 @@ suite: !Cycle
       eupd: !Task
         <<: *exclusive_task_template
         Trigger: !Depend eomg
+        Complete: !Depend ~ suite.has_cycle('-6:00:00')
         resources: !calc ( doc.resources.run_eupd )
 
       ecen: !Task
         <<: *exclusive_task_template
         Trigger: !Depend ( eupd & up.anal )
+        Complete: !Depend ~ suite.has_cycle('-6:00:00')
         resources: !calc ( doc.resources.run_ecen )
 
       efcs: !TaskArray
@@ -213,11 +229,11 @@ suite: !Cycle
         resources: !calc ( doc.resources.run_epos )
 
   gfs: !Family
+    Complete: !Depend ~ suite.has_cycle('-6:00:00')
     AlarmName: gfs
     ecflow_def: |
       edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
       edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
-      edit PROJ '%PROJENVIR%'
       edit MODEL_NAME 'gfs'
 
     dump_waiter: *dump_waiter_task
@@ -292,6 +308,7 @@ suite: !Cycle
       Trigger: !Depend up.gdas.vrfy
       resources: !calc ( doc.resources.run_arch )
       Disable: !calc not doc.settings.archive_to_hpss
+      J_JOB: arch.sh
 
     earc: !TaskArray
       AlarmName: gdas
@@ -313,10 +330,12 @@ suite: !Cycle
 
     gfsarch: !Task
       <<: *shared_task_template
+      Complete: !Depend ~ suite.has_cycle('-6:00:00')
       AlarmName: gfs
       Trigger: !Depend up.gfs.vrfy
       resources: !calc ( doc.resources.run_arch )
       Disable: !calc not doc.settings.archive_to_hpss
+      J_JOB: arch.sh
 
   final: !Task
     <<: *shared_task_template

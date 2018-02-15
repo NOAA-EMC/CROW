@@ -7,7 +7,7 @@ settings:
   COM: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/comdir2/{experiment_name}'
   EXPDIR: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/expdir2/{experiment_name}'
   DATAROOT: !expand '/gpfs/hps2/stmp/emc.glopara/{experiment_name}'
-  experiment_name: ecfgfsfv3
+  experiment_name: QSLOT
 
   NMEM_ENKF: 80
   ENKF_GROUPS: 2
@@ -30,7 +30,7 @@ settings:
 
   start_date: 2018-01-05t00:00:00
   end_date: 2018-01-05t06:00:00
-  start_date_gfs: !calc start_date
+  start_date_gfs: !calc ( start_date+tools.to_timedelta('6:00:00') )
   end_date_gfs: !calc end_date
   interval_gfs: !timedelta "12:00:00"
   forecast_hours: !calc tools.seq(0,120,1)+tools.seq(123,240,3)+tools.seq(240,384,12)

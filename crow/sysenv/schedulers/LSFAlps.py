@@ -184,7 +184,7 @@ class Scheduler(BaseScheduler):
         if spec[0].is_exclusive() is False:
             # Shared program.  This requires a different batch card syntax            
             nranks=max(1,spec.total_ranks())
-            sio.write(f'{indent*space}<cores>{spec.total_ranks()}</cores>\n'
+            sio.write(f'{indent*space}<cores>{max(1,spec.total_ranks())}</cores>\n'
                       f'{indent*space}<shared></shared>\n')
         else:
             if not spec.is_pure_serial() and not spec.is_pure_openmp():

@@ -56,6 +56,7 @@ task_template: &task_template
     %include <tail.h>
     %manual
     {ecf_manual}
+    %end
 
   ecf_manual: |
     # FIXME: Insert manual for this job.
@@ -67,7 +68,7 @@ task_template: &task_template
     # Set tuning variables like KMP_AFFINITY and OMP_STACKSIZE here.
 
   ecf_batch_resources: !expand |-
-    {sched.batch_accounting(accounting,jobname=task_path_var,outerr="%ECF_OUT%/%PDY%/%CYC%/"+task_path_var+".log")}
+    {sched.batch_accounting(accounting,jobname=task_path_var,outerr="%ECF_OUT%/%PDY%%CYC%_"+task_path_var+".log")}
     {sched.batch_resources(resources)}
 
   ecf_resource_more: !expand |-
