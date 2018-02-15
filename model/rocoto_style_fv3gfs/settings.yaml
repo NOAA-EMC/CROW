@@ -9,7 +9,7 @@ settings:
   DATAROOT: !expand '/gpfs/hps2/stmp/emc.glopara/{experiment_name}'
   experiment_name: !calc doc.sys_argv_1
 
-  NMEM_ENKF: 80
+  NMEM_ENKF: 20
   ENKF_GROUPS: 2
 
   ENKF_INNOVATE_GROUPS: !calc ENKF_GROUPS
@@ -23,7 +23,7 @@ settings:
   WRITE_GROUP: 2
   WRTTASK_PER_GROUP: 24
   QUEUE: dev
-  PROJECT: GFS-T2O
+  PROJECT: FV3GFS-T2O
   QUEUESERV: dev_transfer
   QUEUESHARED: dev_shared
 
