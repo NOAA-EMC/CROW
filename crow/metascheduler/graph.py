@@ -20,10 +20,7 @@ def depth_first_traversal(tree,skip_fun=None,enter_fun=None,
     memo.add(id(tree))
     if skip_fun is not None:
         if skip_fun(tree):
-            print(f'{tree.path}: skip')
             return
-        else:
-            print(f'{tree.path}: do not skip')
     if enter_fun is not None:
         enter_fun(tree)
     yield tree
@@ -73,17 +70,11 @@ class Node(object):
             self.trigger=FALSE_DEPENDENCY
             self.complete=FALSE_DEPENDENCY
         else:
-            print(f'{self.path}: simplify trigger={self.trigger}')
-            print(f'{self.path}: simplify complete={self.complete}')
             self.trigger=algebra_simplify(algebra_assume(
                 self.trigger,clock,self.cycle,assume_complete,assume_never_run))
             self.complete=algebra_simplify(algebra_assume(
                 self.complete,clock,self.cycle,assume_complete,assume_never_run))
-            print(f'{self.path}: resulting trigger={self.trigger}')
-            print(f'{self.path}: resulting complete={self.complete}')
         if trigger0!=self.trigger or complete0!=self.complete:
-            print(f'{self.path}: trigger {trigger0} => {self.trigger}')
-            print(f'{self.path}: complete {complete0} => {self.complete}')
             return True
         return False
     def is_family(self): return self.view.is_family()
@@ -147,35 +138,25 @@ class Graph(object):
         while changed:
             changed=False
             for node in self.__nodes[cycle].values():
-                print(f'{node.path}: trigger {node.trigger}')
-                print(f'{node.path}: complete {node.complete}')
                 if node.is_always_complete():
-                    print(f'{node.path}: is always complete')
                     continue
                 if node.can_never_complete():
-                    print(f'{node.path}: can never complete')
                     continue
                 if node.has_no_dependencies():
-                    print(f'{node.path}: has no dependencies')
                     continue
                 if node.assume(self.__clock,fun_assume_complete,
                                fun_assume_never_run):
-                    print(f'{node.path}: assumptions changed trigger or complete')
                     changed=True
                 if node.can_never_complete():
                     never_run.add(node.path)
-                    print(f'{node.path}: can never complete')
                     for descendent in depth_first_traversal(node):
-                        print(f'{node.path}: descendent {descendent.path} can never complete')
                         never_run.add(descendent.path)
                         descendent.force_never_run()
                     changed=True
                     assert(not node.might_complete())
                 elif node.is_always_complete():
-                    print(f'{node.path}: is always complete')
                     for descendent in depth_first_traversal(node):
                         always_complete.add(node.path)
-                        print(f'{node.path}: descendent {descendent.path} is always complete')
                         always_complete.add(descendent.path)
                         descendent.force_always_complete()
                     changed=True

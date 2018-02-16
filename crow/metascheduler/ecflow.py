@@ -23,10 +23,6 @@ ECFLOW_STATE_MAP={ COMPLETED:'complete',
                    FAILED:'aborted' }
 
 def skip_fun(node):
-    print(f'{node.path}: skip? trigger={node.trigger}')
-    print(f'{node.path}: skip? complete={node.complete}')
-    print(f'{node.path}: skip? might_complete={node.might_complete()}')
-    print(f'{node.path}: skip? is_always_complete={node.is_always_complete()}')
     return not node.might_complete() or node.is_always_complete()
 
 def relative_path(start,dest):
@@ -209,7 +205,6 @@ class ToEcflow(object):
 
     def _simplify_job_graph(self):
         for cycle in self._foreach_cycle(self._cycles_to_write()):
-            print(f'{cycle}: simplify cycle')
             self.graph.simplify_cycle(cycle)
 
     def _walk_job_graph(self,cycle,skip_fun=None,enter_fun=None,exit_fun=None):

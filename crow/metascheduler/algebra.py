@@ -19,7 +19,6 @@ def assume(tree,existing_cycles,current_cycle,assume_complete=None,
         if rel_cycle in existing_cycles:
             #print(f'{rel_cycle}: cylce exists in {existing_cycles}')
             return TRUE_DEPENDENCY
-        print(f'{rel_cycle}: cycle does not exist in {existing_cycles}')
         return FALSE_DEPENDENCY
     elif isinstance(tree,TaskExistsDependency):
         cycle=current_cycle+tree.view.path[0]
@@ -35,13 +34,11 @@ def assume(tree,existing_cycles,current_cycle,assume_complete=None,
         a=TRUE_DEPENDENCY
         for d in tree:
             a=a & assume(d,existing_cycles,current_cycle)
-        print(f'AND: reduced {tree} to {a}')
         return a
     elif isinstance(tree,OrDependency):
         a=FALSE_DEPENDENCY
         for d in tree:
             a=a | assume(d,existing_cycles,current_cycle)
-        print(f'OR: reduced {tree} to {a}')
         return a
     elif isinstance(tree,NotDependency):
         return ~assume(tree.depend,existing_cycles,current_cycle)
