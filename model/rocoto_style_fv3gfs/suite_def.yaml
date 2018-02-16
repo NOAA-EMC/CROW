@@ -22,9 +22,10 @@ suite: !Cycle
       step: !calc doc.settings.interval_gfs
 
   ecFlow:
-    suite_def_filename: "prod%Y%m%d%H.def"
-    suite_name: "prod%Y%m%d%H"
+    suite_def_filename: !expand "{doc.settings.experiment_name}_%Y%m%d%H.def"
+    suite_name: !expand "{doc.settings.experiment_name}_%Y%m%d%H"
     scheduler: !calc doc.scheduler
+    dates_in_time_dependencies: true
 
     # write_cycles/analyze_cycles: Use these to generate a subset of
     # the cycles in ecFlow.  Make sure analyze_cycles starts at least
@@ -60,8 +61,8 @@ suite: !Cycle
     edit DATAROOT '{doc.settings.DATAROOT}'
     edit ECF_FILES '{doc.settings.ECF_HOME}'
     #edit ECF_JOBOUT '%ECF_HOME%/%ECF_NAME%.%ECF_TRYNO%'
-    edit ECF_OUT '{doc.settings.ECF_HOME}'
-    edit ECF_LOG '{doc.settings.ECF_HOME}/ecf.log'
+    edit ECF_OUT '{doc.settings.COM}/logs'
+    edit ECF_LOG '{doc.settings.EXPDIR}/ecf.log'
     edit MODEL_NAME 'gfs'
 
     edit DUMPDIR '{doc.settings.DUMPDIR}'
@@ -109,6 +110,10 @@ suite: !Cycle
     dump_waiter: !Task
       <<: *dump_waiter_task
       Complete: !Depend ~ suite.has_cycle('-6:00:00') 
+      Time: !FirstTrue
+        - when: !calc doc.settings.realtime
+          do: !timedelta "3:00:00"
+        - otherwise: null
 
     prep: !Task
       <<: *exclusive_task_template
@@ -229,7 +234,12 @@ suite: !Cycle
     ecflow_def: |
       edit MODEL_NAME 'gfs'
 
-    dump_waiter: *dump_waiter_task
+    dump_waiter: !Task
+      <<:  *dump_waiter_task
+      Time: !FirstTrue
+        - when: !calc doc.settings.realtime
+          do: !timedelta "6:00:00"
+        - otherwise: null
 
     prep: !Task
       <<: *exclusive_task_template

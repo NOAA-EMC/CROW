@@ -1,7 +1,7 @@
 include:
   - schedulers.yaml
   - settings.yaml
-  - resources_C192_C192.yaml
+  - resources.yaml
   - validator.yaml
   - post_manager.yaml
   - task_template.yaml

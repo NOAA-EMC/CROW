@@ -2,12 +2,26 @@
 ## initial_directory: location from which the setup script was run.
 initial_directory: !calc ( tools.realpath(tools.abspath(".")) )
 
+config_base:
+  # These are initialized from config.base:
+  FHMAX_GFS: !Immediate [ !calc int(tools.env("FHMAX_GFS")) ]
+  PSLOT:     !Immediate [ !calc tools.env("PSLOT") ]
+  EXPDIR:    !Immediate [ !calc tools.env("EXPDIR") ]
+  ROTDIR:    !Immediate [ !calc tools.env("ROTDIR") ]
+  RUNDIR:    !Immediate [ !calc tools.env("RUNDIR") ]
+  HOMEgfs:   !Immediate [ !calc tools.env("HOMEgfs") ]
+  CASE:      !Immediate [ !calc tools.env("CASE") ]
+  CASE_ENKF: !Immediate [ !calc tools.env("CASE_ENKF") ]
+  
 settings:
-  HOMEgfs: "/gpfs/hps3/emc/nems/noscrub/Samuel.Trahan/snapshot_master_20180209/gfs.v15.0.0/"
-  COM: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/comdir/{experiment_name}'
-  EXPDIR: !expand '/gpfs/hps3/ptmp/Samuel.Trahan/expdir/{experiment_name}'
-  DATAROOT: !expand '/gpfs/hps2/stmp/emc.glopara/{experiment_name}'
-  experiment_name: !calc doc.sys_argv_1
+  resource_file: !expand >-
+    resources_{doc.config_base.CASE}_{doc.config_base.CASE_ENKF}.yaml
+
+  HOMEgfs: !calc doc.config_base.HOMEgfs
+  COM: !calc doc.config_base.ROTDIR
+  EXPDIR: !expand doc.config_base.EXPDIR
+  DATAROOT: !expand doc.config_base.RUNDIR
+  experiment_name: !calc doc.config_base.PSLOT
 
   NMEM_ENKF: 20
   ENKF_GROUPS: 2
@@ -16,8 +30,8 @@ settings:
   ENKF_FORECAST_GROUPS: !calc ENKF_GROUPS
   ENKF_ARCHIVE_GROUPS: 3
 
-  ECF_HOME: !calc ( doc.initial_directory )
-  ROCOTO_HOME: !calc ( doc.initial_directory )
+  ECF_HOME: !calc ( tools.env('ECF_HOME') )
+  ROCOTO_HOME: !calc ( doc.config_base.EXPDIR )
   layout_x: 4
   layout_y: 6
   WRITE_GROUP: 2
@@ -35,13 +49,11 @@ settings:
   end_date_gfs: !calc end_date
   interval_gfs: !timedelta "12:00:00"
   #forecast_hours: !calc tools.seq(0,120,1)+tools.seq(123,240,3)+tools.seq(240,384,12)
-  forecast_hours: !calc tools.seq(0,240,6)
+  forecast_hours: !calc tools.seq(0,doc.config_base.FHMAX_GFS,6)
   gdas_hours: !calc tools.seq(0,9,3)
 
   max_job_tries: 1
   realtime: False
   archive_to_hpss: True
-
-scheduler_settings: *automatic_scheduler_settings
 
 ########################################################################
