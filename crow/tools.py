@@ -1,15 +1,22 @@
 import subprocess, os, re, logging, tempfile, datetime, shutil
 from datetime import timedelta
 from copy import deepcopy
-from contextlib import suppress
+from contextlib import suppress, contextmanager
 from collections.abc import Mapping
 
 __all__=['panasas_gb','gpfs_gb','to_timedelta','deliver_file','NamedConstant',
          'Clock','str_timedelta','memory_in_bytes','to_printf_octal',
          'str_to_posix_sh','typecheck','ZER_DT','shell_to_python_type',
-         'MISSING']
+         'MISSING','chdir']
 
 _logger=logging.getLogger('crow.tools')
+
+@contextmanager
+def chdir(dir):
+    olddir=os.getcwd()
+    os.chdir(dir)
+    yield
+    os.chdir(olddir)
 
 def deliver_file(from_file: str,to_file: str,*,blocksize: int=1048576,
                  permmask: int=2,preserve_perms: bool=True,
