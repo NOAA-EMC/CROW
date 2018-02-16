@@ -58,14 +58,14 @@ task_template: &task_template
     export model=%MODEL_NAME%
     export CDUMP=$model
     {ecf_more_exports}
-    %include <model_ver.h>
+    ## don't include <model_ver.h>
 
     ############################################################
     # Load modules
     ############################################################
-    . $MODULESHOME/init/sh
+    #. $MODULESHOME/init/sh
     {ecf_module_commands}
-    module list
+    #module list
 
     #############################################################
     # WCOSS environment settings

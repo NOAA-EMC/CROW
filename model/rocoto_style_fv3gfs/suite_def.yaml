@@ -131,13 +131,14 @@ suite: !Cycle
       Dimensions:
         fhr: !calc doc.settings.gdas_hours #tools.seq(0,9,1)
       post_manager_el: !TaskElement
-        <<: *exclusive_task_template
+        <<: *shared_task_template
         Trigger: !Depend ( up.fcst.is_running() | up.fcst.is_completed() )
         Disable: !calc metasched.type=='rocoto'
         Foreach: []
         J_JOB: post_manager
         ecflow_command: *post_manager_job_contents
         Name: post_manager
+        resources: !calc doc.resources.run_gdas_post_manager
         release_postanl: !DataEvent
           file: !expand >-
             {metasched.varref("COM")}/{up.CDUMP}.{metasched.datestring("%Y%m%d/%H/")}{up.CDUMP}.t{metasched.datestring("%H")}z.logf000.nemsio
@@ -250,13 +251,14 @@ suite: !Cycle
         fhr: !calc doc.settings.forecast_hours
 
       post_manager_el: !TaskElement
-        <<: *exclusive_task_template
+        <<: *shared_task_template
         Disable: !calc metasched.type == 'rocoto'
         Trigger: !Depend ( up.fcst.is_running() | up.fcst.is_completed() )
         Foreach: [ ]
         ecflow_command: *post_manager_job_contents
         J_JOB: post_manager
         Name: post_manager
+        resources: !calc doc.resources.run_gfs_post_manager
         release_postanl: !DataEvent
           file: !expand >-
             {metasched.varref("COM")}/{up.CDUMP}.{metasched.datestring("%Y%m%d/%H/")}{up.CDUMP}.t{metasched.datestring("%H")}z.logf000.nemsio

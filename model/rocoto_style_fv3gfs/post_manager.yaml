@@ -3,16 +3,17 @@ post_manager_job_contents: &post_manager_job_contents !expand |
   CDATE=%PDY%%CYC%
   for fid in $fhrs ; do
     if [[ "$fid" == anl ]] ; then
-      fhr3=f000
+      fhr3=000
       event=release_postanl
     else
       fhr3=$( printf %%03d $fid )
-      event=release_post$fhr3
+      fhr2=$( printf %%02d $fid )
+      event=release_post$fhr2
     fi
 
-    file=%COM%/$CDUMP.%PDY%/%CYC%/$CDUMP.t%CYC%z.log$fhr3.nemsio
+    file=%COM%/$CDUMP.%PDY%/%CYC%/$CDUMP.t%CYC%z.logf$fhr3.nemsio
 
-    while ( ! -s "$file" ) ; do
+    while [[ ! -s "$file" ]] ; do
       echo "$file: nope"
       sleep 33
     done

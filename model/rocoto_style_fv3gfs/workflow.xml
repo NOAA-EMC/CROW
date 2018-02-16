@@ -111,7 +111,7 @@
         <jobname>gdas.post.g000</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.post.g000.log</cyclestr></join>
         
-        <walltime>0:30:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -131,7 +131,7 @@
         <jobname>gdas.post.g001</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.post.g001.log</cyclestr></join>
         
-        <walltime>0:30:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -151,7 +151,7 @@
         <jobname>gdas.post.g002</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.post.g002.log</cyclestr></join>
         
-        <walltime>0:30:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -171,7 +171,7 @@
         <jobname>gdas.post.g003</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gdas.post.g003.log</cyclestr></join>
         
-        <walltime>0:30:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -494,7 +494,7 @@
         <jobname>gfs.post.grp000</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp000.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -517,7 +517,7 @@
         <jobname>gfs.post.grp001</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp001.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -540,7 +540,7 @@
         <jobname>gfs.post.grp002</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp002.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -563,7 +563,7 @@
         <jobname>gfs.post.grp003</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp003.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -586,7 +586,7 @@
         <jobname>gfs.post.grp004</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp004.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -609,7 +609,7 @@
         <jobname>gfs.post.grp005</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp005.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -632,7 +632,7 @@
         <jobname>gfs.post.grp006</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp006.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -655,7 +655,7 @@
         <jobname>gfs.post.grp007</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp007.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -678,7 +678,7 @@
         <jobname>gfs.post.grp008</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp008.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -701,7 +701,7 @@
         <jobname>gfs.post.grp009</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp009.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -724,7 +724,7 @@
         <jobname>gfs.post.grp010</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp010.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -747,7 +747,7 @@
         <jobname>gfs.post.grp011</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp011.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -770,7 +770,7 @@
         <jobname>gfs.post.grp012</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp012.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -793,7 +793,7 @@
         <jobname>gfs.post.grp013</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp013.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -816,7 +816,7 @@
         <jobname>gfs.post.grp014</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp014.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -839,7 +839,7 @@
         <jobname>gfs.post.grp015</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp015.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -862,7 +862,7 @@
         <jobname>gfs.post.grp016</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp016.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -885,7 +885,7 @@
         <jobname>gfs.post.grp017</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp017.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -908,7 +908,7 @@
         <jobname>gfs.post.grp018</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp018.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -931,7 +931,7 @@
         <jobname>gfs.post.grp019</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp019.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -954,7 +954,7 @@
         <jobname>gfs.post.grp020</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp020.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -977,7 +977,7 @@
         <jobname>gfs.post.grp021</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp021.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1000,7 +1000,7 @@
         <jobname>gfs.post.grp022</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp022.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1023,7 +1023,7 @@
         <jobname>gfs.post.grp023</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp023.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1046,7 +1046,7 @@
         <jobname>gfs.post.grp024</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp024.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1069,7 +1069,7 @@
         <jobname>gfs.post.grp025</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp025.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1092,7 +1092,7 @@
         <jobname>gfs.post.grp026</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp026.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1115,7 +1115,7 @@
         <jobname>gfs.post.grp027</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp027.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1138,7 +1138,7 @@
         <jobname>gfs.post.grp028</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp028.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1161,7 +1161,7 @@
         <jobname>gfs.post.grp029</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp029.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1184,7 +1184,7 @@
         <jobname>gfs.post.grp030</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp030.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1207,7 +1207,7 @@
         <jobname>gfs.post.grp031</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp031.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1230,7 +1230,7 @@
         <jobname>gfs.post.grp032</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp032.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1253,7 +1253,7 @@
         <jobname>gfs.post.grp033</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp033.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1276,7 +1276,7 @@
         <jobname>gfs.post.grp034</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp034.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1299,7 +1299,7 @@
         <jobname>gfs.post.grp035</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp035.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1322,7 +1322,7 @@
         <jobname>gfs.post.grp036</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp036.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1345,7 +1345,7 @@
         <jobname>gfs.post.grp037</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp037.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1368,7 +1368,7 @@
         <jobname>gfs.post.grp038</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp038.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1391,7 +1391,7 @@
         <jobname>gfs.post.grp039</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp039.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1414,7 +1414,7 @@
         <jobname>gfs.post.grp040</jobname>
         <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_gfs.post.grp040.log</cyclestr></join>
         
-        <walltime>1:00:00</walltime>
+        <walltime>0:10:00</walltime>
         <memory>3072M</memory>
         <nodes>6:ppn=12</nodes>
         
@@ -1597,6 +1597,39 @@
       </and>
     </dependency>
   </task>
+  <task name="final_for_gfs" cycledefs="gfs">
+    <command>/bin/true</command>
+    <queue>&QUEUESERV;</queue>
+    <account>&PROJECT;</account>
+    <jobname>final_for_gfs</jobname>
+    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_final_for_gfs.log</cyclestr></join>
+    
+    <walltime>0:02:00</walltime>
+    <memory>300M</memory>
+    <cores>1</cores>
+    <shared></shared>
+    
+    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+    <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+    <envar><name>CDUMP</name><value>gfs</value></envar>
+    
+    <dependency>
+      <or>
+        <and>
+          <metataskdep metatask="gfs"/>
+          <or>
+            <taskdep task="archive.gfsarch"/>
+            <not>
+              <cycleexistdep cycle_offset="-06:00:00"/>
+            </not>
+          </or>
+        </and>
+        <not>
+          <cycleexistdep cycle_offset="-06:00:00"/>
+        </not>
+      </or>
+    </dependency>
+  </task>
   <task name="final_for_gdas" cycledefs="gdas">
     <command>/bin/true</command>
     <queue>&QUEUESERV;</queue>
@@ -1657,39 +1690,6 @@
       </and>
     </dependency>
   </task>
-  <task name="final_for_gfs" cycledefs="gfs">
-    <command>/bin/true</command>
-    <queue>&QUEUESERV;</queue>
-    <account>&PROJECT;</account>
-    <jobname>final_for_gfs</jobname>
-    <join><cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_final_for_gfs.log</cyclestr></join>
-    
-    <walltime>0:02:00</walltime>
-    <memory>300M</memory>
-    <cores>1</cores>
-    <shared></shared>
-    
-    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
-    <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
-    <envar><name>CDUMP</name><value>gfs</value></envar>
-    
-    <dependency>
-      <or>
-        <and>
-          <metataskdep metatask="gfs"/>
-          <or>
-            <taskdep task="archive.gfsarch"/>
-            <not>
-              <cycleexistdep cycle_offset="-06:00:00"/>
-            </not>
-          </or>
-        </and>
-        <not>
-          <cycleexistdep cycle_offset="-06:00:00"/>
-        </not>
-      </or>
-    </dependency>
-  </task>
   <task name="final" final="true">
     <command>/bin/true</command>
     <queue>&QUEUESERV;</queue>
@@ -1714,12 +1714,12 @@
           <not><taskvalid task="final_no_alarm"/></not>
         </or>
         <or>
-          <taskdep task="final_for_gdas"/>
-          <not><taskvalid task="final_for_gdas"/></not>
-        </or>
-        <or>
           <taskdep task="final_for_gfs"/>
           <not><taskvalid task="final_for_gfs"/></not>
+        </or>
+        <or>
+          <taskdep task="final_for_gdas"/>
+          <not><taskvalid task="final_for_gdas"/></not>
         </or>
       </and>
     </dependency>

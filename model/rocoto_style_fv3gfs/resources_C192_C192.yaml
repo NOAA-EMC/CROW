@@ -101,6 +101,13 @@ resources:
       max_ppn: 12
       memory: "1024M"
 
+  run_gdas_post_manager: !JobRequest
+    - memory: "300M"
+      exe: nothing
+      exclusive: false
+      walltime: !calc >-
+        doc.resources.run_gdasfcst[0].walltime + tools.to_timedelta('00:15:00')
+
   run_gfsfcst: !JobRequest
     - mpi_ranks: !calc >-
          doc.settings.layout_x*doc.settings.layout_y*6
@@ -109,10 +116,17 @@ resources:
       max_ppn: 12
       memory: "1024M"
 
+  run_gfs_post_manager: !JobRequest
+    - memory: "300M"
+      exe: nothing
+      exclusive: false
+      walltime: !calc >-
+        doc.resources.run_gfsfcst[0].walltime + tools.to_timedelta('00:15:00')
+
   run_gdaspost: !JobRequest
     - memory: "3072M"
       mpi_ranks: 72
-      walltime: !timedelta "00:30:00"
+      walltime: !timedelta "00:10:00"
       exe: placeholder
       max_ppn: 12
       OMP_NUM_THREADS: 1
@@ -120,7 +134,7 @@ resources:
   run_gfspost: !JobRequest
     - memory: "3072M"
       mpi_ranks: 72
-      walltime: !timedelta "01:00:00"
+      walltime: !timedelta "00:10:00"
       exe: placeholder
       max_ppn: 12
       OMP_NUM_THREADS: 1

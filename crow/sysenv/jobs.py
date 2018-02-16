@@ -78,6 +78,9 @@ class JobRankSpec(Mapping):
         newspec.update(*args,**kwargs)
         return JobRankSpec(**newspec)
 
+    # Nicities
+    def __getattr__(self,key):    return self[key]
+
     # Implement Mapping abstract methods:
     def __getitem__(self,key):    return self.__spec[key]
     def __len__(self):            return len(self.__spec)
