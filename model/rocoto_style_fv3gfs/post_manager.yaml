@@ -2,7 +2,7 @@ post_manager_job_contents: &post_manager_job_contents !expand |
   fhrs='anl {tools.join(up.Dimensions.fhr," ")}'
   CDATE=%PDY%%CYC%
   for fid in $fhrs ; do
-    if [[ "fid" == anl ]] ; then
+    if [[ "$fid" == anl ]] ; then
       fhr3=f000
       event=release_postanl
     else
