@@ -257,8 +257,12 @@ class ToEcflow(object):
                 dep_to_ecflow(sio,node,node.complete,clock,suite_name_format,undated)
                 sio.write('\n')
             if node.time>ZERO_DT:
+                when=cycle+node.time
                 ectime=when.strftime('%H:%M')
                 sio.write(f'{indent1}time {ectime}\n')
+                if self.settings.dates_in_time_dependencies:
+                    ecdate=when.strftime('%d.%m.%Y')
+                    sio.write(f'{indent1}date {ecdate}\n')
 
             event_number=node.view.get('ecflow_first_event_number',1)
             typecheck(f'{node.view.task_path_var}.ecflow_first_event_number',event_number,int)

@@ -6,4 +6,5 @@ include:
   - post_manager.yaml
   - task_template.yaml
   - dump_waiter.yaml
+  - make_next_cycles.yaml
   - suite_def.yaml

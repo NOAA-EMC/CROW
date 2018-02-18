@@ -1,13 +1,9 @@
 resources:
 
-  run_test: !JobRequest
-    - exe: nothing
-      mpi_ranks: 1
-
   # From if[[...ecen]] block in config.resources:
   run_ecen: !JobRequest
     - memory: "254M" 
-      walltime: !timedelta "00:30:00"
+      walltime: !timedelta "00:10:00"
       mpi_ranks: 84
       exe: placeholder
           # max_ppn comes from THEIA.env: 84/12 = 7
@@ -22,13 +18,28 @@ resources:
 
   run_nothing: !JobRequest # Special placeholder for "do nothing"
     - memory: "300M"
-      exe: nothing
+      exe: placeholder
       walltime: !timedelta "00:02:00"
+      exclusive: false
+
+  run_dump_waiter: !JobRequest
+    - memory: "300M"
+      exe: placeholder
+      walltime: !FirstTrue
+        - when: !calc doc.settings.realtime
+          do: !timedelta "01:00:00"
+        - otherwise: !timedelta "00:05:00"
+      exclusive: false
+
+  run_make_next_cycles: !JobRequest
+    - memory: "300M"
+      exe: placeholder
+      walltime: !timedelta "00:15:00"
       exclusive: false
 
   run_eobs: !JobRequest
     - memory: "3072M" 
-      walltime: !timedelta "00:45:00"
+      walltime: !timedelta "00:15:00"
       mpi_ranks: !calc 12*6
       exe: placeholder
       max_ppn: 6
@@ -44,7 +55,7 @@ resources:
 
   run_eupd: !JobRequest
     - memory: "3072M" 
-      walltime: !timedelta "00:30:00"
+      walltime: !timedelta "00:15:00"
       mpi_ranks: !calc 10*12
       exe: placeholder
       max_ppn: 12
@@ -58,7 +69,7 @@ resources:
 #        OMP_NUM_THREADS: 4
 
   run_efcs: !JobRequest
-    - walltime: !timedelta "01:00:00"
+    - walltime: !timedelta "00:45:00"
       mpi_ranks: !calc >-
          doc.settings.layout_x*doc.settings.layout_y*6
          + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
@@ -68,7 +79,7 @@ resources:
   run_epos: !JobRequest
     - memory: "254M"
       mpi_ranks: 84
-      walltime: !timedelta "00:30:00"
+      walltime: !timedelta "00:10:00"
       exe: placeholder
       max_ppn: 12
       OMP_NUM_THREADS: 2
@@ -82,7 +93,7 @@ resources:
   run_anal: !JobRequest
     - memory: "3072M" 
       mpi_ranks: 144
-      walltime: !timedelta "1:30:00"
+      walltime: !timedelta "0:30:00"
       exe: placeholder
       max_ppn: 6
 
@@ -97,13 +108,13 @@ resources:
     - mpi_ranks: !calc >-
          doc.settings.layout_x*doc.settings.layout_y*6
          + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
-      walltime: !timedelta "00:15:00"
+      walltime: !timedelta "00:10:00"
       max_ppn: 12
       memory: "1024M"
 
   run_gdas_post_manager: !JobRequest
     - memory: "300M"
-      exe: nothing
+      exe: placeholder
       exclusive: false
       walltime: !calc >-
         doc.resources.run_gdasfcst[0].walltime + tools.to_timedelta('00:15:00')
@@ -112,13 +123,13 @@ resources:
     - mpi_ranks: !calc >-
          doc.settings.layout_x*doc.settings.layout_y*6
          + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
-      walltime: !timedelta "01:30:00"
+      walltime: !timedelta "00:45:00"
       max_ppn: 12
       memory: "1024M"
 
   run_gfs_post_manager: !JobRequest
     - memory: "300M"
-      exe: nothing
+      exe: placeholder
       exclusive: false
       walltime: !calc >-
         doc.resources.run_gfsfcst[0].walltime + tools.to_timedelta('00:15:00')
@@ -142,14 +153,14 @@ resources:
   run_gfsvrfy: !JobRequest
     - memory: "3072M" 
       mpi_ranks: 1
-      walltime: !timedelta "06:00:00"
+      walltime: !timedelta "02:00:00"
       exe: placeholder
       max_ppn: 1
 
   run_gdasvrfy: !JobRequest
     - memory: "3072M" 
       mpi_ranks: 1
-      walltime: !timedelta "03:00:00"
+      walltime: !timedelta "02:00:00"
       exe: placeholder
       max_ppn: 1
 
@@ -157,7 +168,7 @@ resources:
     - memory: "3072M"
       exclusive: false
       mpi_ranks: 1
-      walltime: !timedelta "06:00:00"
+      walltime: !timedelta "01:00:00"
       exe: placeholder
       max_ppn: 1
       OMP_NUM_THREADS: 2
@@ -173,7 +184,7 @@ resources:
   run_earc: !JobRequest
     - memory: "3072M"
       mpi_ranks: 1
-      walltime: !timedelta "06:00:00"
+      walltime: !timedelta "01:00:00"
       exe: placeholder
       max_ppn: 1
 

@@ -30,7 +30,8 @@ suite: !Cycle
     # write_cycles/analyze_cycles: Use these to generate a subset of
     # the cycles in ecFlow.  Make sure analyze_cycles starts at least
     # one cycle before write_cycles so that dependencies are
-    # processed.
+    # processed.  These are overridden by update_ecflow_workflow.py
+    # during its execution.
 
     # write_cycles: !Clock
     #   start: 2018-01-02T00:00:00
@@ -44,7 +45,18 @@ suite: !Cycle
   ecflow_def: !expand |
     # This ecflow suite definition is automatically generated.
     # Changes will be overwritten.  Please edit suite_def.yaml instead.
+
+    # Repeat vs. autocancel.
+    #
+    # - Use "repeat day 1" if you are generating four cycles: 00, 06, 12, 18
+    #   as is done in operations
+    #
+    # - Use "autocancel" if you are generating one suite for each cycle.
+    #   This ensures the server is not filled up with cycles.
+
     #repeat day 1
+    autocancel +5
+
     edit ECF_TRIES '{doc.settings.max_job_tries}'
     #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
     #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
@@ -71,7 +83,7 @@ suite: !Cycle
   common_metasched_vars: !expand |
     {metasched.defvar("QUEUE", doc.settings.QUEUE)}
     {metasched.defvar("HOMEgfs", doc.settings.HOMEgfs)}
-    {metasched.defvar("QUEUESHARED", doc.settings.QUEUE)}
+    {metasched.defvar("QUEUESHARED", doc.settings.QUEUESHARED)}
     {metasched.defvar("COM", doc.settings.COM)}
     {metasched.defvar("QUEUESERV", doc.settings.QUEUESERV)}
     {metasched.defvar("PROJECT", doc.settings.PROJECT)}
@@ -109,11 +121,12 @@ suite: !Cycle
 
     dump_waiter: !Task
       <<: *dump_waiter_task
-      Complete: !Depend ~ suite.has_cycle('-6:00:00') 
-      Time: !FirstTrue
+      ecflow_def: !FirstTrue
         - when: !calc doc.settings.realtime
-          do: !timedelta "3:00:00"
-        - otherwise: null
+          do: "edit ECF_TRIES 72"
+        - otherwise: ""
+      Trigger: !Depend  up.gdas.post.at('-6:00:00')
+      Complete: !Depend ~ suite.has_cycle('-6:00:00') 
 
     prep: !Task
       <<: *exclusive_task_template
@@ -235,11 +248,12 @@ suite: !Cycle
       edit MODEL_NAME 'gfs'
 
     dump_waiter: !Task
-      <<:  *dump_waiter_task
-      Time: !FirstTrue
+      <<: *dump_waiter_task
+      ecflow_def: !FirstTrue
         - when: !calc doc.settings.realtime
-          do: !timedelta "6:00:00"
-        - otherwise: null
+          do: "edit ECF_TRIES 72"
+        - otherwise: ""
+      Trigger: !Depend  up.gdas.post.at('-6:00:00')
 
     prep: !Task
       <<: *exclusive_task_template
@@ -302,7 +316,21 @@ suite: !Cycle
       Trigger: !Depend post
       resources: !calc ( doc.resources.run_gfsvrfy )
 
+  make_next_cycles: !Task
+    <<: *make_next_cycles_task
+    Trigger: !Depend gdas
+    ecflow_def:
+      # These variables are used by the make_next_cycles job to generate 
+      # suites for later cycles once earlier cycles have finished.
+      edit WORKFLOW_FIRST_CYCLE '{tools.strftime(suite.Clock.start,"%Y%m%d%H")}'
+      edit WORKFLOW_LAST_CYCLE '{tools.strftime(suite.Clock.end,"%Y%m%d%H")}'
+      edit WORKFLOW_CYCLES_TO_GENERATE '5'
+      edit WORKFLOW_CROW_HOME '{doc.initial_directory}'
+      edit WORKFLOW_EXPDIR '{doc.settings.EXPDIR}'
+
   archive: !Family
+    ecflow_def:
+      edit ECF_TRIES '3'
     gdasarch: !Task
       <<: *service_task_template
       AlarmName: gdas

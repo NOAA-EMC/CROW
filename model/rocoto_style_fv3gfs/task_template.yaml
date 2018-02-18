@@ -18,7 +18,7 @@ task_template: &task_template
   CDUMP: !calc task_path_list[0]
 
   # Default resources for a job are serial
-  resources: !calc doc.resources.run_nothing
+  #resources: !calc doc.resources.run_nothing
 
   ecf_dev_overrides: !expand |
     # Set data and logs to locations specified in the suite definition.
@@ -40,8 +40,10 @@ task_template: &task_template
   rocoto_more_vars: !calc |
     "\n".join([ metasched.defenvar(VAR,this[VAR]) for VAR in more_vars ])
 
-  ecflow_def: !calc |
+  ecflow_def_more_vars: !calc |
     "\n".join([ metasched.defenvar(VAR,this[VAR]) for VAR in more_vars ])
+
+  ecflow_def: !calc ecflow_def_more_vars
 
   ecf_file: !expand |
     #! /bin/sh

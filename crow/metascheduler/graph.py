@@ -44,7 +44,8 @@ class Node(object):
         if 'Complete' in view and view.Complete is not None:
             self.complete=view.Complete.copy_dependencies()
         if 'Time' in view and view.Time is not None:
-            self.time=copy(view.Time)
+            typecheck('Time',view.Time,datetime.timedelta)
+            self.time=copy.copy(view.Time)
         self.children=collections.OrderedDict()
 
     def __iter__(self):
