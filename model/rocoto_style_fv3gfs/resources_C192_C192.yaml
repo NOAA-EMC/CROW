@@ -45,7 +45,7 @@ resources:
 
   run_eomg: !JobRequest
     - memory: "3072M"
-      walltime: !timedelta "02:00:00"
+      walltime: !timedelta "01:20:00"
       mpi_ranks: !calc 6*12
       exe: placeholder
       max_ppn: 6

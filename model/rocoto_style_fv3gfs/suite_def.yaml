@@ -321,7 +321,7 @@ suite: !Cycle
   make_next_cycles: !Task
     <<: *make_next_cycles_task
     Trigger: !Depend gdas
-    ecflow_def:
+    ecflow_def: !expand |
       # These variables are used by the make_next_cycles job to generate 
       # suites for later cycles once earlier cycles have finished.
       edit WORKFLOW_FIRST_CYCLE '{tools.strftime(suite.Clock.start,"%Y%m%d%H")}'
