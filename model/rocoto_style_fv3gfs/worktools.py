@@ -168,6 +168,38 @@ def load_and_begin_ecflow_suites(ECF_HOME,suite_def_files):
             logger.info(cmd)
             subprocess.run(cmd,check=False,shell=True)
 
+########################################################################
+
+# These functions are called directly from scripts, and can be thought
+# of as "main programs."
+
+def remake_ecflow_files_for_cycles(
+        yamldir,first_cycle_str,last_cycle_str,
+        surrounding_cycles=5):
+    ECF_HOME=get_target_dir_and_check_ecflow_env()
+    conf,suite=read_yaml_suite(yamldir)
+    loudly_make_dir_if_missing(f'{conf.settings.COM}/log')
+
+    first_cycle=datetime.datetime.strptime(first_cycle_str,'%Y%m%d%H')
+    first_cycle=max(suite.Clock.start,first_cycle)
+
+    last_cycle=datetime.datetime.strptime(last_cycle_str,'%Y%m%d%H')
+    last_cycle=max(first_cycle,min(suite.Clock.end,last_cycle))
+
+    suite_defs, ecf_files = generate_ecflow_suite_in_memory(
+        suite,first_cycle,last_cycle,surrounding_cycles)
+    written_suite_defs = write_ecflow_suite_to_disk(
+        ECF_HOME, suite_defs, ecf_files)
+    print(f'''Suite definition files and ecf files have been written to:
+
+  {ECF_HOME}
+
+If all you wanted to do was update the ecf files, then you're done.
+
+If you want to update the suite (cycle) definitions, or add suites
+(cycles), you will need to call ecflow_client's --load, --begin,
+--replace, or --delete commands.''')
+
 def create_and_begin_ecflow_workflow(yamldir,surrounding_cycles=5):
     conf,suite=read_yaml_suite(yamldir)
     loudly_make_dir_if_missing(f'{conf.settings.COM}/log')
@@ -178,6 +210,11 @@ def create_and_begin_ecflow_workflow(yamldir,surrounding_cycles=5):
         return False
     load_and_begin_ecflow_suites(ECF_HOME,suite_def_files)    
 
-# def add_cycles_to_running_ecflow_workflow_at(
-#         yamldir,first_cycle,last_cycle,surrounding_cycles=5):
-    
+def add_cycles_to_running_ecflow_workflow_at(
+        yamldir,first_cycle_str,last_cycle_str,surrounding_cycles=5): 
+    conf,suite=read_yaml_suite(yamldir)
+    first_cycle=datetime.datetime.strptime(first_cycle_str,'%Y%m%d%H')
+    last_cycle=datetime.datetime.strptime(last_cycle_str,'%Y%m%d%H')
+    ECF_HOME, suite_def_files = update_existing_ecflow_workflow(
+        suite,first_cycle,last_cycle,surrounding_cycles)
+    load_and_begin_ecflow_suites(ECF_HOME,suite_def_files)    

@@ -223,9 +223,9 @@ class Clock(object):
         self.step=step
         self.__now=start
         if self.step<=ZERO_DT:
-            raise ValueError('Time step must be positive and non-zero.')
+            raise ValueError(f'Time step must be positive and non-zero: {self.step}')
         if self.end is not None and self.end<self.start:
-            raise ValueError('End time must be at or after start time.')
+            raise ValueError(f'End time must be at or after start time: {self.end}<{self.start}.')
         self.now=now
 
     def __repr__(self):

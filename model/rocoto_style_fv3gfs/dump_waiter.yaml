@@ -1,5 +1,5 @@
 dump_waiter: &dump_waiter_task !Task
-  <<: *shared_task_template
+  <<: *exclusive_task_template
   manual: |
     The dump_waiter task is a special job needed to run this
     workflow outside of the production suite.  It handles the

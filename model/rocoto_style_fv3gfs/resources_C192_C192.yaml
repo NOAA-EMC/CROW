@@ -29,13 +29,11 @@ resources:
         - when: !calc doc.settings.realtime
           do: !timedelta "01:00:00"
         - otherwise: !timedelta "00:05:00"
-      exclusive: false
 
   run_make_next_cycles: !JobRequest
     - memory: "300M"
       exe: placeholder
       walltime: !timedelta "00:15:00"
-      exclusive: false
 
   run_eobs: !JobRequest
     - memory: "3072M" 
@@ -93,7 +91,7 @@ resources:
   run_anal: !JobRequest
     - memory: "3072M" 
       mpi_ranks: 144
-      walltime: !timedelta "0:30:00"
+      walltime: !timedelta "0:40:00"
       exe: placeholder
       max_ppn: 6
 
@@ -115,7 +113,6 @@ resources:
   run_gdas_post_manager: !JobRequest
     - memory: "300M"
       exe: placeholder
-      exclusive: false
       walltime: !calc >-
         doc.resources.run_gdasfcst[0].walltime + tools.to_timedelta('00:15:00')
 
@@ -130,7 +127,6 @@ resources:
   run_gfs_post_manager: !JobRequest
     - memory: "300M"
       exe: placeholder
-      exclusive: false
       walltime: !calc >-
         doc.resources.run_gfsfcst[0].walltime + tools.to_timedelta('00:15:00')
 

@@ -1,5 +1,5 @@
 make_next_cycles: &make_next_cycles_task !Task
-  <<: *shared_task_template
+  <<: *exclusive_task_template
   manual: |
     The make_next_cycles task generates and begins the suites for the
     next few cycles in the workflow.  This job is only used when running
@@ -22,17 +22,26 @@ make_next_cycles: &make_next_cycles_task !Task
     export WORKFLOW_CYCLES_TO_GENERATE=%WORKFLOW_CYCLES_TO_GENERATE:5%
     export WORKFLOW_CROW_HOME=%WORKFLOW_CROW_HOME%
     export WORKFLOW_EXPDIR=%WORKFLOW_EXPDIR%
+    export ECF_HOME=%ECF_HOME%
+    export ECF_ROOT=%ECF_ROOT:X%
+
+    if [[ "$ECF_ROOT" == X ]] ; then
+      export ECF_ROOT=$( cd "$ECF_HOME" ; cd .. ; pwd -P )
+    fi
 
     export PDY=%PDY%
+    export CYC=%CYC%
     export cycle=t%CYC%z
     setpdy.sh
     source ./PDY
 
+    module load prod_util
+    module load ecflow
+
     set -uex
-    which NDATE
 
     # Decide the range of cycles to start
-    first_cycle=$( $NDATE +6 "$PDY$CYC" )
+    first_cycle=$( $NDATE +6 "%PDY%%CYC%" )
 
     if [[ "${{WORKFLOW_LAST_CYCLE:-ETERNITY}}" != ETERNITY &&
           "$first_cycle" -gt "$WORKFLOW_LAST_CYCLE" ]] ; then
@@ -48,8 +57,8 @@ make_next_cycles: &make_next_cycles_task !Task
       last_cycle=$( $NDATE +6 "$last_cycle" )
     done
 
-    cd "$WORKFLOW_CROWDIR"
-    postmsg Start cycles $first_cycle through $last_cycle.
+    cd "$WORKFLOW_CROW_HOME"
+    postmsg "Start cycles $first_cycle through $last_cycle."
     ./update_ecflow_workflow.sh "$WORKFLOW_EXPDIR" "$first_cycle" "$last_cycle"
 
     

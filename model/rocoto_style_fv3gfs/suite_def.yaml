@@ -149,8 +149,9 @@ suite: !Cycle
       Dimensions:
         fhr: !calc doc.settings.gdas_hours #tools.seq(0,9,1)
       post_manager_el: !TaskElement
-        <<: *shared_task_template
-        Trigger: !Depend ( up.fcst.is_running() | up.fcst.is_completed() )
+        <<: *exclusive_task_template
+        Trigger: !Depend up.fcst.is_running()
+        Complete: !Depend up.fcst
         Disable: !calc metasched.type=='rocoto'
         Foreach: []
         J_JOB: post_manager
@@ -182,7 +183,7 @@ suite: !Cycle
           - when: !calc dimidx.fhr==0
             do:   "anl"
           - otherwise: !expand "{(dimidx.fhr-1)*3:02d}"
-        Trigger: !Depend post_manager.depend("release_post{F}",F=[release_id])
+        Trigger: !Depend post_manager.depend("release_post{F}",F=[release_id]) | up.fcst
         resources: !calc doc.resources.run_gdaspost
 
     vrfy: !Task
@@ -275,9 +276,10 @@ suite: !Cycle
         fhr: !calc doc.settings.forecast_hours
 
       post_manager_el: !TaskElement
-        <<: *shared_task_template
+        <<: *exclusive_task_template
         Disable: !calc metasched.type == 'rocoto'
-        Trigger: !Depend ( up.fcst.is_running() | up.fcst.is_completed() )
+        Trigger: !Depend up.fcst.is_running()
+        Complete: !Depend up.fcst
         Foreach: [ ]
         ecflow_command: *post_manager_job_contents
         J_JOB: post_manager
@@ -309,7 +311,7 @@ suite: !Cycle
             do:   "00"
           - otherwise: !expand "{(dimidx.fhr-1)*6:02d}"
         more_vars: [ FHRGRP, FHRLST ]
-        Trigger: !Depend post_manager.depend("release_post{F}",F=[release_id])
+        Trigger: !Depend post_manager.depend("release_post{F}",F=[release_id]) | up.fcst
     
     vrfy: !Task
       <<: *exclusive_task_template
