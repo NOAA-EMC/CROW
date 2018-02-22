@@ -22,6 +22,7 @@ resources:
 
   run_nothing: !JobRequest # Special placeholder for "do nothing"
     - memory: "300M"
+      walltime: 00:05:00
       exe: nothing
 
   run_eobs: !JobRequest
