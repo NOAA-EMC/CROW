@@ -13,11 +13,9 @@ __all__=[ 'complexity', 'simplify', 'assume' ]
 def assume(tree,existing_cycles,current_cycle,assume_complete=None,
            assume_never_run=None):
     typecheck('tree',tree,LogicalDependency)
-    #print(f'ASSUME: {tree}')
     if isinstance(tree,CycleExistsDependency):
         rel_cycle=tree.dt+current_cycle
         if rel_cycle in existing_cycles:
-            #print(f'{rel_cycle}: cylce exists in {existing_cycles}')
             return TRUE_DEPENDENCY
         return FALSE_DEPENDENCY
     elif isinstance(tree,TaskExistsDependency):
@@ -57,10 +55,8 @@ def assume(tree,existing_cycles,current_cycle,assume_complete=None,
         return tree
     elif isinstance(tree,EventDependency):
         if assume_never_run and assume_never_run(tree.event.parent.path):
-            print(f'{tree.event.path}: event parent is never run so event cannot be set')
             return FALSE_DEPENDENCY
         if assume_complete and assume_complete(tree.event.parent.path):
-            print(f'{tree.event.path}: event parent is always complete so event cannot be set')
             return FALSE_DEPENDENCY
         if current_cycle+tree.path[0] not in existing_cycles:
             # Prior cycle events will never be set.

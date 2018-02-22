@@ -137,26 +137,20 @@ class Graph(object):
         while changed:
             changed=False
             for node in self.__nodes[cycle].values():
-                print(f'{node.path}: examine')
                 if node.is_always_complete():
-                    print(f'{node.path}: already always complete')
                     continue
                 if node.can_never_complete():
-                    print(f'{node.path}: already can never complete')
                     continue
                 if node.has_no_dependencies() and node.is_task():
-                    print(f'{node.path}: task with no dependencies')
                     continue
                 if node.assume(self.__clock,fun_assume_complete,
                                fun_assume_never_run):
                     changed=True
                 if node.can_never_complete():
                     never_run.add(node.path)
-                    print(f'{node.path}: can never run')
                     for descendent in depth_first_traversal(node):
                         never_run.add(descendent.path)
                         descendent.force_never_run()
-                        print(f'{node.path}: {descendent.path}: can never run')
                     changed=True
                     assert(not node.might_complete())
                 elif node.is_always_complete():
@@ -164,20 +158,16 @@ class Graph(object):
                     for descendent in depth_first_traversal(node):
                         always_complete.add(descendent.path)
                         descendent.force_always_complete()
-                        print(f'{node.path}: {descendent.path}: can never run')
                     changed=True
                 elif node.is_family():
-                    print(f'{node.path}: check children of family')
                     n_always_complete=0
                     n_never_complete=0
                     n=0
                     for child in node:
                         n+=1
                         if child.can_never_complete():
-                            print(f'{node.path}: {child.path} can never complete')
                             n_never_complete+=1
                         if child.is_always_complete():
-                            print(f'{node.path}: {child.path} is always complete')
                             n_always_complete+=1
 
                     if n==n_always_complete:
@@ -185,15 +175,11 @@ class Graph(object):
                         # family is always complete
                         changed=True
                         node.force_always_complete()
-                        print(f'{node.path}: all children are is always complete')
                     elif n==n_never_complete:
                         # entirety of family is always complete so
                         # family is always complete
                         changed=True
                         node.force_never_run()
-                        print(f'{node.path}: no children will complete')
-                    else:
-                        print(f'{node.path}: n={n} a={n_always_complete} v={n_never_complete}')
                         
     def depth_first_traversal(self,cycle,skip_fun,enter_fun,exit_fun):
         if cycle not in self.__cycles:

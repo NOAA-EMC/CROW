@@ -54,14 +54,9 @@ def make_yaml_files(srcdir,tgtdir):
     # Deal with the config files:
     for srcfile in glob.glob(f'{srcdir}/config*.yaml'):
         logger.info(f'{srcfile}: read file')
-        with open(srcfile,'rt') as f:
-            sys.stdout.write(f.read())
         doc=from_file(srcfile)
-        print(repr(doc))
         tgtfile=os.path.join(tgtdir,os.path.basename(srcfile))
-        print('to_yaml')
         yaml=to_yaml(doc)
-        print('back from to_yaml')
         anchor=os.path.basename(srcfile)[:-5]
         anchored=re.sub(r'\A([a-zA-Z][a-zA-Z0-9_]*):',
                         r'\1: &'+anchor,yaml)
@@ -118,7 +113,6 @@ def write_ecflow_suite_to_disk(targetdir, suite_defs, ecf_files):
     for deffile in suite_defs.keys():
         defname = suite_defs[deffile]['name']
         defcontents = suite_defs[deffile]['def']
-        #print(f'=== contents of suite def {defname}\n{suite_defs[defname]}')
         filename=os.path.realpath(os.path.join(targetdir,'defs',deffile))
         make_parent_dir(filename)
         logger.info(f'{defname}: {filename}: write suite definition')

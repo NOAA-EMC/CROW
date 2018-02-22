@@ -711,7 +711,7 @@ suite: !Cycle
           Foreach: [ groupid ]
           Name: !expand "jgdas_enkf_fcst_grp{dimval.groupid}"
           resources: !calc ( doc.resources.run_efcs )
-          J_JOB: efcs.hs
+          J_JOB: efcs.sh
           
       jgdas_enkf_post: !Task
         <<: *exclusive_task_template

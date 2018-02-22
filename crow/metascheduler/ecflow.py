@@ -264,12 +264,10 @@ class ToEcflow(object):
 
             if node.trigger not in [FALSE_DEPENDENCY,TRUE_DEPENDENCY]:
                 sio.write(f'{indent1}trigger ')
-                print(f'{node.path}: trigger is {node.trigger}')
                 dep_to_ecflow(sio,node,node.trigger,clock,suite_name_format,undated)
                 sio.write('\n')
             if node.complete not in [FALSE_DEPENDENCY,TRUE_DEPENDENCY]:
                 sio.write(f'{indent1}complete ')
-                print(f'{node.path}: complete is {node.complete}')
                 dep_to_ecflow(sio,node,node.complete,clock,suite_name_format,undated)
                 sio.write('\n')
             if node.time>ZERO_DT:

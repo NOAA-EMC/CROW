@@ -136,14 +136,18 @@ if [[ "${WORKTOOLS_VERBOSE:-NO}" == YES ]] ; then
     set -x
 fi
 
-/ecf/devutils/server_check.sh "$ECF_ROOT" "$ECF_PORT" || true
+if [[ "${WORKTOOLS_VERBOSE:-NO}" == YES ]] ; then
+    /ecf/devutils/server_check.sh "$ECF_ROOT" "$ECF_PORT" || true
+else
+    /ecf/devutils/server_check.sh "$ECF_ROOT" "$ECF_PORT" > /dev/null 2>&1 || true
+fi
 
 if ( ! ecflow_client --ping ) ; then
     echo "Could not connect to ecflow server.  Aborting."
     exit 1
 fi
 
-if ( ! ecflow_client --get=/totality_limit ) ; then
+if ( ! ecflow_client --get=/totality_limit > /dev/null 2>&1 ) ; then
     ecflow_client --load ./totality_limit.def
 fi
 
