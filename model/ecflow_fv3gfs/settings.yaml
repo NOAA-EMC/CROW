@@ -1,24 +1,43 @@
 settings:
-  NMEM_ENKF: 80
-  ENKF_GROUPS: 8
+  Template: *settings_validator
 
-  ENKF_INNOVATE_GROUPS: !calc ENKF_GROUPS
-  ENKF_FORECAST_GROUPS: !calc ENKF_GROUPS
-  ENKF_ARCHIVE_GROUPS: !calc ENKF_GROUPS
+  # Import certain variables from doc.config_files:
+  Inherit: !Inherit
+    - [ 'doc.config_files','FH.*|QUEUE|layout.*|WRITE_GROUP|WRT.*|HOME.*' ]
 
-  ECF_HOME: '/gpfs/hps3/emc/hwrf/noscrub/Bin.Liu/save/gitCROW/model/ecflow_fv3gfs'
-  ROCOTO_HOMEgfs: !calc ECF_HOME # Would be different in the real execution
-  ROCOTO_HOME: !calc ECF_HOME
-  layout_x: 8
-  layout_y: 16
-  experiment_name: ecfgfsfv3
-  QUEUE: debug
-  PROJECT: GFS-T2O
-  QUEUESERV: dev_transfer
+  # NOTE: Additional files are set by the validator.  See validator.yaml.
 
-  forecast_hours: !calc tools.seq(0,120,1)+tools.seq(123,240,3)+tools.seq(240,384,12)
+  resource_file: !expand >-
+    resources_{doc.config_files.CASE}_{doc.config_files.CASE_ENKF}.yaml
+
+  DMPDIR: !calc doc.config_files.DMPDIR
+  COM: !calc doc.config_files.ROTDIR
+  EXPDIR: !calc doc.config_files.EXPDIR
+  DATAROOT: !calc doc.config_files.RUNDIR
+  experiment_name: !calc doc.config_files.PSLOT
+
+  PROJECT: !calc ( doc.config_files.ACCOUNT )
+  QUEUESERV: !calc ( doc.config_files.QUEUE_ARCH )
+
+  ENKF_INNOVATE_GROUPS: !calc >-
+    doc.config_files.NMEM_ENKF // doc.config_files.NMEM_EOMGGRP
+
+  ENKF_FORECAST_GROUPS: !calc >-
+    doc.config_files.NMEM_ENKF // doc.config_files.NMEM_EFCSGRP
+
+  ENKF_ARCHIVE_GROUPS: !calc >-
+    doc.config_files.NMEM_ENKF // doc.config_files.NMEM_EARCGRP
+
+  start_date: !calc tools.strptime(doc.config_files.SDATE,"%Y%m%d%H")
+  end_date:  !calc tools.strptime(doc.config_files.EDATE,"%Y%m%d%H")
+
+  gfs_forecast_hours: !calc >-
+    tools.uniq(sorted(
+      tools.seq(FHMIN_GFS,FHMAX_HF_GFS,FHOUT_HF_GFS) +
+      tools.seq(FHMIN_GFS,FHMAX_GFS,   FHOUT_GFS)))
+  gdas_forecast_hours: !calc tools.seq(FHMIN,FHMAX,FHOUT)
   wafs_last_hour: !calc 120
 
-  # NOTE TO SELF: replace experiment_name with %EMCPEN%
-  COM: !expand '/gpfs/hps2/ptmp/emc.glopara/{experiment_name}/com'
-  DATAROOT: !expand '/gpfs/hps2/stmp/emc.glopara/{experiment_name}'
+  realtime: True
+  archive_to_hpss: True
+  four_cycle_mode: False

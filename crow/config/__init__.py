@@ -57,8 +57,20 @@ def from_file(*args,evaluate_immediates=True,validation_stage=None):
     return from_string(u'\n\n\n'.join(data),
                        evaluate_immediates=evaluate_immediates,
                        validation_stage=validation_stage)
-def validate(obj,stage=''):
-    if getattr(obj,'_validate'):
+
+def _recursive_validate(obj,stage,memo=None):
+    if memo is None: memo=set()
+    if id(obj) in memo: return
+    memo.add(id(obj))
+    if hasattr(obj,'_validate'):
+        obj._validate(stage)
+        for k,v in obj.items():
+            _recursive_validate(v,stage,memo)
+
+def validate(obj,stage='',recurse=False):
+    if recurse:
+        _recursive_validate(obj,stage)
+    elif hasattr(obj,'_validate'):
         obj._validate(stage)
 
 def document_root(obj):

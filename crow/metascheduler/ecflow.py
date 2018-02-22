@@ -1,4 +1,4 @@
-import collections, datetime, re
+import collections, datetime, re, logging
 from collections import OrderedDict
 
 from io import StringIO
@@ -12,11 +12,13 @@ from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           AndDependency, OrDependency, NotDependency, \
           StateDependency, Dependable, Taskable, Task, \
           Family, Cycle, RUNNING, COMPLETED, FAILED, \
-          TRUE_DEPENDENCY, FALSE_DEPENDENCY, SuitePath, \
+          TRUE_DEPENDENCY, FALSE_DEPENDENCY, SuitePath, validate, \
           CycleExistsDependency, invalidate_cache, EventDependency
 __all__=['to_ecflow','ToEcflow']
 
 f'This module requires python 3.6 or newer.'
+
+_logger=logging.getLogger('to_ecflow')
 
 ECFLOW_STATE_MAP={ COMPLETED:'complete',
                    RUNNING:'active',
@@ -172,6 +174,7 @@ class ToEcflow(object):
 
     def _select_cycle(self,cycle):
         invalidate_cache(self.suite,recurse=True)
+        validate(self.suite,stage='suite',recurse=True)
         self.suite.Clock.now = cycle
 
     def _foreach_cycle(self,clock):
@@ -195,12 +198,15 @@ class ToEcflow(object):
             self.graph.force_never_run(self.suite.final.at(dt).path)
 
     def _initialize_graph(self):
+        _logger.info('populate job graph...')
         self._populate_job_graph()
+        _logger.info('simplify job graph...')
         self._remove_final_task()
         self._simplify_job_graph()
 
     def _populate_job_graph(self):
         for cycle in self._foreach_cycle(self._cycles_to_analyze()):
+            _logger.info(f'{cycle:%Y%m%d%H%M}: populate job graph...')
             self.graph.add_cycle(cycle)
 
     def _simplify_job_graph(self):
@@ -221,6 +227,11 @@ class ToEcflow(object):
         suite_name=cycle.strftime(suite_name_format)
         undated=OrderedDict()
         sio=StringIO()
+
+        if 'before_suite_def' in self.suite:
+            sio.write(self.suite.before_suite_def)
+            sio.write('\n')
+
         sio.write(f'suite {suite_name}\n')
         if 'ecflow_def' in self.suite:
             for line in self.suite.ecflow_def.splitlines():
@@ -248,12 +259,17 @@ class ToEcflow(object):
                 for line in node.view.ecflow_def.splitlines():
                     sio.write(f'{indent1}{line.rstrip()}\n')
 
+            if 'Dummy' in node.view and node.view.Dummy:
+                sio.write(f"{indent1}edit ECF_DUMMY_TASK ''\n")
+
             if node.trigger not in [FALSE_DEPENDENCY,TRUE_DEPENDENCY]:
                 sio.write(f'{indent1}trigger ')
+                print(f'{node.path}: trigger is {node.trigger}')
                 dep_to_ecflow(sio,node,node.trigger,clock,suite_name_format,undated)
                 sio.write('\n')
             if node.complete not in [FALSE_DEPENDENCY,TRUE_DEPENDENCY]:
                 sio.write(f'{indent1}complete ')
+                print(f'{node.path}: complete is {node.complete}')
                 dep_to_ecflow(sio,node,node.complete,clock,suite_name_format,undated)
                 sio.write('\n')
             if node.time>ZERO_DT:
@@ -334,6 +350,7 @@ class ToEcflow(object):
         ecf_files=collections.defaultdict(dict)
         self._initialize_graph()
         for cycle in self._foreach_cycle(self._cycles_to_write()):
+            _logger.info(f'{cycle:%Y%m%d%H%M}: make suite definition in memory...')
             # Figure our where we are making the suite definition file:
             filename=cycle.strftime(self.suite.ecFlow.suite_def_filename)
             if filename in suite_def_files:
@@ -344,6 +361,7 @@ class ToEcflow(object):
             assert(isinstance(suite_name,str))
             assert(isinstance(suite_def,str))
             suite_def_files[filename]={ 'name':suite_name, 'def':suite_def }
+            _logger.info(f'{cycle:%Y%m%d%H%M}: make ecf files in memory...')
             self._make_ecf_files_for_one_cycle(ecf_files)
         del self.suite
         return suite_def_files,ecf_files

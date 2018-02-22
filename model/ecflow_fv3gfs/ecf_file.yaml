@@ -38,6 +38,7 @@ ecf_file_logic: &ecf_file_logic
     %include <tail.h>
     %manual
     {ecf_manual}
+    %end
 
   ecf_manual: |
     # FIXME: Insert manual for this job.

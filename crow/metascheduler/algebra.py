@@ -22,8 +22,8 @@ def assume(tree,existing_cycles,current_cycle,assume_complete=None,
         return FALSE_DEPENDENCY
     elif isinstance(tree,TaskExistsDependency):
         cycle=current_cycle+tree.view.path[0]
-        if assume_complete and assume_complete(tree.view) or \
-           assume_never_run and assume_never_run(tree.view):
+        if assume_complete and assume_complete(tree.path) or \
+           assume_never_run and assume_never_run(tree.path):
             return FALSE_DEPENDENCY
         alarm=tree.view.get_alarm(default=existing_cycles)
         if cycle in alarm:
@@ -33,27 +33,38 @@ def assume(tree,existing_cycles,current_cycle,assume_complete=None,
     elif isinstance(tree,AndDependency):
         a=TRUE_DEPENDENCY
         for d in tree:
-            a=a & assume(d,existing_cycles,current_cycle)
+            a=a & assume(d,existing_cycles,current_cycle,assume_complete,
+                         assume_never_run)
         return a
     elif isinstance(tree,OrDependency):
         a=FALSE_DEPENDENCY
         for d in tree:
-            a=a | assume(d,existing_cycles,current_cycle)
+            a=a | assume(d,existing_cycles,current_cycle,assume_complete,
+                         assume_never_run)
         return a
     elif isinstance(tree,NotDependency):
-        return ~assume(tree.depend,existing_cycles,current_cycle)
+        return ~assume(tree.depend,existing_cycles,current_cycle,
+                       assume_complete,assume_never_run)
     elif isinstance(tree,StateDependency):
         if assume_never_run and assume_never_run(tree.path):
             return FALSE_DEPENDENCY
         if assume_complete and assume_complete(tree.path):
             return TRUE_DEPENDENCY if tree.state==COMPLETED \
               else FALSE_DEPENDENCY
+        if current_cycle+tree.path[0] not in existing_cycles:
+            # Prior cycle tasks will never complete, run, or fail.
+            return FALSE_DEPENDENCY
         return tree
     elif isinstance(tree,EventDependency):
         if assume_never_run and assume_never_run(tree.event.parent.path):
+            print(f'{tree.event.path}: event parent is never run so event cannot be set')
             return FALSE_DEPENDENCY
         if assume_complete and assume_complete(tree.event.parent.path):
-            return TRUE_DEPENDENCY
+            print(f'{tree.event.path}: event parent is always complete so event cannot be set')
+            return FALSE_DEPENDENCY
+        if current_cycle+tree.path[0] not in existing_cycles:
+            # Prior cycle events will never be set.
+            return FALSE_DEPENDENCY
         return tree
 
     return tree

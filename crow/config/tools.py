@@ -85,6 +85,15 @@ def indent(prefix,text):
 def expand(string,**kwargs):
     return eval(f"f'''{string}'''",{},kwargs)
 
+def uniq(inlist):
+    outlist=[]
+    memo=set()
+    for i in inlist:
+        if i in memo: continue
+        memo.add(i)
+        outlist.append(i)
+    return outlist
+
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
 CONFIG_TOOLS=crow.tools.ImmutableMapping({
@@ -108,6 +117,7 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'exists':os.path.exists,
     'strftime':strftime,
     'strptime':strptime,
+    'uniq':uniq,
     'to_timedelta':crow.tools.to_timedelta,
     'as_seconds':seconds,
     'to_YMDH':to_YMDH, 'from_YMDH':from_YMDH,

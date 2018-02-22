@@ -242,7 +242,7 @@ class SuiteView(Mapping):
         if key not in self.viewed:
             raise KeyError(f'{key}: not in {", ".join([k for k in self.keys()])}')
         val=self.viewed[key]
-
+        
         if hasattr(val,'_is_suite_view'):
             return val
         elif type(val) in SUITE_CLASS_MAP:
@@ -439,8 +439,10 @@ class Depend(str):
             result=eval(self,globals,locals)
             result=as_dependency(result,path)
             return result
-        except(ValueError,SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
-            raise DependError(f'!Depend {self}: {ke}')
+        except(AttributeError,KeyError,NameError) as ne:
+            raise DependError(f'{".".join(path[1:])}@{path[0]}: !Depend {self}: {ne} --- in --- {{{", ".join([k for k in locals.keys()])}}}')
+        except(ValueError,SyntaxError,TypeError,IndexError) as ke:
+            raise DependError(f'{path}: !Depend {self}: {ke}')
 
 def as_dependency(obj,path=MISSING,state=COMPLETED):
     """!Converts the containing object to a State.  Action objects are
@@ -454,6 +456,8 @@ def as_dependency(obj,path=MISSING,state=COMPLETED):
         return StateDependency(obj,state)
     elif isinstance(obj,LogicalDependency):
         return obj
+    elif obj is None:
+        return None
     raise TypeError(
         f'{type(obj).__name__} is not a valid type for a dependency')
 

@@ -27,6 +27,7 @@ class Inherit(list_eval):
     def _update(self,target,globals,locals,stage,memo):
         errors=list()
         for scopename,regex in reversed(self):
+            inherited=False
             try:
                 scopename=str(scopename)
                 _logger.debug(f'{target._path}: inherit from {scopename}')
@@ -36,6 +37,8 @@ class Inherit(list_eval):
                 for key in scope:
                     if key not in IGNORE_WHILE_INHERITING  and \
                        re.search(regex,key) and key not in target:
+                        inherited=True
+                        _logger.debug(f'{target._path}: inherit {key} from {scopename} regex {regex}')
                         target._raw_child()[key]=scope._raw_child()[key]
             # except (IndexError,AttributeError,TypeError,ValueError) as pye:
             #     msg=f'{target._path}: when including {scope._path}:'\
@@ -45,7 +48,10 @@ class Inherit(list_eval):
             except TemplateErrors as te:
                 errors.append(f'{target._path}: when including {scope._path}')
                 errors.extend(te.template_errors)
+            if not inherited:
+                _logger.debug(f'{target._path}: inherit nothing from {scopename} with regex {regex} keys {{{", ".join([k for k in scope.keys()])}}}')
         if errors: raise TemplateErrors(errors)
+        _logger.debug(f'{target._path}: now has keys {{{", ".join([k for k in target.keys()])}}}')
 
 class Template(dict_eval):
     """!Internal implementation of the YAML Template type.  Validates a
@@ -123,6 +129,7 @@ class Template(dict_eval):
                 errors.append(str(ce))
                 _logger.debug(f'{scope._path}.{var}: {type(ce).__name__}: {ce}',exc_info=True)
 
+
         # Insert default values for all templates found thus far and
         # detect any missing, non-optional, variables
         missing=list()
@@ -137,12 +144,13 @@ class Template(dict_eval):
         # Second pass checking for required variables that have no
         # values.  This second pass deals with variables that were
         # updated by an "override" clause.
-        still_missing=list()
-        for var in missing:
-            if var not in scope: still_missing.append(var)
+        reported_missing=set(missing)
+        in_scope=set([k for k in scope.keys()])
+        still_missing=reported_missing-in_scope
         if still_missing:
             raise VariableMissing(f'{scope._path}: missing: '+
-                                  ', '.join(still_missing))
+                                  ', '.join(still_missing)+' in: '+
+                                  ', '.join([k for k in scope.keys()]))
 
         # Check for variables that evaluate to an error
         for key,expr in scope._raw_child().items():
@@ -228,7 +236,8 @@ def validate_type(path,var,typ,val,allowed):
     elif result is TYPE_MISMATCH:
         val_repr='null' if val is None else repr(val)
         raise InvalidConfigValue(
-            f'{path}.{var}={val_repr}: not valid for type {typ!r}')
+            f'{path}.{var}={val_repr}: not valid for type {typ!r}'
+            '.  Should this have been a !calc?')
     elif result is NOT_ALLOWED:
         val_repr='null' if val is None else repr(val)
         raise InvalidConfigValue(

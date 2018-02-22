@@ -82,7 +82,11 @@ def from_config(key,val,globals,locals,path):
             result=val._result(globals,locals)
             return from_config(key,result,globals,locals,path)
         return val
-    except(SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
+    except(KeyError,NameError,AttributeError) as ae:
+        raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
+                           f'{type(ae).__name__} {str(ae)} --- in --- '
+                           f'{{{", ".join([ k for k in locals.keys() ])}}}')
+    except(SyntaxError,TypeError,IndexError) as ke:
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
                            f'{type(ke).__name__} {str(ke)}')
     except RecursionError as re:
@@ -169,6 +173,8 @@ class dict_eval(MutableMapping):
         return d
 
     def _invalidate_cache(self,key=None):
+        _logger.debug(f'{self._path}: invalidate cache')
+        self._is_validated=False
         if key is None:
             #print(f'{self._path}: reset')
             self.__cache=copy(self.__child)
@@ -230,8 +236,15 @@ class dict_eval(MutableMapping):
         self.__is_validated=True
 
         # Inherit from other scopes:
-        if 'Inherit' in self and hasattr(self.Inherit,'_update'):
-            self.Inherit._update(self,self.__globals,self,stage,memo)
+        if 'Inherit' in self:
+            _logger.debug(f'{self._path}: has Inherit')
+            if hasattr(self.Inherit,'_update'):
+                self.Inherit._update(self,self.__globals,self,stage,memo)
+                _logger.debug(f'{self._path}: after inherit, {{{", ".join([k for k in self.keys()])}}}')
+            else:
+                _logger.warning(f'{self._path}: Inherit is not an !Inherit.  Error?')
+        else:
+            _logger.debug(f'{self._path}: no Inherit')
 
         # Validate this scope:
         if 'Template' in self:
@@ -255,8 +268,8 @@ class dict_eval(MutableMapping):
         val=self.__cache[key]
         if hasattr(val,'_result'):
             immediate=hasattr(val,'_is_immediate')
-            val=from_config(key,val,self.__globals,self,
-                            f'{self._path}.{key}')
+            val=from_config(key=key,val=val,globals=self.__globals,locals=self,
+                            path=f'{self._path}.{key}')
             self.__cache[key]=val
             if immediate:
                 self.__child[key]=val
@@ -348,6 +361,7 @@ class list_eval(MutableSequence):
         self.__globals=deepcopy(other.__globals,memo)
         self.__cache=deepcopy(other.__cache,memo)
     def _invalidate_cache(self,index=None):
+        _logger.debug(f'{self._path}: invalidate cache')
         if index is None:
             self.__cache=copy(self.__child)
         else:
