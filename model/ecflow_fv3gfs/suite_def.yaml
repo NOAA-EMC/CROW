@@ -67,7 +67,6 @@ suite: !Cycle
     edit ENVIR 'prod'
     edit E 'jecffv3'
     edit EMCPEN '{doc.settings.experiment_name}'
-    edit COM '{doc.settings.COM}'
     edit DATAROOT '{doc.settings.DATAROOT}'
     edit ECF_OUT '{doc.settings.ECF_HOME}/output'
     edit ECF_LOG '{doc.settings.EXPDIR}/ecf.log'
@@ -347,27 +346,30 @@ suite: !Cycle
         # NOTE: the above files must match post_manager.yaml
 
       jgfs_post_anl: !Task
+        <<: *exclusive_task_template
+        FHRGRP: '000'
+        FHRLST: anl
+        more_vars: [ FHRGRP, FHRLST ]
         ecflow_def: |
-          edit FHRGRP '000'
-          edit FHRLST 'anl'
           edit FHR 'anl'
           edit HR 'anl'
-        <<: *exclusive_task_template
         Trigger: !Depend jgfs_post_manager.release_postanl | up.forecast
         release_pgrb2_anl: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resources.run_gfspost )
         J_JOB: post.sh
+        more_vars: [ FHRGRP, FHRLST ]
 
       jgfs_post_fhr_el: !TaskElement
         <<: *exclusive_task_template
         Foreach: [ fhr  ]
         resources: !calc doc.resources.run_gfspost
         Name: !expand jgfs_post_f{dimval.fhr:02d}
+        FHRGRP: !expand "{dimidx.fhr+1:03d}"
+        FHRLST: !expand "{dimval.fhr:03d}"
         ecflow_def:
-          edit FHRGRP '{dimidx.fhr+1:03d}'
-          edit FHRLST '{dimval.fhr:03d}'
           edit FHR '{dimval.fhr:02d}'
           edit HR '{dimval.fhr:02d}'
+        more_vars: [ FHRGRP, FHRLST ]
         J_JOB: post.sh
         Trigger: !Depend jgfs_post_manager.depend("release_post{F:02d}",F=[dimval.fhr]) | up.forecast
 
@@ -684,6 +686,8 @@ suite: !Cycle
           Name: !expand "jgdas_enkf_innovate_obs_grp{dimval.groupid}"
           resources: !calc ( doc.resources.run_eomg )
           J_JOB: eomg.sh
+          ENSGRP: !expand "{dimval.groupid:02d}"
+          more_vars: [ ENSGRP ]
 
       jgdas_enkf_update: !Task
         <<: *exclusive_task_template
@@ -712,6 +716,8 @@ suite: !Cycle
           Name: !expand "jgdas_enkf_fcst_grp{dimval.groupid}"
           resources: !calc ( doc.resources.run_efcs )
           J_JOB: efcs.sh
+          ENSGRP: !expand "{dimval.groupid:02d}"
+          more_vars: [ ENSGRP ]
           
       jgdas_enkf_post: !Task
         <<: *exclusive_task_template
@@ -751,7 +757,7 @@ suite: !Cycle
   archive: !Family
     ecflow_def:
       edit ECF_TRIES '3'
-    gdasarch: !Task
+    jgdas_archive: !Task
       <<: *service_task_template
       AlarmName: gdas
       Trigger: !Depend up.gdas.jgdas_emc_vrfy
@@ -760,7 +766,7 @@ suite: !Cycle
       J_JOB: arch.sh
       RUN: gdas
 
-    earc: !TaskArray
+    jgdas_enkf_archive: !TaskArray
       AlarmName: gdas
       Trigger: !Depend up.gdas.enkf.jgdas_enkf_post
       Dimensions:
@@ -775,7 +781,7 @@ suite: !Cycle
         ENSGRP: !expand "{dimval.groupid:02d}"
         RUN: gdas
 
-    gfsarch: !Task
+    jgfs_archive: !Task
       <<: *service_task_template
       Complete: !Depend ~ suite.has_cycle('-6:00:00')
       AlarmName: gfs
