@@ -64,6 +64,7 @@ suite: !Cycle
     edit ECF_TRIES '{doc.settings.max_job_tries}'
     edit ECF_HOME '{doc.settings.ECF_HOME}'
     edit CYC '{tools.strftime(suite.Clock.now,"%H")}'
+    edit MACHINE '{doc.settings.ecflow_machine}'
     edit ENVIR 'prod'
     edit E 'jecffv3'
     edit EMCPEN '{doc.settings.experiment_name}'
@@ -87,19 +88,19 @@ suite: !Cycle
   gfs: !Family
     Complete: !Depend ~ suite.has_cycle('-6:00:00') 
     ecflow_def: !expand |
-      edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
-      edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
-      edit PROJ '%PROJENVIR%'
       edit RUN 'gfs'
 
     dump_waiter: !Task
       <<: *dump_waiter_task
-      ecflow_def: !FirstTrue
+      Disable: !calc metasched.type != 'ecflow'
+      realtime_logic: !FirstTrue
         - when: !calc doc.settings.realtime
           do: "edit ECF_TRIES 72"
         - otherwise: ""
+      ecflow_def: !expand |
+        {realtime_logic}
+        edit DUMPDIR '{doc.settings.DMPDIR}'
       Trigger: !Depend  up.gdas.post.at('-6:00:00')
-      Complete: !Depend ~ suite.has_cycle('-6:00:00') 
 
     dump: !Family
       Dummy: true  ## <-- Node is not implemented yet
@@ -349,10 +350,9 @@ suite: !Cycle
         <<: *exclusive_task_template
         FHRGRP: '000'
         FHRLST: anl
-        more_vars: [ FHRGRP, FHRLST ]
-        ecflow_def: |
-          edit FHR 'anl'
-          edit HR 'anl'
+        more_vars: [ FHRGRP, FHRLST, FHR, HR ]
+        FHR: !expand 'anl'
+        HR: !expand 'anl'
         Trigger: !Depend jgfs_post_manager.release_postanl | up.forecast
         release_pgrb2_anl: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resources.run_gfspost )
@@ -365,11 +365,10 @@ suite: !Cycle
         resources: !calc doc.resources.run_gfspost
         Name: !expand jgfs_post_f{dimval.fhr:02d}
         FHRGRP: !expand "{dimidx.fhr+1:03d}"
-        FHRLST: !expand "{dimval.fhr:03d}"
-        ecflow_def:
-          edit FHR '{dimval.fhr:02d}'
-          edit HR '{dimval.fhr:02d}'
-        more_vars: [ FHRGRP, FHRLST ]
+        FHRLST: !expand "f{dimval.fhr:03d}"
+        FHR: !expand 'f{dimval.fhr:02d}'
+        HR: !expand '{dimval.fhr:02d}'
+        more_vars: [ FHRGRP, FHRLST, FHR, HR ]
         J_JOB: post.sh
         Trigger: !Depend jgfs_post_manager.depend("release_post{F:02d}",F=[dimval.fhr]) | up.forecast
 
@@ -461,7 +460,8 @@ suite: !Cycle
       <<: *exclusive_task_template
       Trigger: !Depend post
       resources: !calc ( doc.resources.run_gfsvrfy )
-
+      J_JOB: vrfy.sh
+      
     #endfamily gempak
   #endfamily gfs
 
@@ -471,10 +471,6 @@ suite: !Cycle
 
   gdas: !Family
     ecflow_def: !expand |
-      #edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% xc40-dev'
-      edit ECF_JOB_CMD 'lsub %ECF_JOB% %ECF_JOBOUT% %MACHINE%'
-      edit ECF_FILES '{doc.settings.ECF_HOME}/scripts'
-      edit PROJ '%PROJENVIR%'
       edit RUN 'gdas'
 
     jgdas_verfrad: !Task
@@ -492,10 +488,13 @@ suite: !Cycle
     dump_waiter: !Task
       <<: *dump_waiter_task
       Disable: !calc metasched.type != 'ecflow'
-      ecflow_def: !FirstTrue
+      realtime_logic: !FirstTrue
         - when: !calc doc.settings.realtime
           do: "edit ECF_TRIES 72"
         - otherwise: ""
+      ecflow_def: !expand |
+        {realtime_logic}
+        edit DUMPDIR '{doc.settings.DMPDIR}'
       Trigger: !Depend  post.at('-6:00:00')
 
     dump: !Family
@@ -561,26 +560,26 @@ suite: !Cycle
         <<: *exclusive_task_template
         Trigger: !Depend ( up.prep.jgdas_prep & up.prep.jgdas_emcsfc_sfc_prep & up.enkf.jgdas_enkf_post.at('-6:00:00') )
         #Trigger: !Depend ( up.prep.jgdas_prep & up.prep.jgdas_emcsfc_sfc_prep )
-        release_fcst: !DataEvent {file="/dev/null"}
+        #release_fcst: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resources.run_anal )
         J_JOB: anal.sh
 
     forecast: !Family
       jgdas_forecast_high: !Task
         <<: *exclusive_task_template
-        Dummy: true  ## <-- Node is not implemented yet
-        Trigger: !Depend ( up.analysis.jgdas_analysis_high.release_fcst & up.enkf.innovate ) | ~ suite.has_cycle('-6:00:00')
-        release_fcst: !DataEvent {file="/dev/null"}
+        Trigger: !Depend ( up.analysis.jgdas_analysis_high & up.enkf.innovate ) | ~ suite.has_cycle('-6:00:00')
+        #release_fcst: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resources.run_gdasfcst )
-        J_JOB: JGLOBAL_FORECAST
+        J_JOB: fcst.sh
 
       jgdas_forecast: !Task
         <<: *exclusive_task_template
-        Trigger: !Depend ( up.analysis.jgdas_analysis_high.release_fcst & up.enkf.innovate )
-        release_fcst: !DataEvent {file="/dev/null"}
+        Trigger: !Depend ( up.analysis.jgdas_analysis_high & up.enkf.innovate ) | ~ suite.has_cycle('-6:00:00')
+        #release_fcst: !DataEvent {file="/dev/null"}
         #resources: !calc ( doc.resources.run_gdasfcst )
         resources: !calc ( doc.resources.run_nothing )
         J_JOB: fcst.sh
+        Dummy: true  ## <-- Node is not implemented yet
 
     post_processing: !Family
       Dummy: true  ## <-- Node is not implemented yet
@@ -636,12 +635,12 @@ suite: !Cycle
         # NOTE: the above files must match post_manager.yaml
 
       jgdas_post_anl: !Task
-        ecflow_def: |
-          edit FHRGRP '000'
-          edit FHRLST 'anl'
-          edit FHR 'anl'
-          edit HR 'anl'
         <<: *exclusive_task_template
+        FHR: 'anl'
+        HR: 'anl'
+        FHRGRP: '000'
+        FHRLST: 'anl'
+        more_vars: [ FHRGRP, FHRLST, HR, FHR ]
         Trigger: !Depend jgdas_post_manager.release_postanl | up.forecast
         release_pgrb2_anl: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resources.run_gdaspost )
@@ -652,19 +651,20 @@ suite: !Cycle
         Foreach: [ fhr  ]
         resources: !calc doc.resources.run_gdaspost
         Name: !expand jgdas_post_f{dimval.fhr:02d}
-        ecflow_def: |
-          edit FHRGRP '{dimidx.fhr+1:03d}'
-          edit FHRLST 'f{dimval.fhr:03d}'
-          edit FHR 'f{dimval.fhr:02d}'
-          edit HR '{dimval.fhr:02d}'
+        FHRGRP: !expand '{dimidx.fhr+1:03d}'
+        FHRLST: !expand 'f{dimval.fhr:03d}'
+        FHR: !expand 'f{dimval.fhr:02d}'
+        HR: !expand '{dimval.fhr:02d}'
         J_JOB: post.sh
         Trigger: !Depend jgdas_post_manager.depend("release_post{F:02d}",F=[dimval.fhr]) | up.forecast
+        more_vars: [ FHR, HR, FHRGRP, FHRLST ]
     #endfamily post
 
     jgdas_emc_vrfy: !Task
       <<: *exclusive_task_template
       Trigger: !Depend post
       resources: !calc ( doc.resources.run_gdasvrfy )
+      J_JOB: vrfy.sh
 
     enkf: !Family
       jgdas_enkf_select_obs: !Task

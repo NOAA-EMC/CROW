@@ -39,4 +39,4 @@ config_files:
   layout_y:     !Immediate [ !calc ' int(tools.env("layout_y"),10) ' ]
   WRITE_GROUP:  !Immediate [ !calc ' int(tools.env("WRITE_GROUP"),10) ' ]
   WRTTASK_PER_GROUP: !Immediate
-    - !calc int(tools.env("WRITE_GROUP"),10)
+    - !calc int(tools.env("WRTTASK_PER_GROUP"),10)

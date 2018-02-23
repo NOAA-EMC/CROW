@@ -17,6 +17,9 @@ make_next_cycles: &make_next_cycles_task !Task
   # J-Job would normally be called.  This job is never run by
   # Rocoto, so Rocoto never uses this code block.
   ecflow_command: !expand |
+    workdir=/tmp/$USER.dump_waiter.$$.$RANDOM
+    mkdir -p "$workdir"
+    cd "$workdir"
     export WORKFLOW_FIRST_CYCLE=%WORKFLOW_FIRST_CYCLE:1970010100%
     export WORKFLOW_LAST_CYCLE=%WORKFLOW_LAST_CYCLE:ETERNITY%
     export WORKFLOW_CYCLES_TO_GENERATE=%WORKFLOW_CYCLES_TO_GENERATE:5%
@@ -62,3 +65,5 @@ make_next_cycles: &make_next_cycles_task !Task
     ./update_ecflow_workflow.sh "$WORKFLOW_EXPDIR" "$first_cycle" "$last_cycle"
 
     
+    cd /
+    rm -rf "$workdir"

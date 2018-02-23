@@ -261,6 +261,7 @@ class ToEcflow(object):
 
             if 'Dummy' in node.view and node.view.Dummy:
                 sio.write(f"{indent1}edit ECF_DUMMY_TASK ''\n")
+                sio.write(f"{indent1}defstatus complete\n")
 
             if node.trigger not in [FALSE_DEPENDENCY,TRUE_DEPENDENCY]:
                 sio.write(f'{indent1}trigger ')
