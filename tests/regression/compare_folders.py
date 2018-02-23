@@ -6,6 +6,7 @@ import os,sys
 from pathlib import Path
 from pathlib import PurePath
 
+egnore_file_list = ['*.grp*','*.log','*.log*','INPUT','logs','*.idx']
 
 def get_args():
     import argparse
@@ -48,7 +49,7 @@ def compare(folder1, folder2 ):
 
 def _recursive_dircmp(folder1, folder2 ):
 
-    comparison = filecmp.dircmp(folder1, folder2)
+    comparison = filecmp.dircmp(folder1, folder2,  ignore=egnore_file_list)
     data = {
         'left': [r'{}/{}'.format(folder1, i) for i in comparison.left_only],
         'right': [r'{}/{}'.format(folder2, i) for i in comparison.right_only],
@@ -134,13 +135,14 @@ def tarcmp(tar_file_one, tar_file_two):
 def cmp_master_grb2(grib2_file1, grib2_file2):
     l1 = l2 = ' '
     with open(grib2_file1, 'r',encoding="ISO-8859-1") as f1, open(grib2_file2, 'r',encoding="ISO-8859-1") as f2:
-        f1.readline(); f1.readline()
-        f2.readline(); f2.readline()
+        firstline1 = f1.readline(); firstline2 = f2.readline()
+        if '!GFHDR!' in firstline1:
+            f1.readline(); f2.readline()
         while l1 != '' and l2 != '':
-            l1 = f1.readline()
-            l2 = f2.readline()
             if l1 != l2:
                 return False
+            l1 = f1.readline()
+            l2 = f2.readline()
     return True
 
 
@@ -517,9 +519,14 @@ if __name__ == '__main__':
         if not os.path.isdir(folder):
             logger.critical(logger_hdr+'directory %s does not exsist'%folder)
             sys.exit(-1)
-    diff_file = open( diff_file_name, 'w')
+    diff_file = open( diff_file_name,'w')
 
     cwd = os.getcwd()
+
+    total_file_count_dir1 = sum([len(files) for r, d, files in os.walk(folder1)])
+    total_file_count_dir2 = sum([len(files) for r, d, files in os.walk(folder2)])
+    logger.info(logger_hdr+'total number of files in %s is %d'%(folder1,total_file_count_dir1))
+    logger.info(logger_hdr+'total number of files in %s is %d'%(folder2,total_file_count_dir2))
 
     logger.info(logger_hdr+'comparing folders:\n   %s\n   %s'%(folder1,folder2))
     logger.info(logger_hdr+'checking for matching file counts in directories')
@@ -528,7 +535,7 @@ if __name__ == '__main__':
     if len(results['left']) !=0 and len(results['right']) !=0:
         left_right = ('left','right')
         out_of_order_file_name = os.path.join( os.path.dirname( diff_file_name ), os.path.basename(diff_file_name).split('.',1)[0]+'.file_imbalance')
-        out_of_order_file = open(out_of_order_file_name , 'w')
+        out_of_order_file = open(out_of_order_file_name ,'w')
         for each_side in left_right:
             if each_side == 'left':
                 foldera = folder1
@@ -543,9 +550,11 @@ if __name__ == '__main__':
                 out_of_order_file.write('%d files found in %s that are not in %s:\n'%(num_missmatched_files,os.path.basename(foldera),os.path.basename(folderb)))
                 for file in results[each_side]:
                     out_of_order_file.write('   %s'%file+'\n')
+                out_of_order_file.flush()
+    else:
+        logger.info('after applying filters, both directories have matching file counts')
     logger.info(logger_hdr+'checking for file differences...')
-    egnore_file_list = ['*.log','*.log*','INPUT','logs','*.idx']
-    compare_files = filecmp.dircmp(folder1, folder2, egnore_file_list)
+    compare_files = filecmp.dircmp(folder1, folder2, ignore=egnore_file_list)
     print_diff_files( compare_files )
     elapsed_time = time.process_time() - process_time 
     logger.info(logger_hdr+'comparing fv3gfs output directories completed. Time to process(%.4f seconds)'%elapsed_time)
