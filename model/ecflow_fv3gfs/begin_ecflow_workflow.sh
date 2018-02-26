@@ -105,6 +105,8 @@ make_yaml_files() {
 
     echo "EXPDIR=\"$EXPDIR\"" > "$tmpfile"
 
+    mkdir -p "$EXPDIR"/logs
+
     set +ue
     ( maybe_verbose_source "$CONFIGDIR"/config.earc ;
       echo "export NMEM_EARCGRP=\"$NMEM_EARCGRP\"" >> "$tmpfile" )

@@ -56,6 +56,9 @@ task_template: &task_template
 
     {ecf_resource_more}
 
+    # Workaround for vrfy bug
+    mkdir -p %COM%/logs/%PDY%%CYC%/
+    
     export HOMEgfs=%HOMEgfs%
     export CDUMP=%RUN%
     {ecf_more_exports}
