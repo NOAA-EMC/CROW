@@ -171,7 +171,7 @@ resources:
     - memory: "3072M"
       exclusive: false
       mpi_ranks: 1
-      walltime: !timedelta "01:00:00"
+      walltime: !timedelta "01:40:00"
       exe: placeholder
       max_ppn: 1
       OMP_NUM_THREADS: 2
