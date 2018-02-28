@@ -2,8 +2,9 @@ task_template: &task_template
 
   Template: *task_validator
 
-  rocoto_command: !expand "&HOMEgfs;/jobs/rocoto/{J_JOB}"
-  ecflow_command: !expand "${{HOMEgfs}}/jobs/rocoto/{J_JOB}"
+  rocoto_command: !expand >-
+     source &HOMEgfs;/ush/load_fv3gfs_modules.sh ; &HOMEgfs;/jobs/{J_JOB}
+  ecflow_command: !expand "${{HOMEgfs}}/jobs/{J_JOB}"
 
   Rocoto: !expand |
     <command>{rocoto_command}</command>
@@ -69,7 +70,8 @@ task_template: &task_template
     ############################################################
     #. $MODULESHOME/init/sh
     {ecf_module_commands}
-    #module list
+    module load ecflow
+    module list
 
     #############################################################
     # WCOSS environment settings
@@ -92,7 +94,7 @@ task_template: &task_template
     # FIXME: Insert manual for this job.
 
   ecf_module_commands: |-
-    # Add any "module" commands here (switch, load, use, etc.)
+    source "$HOMEgfs/ush/load_fv3gfs_modules.sh"
 
   ecf_environment_settings: |-
     # Set tuning variables like KMP_AFFINITY and OMP_STACKSIZE here.

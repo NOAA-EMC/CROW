@@ -136,7 +136,7 @@ suite: !Cycle
         Trigger: !Depend up.dump
         #Trigger: !Depend ( up.dump.jgfs_dump & up.dump.jgfs_tropcy_qc_reloc
         resources: !calc ( doc.resources.run_prep )
-        J_JOB: prep.sh
+        J_JOB: rocoto/prep.sh
 
       jgfs_prep_post: !Task
         <<: *exclusive_task_template
@@ -149,7 +149,7 @@ suite: !Cycle
       Trigger: !Depend ( prep.jgfs_prep & prep.jgfs_emcsfc_sfc_prep  & up.gdas.enkf.jgdas_enkf_post.at('-6:00:00') )
       #Trigger: !Depend ( prep.jgfs_prep & prep.jgfs_emcsfc_sfc_prep )
       resources: !calc ( doc.resources.run_anal )
-      J_JOB: anal.sh
+      J_JOB: JGLOBAL_ANALYSIS
       Complete: !Depend ~ suite.has_cycle('-6:00:00') 
 
     jgfs_vminmon: !Task
@@ -164,7 +164,7 @@ suite: !Cycle
         <<: *exclusive_task_template
         Trigger: !Depend up.jgfs_analysis
         resources: !calc ( doc.resources.run_gfsfcst )
-        J_JOB: fcst.sh
+        J_JOB: JGLOBAL_FORECAST
 
       jgfs_forecast_low: !Task
         <<: *exclusive_task_template
@@ -356,7 +356,12 @@ suite: !Cycle
         Trigger: !Depend jgfs_post_manager.release_postanl | up.forecast
         release_pgrb2_anl: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resources.run_gfspost )
-        J_JOB: post.sh
+        J_JOB: JGLOBAL_NCEPPOST
+        ecflow_command: !expand |
+          export post_times=anl FHRLST={FHRLST} FHRGRP={FHRGRP}
+          $HOMEgfs/jobs/{J_JOB}
+        rocoto_command: !expand >-
+          /usr/bin/env post_times=anl &HOMEgfs;/jobs/{J_JOB}
         more_vars: [ FHRGRP, FHRLST ]
 
       jgfs_post_fhr_el: !TaskElement
@@ -369,8 +374,13 @@ suite: !Cycle
         FHR: !expand 'f{dimval.fhr:02d}'
         HR: !expand '{dimval.fhr:02d}'
         more_vars: [ FHRGRP, FHRLST, FHR, HR ]
-        J_JOB: post.sh
+        J_JOB: JGLOBAL_NCEPPOST
         Trigger: !Depend jgfs_post_manager.depend("release_post{F:02d}",F=[dimval.fhr]) | up.forecast
+        ecflow_command: !expand |
+          export post_times={dimval.fhr:03d} FHRLST={FHRLST} FHRGRP={FHRGRP}
+          $HOMEgfs/jobs/{J_JOB}
+        rocoto_command: !expand >-
+          /usr/bin/env post_times={dimval.fhr:03d} &HOMEgfs;/jobs/{J_JOB}
 
       jgfs_pgrb2_spec_post: !FirstTrue
         - when: !calc max(doc.settings.gfs_forecast_hours)>=384
@@ -460,7 +470,8 @@ suite: !Cycle
       <<: *exclusive_task_template
       Trigger: !Depend post
       resources: !calc ( doc.resources.run_gfsvrfy )
-      J_JOB: vrfy.sh
+      J_JOB: rocoto/vrfy.sh
+      ecf_module_commands: "# vrfy.sh will load modules instead"
       
     #endfamily gempak
   #endfamily gfs
@@ -547,7 +558,9 @@ suite: !Cycle
         Trigger: !Depend (up.dump.jgdas_dump & up.dump.jgdas_tropcy_qc_reloc & up.up.gdas.post.at('-6:00:00') )
         #Trigger: !Depend ( up.dump.jgdas_dump & up.dump.jgdas_tropcy_qc_reloc )
         resources: !calc ( doc.resources.run_prep )
-        J_JOB: prep.sh
+        J_JOB: rocoto/prep.sh
+        ecf_module_commands: "# prep.sh will load modules instead"
+
 
       jgdas_prep_post: !Task
         <<: *exclusive_task_template
@@ -562,7 +575,7 @@ suite: !Cycle
         #Trigger: !Depend ( up.prep.jgdas_prep & up.prep.jgdas_emcsfc_sfc_prep )
         #release_fcst: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resources.run_anal )
-        J_JOB: anal.sh
+        J_JOB: JGLOBAL_ANALYSIS
 
     forecast: !Family
       jgdas_forecast_high: !Task
@@ -570,7 +583,7 @@ suite: !Cycle
         Trigger: !Depend ( up.analysis.jgdas_analysis_high & up.enkf.innovate ) | ~ suite.has_cycle('-6:00:00')
         #release_fcst: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resources.run_gdasfcst )
-        J_JOB: fcst.sh
+        J_JOB: JGLOBAL_FORECAST
 
       jgdas_forecast: !Task
         <<: *exclusive_task_template
@@ -578,7 +591,7 @@ suite: !Cycle
         #release_fcst: !DataEvent {file="/dev/null"}
         #resources: !calc ( doc.resources.run_gdasfcst )
         resources: !calc ( doc.resources.run_nothing )
-        J_JOB: fcst.sh
+        J_JOB: JGLOBAL_FORECAST
         Dummy: true  ## <-- Node is not implemented yet
 
     post_processing: !Family
@@ -644,7 +657,12 @@ suite: !Cycle
         Trigger: !Depend jgdas_post_manager.release_postanl | up.forecast
         release_pgrb2_anl: !DataEvent {file="/dev/null"}
         resources: !calc ( doc.resources.run_gdaspost )
-        J_JOB: post.sh
+        J_JOB: JGLOBAL_NCEPPOST
+        ecflow_command: !expand |
+          export post_times=anl FHRLST={FHRLST} FHRGRP={FHRGRP}
+          $HOMEgfs/jobs/{J_JOB}
+        rocoto_command: !expand >-
+          /usr/bin/env post_times=anl &HOMEgfs;/jobs/{J_JOB}
 
       jgdas_post_fhr_el: !TaskElement
         <<: *exclusive_task_template
@@ -655,7 +673,12 @@ suite: !Cycle
         FHRLST: !expand 'f{dimval.fhr:03d}'
         FHR: !expand 'f{dimval.fhr:02d}'
         HR: !expand '{dimval.fhr:02d}'
-        J_JOB: post.sh
+        J_JOB: JGLOBAL_NCEPPOST
+        ecflow_command: !expand |
+          export post_times={dimval.fhr:03d} FHRLST={FHRLST} FHRGRP={FHRGRP}
+          $HOMEgfs/jobs/{J_JOB}
+        rocoto_command: !expand >-
+          /usr/bin/env post_times={dimval.fhr:03d} &HOMEgfs;/jobs/{J_JOB}
         Trigger: !Depend jgdas_post_manager.depend("release_post{F:02d}",F=[dimval.fhr]) | up.forecast
         more_vars: [ FHR, HR, FHRGRP, FHRLST ]
     #endfamily post
@@ -664,7 +687,8 @@ suite: !Cycle
       <<: *exclusive_task_template
       Trigger: !Depend post
       resources: !calc ( doc.resources.run_gdasvrfy )
-      J_JOB: vrfy.sh
+      J_JOB: rocoto/vrfy.sh
+      ecf_module_commands: "# vrfy.sh will load modules instead"
 
     enkf: !Family
       jgdas_enkf_select_obs: !Task
@@ -673,7 +697,7 @@ suite: !Cycle
         #Trigger: !Depend  ( up.prep.jgdas_prep )
         resources: !calc ( doc.resources.run_eobs )
         Complete: !Depend ~ suite.has_cycle('-6:00:00') 
-        J_JOB: eobs.sh
+        J_JOB: JGDAS_ENKF_SELECT_OBS
 
       innovate: !TaskArray
         Trigger: !Depend jgdas_enkf_select_obs
@@ -685,7 +709,7 @@ suite: !Cycle
           Foreach: [ groupid ]
           Name: !expand "jgdas_enkf_innovate_obs_grp{dimval.groupid}"
           resources: !calc ( doc.resources.run_eomg )
-          J_JOB: eomg.sh
+          J_JOB: JGDAS_ENKF_INNOVATE_OBS
           ENSGRP: !expand "{dimval.groupid:02d}"
           more_vars: [ ENSGRP ]
 
@@ -696,13 +720,13 @@ suite: !Cycle
         Trigger: !Depend innovate
         Complete: !Depend ~ suite.has_cycle('-6:00:00') 
         resources: !calc ( doc.resources.run_eupd )
-        J_JOB: eupd.sh
+        J_JOB: JGDAS_ENKF_UPDATE
 
       jgdas_enkf_inflate_recenter: !Task
         <<: *exclusive_task_template
         Trigger: !Depend ( jgdas_enkf_update & up.analysis.jgdas_analysis_high )
         resources: !calc ( doc.resources.run_ecen )
-        J_JOB: ecen.sh
+        J_JOB: JGDAS_ENKF_RECENTER
         Complete: !Depend ~ suite.has_cycle('-6:00:00') 
 
       forecast: !TaskArray
@@ -715,7 +739,7 @@ suite: !Cycle
           Foreach: [ groupid ]
           Name: !expand "jgdas_enkf_fcst_grp{dimval.groupid}"
           resources: !calc ( doc.resources.run_efcs )
-          J_JOB: efcs.sh
+          J_JOB: JGDAS_ENKF_FCST
           ENSGRP: !expand "{dimval.groupid:02d}"
           more_vars: [ ENSGRP ]
           
@@ -723,7 +747,7 @@ suite: !Cycle
         <<: *exclusive_task_template
         Trigger: !Depend forecast
         resources: !calc ( doc.resources.run_epos )
-        J_JOB: epos.sh
+        J_JOB: JGDAS_ENKF_POST
     #endfamily enkf
   #endfamily gdas
 
@@ -760,11 +784,15 @@ suite: !Cycle
     jgdas_archive: !Task
       <<: *service_task_template
       AlarmName: gdas
-      Trigger: !Depend up.gdas.jgdas_emc_vrfy
+      Trigger: !Depend up.gdas
+      #Trigger: !Depend up.gdas.jgdas_emc_vrfy
       resources: !calc ( doc.resources.run_arch )
       Disable: !calc not doc.settings.archive_to_hpss
-      J_JOB: arch.sh
+      J_JOB: rocoto/arch.sh
+      ecf_module_commands: "# arch.sh will load modules instead"
       RUN: gdas
+      ecflow_def:
+        time +00:10
 
     jgdas_enkf_archive: !TaskArray
       AlarmName: gdas
@@ -774,12 +802,14 @@ suite: !Cycle
       grp: !TaskElement
         <<: *service_task_template
         resources: !calc ( doc.resources.run_arch )
-        J_JOB: earc.sh
+        J_JOB: rocoto/earc.sh
+        ecf_module_commands: "# arch.sh will load modules instead"
         Foreach: [ groupid ]
         Name: !expand "grp{dimval.groupid:02d}"
-        more_vars: [ ENSGRP ]
-        ENSGRP: !expand "{dimval.groupid:02d}"
         RUN: gdas
+        ecflow_def: !expand |
+          time +00:10
+          edit ENSGRP '{dimval.groupid:02d}'
 
     jgfs_archive: !Task
       <<: *service_task_template
@@ -788,8 +818,11 @@ suite: !Cycle
       Trigger: !Depend up.gfs.jgfs_emc_vrfy
       resources: !calc ( doc.resources.run_arch )
       Disable: !calc not doc.settings.archive_to_hpss
-      J_JOB: arch.sh
+      J_JOB: rocoto/arch.sh
+      ecf_module_commands: "# arch.sh will load modules instead"
       RUN: gfs
+      ecflow_def:
+        time +00:10
 
   final: !Task
     <<: *service_task_template
