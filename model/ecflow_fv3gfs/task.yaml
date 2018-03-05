@@ -7,13 +7,17 @@ task_template: &task_template
   ecflow_command: !expand "${{HOMEgfs}}/jobs/{J_JOB}"
 
   Rocoto: !expand |
-    <command>{rocoto_command}</command>
+    <command>sh -c '{rocoto_command}'</command>
     {sched.rocoto_accounting(accounting,jobname=task_path_var,
         outerr="<cyclestr>&LOG_DIR;/@Y@m@d/@H/&PSLOT;_"+task_path_var+".log</cyclestr>")}
     {sched.rocoto_resources(resources)}
     <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+    <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+    <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
     <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
     <envar><name>CDUMP</name><value>{CDUMP}</value></envar>
+    <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+    <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
     {rocoto_more_vars}
 
   CDUMP: !calc task_path_list[0]

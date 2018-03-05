@@ -94,7 +94,7 @@ def _none_are_in_alarm(item,desired_alarm,recursed_alarm):
         recursed_alarm=item.AlarmName
 
     if desired_alarm==recursed_alarm:
-        print(f'NAIA: {item.path}: alarm {recursed_alarm} is in alarm {desired_alarm}')
+        #print(f'NAIA: {item.path}: alarm {recursed_alarm} is in alarm {desired_alarm}')
         return False
 
     if item.is_family() or item.is_cycle():
@@ -102,9 +102,9 @@ def _none_are_in_alarm(item,desired_alarm,recursed_alarm):
             if subitem.is_family() or subitem.is_task():
                 if not _none_are_in_alarm(
                         subitem,desired_alarm,recursed_alarm):
-                    print(f'NAIA: {item.path}: subitem {subitem.path} in alarm {desired_alarm}')
+                    #print(f'NAIA: {item.path}: subitem {subitem.path} in alarm {desired_alarm}')
                     return False
-    print(f'NAIA: {item.path}: self and children not in {desired_alarm}')
+    #print(f'NAIA: {item.path}: self and children not in {desired_alarm}')
     return True
 
 def stringify_clock(name,clock,indent):
@@ -398,6 +398,7 @@ class ToRocoto(object):
 
     def _record_item(self,view,complete,alarm_name):
         if view.get('Disable',False):          return
+        if view.get('Dummy',False):            return
         my_completes = view.get_complete_dep()
         self.__all_defined.add(view.path)
 
@@ -432,6 +433,7 @@ class ToRocoto(object):
 
     def _convert_item(self,fd,indent,view,trigger,complete,time,alarm_name):
         if view.get('Disable',False):          return
+        if view.get('Dummy',False):            return
         trigger=trigger & view.get_trigger_dep()
         complete=complete | view.get_complete_dep()
         time=max(time,view.get_time_dep())
@@ -531,7 +533,9 @@ class ToRocoto(object):
         path=SuitePath(item.path[1:])
         with_completes=self.__families_with_completes
 
-        if 'Disabled' in item and item.Disabled:
+        if 'Disable' in item and item.Disable:
+            return TRUE_DEPENDENCY
+        if 'Dummy' in item and item.Dummy:
             return TRUE_DEPENDENCY
 
         if item.is_task():
@@ -597,13 +601,16 @@ class ToRocoto(object):
 
         # Disabled applies recursively to families, so if this node is
         # disabled, the netire tree is done:
-        if 'Disabled' in item and item.Disabled:
-            print(f'{path}: disabled')
+        if 'Disable' in item and item.Disable:
+            #print(f'{path}: disabled')
+            return TRUE_DEPENDENCY
+        if 'Dummy' in item and item.Dummy:
+            #print(f'{path}: dummy')
             return TRUE_DEPENDENCY
         
         # If nothing in the entire tree is in the alarm, then we're done.
         if _none_are_in_alarm(item,for_alarm,alarm_name):
-            print(f'{path}: entire tree is not in alarm')
+            #print(f'{path}: entire tree is not in alarm')
             return TRUE_DEPENDENCY
 
         if len(path)==1 and '_is_final_' in path:
@@ -616,7 +623,7 @@ class ToRocoto(object):
 
             if item.is_task():
                 # No children.  We're done.
-                print(f'{path}: task dep {dep}')
+                #print(f'{path}: task dep {dep}')
                 return dep
         else:
             # This is a suite.
@@ -642,7 +649,7 @@ class ToRocoto(object):
             dep=subdep
             if item.path in self.__completes:
                 dep = self.__completes[item.path][1] | subdep
-        print(f'{path}: family or suite dep {dep}')
+        #print(f'{path}: family or suite dep {dep}')
         return dep
 
     def _handle_final_task(self,fd,indent):
@@ -686,7 +693,7 @@ class ToRocoto(object):
         alarms = set(self.__alarms_used)
         alarms.add('')
         for alarm_name in alarms:
-            print(f'find final for {alarm_name}')
+            #print(f'find final for {alarm_name}')
             dep = self._final_task_deps_for_alarm(self.suite,alarm_name)
             dep = simplify(dep)
             task_name=f'final_for_{alarm_name}' if alarm_name else 'final_no_alarm'

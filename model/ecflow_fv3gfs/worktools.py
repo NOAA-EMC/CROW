@@ -190,6 +190,12 @@ def begin_ecflow_suites(ECF_HOME,suite_def_files):
             logger.info(cmd)
             subprocess.run(cmd,check=False,shell=True)
 
+def make_rocoto_xml(suite,filename):
+    with open(filename,'wt') as fd:
+        logger.info(f'{filename}: create Rocoto XML document')
+        fd.write(to_rocoto(suite))
+    print(f'{filename}: Rocoto XML document created here.')
+    
 ########################################################################
 
 # These functions are called directly from scripts, and can be thought
@@ -243,3 +249,8 @@ def add_cycles_to_running_ecflow_workflow_at(
         suite,first_cycle,last_cycle,surrounding_cycles)
     load_ecflow_suites(ECF_HOME,suite_def_files)    
     begin_ecflow_suites(ECF_HOME,suite_def_files)    
+
+def make_rocoto_xml_for(yamldir):
+    conf,suite=read_yaml_suite(yamldir)
+    loudly_make_dir_if_missing(f'{conf.settings.COM}/log')
+    make_rocoto_xml(suite,f'{yamldir}/workflow.xml')

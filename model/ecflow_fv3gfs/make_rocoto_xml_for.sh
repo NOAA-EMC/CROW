@@ -22,25 +22,11 @@ if [[ "$1" == "-v" ]] ; then
     shift 1
 fi
 export CONFIGDIR="$1"
-export FIRST_CYCLE="$2"
-export LAST_CYCLE="$3"
 
 if [[ ! -d /usrx/local || -e /etc/redhat-release ]] ; then
    echo "ERROR: This script only runs on WCOSS Cray" 1>&2
    exit 1
 fi
-
-check_ecf_variables
-
-if [[ "${WORKTOOLS_VERBOSE:-NO}" == YES ]] ; then 
-    echo "remake_ecflow_files_for.sh: verbose mode"
-fi
-
-echo 'ecFlow server settings:'
-echo "   port: $ECF_PORT"
-echo "   root: $ECF_ROOT"
-echo "   home: $ECF_HOME"
-echo "   host: $ECF_HOST"
 
 set +e
 find_python36
@@ -57,11 +43,9 @@ source "$tmpfile"
 rm -f "$tmpfile"
 
 if [[ "${WORKTOOLS_VERBOSE:-NO}" == YES ]] ; then
-    echo "remake_ecflow_files_for.sh: EXPDIR=$EXPDIR"
+    echo "make_rocoto_xml_for.sh: EXPDIR=$EXPDIR"
     set -x
 fi
 
-$python36 -c "import worktools ; worktools.remake_ecflow_files_for_cycles(
-  '$EXPDIR',
-  '$FIRST_CYCLE',
-  '$LAST_CYCLE')"
+$python36 -c "import worktools ; worktools.make_rocoto_xml_for(
+  '$EXPDIR')"

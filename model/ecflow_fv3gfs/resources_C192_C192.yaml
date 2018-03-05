@@ -4,10 +4,9 @@ resources:
   run_ecen: !JobRequest
     - memory: "254M" 
       walltime: !timedelta "00:10:00"
-      mpi_ranks: 84
+      mpi_ranks: 80
       exe: placeholder
-          # max_ppn comes from THEIA.env: 84/12 = 7
-      max_ppn: 12
+      max_ppn: 4
       OMP_NUM_THREADS: 2
 
   run_chgres: !JobRequest
@@ -44,27 +43,27 @@ resources:
 
   run_eobs: !JobRequest
     - memory: "3072M" 
-      walltime: !timedelta "00:15:00"
-      mpi_ranks: !calc 12*6
+      walltime: !timedelta "00:30:00"
+      mpi_ranks: !calc 12*12
       exe: placeholder
-      max_ppn: 6
-      OMP_NUM_THREADS: 4
+      max_ppn: 12
+      OMP_NUM_THREADS: 2
 
   run_eomg: !JobRequest
     - memory: "3072M"
-      walltime: !timedelta "01:20:00"
-      mpi_ranks: !calc 6*12
+      walltime: !timedelta "03:00:00"
+      mpi_ranks: !calc 12*12
       exe: placeholder
-      max_ppn: 6
+      max_ppn: 12
       OMP_NUM_THREADS: 2
 
   run_eupd: !JobRequest
     - memory: "3072M" 
-      walltime: !timedelta "00:15:00"
-      mpi_ranks: !calc 10*12
+      walltime: !timedelta "00:30:00"
+      mpi_ranks: !calc 40*6
       exe: placeholder
-      max_ppn: 12
-      OMP_NUM_THREADS: 2
+      max_ppn: 6
+      OMP_NUM_THREADS: 4
 
 #  run_enkf: !JobRequest
 #    pi_ranks: !calc 10*12
@@ -74,7 +73,7 @@ resources:
 #        OMP_NUM_THREADS: 4
 
   run_efcs: !JobRequest
-    - walltime: !timedelta "00:45:00"
+    - walltime: !timedelta "03:00:00"
       mpi_ranks: !calc >-
          doc.settings.layout_x*doc.settings.layout_y*6
          + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
@@ -83,22 +82,23 @@ resources:
 
   run_epos: !JobRequest
     - memory: "254M"
-      mpi_ranks: 84
+      mpi_ranks: 80
       walltime: !timedelta "00:10:00"
       exe: placeholder
-      max_ppn: 12
-      OMP_NUM_THREADS: 2
+      max_ppn: 1
+      OMP_NUM_THREADS: 24
 
   run_prep: !JobRequest
     - memory: "3072M"
       walltime: !timedelta "00:15:00"
-      mpi_ranks: 12
+      max_ppn: 2
+      mpi_ranks: 6
       exe: placeholder
 
   run_anal: !JobRequest
     - memory: "3072M" 
-      mpi_ranks: 144
-      walltime: !timedelta "0:40:00"
+      mpi_ranks: !calc 60*6
+      walltime: !timedelta "1:30:00"
       exe: placeholder
       max_ppn: 6
 
@@ -113,7 +113,7 @@ resources:
     - mpi_ranks: !calc >-
          doc.settings.layout_x*doc.settings.layout_y*6
          + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
-      walltime: !timedelta "00:10:00"
+      walltime: !timedelta "01:00:00"
       max_ppn: 12
       memory: "1024M"
 
@@ -127,7 +127,7 @@ resources:
     - mpi_ranks: !calc >-
          doc.settings.layout_x*doc.settings.layout_y*6
          + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
-      walltime: !timedelta "00:45:00"
+      walltime: !timedelta "06:00:00"
       max_ppn: 12
       memory: "1024M"
 
@@ -139,15 +139,15 @@ resources:
 
   run_gdaspost: !JobRequest
     - memory: "3072M"
-      mpi_ranks: 72
-      walltime: !timedelta "00:10:00"
+      mpi_ranks: !calc 6*max_ppn
+      walltime: !timedelta "00:30:00"
       exe: placeholder
       max_ppn: 12
       OMP_NUM_THREADS: 1
 
   run_gfspost: !JobRequest
     - memory: "3072M"
-      mpi_ranks: 72
+      mpi_ranks: !calc 6*max_ppn
       walltime: !timedelta "00:10:00"
       exe: placeholder
       max_ppn: 12
@@ -156,14 +156,14 @@ resources:
   run_gfsvrfy: !JobRequest
     - memory: "3072M" 
       mpi_ranks: 1
-      walltime: !timedelta "02:00:00"
+      walltime: !timedelta "03:00:00"
       exe: placeholder
       max_ppn: 1
 
   run_gdasvrfy: !JobRequest
     - memory: "3072M" 
       mpi_ranks: 1
-      walltime: !timedelta "02:00:00"
+      walltime: !timedelta "01:30:00"
       exe: placeholder
       max_ppn: 1
 
@@ -171,7 +171,7 @@ resources:
     - memory: "3072M"
       exclusive: false
       mpi_ranks: 1
-      walltime: !timedelta "01:40:00"
+      walltime: !timedelta "06:00:00"
       exe: placeholder
       max_ppn: 1
       OMP_NUM_THREADS: 2
@@ -187,9 +187,10 @@ resources:
   run_earc: !JobRequest
     - memory: "3072M"
       mpi_ranks: 1
-      walltime: !timedelta "01:00:00"
+      walltime: !timedelta "06:00:00"
       exe: placeholder
       max_ppn: 1
+      exclusive: false
 
   run_fv3ic: !JobRequest
     - memory: "3072M" 
