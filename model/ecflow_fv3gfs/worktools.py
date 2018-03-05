@@ -172,14 +172,20 @@ def update_existing_ecflow_workflow(suite,first_cycle,last_cycle,
         ECF_HOME,suite_defs,ecf_files)
     return ECF_HOME, suite_def_files
 
-def load_and_begin_ecflow_suites(ECF_HOME,suite_def_files):
-    logger.info(f'{ECF_HOME}: write files for suites: '
+def load_ecflow_suites(ECF_HOME,suite_def_files):
+    logger.info(f'{ECF_HOME}: load suites: '
                 f'{", ".join(suite_def_files.keys())}')
     with crow.tools.chdir(ECF_HOME):
-        for suite, file in suite_def_files.items():
+        for file in suite_def_files.values():
             cmd=f'ecflow_client --load {file}'
             logger.info(cmd)
             subprocess.run(cmd,check=False,shell=True)
+
+def begin_ecflow_suites(ECF_HOME,suite_def_files):
+    logger.info(f'{ECF_HOME}: begin suites: '
+                f'{", ".join(suite_def_files.keys())}')
+    with crow.tools.chdir(ECF_HOME):
+        for suite in suite_def_files.keys():
             cmd=f'ecflow_client --begin {suite}'
             logger.info(cmd)
             subprocess.run(cmd,check=False,shell=True)
@@ -216,7 +222,7 @@ If you want to update the suite (cycle) definitions, or add suites
 (cycles), you will need to call ecflow_client's --load, --begin,
 --replace, or --delete commands.''')
 
-def create_and_begin_ecflow_workflow(yamldir,surrounding_cycles=1):
+def create_and_load_ecflow_workflow(yamldir,surrounding_cycles=1,begin=False):
     conf,suite=read_yaml_suite(yamldir)
     loudly_make_dir_if_missing(f'{conf.settings.COM}/log')
     ECF_HOME, suite_def_files, first_cycle, last_cycle = \
@@ -224,8 +230,10 @@ def create_and_begin_ecflow_workflow(yamldir,surrounding_cycles=1):
     if not ECF_HOME:
         logger.error('Could not create workflow files.  See prior errors for details.')
         return False
-    load_and_begin_ecflow_suites(ECF_HOME,suite_def_files)    
-
+    load_ecflow_suites(ECF_HOME,suite_def_files)
+    if begin:
+        begin_ecflow_suites(ECF_HOME,suite_def_files)
+        
 def add_cycles_to_running_ecflow_workflow_at(
         yamldir,first_cycle_str,last_cycle_str,surrounding_cycles=1): 
     conf,suite=read_yaml_suite(yamldir)
@@ -233,4 +241,5 @@ def add_cycles_to_running_ecflow_workflow_at(
     last_cycle=datetime.datetime.strptime(last_cycle_str,'%Y%m%d%H')
     ECF_HOME, suite_def_files = update_existing_ecflow_workflow(
         suite,first_cycle,last_cycle,surrounding_cycles)
-    load_and_begin_ecflow_suites(ECF_HOME,suite_def_files)    
+    load_ecflow_suites(ECF_HOME,suite_def_files)    
+    begin_ecflow_suites(ECF_HOME,suite_def_files)    

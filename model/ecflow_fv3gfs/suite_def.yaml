@@ -86,7 +86,8 @@ suite: !Cycle
     {metasched.defvar("PROJ", doc.settings.PROJECT)}
 
   gfs: !Family
-    Complete: !Depend ~ suite.has_cycle('-6:00:00') 
+    Complete: !Depend ~ suite.has_cycle('-6:00:00')
+    AlarmName: gfs
     ecflow_def: !expand |
       edit RUN 'gfs'
 

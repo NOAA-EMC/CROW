@@ -40,3 +40,13 @@ config_files:
   WRITE_GROUP:  !Immediate [ !calc ' int(tools.env("WRITE_GROUP"),10) ' ]
   WRTTASK_PER_GROUP: !Immediate
     - !calc int(tools.env("WRTTASK_PER_GROUP"),10)
+
+  # config.efcs / config.fv3:
+  ENKF_layout_x:     !Immediate
+    - !calc ' int(tools.env("ENKF_layout_x"),10) '
+  ENKF_layout_y:     !Immediate
+    - !calc ' int(tools.env("ENKF_layout_y"),10) '
+  ENKF_WRITE_GROUP:  !Immediate
+    - !calc ' int(tools.env("ENKF_WRITE_GROUP"),10) '
+  ENKF_WRTTASK_PER_GROUP: !Immediate
+    - !calc int(tools.env("ENKF_WRTTASK_PER_GROUP"),10)

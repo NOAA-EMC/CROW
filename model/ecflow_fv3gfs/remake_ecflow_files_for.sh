@@ -95,11 +95,6 @@ make_yaml_files() {
     set +ue
     maybe_verbose_source "$CONFIGDIR"/config.base 
     set -ue
-    
-    if [[ "$FHMAX_GFS" != 240 ]] ; then
-        echo "ERROR: This script requires FHMAX_GFS = 240" 1>&2
-	exit 1
-    fi
 
     if [[ "${WORKTOOLS_VERBOSE:-NO}" == YES ]] ; then
 	set -x
@@ -107,11 +102,17 @@ make_yaml_files() {
 
     echo "EXPDIR=\"$EXPDIR\"" > "$tmpfile"
 
+    mkdir -p "$EXPDIR"/logs
+    
     set +ue
     ( maybe_verbose_source "$CONFIGDIR"/config.earc ;
       echo "export NMEM_EARCGRP=\"$NMEM_EARCGRP\"" >> "$tmpfile" )
     ( maybe_verbose_source "$CONFIGDIR"/config.efcs ;
-      echo "export NMEM_EFCSGRP=\"$NMEM_EFCSGRP\"" >> "$tmpfile" )
+      echo "export NMEM_EFCSGRP=\"$NMEM_EFCSGRP\"" >> "$tmpfile" ;
+      echo "export ENKF_layout_x=\"$layout_x\"" >> "$tmpfile" ;
+      echo "export ENKF_layout_y=\"$layout_y\"" >> "$tmpfile" ;
+      echo "export ENKF_WRITE_GROUP=\"$WRITE_GROUP\"" >> "$tmpfile" ;
+      echo "export ENKF_WRTTASK_PER_GROUP=\"$WRTTASK_PER_GROUP\"" >> "$tmpfile" )
     ( maybe_verbose_source "$CONFIGDIR"/config.eobs ;
       echo "export NMEM_EOMGGRP=\"$NMEM_EOMGGRP\"" >> "$tmpfile" )
     ( maybe_verbose_source "$CONFIGDIR"/config.fcst ;

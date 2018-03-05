@@ -3,7 +3,7 @@ settings:
 
   # Import certain variables from doc.config_files:
   Inherit: !Inherit
-    - [ 'doc.config_files','FH.*|QUEUE|layout.*|WRITE_GROUP|WRT.*|HOME.*' ]
+    - [ 'doc.config_files','FH.*|QUEUE|.*layout.*|.*WRITE_GROUP|.*WRT.*|HOME.*' ]
 
   # NOTE: Additional files are set by the validator.  See validator.yaml.
 
