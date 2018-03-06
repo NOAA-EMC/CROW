@@ -140,7 +140,7 @@ resources:
   run_gdaspost: !JobRequest
     - memory: "3072M"
       mpi_ranks: !calc 6*max_ppn
-      walltime: !timedelta "00:30:00"
+      walltime: !timedelta "00:45:00"
       exe: placeholder
       max_ppn: 12
       OMP_NUM_THREADS: 1
