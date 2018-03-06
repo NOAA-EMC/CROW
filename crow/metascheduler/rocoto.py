@@ -353,9 +353,8 @@ class ToRocoto(object):
         elif isinstance(dep,StateDependency) and dep.state==COMPLETED:
             zero_path=SuitePath([_ZERO_DT]+dep.view.path[1:])
             if dep.view.is_task():
-                if zero_path in self.__completes:
-                    return dep | _dep_rel(dep.view.path[0],self._rocotoify_dep(
-                        self._completes_for(dep.view),defining_path))
+                completes=self._completes_for(dep.view)
+                return dep | _dep_rel(dep.view.path[0],completes)
             elif SuitePath(dep.view.path[1:]) in self.__families_with_completes:
                 deplist=TRUE_DEPENDENCY
                 for t in dep.view.walk_task_tree():
@@ -524,9 +523,11 @@ class ToRocoto(object):
     def _completes_for(self,item):
         dep=FALSE_DEPENDENCY
         for i in range(1,len(item.path)):
-            item_path=SuitePath(item.path[0:i+1])
-            if item_path in self.__completes:
-                dep=dep | self.__completes[item_path][1]
+                                                   
+            zero_path=SuitePath([_ZERO_DT]+item.path[1:i+1])
+#                                                   item_path=SuitePath(item.path[0:i+1])
+            if zero_path in self.__completes:
+                dep=dep | self.__completes[zero_path][1]
         return dep
 
     def _final_task_deps_no_alarms(self,item):
