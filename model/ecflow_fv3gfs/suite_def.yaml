@@ -555,6 +555,7 @@ suite: !Cycle
 
     prep: !Family
       Trigger: !Depend dump_waiter.updated_status
+      Complete: !Depend ( ~ suite.has_cycle('-6:00:00') )
       jgdas_emcsfc_sfc_prep: !Task
         <<: *exclusive_task_template
         Dummy: true  ## <-- Node is not implemented yet
@@ -577,6 +578,7 @@ suite: !Cycle
         resources: !calc ( doc.resources.run_prep )
 
     analysis: !Family
+      Complete: !Depend ( ~ suite.has_cycle('-6:00:00') )
       jgdas_analysis_high: !Task
         <<: *exclusive_task_template
         Trigger: !Depend ( up.prep.jgdas_prep & up.prep.jgdas_emcsfc_sfc_prep & up.enkf.jgdas_enkf_post.at('-6:00:00') )
@@ -695,6 +697,7 @@ suite: !Cycle
 
     jgdas_emc_vrfy: !Task
       <<: *exclusive_task_template
+      Complete: !Depend ( ~ suite.has_cycle('-6:00:00') )
       Trigger: !Depend post
       resources: !calc ( doc.resources.run_gdasvrfy )
       J_JOB: rocoto/vrfy.sh
