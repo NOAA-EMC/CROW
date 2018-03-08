@@ -132,7 +132,8 @@ class GenericNodeSpec(NodeSpec):
         return max_ranks_per_node//ppn
 
     def max_ranks_per_node(self,rank_spec):
-        typecheck('rank_spec',rank_spec,crow.sysenv.jobs.JobRankSpec)
+        typecheck('rank_spec',rank_spec,crow.sysenv.jobs.JobRankSpec,
+                  print_contents=True)
         can_hyper=self.hyperthreading_allowed
         max_per_node=self.cores_per_node
         if can_hyper and rank_spec.get('hyperthreading',False):

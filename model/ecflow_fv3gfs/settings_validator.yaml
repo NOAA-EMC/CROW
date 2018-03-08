@@ -103,7 +103,7 @@ settings_validator: &settings_validator !Template
     description: >-
       The $ECF_HOME setting for the ecFlow server.  Not used in Rocoto mode.
     type: string
-    default: !calc ( tools.env('ECF_HOME') )
+    default: !calc ( tools.env('ECF_HOME','localhost') )
 
   ROCOTO_HOME:
     description: >-

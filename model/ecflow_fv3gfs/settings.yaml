@@ -42,3 +42,5 @@ settings:
   archive_to_hpss: True
   four_cycle_mode: False
   ecflow_machine: xc40-prod
+
+  fv3gfs_machine: !calc doc.config_files.machine

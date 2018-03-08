@@ -2,8 +2,12 @@ task_template: &task_template
 
   Template: *task_validator
 
+  rocoto_load_modules: !expand >-
+     source &HOMEgfs;/ush/load_fv3gfs_modules.sh ;
+     module list
   rocoto_command: !expand >-
-     source &HOMEgfs;/ush/load_fv3gfs_modules.sh ; &HOMEgfs;/jobs/{J_JOB}
+     {rocoto_load_modules} ;
+     &HOMEgfs;/jobs/{J_JOB}
   ecflow_command: !expand "${{HOMEgfs}}/jobs/{J_JOB}"
 
   Rocoto: !expand |

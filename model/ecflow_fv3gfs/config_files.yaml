@@ -24,6 +24,7 @@ config_files:
   QUEUE:        !Immediate [ !calc tools.env("QUEUE") ]
   QUEUE_ARCH:   !Immediate [ !calc tools.env("QUEUE_ARCH") ]
   ACCOUNT:      !Immediate [ !calc tools.env("ACCOUNT") ]
+  machine:      !Immediate [ !calc tools.env("machine") ]
 
   # config.eobs:
   NMEM_EOMGGRP: !Immediate [ !calc ' int(tools.env("NMEM_EOMGGRP"),10) ' ]

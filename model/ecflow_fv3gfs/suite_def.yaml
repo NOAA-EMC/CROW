@@ -368,6 +368,7 @@ suite: !Cycle
           export post_times=anl FHRLST={FHRLST} FHRGRP={FHRGRP}
           $HOMEgfs/jobs/{J_JOB}
         rocoto_command: !expand >-
+          {rocoto_load_modules} ;
           /usr/bin/env post_times=anl &HOMEgfs;/jobs/{J_JOB}
         more_vars: [ FHRGRP, FHRLST ]
 
@@ -387,6 +388,7 @@ suite: !Cycle
           export post_times={dimval.fhr:03d} FHRLST={FHRLST} FHRGRP={FHRGRP}
           $HOMEgfs/jobs/{J_JOB}
         rocoto_command: !expand >-
+          {rocoto_load_modules} ;
           /usr/bin/env post_times={dimval.fhr:03d} &HOMEgfs;/jobs/{J_JOB}
 
       jgfs_pgrb2_spec_post: !FirstTrue
@@ -674,6 +676,7 @@ suite: !Cycle
           export post_times=anl FHRLST={FHRLST} FHRGRP={FHRGRP}
           $HOMEgfs/jobs/{J_JOB}
         rocoto_command: !expand >-
+          {rocoto_load_modules} ;
           /usr/bin/env post_times=anl &HOMEgfs;/jobs/{J_JOB}
 
       jgdas_post_fhr_el: !TaskElement
@@ -690,6 +693,7 @@ suite: !Cycle
           export post_times={dimval.fhr:03d} FHRLST={FHRLST} FHRGRP={FHRGRP}
           $HOMEgfs/jobs/{J_JOB}
         rocoto_command: !expand >-
+          {rocoto_load_modules} ;
           /usr/bin/env post_times={dimval.fhr:03d} &HOMEgfs;/jobs/{J_JOB}
         Trigger: !Depend jgdas_post_manager.depend("release_post{F:02d}",F=[dimval.fhr]) | up.forecast
         more_vars: [ FHR, HR, FHRGRP, FHRLST ]

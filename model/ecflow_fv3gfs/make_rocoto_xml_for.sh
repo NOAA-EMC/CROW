@@ -23,8 +23,10 @@ if [[ "$1" == "-v" ]] ; then
 fi
 export CONFIGDIR="$1"
 
-if [[ ! -d /usrx/local || -e /etc/redhat-release ]] ; then
-   echo "ERROR: This script only runs on WCOSS Cray" 1>&2
+if [[ ! ( -d /scratch4 && -d /scratch3 || \
+          -d /usrx/local && ! -e /etc/redhat-release ) \
+    ]] ; then
+   echo "ERROR: This script only runs on WCOSS Cray and Theia" 1>&2
    exit 1
 fi
 

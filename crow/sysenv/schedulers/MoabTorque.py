@@ -24,7 +24,7 @@ class Scheduler(BaseScheduler):
     def max_ranks_per_node(self,spec):
         if not spec.is_pure_serial() and not spec.is_pure_openmp():
             # MPI program.  Merge ranks if allowed.
-            spec=self.nodes.to_nodes_ppn(
+            spec=self.nodes.with_similar_ranks_merged(
                 spec,can_merge_ranks=self.nodes.same_except_exe)
         return max([ self.nodes.max_ranks_per_node(j) for j in spec ])
 
@@ -156,8 +156,6 @@ class Scheduler(BaseScheduler):
             memory=spec[0]['memory']
             bytes=tools.memory_in_bytes(memory)
             megabytes=int(math.ceil(bytes/1048576.))
-            sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
-        else:
             sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
 
         if 'outerr' in spec:

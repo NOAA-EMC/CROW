@@ -1,12 +1,27 @@
 resources:
 
+  memory_3072M_on_wcoss_cray: !FirstTrue
+    - when: !calc doc.settings.fv3gfs_machine != 'WCOSS_C'
+      do: null
+    - otherwise: "3072M"
+
+  memory_1024M_on_wcoss_cray: !FirstTrue
+    - when: !calc doc.settings.fv3gfs_machine != 'WCOSS_C'
+      do: null
+    - otherwise: "1024M"
+
+  memory_254M_on_wcoss_cray: !FirstTrue
+    - when: !calc doc.settings.fv3gfs_machine != 'WCOSS_C'
+      do: null
+    - otherwise: "254M"
+
   # From if[[...ecen]] block in config.resources:
   run_ecen: !JobRequest
-    - memory: "254M" 
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
       walltime: !timedelta "00:10:00"
-      mpi_ranks: 80
+      mpi_ranks: 84
       exe: placeholder
-      max_ppn: 4
+      max_ppn: 12
       OMP_NUM_THREADS: 2
 
   run_chgres: !JobRequest
@@ -22,7 +37,7 @@ resources:
       exclusive: false
 
   run_one_hour_exclusive: !JobRequest # Placeholder for one node jobs
-    - memory: "2000M"
+    - memory: "300M"
       exe: placeholder
       mpi_ranks: 0
       walltime: !timedelta "00:02:00"
@@ -42,15 +57,15 @@ resources:
       walltime: !timedelta "00:15:00"
 
   run_eobs: !JobRequest
-    - memory: "3072M" 
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
       walltime: !timedelta "00:30:00"
-      mpi_ranks: !calc 12*12
+      mpi_ranks: !calc 10*max_ppn
       exe: placeholder
       max_ppn: 12
       OMP_NUM_THREADS: 2
 
   run_eomg: !JobRequest
-    - memory: "3072M"
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
       walltime: !timedelta "03:00:00"
       mpi_ranks: !calc 12*12
       exe: placeholder
@@ -58,7 +73,7 @@ resources:
       OMP_NUM_THREADS: 2
 
   run_eupd: !JobRequest
-    - memory: "3072M" 
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
       walltime: !timedelta "00:30:00"
       mpi_ranks: !calc 40*6
       exe: placeholder
@@ -73,31 +88,28 @@ resources:
 #        OMP_NUM_THREADS: 4
 
   run_efcs: !JobRequest
-    - walltime: !timedelta "03:00:00"
-      mpi_ranks: !calc >-
-         doc.settings.layout_x*doc.settings.layout_y*6
-         + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
+    - memory: !calc doc.resources.memory_254M_on_wcoss_cray
+      walltime: !timedelta "03:00:00"
+      mpi_ranks: !calc doc.settings.ENKF_layout_x*doc.settings.ENKF_layout_y*6
       max_ppn: 12
-      memory: "254M"
 
   run_epos: !JobRequest
-    - memory: "254M"
-      mpi_ranks: 80
+    - memory: !calc doc.resources.memory_254M_on_wcoss_cray
+      mpi_ranks: 84
       walltime: !timedelta "00:10:00"
       exe: placeholder
-      max_ppn: 1
-      OMP_NUM_THREADS: 24
+      max_ppn: 12
 
   run_prep: !JobRequest
-    - memory: "3072M"
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
       walltime: !timedelta "00:15:00"
-      max_ppn: 2
-      mpi_ranks: 6
+      max_ppn: 12
+      mpi_ranks: 12
       exe: placeholder
 
   run_anal: !JobRequest
-    - memory: "3072M" 
-      mpi_ranks: !calc 60*6
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
+      mpi_ranks: !calc 144
       walltime: !timedelta "1:30:00"
       exe: placeholder
       max_ppn: 6
@@ -110,12 +122,12 @@ resources:
 #        OMP_NUM_THREADS: 4
 
   run_gdasfcst: !JobRequest
-    - mpi_ranks: !calc >-
+    - memory: !calc doc.resources.memory_1024M_on_wcoss_cray
+      mpi_ranks: !calc >-
          doc.settings.layout_x*doc.settings.layout_y*6
          + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
       walltime: !timedelta "01:00:00"
       max_ppn: 12
-      memory: "1024M"
 
   run_gdas_post_manager: !JobRequest
     - memory: "300M"
@@ -124,12 +136,12 @@ resources:
         doc.resources.run_gdasfcst[0].walltime + tools.to_timedelta('00:15:00')
 
   run_gfsfcst: !JobRequest
-    - mpi_ranks: !calc >-
+    - memory: !calc doc.resources.memory_1024M_on_wcoss_cray
+      mpi_ranks: !calc >-
          doc.settings.layout_x*doc.settings.layout_y*6
          + doc.settings.WRITE_GROUP*doc.settings.WRTTASK_PER_GROUP
       walltime: !timedelta "06:00:00"
       max_ppn: 12
-      memory: "1024M"
 
   run_gfs_post_manager: !JobRequest
     - memory: "300M"
@@ -138,7 +150,7 @@ resources:
         doc.resources.run_gfsfcst[0].walltime + tools.to_timedelta('00:15:00')
 
   run_gdaspost: !JobRequest
-    - memory: "3072M"
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
       mpi_ranks: !calc 6*max_ppn
       walltime: !timedelta "00:30:00"
       exe: placeholder
@@ -146,7 +158,7 @@ resources:
       OMP_NUM_THREADS: 1
 
   run_gfspost: !JobRequest
-    - memory: "3072M"
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
       mpi_ranks: !calc 6*max_ppn
       walltime: !timedelta "00:10:00"
       exe: placeholder
@@ -154,21 +166,27 @@ resources:
       OMP_NUM_THREADS: 1
 
   run_gfsvrfy: !JobRequest
-    - memory: "3072M" 
+    - memory: !FirstTrue
+        - when: !calc doc.settings.fv3gfs_machine == 'THEIA'
+          do: "16384M"
+        - otherwise: "3072M"
       mpi_ranks: 1
       walltime: !timedelta "03:00:00"
       exe: placeholder
       max_ppn: 1
 
   run_gdasvrfy: !JobRequest
-    - memory: "3072M" 
+    - memory: !FirstTrue
+        - when: !calc doc.settings.fv3gfs_machine == 'THEIA'
+          do: "16384M"
+        - otherwise: "3072M"
       mpi_ranks: 1
       walltime: !timedelta "01:30:00"
       exe: placeholder
       max_ppn: 1
 
   run_arch: !JobRequest
-    - memory: "3072M"
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
       exclusive: false
       mpi_ranks: 1
       walltime: !timedelta "06:00:00"
@@ -177,7 +195,7 @@ resources:
       OMP_NUM_THREADS: 2
 
   run_final: !JobRequest
-    - memory: "2M"
+    - memory: "1024M"
       mpi_ranks: 1
       walltime: !timedelta "00:01:00"
       exe: placeholder
@@ -185,7 +203,7 @@ resources:
       OMP_NUM_THREADS: 2
 
   run_earc: !JobRequest
-    - memory: "3072M"
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
       mpi_ranks: 1
       walltime: !timedelta "06:00:00"
       exe: placeholder
@@ -193,6 +211,6 @@ resources:
       exclusive: false
 
   run_fv3ic: !JobRequest
-    - memory: "3072M" 
+    - memory: !calc doc.resources.memory_3072M_on_wcoss_cray
       mpi_ranks: 24
       exe: placeholder
