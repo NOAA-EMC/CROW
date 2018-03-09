@@ -69,14 +69,21 @@ class Scheduler(BaseScheduler):
             minutes=int((dt%3600)//60)
             seconds=int(math.floor(dt%60))
             sio.write(f'#BSUB -W {hours}:{minutes:02d}\n')
-       
-        if spec[0].get('memory',''):
-            memory=spec[0]['memory']
-            bytes=tools.memory_in_bytes(memory)
+
+        # Handle memory.
+        if spec[0].is_exclusive() and spec[0].get('batch_memory',''):
+            bytes=tools.memory_in_bytes(spec[0]['batch_memory'])
             megabytes=int(math.ceil(bytes/1048576.))
-            sio.write(f'#BSUB -R rusage[mem={megabytes:d}]\n')
+        elif not spec[0].is_exclusive() and spec[0].get('compute_memory',''):
+            bytes=tools.memory_in_bytes(spec[0]['compute_memory'])
+            megabytes=int(math.ceil(bytes/1048576.))
+        elif spec[0].get('memory',''):
+            memory=tools.memory_in_bytes(spec[0]['memory'])
+            megabytes=int(math.ceil(bytes/1048576.))
         else:
-            sio.write(f'#BSUB -R rusage[mem=2000]\n')
+            megabytes=2000
+
+        sio.write(f'#BSUB -R rusage[mem={megabytes:d}]\n')
 
         if spec[0].get('outerr',''):
             sio.write(f'#BSUB -o {spec[0]["outerr"]}\n')
@@ -161,13 +168,21 @@ class Scheduler(BaseScheduler):
             seconds=int(math.floor(dt%60))
             sio.write(f'{indent*space}<walltime>{hours}:{minutes:02d}:{seconds:02d}</walltime>\n')
        
-        if spec[0].get('memory',''):
-            memory=spec[0]['memory']
-            bytes=tools.memory_in_bytes(memory)
+
+        # Handle memory.
+        if spec[0].is_exclusive() and spec[0].get('batch_memory',''):
+            bytes=tools.memory_in_bytes(spec[0]['batch_memory'])
             megabytes=int(math.ceil(bytes/1048576.))
-            sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
+        elif not spec[0].is_exclusive() and spec[0].get('compute_memory',''):
+            bytes=tools.memory_in_bytes(spec[0]['compute_memory'])
+            megabytes=int(math.ceil(bytes/1048576.))
+        elif spec[0].get('memory',''):
+            memory=tools.memory_in_bytes(spec[0]['memory'])
+            megabytes=int(math.ceil(bytes/1048576.))
         else:
-            sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
+            megabytes=2000
+
+        sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
 
         if 'outerr' in spec:
             sio.write(f'{indent*space}<join>{spec["outerr"]}</join>\n')

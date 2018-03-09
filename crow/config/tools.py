@@ -25,6 +25,11 @@ def join(L,J): return J.join([str(i) for i in L])
 def seq(start,end,step):
     return [ r for r in range(start,end+1,step) ]
 
+def yes_no(value):
+    return 'yes' if value else 'no'
+def YES_NO(value):
+    return 'YES' if value else 'NO'
+
 def fort(value,scope='scope'):
     """!Convenience function to convert a python object to a syntax valid
     in fortran namelists.    """
