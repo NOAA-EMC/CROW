@@ -14,7 +14,8 @@ from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           StateDependency, Dependable, Taskable, Task, \
           Family, Cycle, RUNNING, COMPLETED, FAILED, invalidate_cache, \
           TRUE_DEPENDENCY, FALSE_DEPENDENCY, SuitePath, TaskExistsDependency, \
-          CycleExistsDependency, DataEvent, ShellEvent, EventDependency
+          CycleExistsDependency, DataEvent, ShellEvent, EventDependency, \
+          document_root, update_globals
 from crow.metascheduler.algebra import simplify
 
 __all__=['to_rocoto','RocotoConfigError','ToRocoto',
@@ -210,14 +211,14 @@ class ToRocoto(object):
             raise ValueError('A Suite must define a Rocoto section containing '
                              'a "parallelism" and a "scheduler."')
 
-        update_globals={ 'sched':scheduler, 'to_rocoto':self,
+        globals={ 'sched':scheduler, 'to_rocoto':self,
                          'metasched':self }
         if 'parallelism' in suite.Rocoto:
-            update_globals['parallelism']=suite.Rocoto.parallelism
+            globals['parallelism']=suite.Rocoto.parallelism
 
         self.type='rocoto'
         self.suite=suite
-        self.suite.update_globals(**update_globals)
+        self.suite.update_globals(globals)
         self.settings=self.suite.Rocoto
         self.sched=scheduler
         self.__all_defined=set()
@@ -262,7 +263,7 @@ class ToRocoto(object):
                         sio.write(stringify_clock(
                             name,alarm,indent*self.__spacing))
 
-            sio.write(stringify_clock(None,alarm,indent*self.__spacing))
+            sio.write(stringify_clock(None,self.suite.Clock,indent*self.__spacing))
             return sio.getvalue()
 
     def make_task_xml(self,indent=1):

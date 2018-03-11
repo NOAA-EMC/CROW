@@ -1,8 +1,5 @@
 import crow.tools
-import os.path
-import os
-import re
-import datetime
+import os, re, datetime
 from collections import Sequence, Mapping
 from crow.config.exceptions import *
 from crow.tools import typecheck
@@ -101,6 +98,9 @@ def uniq(inlist):
 def can_write(f):
     return os.access(f, os.W_OK)
 
+def day_of(d):
+    return datetime.datetime(d.year,d.month,d.day)
+
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
 CONFIG_TOOLS=crow.tools.ImmutableMapping({
@@ -139,4 +139,5 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'node_tool_for':crow.sysenv.node_tool_for,
     'command_without_exe':command_without_exe,
     'indent':indent,
+    'day_of':day_of,
 })

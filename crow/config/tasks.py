@@ -17,7 +17,7 @@ from collections import namedtuple, OrderedDict, Sequence
 from collections.abc import Mapping, Sequence
 from copy import copy, deepcopy
 from crow.config.exceptions import *
-from crow.config.eval_tools import dict_eval, strcalc, multidict, from_config
+from crow.config.eval_tools import dict_eval, strcalc, multidict, from_config, update_globals
 from crow.tools import to_timedelta, typecheck, NamedConstant, MISSING
 
 __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
@@ -96,7 +96,8 @@ class SuiteView(Mapping):
         self.viewed.task_path_list=path[1:]
         self.viewed.task_path_str='/'+'/'.join(path[1:])
         self.viewed.task_path_var='.'.join(path[1:])
-        self.viewed._path=self.viewed.task_path_var
+        if self.viewed.task_path_var:
+            self.viewed._path=self.viewed.task_path_var
         if type(self.viewed) in SUITE_CLASS_MAP:
             self.viewed.up=parent
             self.viewed.this=self.viewed
@@ -408,10 +409,11 @@ class Suite(SuiteView):
                        RUNNING=RUNNING,COMPLETED=COMPLETED,
                        FAILED=FAILED)
         self._more_globals=dict(more_globals)
-
         globals.update(self._more_globals)
+
         super().__init__(self,viewed,[ZERO_DT],self)
-        viewed._recursively_set_globals(globals)
+
+        update_globals(self.viewed._globals()['doc'],globals)
     def has_cycle(self,dt):
         return CycleExistsDependency(to_timedelta(dt))
     def make_empty_copy(self,more_globals=EMPTY_DICT):
@@ -420,9 +422,9 @@ class Suite(SuiteView):
         new_more_globals.update(more_globals)
         return Suite(suite_copy,new_more_globals)
     def update_globals(self,*args,**kwargs):
-        globals=self.viewed._get_globals()
+        globals=dict()
         globals.update(*args,**kwargs)
-        self.viewed._recursively_set_globals(globals)
+        update_globals(self.viewed,globals)
     def get_alarm_with_name(self,alarm_name):
         return self["Alarms"][alarm_name]
 

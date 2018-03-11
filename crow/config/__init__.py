@@ -15,7 +15,7 @@ from .tasks import Suite, Depend, AndDependency, SuitePath, \
     CycleExistsDependency, InputSlot, OutputSlot, EventDependency, \
     Event, DataEvent, ShellEvent, TaskExistsDependency
 from .to_yaml import to_yaml
-from .eval_tools import invalidate_cache
+from .eval_tools import invalidate_cache, update_globals
 from .eval_tools import evaluate_immediates as _evaluate_immediates
 from .exceptions import ConfigError, ConfigUserError
 
@@ -24,7 +24,7 @@ __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
          'Taskable', 'Task', 'Family', 'CycleAt', 'CycleTime', 'Cycle',
          'Trigger', 'Depend', 'Timespec', 'SuitePath', 'ShellEvent', 'Event',
          'DataEvent', 'CycleExistsDependency', 'validate', 'EventDependency',
-         'TaskExistsDependency', 'follow_main', 'from_dir' ]
+         'TaskExistsDependency', 'follow_main', 'from_dir', 'update_globals' ]
 
 _logger=logging.getLogger('crow.config')
 

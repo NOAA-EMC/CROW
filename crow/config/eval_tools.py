@@ -293,15 +293,18 @@ class dict_eval(MutableMapping):
         cls=type(self.__child)
         return cls([(k, to_py(v)) for k,v in self.items()])
     def _child(self): return self.__child
-    def _recursively_set_globals(self,globals):
+    def _recursively_set_globals(self,globals,memo=None):
         """Recurses through the object tree setting the globals for eval() calls"""
         assert('tools' in globals)
         assert('doc' in globals)
+        if memo is None: memo=set()
+        if id(self) in memo: return
+        memo.add(id(self))
         if self.__globals is globals: return
         self.__globals=globals
         for k,v in self.__child.items():
             try:
-                v._recursively_set_globals(globals)
+                v._recursively_set_globals(globals,memo)
             except AttributeError: pass
     def __repr__(self):
         return '%s(%s)'%(type(self).__name__,repr(self.__child),)
@@ -392,12 +395,15 @@ class list_eval(MutableSequence):
     def _to_py(self,recurse=True):
         """!Converts to a python core object; does not work for cyclic object trees"""
         return [ to_py(v) for v in self ]
-    def _recursively_set_globals(self,globals):
+    def _recursively_set_globals(self,globals,memo):
+        if memo is None: memo=set()
+        if id(self) in memo: return
+        memo.add(id(self))
         if self.__globals is globals: return
         self.__globals=globals
         for v in self.__child:
             if isinstance(v,dict_eval) or isinstance(v,list_eval):
-                v._recursively_set_globals(globals)
+                v._recursively_set_globals(globals,memo)
     def __repr__(self):
         return '%s(%s)'%(type(self).__name__,repr(self.__child),)
     def __str__(self):
@@ -417,6 +423,15 @@ class Eval(dict_eval):
         if 'result' not in self:
             raise EvalMissingCalc('"!Eval" block lacks a "result: !calc"')
         return self.result
+
+def update_globals(s,globals):
+    gcopy=dict(s._get_globals())
+    doc=gcopy['doc']
+    tools=gcopy['tools']
+    gcopy.update(globals)
+    gcopy['doc']=doc
+    gcopy['tools']=tools
+    doc._recursively_set_globals(gcopy)
 
 def recursively_validate(obj,stage,validation_memo=None,inheritence_memo=None):
     if validation_memo is None: validation_memo=set()

@@ -1,6 +1,6 @@
-import subprocess, os, re, logging, tempfile, datetime, shutil
+import subprocess, os, re, logging, tempfile, datetime, shutil, math
 from datetime import timedelta
-from copy import deepcopy
+from copy import deepcopy, copy
 from contextlib import suppress, contextmanager
 from collections.abc import Mapping
 
@@ -56,10 +56,12 @@ def deliver_file(from_file: str,to_file: str,*,blocksize: int=1048576,
 def panasas_gb(dir,pan_df='pan_df'):
     rdir=os.path.realpath(dir)
     stdout=subprocess.check_output([pan_df,'-B','1G','-P',rdir])
+    result=0
     for line in stdout.splitlines():
         if rdir in str(line):
-            return int(line.split()[3],10)
-    return 0
+            result=int(line.split()[3],10)
+    _logger.info(f'{pan_df} of {dir} is {result}')
+    return result
 #pan_df -B 1G -P /scratch4/NCEPDEV/stmp3/
 #Filesystem         1073741824-blocks      Used Available Capacity Mounted on
 #panfs://10.181.12.11/     94530     76432     18098      81% /scratch4/NCEPDEV/stmp3/
@@ -222,7 +224,7 @@ class Clock(object):
         typecheck('step',step,datetime.timedelta)
         if end is not None:
             typecheck('end',end,datetime.datetime)
-        self.start=start
+        self.start=copy(start)
         self.end=end
         self.step=step
         self.__now=start
@@ -235,6 +237,37 @@ class Clock(object):
     def __repr__(self):
         return f'Clock(start={self.start!r},step={self.step!r},'\
                f'end={self.end!r},now={self.now!r})'
+
+    def for_alarm(self,alarm):
+        typecheck('alarm',alarm,Clock)
+        if alarm.step<self.step or alarm.step%self.step:
+            raise ValueError(f"In for_alarm, the alarm's step must be a multiple of the clock's step (clock: {self.step}, alarm: {alarm.step}).")
+        if (alarm.start-self.start)%self.step:
+            raise ValueError(f"In for_alarm, the alarm start must reside on a clock step (clock: {self}, alarm: {alarm}).")
+        start=alarm.start + alarm.step * math.ceil(
+            (self.start-alarm.start)/alarm.step)
+
+        if self.end is None:
+            # Clock is unbounded, so use the alarm's bound
+            end=copy(alarm.end)
+        elif alarm.end is None:
+            # Clock is bounded, and alarm is unbounded, so use clock's end
+            end=copy(self.end)
+        else:
+            # Both clock and alarm are bounded, so use earliest
+            end=min(self.end,alarm.end)
+
+        # If the resulting alarm is bounded, make sur its end lies on
+        # an alarm step:
+        if end is not None:
+            end=alarm.start + alarm.step * math.floor(
+                max(ZERO_DT,end-alarm.start)/alarm.step)
+
+        # Start is the first alarm step at or after clock start:
+        start=alarm.start + alarm.step * math.ceil(
+            max(ZERO_DT,self.start-alarm.start)/alarm.step)
+
+        return Clock(start,alarm.step,end) # No "now" in new alarm.
 
     def __contains__(self,when):
         if isinstance(when,datetime.timedelta):
