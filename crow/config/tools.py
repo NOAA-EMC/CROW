@@ -48,7 +48,7 @@ def fort(value,scope='scope'):
         return ', '.join([f'{scope}%{k}={v}' for k,v in value.items()])
     elif value is True or value is False:
         # Booleans get a "." around them:
-        return '.'+str(bool(value))+'.'
+        return '.'+str(bool(value)).lower()+'.'
     elif isinstance(value,float):
         return '%.12g'%value
     else:
