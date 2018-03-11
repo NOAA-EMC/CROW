@@ -43,6 +43,7 @@ add_yaml_list_eval(u'!FirstTrue',FirstTrue)
 add_yaml_list_eval(u'!Immediate',Immediate)
 add_yaml_list_eval(u'!JobRequest',JobResourceSpecMaker)
 add_yaml_list_eval(u'!Inherit',Inherit)
+add_yaml_list_eval(u'!MergeMapping',MergeMapping)
 add_yaml_list_eval(None,GenericList)
 
 ########################################################################
@@ -67,6 +68,7 @@ def add_yaml_dict_eval(key,cls):
 
 add_yaml_dict_eval(None,GenericDict)
 add_yaml_dict_eval(u'!Platform',Platform)
+add_yaml_dict_eval(u'!Select',Select)
 add_yaml_dict_eval(u'!Action',Action)
 add_yaml_dict_eval(u'!Eval',Eval)
 add_yaml_dict_eval(u'!InputSlot',InputSlot)

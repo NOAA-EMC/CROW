@@ -84,7 +84,7 @@ def from_config(key,val,globals,locals,path):
         return val
     except(KeyError,NameError,AttributeError) as ae:
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
-                           f'{type(ae).__name__} {str(ae)} --- in --- '
+                           f'{type(ae).__name__} {str(ae)} --- not in --- '
                            f'{{{", ".join([ k for k in locals.keys() ])}}}')
     except(SyntaxError,TypeError,IndexError) as ke:
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '

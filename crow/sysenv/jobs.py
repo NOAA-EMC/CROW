@@ -26,6 +26,12 @@ class JobRankSpec(Mapping):
                  exe=MISSING,args=MISSING,exclusive=True,
                  separate_node=False,hyperthreads=1,max_ppn=MISSING,
                  **kwargs):
+        if OMP_NUM_THREADS is None: OMP_NUM_THREADS=0
+        if mpi_ranks is None:       mpi_ranks=0
+        if args is None:            args=MISSING
+        if exclusive is None:       exclusive=True
+        if hyperthreads is None:    hyperthreads=1
+        if max_ppn is None:         max_ppn=MISSING
         if OMP_NUM_THREADS == 'max':
             OMP_NUM_THREADS=MAXIMUM_THREADS
         self.__spec={

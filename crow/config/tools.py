@@ -99,6 +99,9 @@ def uniq(inlist):
         outlist.append(i)
     return outlist
 
+def can_write(f):
+    return os.access(f, os.W_OK)
+
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
 CONFIG_TOOLS=crow.tools.ImmutableMapping({
@@ -114,6 +117,7 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'dirname':os.path.dirname,
     'abspath':os.path.abspath,
     'realpath':os.path.realpath,
+    'can_write':can_write,
     'isdir':os.path.isdir,
     'isfile':os.path.isfile,
     'env':env,

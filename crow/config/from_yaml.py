@@ -29,6 +29,7 @@ __all__=['ConvertFromYAML']
 
 # YAML representation objects:
 class PlatformYAML(YAMLObject):   yaml_tag=u'!Platform'
+class SelectYAML(YAMLObject):     yaml_tag=u'!Select'
 class ActionYAML(YAMLObject):     yaml_tag=u'!Action'
 #class TemplateYAML(YAMLObject):   yaml_tag=u'!Template'
 
@@ -38,6 +39,7 @@ class FirstTrueYAML(list):        yaml_tag=u'!FirstTrue'
 class LastTrueYAML(list):         yaml_tag=u'!LastTrue'
 class ImmediateYAML(list):        yaml_tag=u'!Immediate'
 class InheritYAML(list):          yaml_tag=u'!Inherit'
+class MergeMappingYAML(list):     yaml_tag=u'!MergeMapping'
 
 class ClockYAML(dict):            yaml_tag=u'!Clock'
 class EvalYAML(dict): pass
@@ -60,6 +62,7 @@ class JobResourceSpecMakerYAML(list): pass
 # * internal representation class
 # * python core class for intermediate conversion
 TYPE_MAP={ PlatformYAML:          [ Platform,     dict,        None ], 
+           SelectYAML:            [ Select,       dict,        None ], 
            TemplateYAML:          [ Template,     OrderedDict, None ],
            ActionYAML:            [ Action,       dict,        None ],
            ShellCommandYAML:      [ ShellCommand, OrderedDict, None ],
@@ -157,6 +160,7 @@ add_yaml_sequence(u'!LastTrue',LastTrueYAML)
 add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
 add_yaml_sequence(u'!Immediate',ImmediateYAML)
 add_yaml_sequence(u'!Inherit',InheritYAML)
+add_yaml_sequence(u'!MergeMapping',MergeMappingYAML)
 add_yaml_sequence(u'!JobRequest',JobResourceSpecMakerYAML)
 
 ## @var CONDITIONALS
@@ -271,6 +275,8 @@ class ConvertFromYAML(object):
             return self.from_list(v,locals,Immediate,path)
         elif cls is InheritYAML:
             return self.from_list(v,locals,Inherit,path)
+        elif cls is MergeMappingYAML:
+            return self.from_list(v,locals,MergeMapping,path)
         elif cls is JobResourceSpecMakerYAML:
             return self.from_list(v,locals,JobResourceSpecMaker,path)
         elif isinstance(v,list) and v and isinstance(v[0],tuple) \

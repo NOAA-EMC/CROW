@@ -440,7 +440,7 @@ class Depend(str):
             result=as_dependency(result,path)
             return result
         except(AttributeError,KeyError,NameError) as ne:
-            raise DependError(f'{".".join(path[1:])}@{path[0]}: !Depend {self}: {ne} --- in --- {{{", ".join([k for k in locals.keys()])}}}')
+            raise DependError(f'{".".join(path[1:])}@{path[0]}: !Depend {self}: {ne} --- not in --- {{{", ".join([k for k in locals.keys()])}}}')
         except(ValueError,SyntaxError,TypeError,IndexError) as ke:
             raise DependError(f'{path}: !Depend {self}: {ke}')
 

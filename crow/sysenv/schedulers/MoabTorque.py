@@ -67,7 +67,7 @@ class Scheduler(BaseScheduler):
             sio.write(f'#PBS -l walltime={hours:d}:{minutes:02d}'
                       f':{seconds:02d}\n')
         for memvar in [ 'compute_memory', 'memory' ]:
-            memory=spec[0].get(memvar,''):
+            memory=spec[0].get(memvar,'')
             if not memory: continue
             bytes=tools.memory_in_bytes(memory)
             megabytes=int(math.ceil(bytes/1048576.))
@@ -157,7 +157,7 @@ class Scheduler(BaseScheduler):
             sio.write(f'{indent*space}<walltime>{hours}:{minutes:02d}:{seconds:02d}</walltime>\n')
        
         for memvar in [ 'compute_memory', 'memory' ]:
-            memory=spec[0].get(memvar,''):
+            memory=spec[0].get(memvar,'')
             if not memory: continue
             bytes=tools.memory_in_bytes(memory)
             megabytes=int(math.ceil(bytes/1048576.))

@@ -62,6 +62,7 @@ def _recursive_validate(obj,stage,memo=None):
     if memo is None: memo=set()
     if id(obj) in memo: return
     memo.add(id(obj))
+    if hasattr(obj,'_do_not_validate'): return
     if hasattr(obj,'_validate'):
         obj._validate(stage)
         for k,v in obj.items():
@@ -76,14 +77,14 @@ def validate(obj,stage='',recurse=False):
 def document_root(obj):
     return obj._globals()['doc']
 
-def from_dir(reldir,evaluate_immediates=True,validation_stage=None,more_globals=None):
+def from_dir(reldir,evaluate_immediates=True,validation_stage=None,main_globals=None):
     with io.StringIO() as fd:
-        follow_main(fd,reldir,more_globals)
+        follow_main(fd,reldir,main_globals)
         yaml=fd.getvalue()
     return from_string(yaml,evaluate_immediates=True,validation_stage=None)
 
-def follow_main(fd,reldir,more_globals=None):
-    if more_globals is None: more_globals={}
+def follow_main(fd,reldir,main_globals=None):
+    if main_globals is None: main_globals={}
     _logger.debug(f"{reldir}: enter directory")
     mainfile=os.path.join(reldir,"_main.yaml")
 
@@ -91,7 +92,7 @@ def follow_main(fd,reldir,more_globals=None):
     if os.path.exists(mainfile):
         _logger.debug(f"{mainfile}: read \"include\" array")
         maindat=crow.config.from_file(mainfile)
-        maindat.update(more_globals)
+        maindat.update(main_globals)
         if "include" not in maindat or \
            not isinstance(maindat.include,Sequence):
             epicfail(f"{mainfile} has no \"include\" array")
@@ -121,7 +122,7 @@ def follow_main(fd,reldir,more_globals=None):
             if not is_literal and basename in literals: continue
             if basename == "_main.yaml": continue
             if os.path.isdir(path):
-                follow_main(fd,path,more_globals)
+                follow_main(fd,path,main_globals)
             else:
                 _logger.debug(f"{path}: read yaml")
                 included.add(basename)

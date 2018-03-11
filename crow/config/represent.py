@@ -2,7 +2,7 @@
 embedded yaml calculations, as well as internal representations of all
 custom data types in the yaml files."""
 
-import re, abc, logging, sys
+import re, abc, logging, sys, collections
 from datetime import timedelta
 from copy import deepcopy
 from crow.config.exceptions import *
@@ -16,7 +16,8 @@ _logger=logging.getLogger('crow.config')
 __all__=[ 'Action','Platform', 'Conditional', 'calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
           'GenericDict', 'GenericOrderedDict', 'ShellCommand',
-          'Immediate', 'ClockMaker', 'JobResourceSpecMaker' ]
+          'Immediate', 'ClockMaker', 'JobResourceSpecMaker',
+          'MergeMapping', 'Select' ]
 
 ########################################################################
 
@@ -51,6 +52,33 @@ class ClockMaker(dict_eval):
         return Clock(start=self.start,step=self.step,
                      end=self.get('end',None),
                      now=self.get('now',None))
+        
+class Select(dict_eval):
+    def __result(self,globals,locals):
+        if 'select' not in self or 'otherwise' not in self or 'cases' not in self:
+            raise KeyError(f'{self._path}: !Select must contain select, otherwise, and cases.')
+        if not isinstance(self.cases,collections.Mapping):
+            raise TypeError(f'{self._path}.cases: !Select cases must be a map')
+        value=from_config('select',self._raw('select'),
+                          globals,locals,self._path)
+        if value in self.cases:
+            if hasattr(self.cases,'_raw'):
+                return self.cases._raw(value)
+            return self.cases[value]
+        return self._raw('otherwise')
+
+class MergeMapping(list_eval):
+    def _do_not_validate(self): pass
+    def _result(self,globals,locals):
+        result={}
+        for d in self:
+            if not isinstance(d,collections.Mapping): continue
+            if not d: continue
+            if hasattr(d,'_raw_child'):
+                result.update(d._raw_child())
+            else:
+                result.update(d)
+        return dict_eval(result,self._path,self._get_globals())
 
 class Immediate(list_eval): 
     def _result(self,globals,locals):
