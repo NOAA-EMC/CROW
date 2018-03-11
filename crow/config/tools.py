@@ -45,8 +45,7 @@ def fort(value,scope='scope'):
         return ", ".join(result)
     elif isinstance(value,Mapping):
         # For mappings, assume a derived type.
-        subscope_keys=[ (f'{scope}%{key}',value) for key in value ]
-        return ', '.join([f'{k}={fort(v,k)}' for (k,v) in subscope_keys])
+        return ', '.join([f'{scope}%{k}={v}' for k,v in value.items()])
     elif value is True or value is False:
         # Booleans get a "." around them:
         return '.'+str(bool(value))+'.'
@@ -107,6 +106,8 @@ def can_write(f):
 CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'fort':fort,
     'seq':seq,
+    'YES_NO': YES_NO,
+    'yes_no': yes_no,
     'expand':expand,
     'crow_install_dir':crow_install_dir,
     'to_upper':(lambda s: s.upper()),

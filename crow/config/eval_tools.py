@@ -84,14 +84,17 @@ def from_config(key,val,globals,locals,path):
         return val
     except(KeyError,NameError,AttributeError) as ae:
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
-                           f'{type(ae).__name__} {str(ae)} --- not in --- '
+                           f'{type(ae).__name__} {str(ae)} --in-- '
                            f'{{{", ".join([ k for k in locals.keys() ])}}}')
     except(SyntaxError,TypeError,IndexError) as ke:
+        if 'f-string: unterminated string' in str(ke):
+#            raise CalcKeyError(f'{path}: {type(val).__name__} 
+            raise CalcKeyError(f'''{path}: {type(val).__name__}: probable unbalanced parentheses ([{{"''"}}]) in {str(val)[0:80]} {str(ke)[:80]}''')
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
-                           f'{type(ke).__name__} {str(ke)}')
+                           f'{type(ke).__name__} {str(ke)[:80]}')
     except RecursionError as re:
-        raise CalcRecursionTooDeep('%s: !%s %s'%(
-            str(key),type(val).__name__,str(val)))
+        raise CalcRecursionTooDeep(
+            f'{path}: !{key} {type(val).__name__}')
 
 class multidict(MutableMapping):
     """!This is a dict-like object that makes multiple dicts act as one.
@@ -226,14 +229,15 @@ class dict_eval(MutableMapping):
         for k in self.__child.keys(): yield k
     def _validate(self,stage,memo=None):
         """!Validates this dict_eval using its embedded Template object, if present """
+        if self.__is_validated: return
+        self.__is_validated=True
+
         # Make sure we don't get infinite recursion:
         if memo is None: memo=set()
         if id(self) in memo:
             raise ValidationRecursionError(
                 f'{self._path}: cyclic Inherit detected')
         memo.add(id(self))
-        if self.__is_validated: return
-        self.__is_validated=True
 
         # Inherit from other scopes:
         if 'Inherit' in self:
@@ -413,6 +417,17 @@ class Eval(dict_eval):
         if 'result' not in self:
             raise EvalMissingCalc('"!Eval" block lacks a "result: !calc"')
         return self.result
+
+def recursively_validate(obj,stage,validation_memo=None,inheritence_memo=None):
+    if validation_memo is None: validation_memo=set()
+    if id(obj) in validation_memo: return
+    validation_memo.add(id(obj))
+
+    if hasattr(obj,'_validate'):
+        obj._validate(stage)
+    if hasattr(obj,'_iter_raw'):
+        for subobj in obj._iter_raw():
+            recursively_validate(subobj,stage,validation_memo,inheritence_memo)
 
 def _invalidate_cache_one_obj(obj,key=None):
     if hasattr(obj,'_invalidate_cache'):

@@ -43,9 +43,8 @@ evaluate_immediates=_evaluate_immediates
 def from_string(s,evaluate_immediates=True,validation_stage=None):
     if not s: raise TypeError('Cannot parse null string')
     c=ConvertFromYAML(yaml.load(s),CONFIG_TOOLS,ENV)
-    result=c.convert(validation_stage=validation_stage)
-    if evaluate_immediates:
-        _evaluate_immediates(result,recurse=True)
+    result=c.convert(validation_stage=validation_stage,
+                     evaluate_immediates=evaluate_immediates)
     return result
 
 def from_file(*args,evaluate_immediates=True,validation_stage=None):
@@ -81,7 +80,8 @@ def from_dir(reldir,evaluate_immediates=True,validation_stage=None,main_globals=
     with io.StringIO() as fd:
         follow_main(fd,reldir,main_globals)
         yaml=fd.getvalue()
-    return from_string(yaml,evaluate_immediates=True,validation_stage=None)
+    return from_string(yaml,evaluate_immediates=evaluate_immediates,
+                       validation_stage=validation_stage)
 
 def follow_main(fd,reldir,main_globals=None):
     if main_globals is None: main_globals={}

@@ -54,7 +54,7 @@ class ClockMaker(dict_eval):
                      now=self.get('now',None))
         
 class Select(dict_eval):
-    def __result(self,globals,locals):
+    def _result(self,globals,locals):
         if 'select' not in self or 'otherwise' not in self or 'cases' not in self:
             raise KeyError(f'{self._path}: !Select must contain select, otherwise, and cases.')
         if not isinstance(self.cases,collections.Mapping):
@@ -68,7 +68,8 @@ class Select(dict_eval):
         return self._raw('otherwise')
 
 class MergeMapping(list_eval):
-    def _do_not_validate(self): pass
+    def _is_immediate(self): pass
+    def _validate(self,*args,**kwargs): assert(False)
     def _result(self,globals,locals):
         result={}
         for d in self:
@@ -78,7 +79,8 @@ class MergeMapping(list_eval):
                 result.update(d._raw_child())
             else:
                 result.update(d)
-        return dict_eval(result,self._path,self._get_globals())
+        result=dict_eval(result,self._path,self._get_globals())
+        return result
 
 class Immediate(list_eval): 
     def _result(self,globals,locals):

@@ -11,12 +11,12 @@ following python concept:
 
 from datetime import timedelta
 from collections import namedtuple, OrderedDict
-import collections
-import re
-import yaml
+
+import collections, re, yaml, logging
+
 from yaml import YAMLObject
 from yaml.nodes import MappingNode
-
+import crow.config.eval_tools
 from crow.config.eval_tools import *
 from crow.config.represent import *
 from crow.config.tasks import *
@@ -26,6 +26,8 @@ from crow.tools import to_timedelta
 import crow.sysenv
 
 __all__=['ConvertFromYAML']
+
+logger=logging.getLogger('crow.config')
 
 # YAML representation objects:
 class PlatformYAML(YAMLObject):   yaml_tag=u'!Platform'
@@ -242,15 +244,23 @@ class ConvertFromYAML(object):
         self.tree=tree
         self.tools=tools
         self.validatable=dict()
+        self.immediates=dict()
         self.ENV=ENV
 
-    def convert(self,validation_stage):
+    def convert(self,validation_stage,evaluate_immediates):
         self.result=self.from_dict(self.tree,path='doc')
         globals={ 'tools':self.tools, 'doc':self.result, 'ENV': self.ENV }
         self.result._recursively_set_globals(globals)
+        if evaluate_immediates:
+            logger.debug('evaluate immediates')
+            crow.config.eval_tools.evaluate_immediates(
+                self.result,recurse=True)
         if validation_stage is not None:
-            for i,v in self.validatable.items():
-                v._validate(validation_stage)
+            logger.debug(f'validate in {validation_stage}')
+            crow.config.eval_tools.recursively_validate(
+                self.result,validation_stage)
+        else:
+            logger.debug('do not validate')
         return self.result
 
     def to_eval(self,v,locals,path):
