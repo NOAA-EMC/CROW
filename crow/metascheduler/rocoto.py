@@ -678,10 +678,7 @@ class ToRocoto(object):
             # There are no alarms in use, so there is only one final task.
             # Generate dependency for it:
             fd.write(f'\n{self.__spacing*indent}<!-- The final task dependencies are automatically generated to handle Complate and Trigger conditions. -->\n\n')
-            alarm_dep, complete_dep=self._final_task_deps(self.suite)
-            dep = alarm_dep
-            if complete_dep is not None:
-                dep = dep | complete_dep
+            dep=self._final_task_deps_no_alarms(self.suite)
             self._write_task_text(fd,' final="true"',indent,final,dep,timedelta.min,'')
             return
             
