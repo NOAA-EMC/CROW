@@ -73,15 +73,14 @@ class Scheduler(BaseScheduler):
         # Handle memory.
         if spec[0].is_exclusive() and spec[0].get('batch_memory',''):
             bytes=tools.memory_in_bytes(spec[0]['batch_memory'])
-            megabytes=int(math.ceil(bytes/1048576.))
         elif not spec[0].is_exclusive() and spec[0].get('compute_memory',''):
             bytes=tools.memory_in_bytes(spec[0]['compute_memory'])
-            megabytes=int(math.ceil(bytes/1048576.))
         elif spec[0].get('memory',''):
-            memory=tools.memory_in_bytes(spec[0]['memory'])
-            megabytes=int(math.ceil(bytes/1048576.))
+            bytes=tools.memory_in_bytes(spec[0]['memory'])
         else:
-            megabytes=2000
+            bytes=2000*1048576.
+
+        megabytes=int(math.ceil(bytes/1048576.))
 
         sio.write(f'#BSUB -R rusage[mem={megabytes:d}]\n')
 
@@ -172,15 +171,14 @@ class Scheduler(BaseScheduler):
         # Handle memory.
         if spec[0].is_exclusive() and spec[0].get('batch_memory',''):
             bytes=tools.memory_in_bytes(spec[0]['batch_memory'])
-            megabytes=int(math.ceil(bytes/1048576.))
         elif not spec[0].is_exclusive() and spec[0].get('compute_memory',''):
             bytes=tools.memory_in_bytes(spec[0]['compute_memory'])
-            megabytes=int(math.ceil(bytes/1048576.))
         elif spec[0].get('memory',''):
-            memory=tools.memory_in_bytes(spec[0]['memory'])
-            megabytes=int(math.ceil(bytes/1048576.))
+            bytes=tools.memory_in_bytes(spec[0]['memory'])
         else:
-            megabytes=2000
+            bytes=2000*1048576.
+
+        megabytes=int(math.ceil(bytes/1048576.))
 
         sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
 

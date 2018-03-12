@@ -1,9 +1,11 @@
 import crow.tools
-import os, re, datetime
+import os, re, datetime, logging
 from collections import Sequence, Mapping
 from crow.config.exceptions import *
 from crow.tools import typecheck
 import crow.sysenv
+
+logger=logging.getLogger('crow.config')
 
 class Environment(dict):
     def __getattr__(self,key):

@@ -68,10 +68,10 @@ def panasas_gb(dir,pan_df='pan_df'):
 
 def gpfs_gb(dir,fileset,device,mmlsquota='mmlsquota'):
     mmlsquota=subprocess.check_output([
-        mmlsquota, '--block-size', '1T'])
+        mmlsquota, '--block-size', '1T','-j',fileset,device])
     for m in re.finditer(b'''(?isx)
                (?:
-                   \S+ \s+ FILESET
+                   (?P<device>\S+) \s+ FILESET
                    \s+ (?P<TBused>  \d+  )
                    \s+ (?P<TBquota> \d+  )
                    \s+ (?P<TBlimit> \d+  )
@@ -84,7 +84,10 @@ def gpfs_gb(dir,fileset,device,mmlsquota='mmlsquota'):
         if m.group('bad') or not m.group('TBused') \
            or not m.group('TBlimit'):
             continue
-        return 1024*(int(m.group('TBlimit')) - int(m.group('TBused')))
+        result=1024*(int(m.group('TBlimit')) - int(m.group('TBused')))
+        _logger.info(f'{device}:{fileset}: space={result}')
+        return result
+    _logger.error(f'{device}:{fileset}: not found or no quota')
     return 0
     
 class ImmutableMapping(Mapping):
