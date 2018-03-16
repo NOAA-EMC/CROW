@@ -49,6 +49,14 @@ class Scheduler(BaseScheduler):
         sio.close()
         return ret
 
+    def get_memory_from_resource_spec(self,spec):
+        for memvar in [ 'compute_memory', 'memory' ]:
+            memory=spec[0].get(memvar,'')
+            if not memory: continue
+            bytes=tools.memory_in_bytes(memory)
+            return int(math.ceil(bytes/1048576.))
+        return None
+
     def batch_resources(self,spec,**kwargs):
         if kwargs:
             spec=dict(spec,**kwargs)
@@ -66,13 +74,10 @@ class Scheduler(BaseScheduler):
             seconds=int(math.floor(dt%60))
             sio.write(f'#PBS -l walltime={hours:d}:{minutes:02d}'
                       f':{seconds:02d}\n')
-        for memvar in [ 'compute_memory', 'memory' ]:
-            memory=spec[0].get(memvar,'')
-            if not memory: continue
-            bytes=tools.memory_in_bytes(memory)
-            megabytes=int(math.ceil(bytes/1048576.))
+
+        megabytes=self.get_memory_from_resource_spec(spec)
+        if megabytes is not None:
             sio.write(f'#PBS -l vmem={megabytes:d}M\n')
-            break
 
         if spec[0].get('outerr',''):
             sio.write(f'#PBS -j oe -o {spec[0]["outerr"]}\n')
@@ -156,13 +161,9 @@ class Scheduler(BaseScheduler):
             seconds=int(math.floor(dt%60))
             sio.write(f'{indent*space}<walltime>{hours}:{minutes:02d}:{seconds:02d}</walltime>\n')
        
-        for memvar in [ 'compute_memory', 'memory' ]:
-            memory=spec[0].get(memvar,'')
-            if not memory: continue
-            bytes=tools.memory_in_bytes(memory)
-            megabytes=int(math.ceil(bytes/1048576.))
+        megabytes=self.get_memory_from_resource_spec(spec)
+        if megabytes is not None:
             sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
-            break
 
         if 'outerr' in spec:
             sio.write(f'{indent*space}<join>{spec["outerr"]}</join>\n')

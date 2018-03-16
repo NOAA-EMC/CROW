@@ -1,9 +1,11 @@
 from crow.sysenv.exceptions import UnknownSchedulerError
 from crow.sysenv.schedulers.MoabTorque import Scheduler as MoabTorqueScheduler
+from crow.sysenv.schedulers.MoabAlps import Scheduler as MoabAlpsScheduler
 from crow.sysenv.schedulers.LSFAlps import Scheduler as LSFAlpsScheduler
 
 KNOWN_SCHEDULERS={
     'MoabTorque': MoabTorqueScheduler,
+    'MoabAlps': MoabAlpsScheduler,
     'LSFAlps': LSFAlpsScheduler
     }
 
