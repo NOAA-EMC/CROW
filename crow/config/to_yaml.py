@@ -44,6 +44,7 @@ add_yaml_list_eval(u'!Immediate',Immediate)
 add_yaml_list_eval(u'!JobRequest',JobResourceSpecMaker)
 add_yaml_list_eval(u'!Inherit',Inherit)
 add_yaml_list_eval(u'!MergeMapping',MergeMapping)
+add_yaml_list_eval(u'!AppendSequence',AppendSequence)
 add_yaml_list_eval(None,GenericList)
 
 ########################################################################

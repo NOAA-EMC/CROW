@@ -42,6 +42,7 @@ class LastTrueYAML(list):         yaml_tag=u'!LastTrue'
 class ImmediateYAML(list):        yaml_tag=u'!Immediate'
 class InheritYAML(list):          yaml_tag=u'!Inherit'
 class MergeMappingYAML(list):     yaml_tag=u'!MergeMapping'
+class AppendSequenceYAML(list):     yaml_tag=u'!AppendSequence'
 
 class ClockYAML(dict):            yaml_tag=u'!Clock'
 class EvalYAML(dict): pass
@@ -162,6 +163,7 @@ add_yaml_sequence(u'!LastTrue',LastTrueYAML)
 add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
 add_yaml_sequence(u'!Immediate',ImmediateYAML)
 add_yaml_sequence(u'!Inherit',InheritYAML)
+add_yaml_sequence(u'!AppendSequence',AppendSequenceYAML)
 add_yaml_sequence(u'!MergeMapping',MergeMappingYAML)
 add_yaml_sequence(u'!JobRequest',JobResourceSpecMakerYAML)
 
@@ -287,6 +289,8 @@ class ConvertFromYAML(object):
             return self.from_list(v,locals,Inherit,path)
         elif cls is MergeMappingYAML:
             return self.from_list(v,locals,MergeMapping,path)
+        elif cls is AppendSequenceYAML:
+            return self.from_list(v,locals,AppendSequence,path)
         elif cls is JobResourceSpecMakerYAML:
             return self.from_list(v,locals,JobResourceSpecMaker,path)
         elif isinstance(v,list) and v and isinstance(v[0],tuple) \

@@ -199,7 +199,7 @@ def _xml_quote(s):
             .replace('<','&lt;')
 
 class ToRocoto(object):
-    def __init__(self,suite):
+    def __init__(self,suite,apply_overrides):
         if not isinstance(suite,Suite):
             raise TypeError('The suite argument must be a Suite, '
                             'not a '+type(suite).__name__)
@@ -219,6 +219,8 @@ class ToRocoto(object):
         self.type='rocoto'
         self.suite=suite
         self.suite.update_globals(globals)
+        if apply_overrides:
+            self.suite.apply_overrides()
         self.settings=self.suite.Rocoto
         self.sched=scheduler
         self.__all_defined=set()
@@ -718,9 +720,9 @@ class ToRocoto(object):
             fd,' final="true"',indent,final,
             TRUE_DEPENDENCY,timedelta.min,'',
             manual_dependency=manual_dependency)
-def to_rocoto(suite):
+def to_rocoto(suite,apply_overrides=True):
     typecheck('suite',suite,Suite)
-    return ToRocoto(suite)._expand_workflow_xml()
+    return ToRocoto(suite,apply_overrides=apply_overrides)._expand_workflow_xml()
 
 def test():
     def to_string(action):

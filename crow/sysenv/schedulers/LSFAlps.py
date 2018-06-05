@@ -29,9 +29,8 @@ class Scheduler(BaseScheduler):
 
     # Generation of batch cards
 
-    def batch_accounting(self,spec,**kwargs):
-        if kwargs:
-            spec=dict(spec,**kwargs)
+    def batch_accounting(self,*args,**kwargs):
+        spec=tools.make_dict_from(args,kwargs)
         space=self.indent_text
         sio=StringIO()
         if 'queue' in spec:
@@ -127,9 +126,8 @@ class Scheduler(BaseScheduler):
 
     # Generation of Rocoto XML
 
-    def rocoto_accounting(self,spec,indent=0,**kwargs):
-        if kwargs:
-            spec=dict(spec,**kwargs)
+    def rocoto_accounting(self,*args,indent=0,**kwargs):
+        spec=tools.make_dict_from(args,kwargs)
         space=self.indent_text
         sio=StringIO()
         if 'queue' in spec:

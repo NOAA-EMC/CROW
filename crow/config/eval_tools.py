@@ -174,7 +174,12 @@ class dict_eval(MutableMapping):
         d=cls(self.__child,self._path)
         d.__globals=self.__globals
         return d
-
+    def _copy_in_scope(self,globals=None,locals=None):
+        if globals is None: globals=self.__globals
+        cls=type(self)
+        d=cls(self.__child,self._path)
+        d.__globals=globals
+        return d
     def _invalidate_cache(self,key=None):
         _logger.debug(f'{self._path}: invalidate cache')
         self._is_validated=False
@@ -352,8 +357,15 @@ class list_eval(MutableSequence):
         return i>=0 and len(self.__child)>i
     def __copy__(self):
         cls=type(self)
-        L=cls(copy(self.__child),self.__locals)
+        L=cls(copy(self.__child),self.__locals,self._path)
         L.__globals=self.__globals
+        return L
+    def _copy_in_scope(self,globals=None,locals=None):
+        if globals is None: globals=self.__globals
+        if locals is None: locals=self.__locals
+        cls=type(self)
+        L=cls(copy(self.__child),locals,self._path)
+        L.__globals=globals
         return L
     def __deepcopy__(self,memo):
         cls=type(self)

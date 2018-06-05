@@ -17,7 +17,7 @@ __all__=[ 'Action','Platform', 'Conditional', 'calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
           'GenericDict', 'GenericOrderedDict', 'ShellCommand',
           'Immediate', 'ClockMaker', 'JobResourceSpecMaker',
-          'MergeMapping', 'Select' ]
+          'MergeMapping', 'AppendSequence', 'Select' ]
 
 ########################################################################
 
@@ -80,6 +80,21 @@ class MergeMapping(list_eval):
             else:
                 result.update(d)
         result=dict_eval(result,self._path,self._get_globals())
+        return result
+
+class AppendSequence(list_eval):
+    def _is_immediate(self): pass
+    def _validate(self,*args,**kwargs): assert(False)
+    def _result(self,globals,locals):
+        result=[]
+        for d in self:
+            if not isinstance(d,collections.Mapping): continue
+            if not d: continue
+            if hasattr(d,'_raw_child'):
+                result.extend(d._raw_child())
+            else:
+                result.extend(d)
+        result=list_eval(result,self._path,self._get_globals())
         return result
 
 class Immediate(list_eval): 

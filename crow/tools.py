@@ -6,10 +6,21 @@ from collections.abc import Mapping
 
 __all__=['panasas_gb','gpfs_gb','to_timedelta','deliver_file','NamedConstant',
          'Clock','str_timedelta','memory_in_bytes','to_printf_octal',
-         'str_to_posix_sh','typecheck','ZER_DT','shell_to_python_type',
-         'MISSING','chdir']
+         'str_to_posix_sh','typecheck','ZERO_DT','shell_to_python_type',
+         'MISSING','chdir','make_dict_from']
 
 _logger=logging.getLogger('crow.tools')
+
+def make_dict_from(dict_list,kwargs):
+    if dict_list:
+        result=copy(dict_list[0])
+        for d in dict_list[1:]:
+            result.update(d)
+    else:
+        result={}
+    if kwargs:
+        result.update(**kwargs)
+    return result
 
 @contextmanager
 def chdir(dir):

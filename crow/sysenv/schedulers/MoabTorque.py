@@ -32,19 +32,31 @@ class Scheduler(BaseScheduler):
 
     # Batch card generation
 
-    def batch_accounting(self,spec,**kwargs):
-        if kwargs:
-            spec=dict(spec,**kwargs)
+    def batch_accounting(self,*args,**kwargs):
+        spec=tools.make_dict_from(args,kwargs)
         space=self.indent_text
         sio=StringIO()
+
         if 'queue' in spec:
             sio.write(f'#PBS -q {spec["queue"]!s}\n')
         if 'project' in spec:
             sio.write(f'#PBS -A {spec["project"]!s}\n')
-        if 'partition' in spec:
-            sio.write(f'#PBS -l partition={spec["partition"]!s}\n')
         if 'account' in spec:
             sio.write(f'#PBS -A {spec["account"]!s}\n')
+        if 'partition' in spec:
+            sio.write(f'#PBS -l partition={spec["partition"]!s}\n')
+        if 'jobname' in spec:
+            sio.write(f'#PBS -N {spec["jobname"]}\n')
+        if 'reservation' in spec:
+            sio.write(f'#PBS -l flags=ADVRES:{spec["reservation"]}\n')
+        if 'outerr' in spec:
+            sio.write(f'#PBS -joe -o {spec["outerr"]}\n')
+        else:
+            if 'stdout' in spec:
+                sio.write('#PBS -o {spec["stdout"]}\n')
+            if 'stderr' in spec:
+                sio.write('#PBS -e {spec["stderr"]}\n')
+
         ret=sio.getvalue()
         sio.close()
         return ret
@@ -57,9 +69,8 @@ class Scheduler(BaseScheduler):
             return int(math.ceil(bytes/1048576.))
         return None
 
-    def batch_resources(self,spec,**kwargs):
-        if kwargs:
-            spec=dict(spec,**kwargs)
+    def batch_resources(self,*args,**kwargs):
+        spec=tools.make_dict_from(args,kwargs)
         space=self.indent_text
         sio=StringIO()
         if not isinstance(spec,JobResourceSpec):
@@ -118,9 +129,8 @@ class Scheduler(BaseScheduler):
     
     # Rocoto XML generation
 
-    def rocoto_accounting(self,spec,indent=0,**kwargs):
-        if kwargs:
-            spec=dict(spec,**kwargs)
+    def rocoto_accounting(self,*args,indent=0,**kwargs):
+        spec=tools.make_dict_from(args,kwargs)
         space=self.indent_text
         sio=StringIO()
         if 'queue' in spec:
@@ -136,6 +146,8 @@ class Scheduler(BaseScheduler):
             sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
         if 'jobname' in spec:
             sio.write(f'{indent*space}<jobname>{spec["jobname"]!s}</jobname>\n')
+        if 'reservation' in spec:
+            sio.write(f'{indent*space}<native>-l flags=ADVRES:{spec["reservation"]}</native>\n')
         if 'outerr' in spec:
             sio.write(f'{indent*space}<join>{spec["outerr"]}</join>\n')
         else:
@@ -147,7 +159,8 @@ class Scheduler(BaseScheduler):
         sio.close()
         return ret
 
-    def rocoto_resources(self,spec,indent=0):
+    def rocoto_resources(self,*args,indent=0,**kwargs):
+        spec=tools.make_dict_from(args,kwargs)
         sio=StringIO()
         space=self.indent_text
         if not isinstance(spec,JobResourceSpec):

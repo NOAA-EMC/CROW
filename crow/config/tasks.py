@@ -10,7 +10,7 @@ following basic Python concepts:
 """
 
 from functools import reduce
-import operator, io, logging, itertools
+import operator, io, logging, itertools, re
 from datetime import timedelta
 from abc import abstractmethod
 from collections import namedtuple, OrderedDict, Sequence
@@ -55,6 +55,45 @@ def subdict_iter(d):
     dvalues=[p for p in piter]
     for j in range(len(dvalues)):
         yield dict([i for i in zip(dkeys,dvalues[j])])
+
+
+class _count_pipes(object):
+    def __init__(self):
+        self.count=0
+    def __call__(self,match):
+        self.count+=1
+        return '|'
+
+def _make_regex_for_search_string(search_string):
+
+    # Backslash all regular expression control characters except ? and *
+    # and remove duplicate /
+    #
+    # Handle globbing:
+    #   ** = search recursively (.+)
+    #    ? = any one character other than / ([^/])
+    #    * = search locally ([^/]*)
+    #
+    # Allow any / to match more than one /  (/+)
+
+    pipe_count=0
+    def backslash(m): return '\\'+m.group(1)
+    def optional_slash(m): return '/'+m.group(1)+'/{0,}'
+
+    pipe=_count_pipes()
+    a=re.sub(r'([.+^$\\(){}[\]])',backslash,search_string)
+    b=re.sub(r',\s+',pipe,a)
+    c=re.sub('/+','/',b)
+    d=c.replace('**','.+') \
+       .replace('?','[^/]') \
+       .replace('*','[^/]*')
+    e=re.sub('/(?![\{\]])','/+',d)
+    if pipe.count:
+        f='(?:'+e+')$'
+    else:
+        f=e+'$'
+
+    return f,None
 
 class SuitePath(list):
     """!Simply a list that can be hashed."""
@@ -142,6 +181,22 @@ class SuiteView(Mapping):
         if hasattr(self.viewed,'_invalidate_cache'):
             self.viewed._invalidate_cache(key)
 
+    def _invalidate_non_dependables_in_tree(self):
+        deleteme=False
+        for k,v in self.viewed._raw_cache().items():
+            if not isinstance(v,Dependable):
+                if not deleteme:
+                    deleteme=set([k])
+                else:
+                    deleteme.add(k)
+            elif k in [ 'up', 'this' ]:
+                continue
+            else:
+                self[k]._invalidate_non_dependables_in_tree()
+        if deleteme:
+            for k in deleteme:
+                self.viewed._invalidate_cache(k)
+
     def _globals(self):
         return self.viewed._globals()
 
@@ -203,15 +258,16 @@ class SuiteView(Mapping):
             #if hasattr(val,'_is_suite_view'):
             #    yield val
 
-    def walk_task_tree(self):
+    def walk_task_tree(self,depth=False):
         """!Iterates over the entire tree of descendants below this
         SuiteView in a depth-first manner, yielding a SuiteView of
         each."""
         for val in self.child_iter():
-            yield val
+            if not depth:          yield val
             if hasattr(val,'_is_suite_view'):
                 for t in val.walk_task_tree():
                     yield t
+            if depth:              yield val
 
     def __contains__(self,key):
         return key in self.viewed
@@ -427,6 +483,46 @@ class Suite(SuiteView):
         update_globals(self.viewed,globals)
     def get_alarm_with_name(self,alarm_name):
         return self["Alarms"][alarm_name]
+    def apply_overrides(self):
+        if 'Overrides' not in self or not self.Overrides \
+           or 'rules' not in self.Overrides or not self.Overrides.rules:
+            return # no rules to apply
+        if not 'allowed' in self.Overrides:
+            raise KeyError(f'{self.viewed._path}: suite.Overrides must contain "allowed"')
+        allowed=[ str(s) for s in self.Overrides.allowed ]
+        replace_me=[]
+        irule=-1
+
+        # Copy the override rules into a more useful data structure:
+        for rule in self.Overrides.rules:
+            irule+=1
+            if not 'Search' in rule or not isinstance(rule.Search,str):
+                raise KeyError(f'{rule._path}: all override rules must contain a "Search" string.')
+            search_regex, descendant_expr = _make_regex_for_search_string(rule.Search)
+            replace_dict={}
+            for key in rule.keys():
+                if key=='Search':
+                    continue
+                if key not in allowed:
+                    raise KeyError(f'{rule._path}[{irule}].{key}: this key is forbidden by {self.viewed._path}.Overrides.allowed')
+                replace_dict[key]=rule._raw(key)
+            if not replace_dict:
+                continue # rule only contains a Search
+            replace_me.append([search_regex, descendant_expr, replace_dict])
+
+        # Now loop through and do the overriding.
+        for task in self.walk_task_tree(depth=True):
+            for search_regex, descendant_expr, replace_dict in replace_me:
+                if not re.search(search_regex,task.task_path_str):
+                    continue
+                for key,value in replace_dict.items():
+                    if hasattr(value,'_copy_in_scope'):
+                        value_copy=value._copy_in_scope(globals=task.viewed._get_globals(),locals=task.viewed)
+                    else:
+                        value_copy=copy(value)
+                    del task.viewed._raw_cache()[key]
+                    task.viewed._raw_child()[key]=value_copy
+        self._invalidate_non_dependables_in_tree()
 
 class Message(str):
     def _as_dependency(self,globals,locals,path):
