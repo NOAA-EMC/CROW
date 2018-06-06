@@ -1,4 +1,5 @@
 import crow.tools
+from copy import copy
 import os, re, datetime, logging
 from collections import Sequence, Mapping
 from crow.config.exceptions import *
@@ -113,6 +114,7 @@ def ref(scope,key):
 CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'fort':fort,
     'seq':seq,
+    'ref':ref,
     'YES_NO': YES_NO,
     'yes_no': yes_no,
     'expand':expand,

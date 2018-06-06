@@ -33,14 +33,17 @@ class ShellCommand(dict_eval): pass
 class JobResourceSpecMaker(list_eval):
     def _result(self,globals,locals):
         rank_specs=list()
+        i=-1
         for spec in self:
+            i+=1
+            _logger.debug(f'Look at spec #{i} in {self._path}...')
             if not hasattr(spec,'_raw_child'):
                 rank_specs.append(spec)
                 continue
             # Create a new dict_eval containing parent locals:
             spec2dict=copy(locals)
             spec2dict.update(spec._raw_child())
-            spec2=dict_eval(spec2dict,spec._path,self._get_globals())
+            spec2=dict_eval(spec2dict,f'{self._path}[{i}]',self._get_globals())
 
             # Get the value, from that new dict_eval, of all keys in spec.
             # Store it in the rank_specs list for the later constructor.
@@ -131,7 +134,7 @@ class Conditional(list_eval):
                 vk_locals=multidict(vk,locals)
                 raw_when=vk._raw('when')
                 keys.append(from_config('when',raw_when,globals,vk_locals,
-                                        self._path))
+                                        f'{self._path}[{i}]'))
             else:
                 raise ConditionalMissingDoWhen(
                     f'{self._path}[{i}]: entries must have both "do" and "when"'

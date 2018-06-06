@@ -79,7 +79,10 @@ def from_config(key,val,globals,locals,path):
     Other types are returned unmodified."""
     try:
         if hasattr(val,'_result'):
+            _logger.debug(f'{path}: evaluate _result() of a {type(val).__name__}')
             result=val._result(globals,locals)
+            if hasattr(result,'_path'):
+                _logger.debug(f'{path}: result is at path {result._path}')
             return from_config(key,result,globals,locals,path)
         return val
     except(KeyError,NameError,AttributeError) as ae:
@@ -376,7 +379,7 @@ class list_eval(MutableSequence):
     def _deepcopy_privates_from(self,memo,other):
         self.__child=deepcopy(other.__child,memo)
         self.__cache=deepcopy(other.__cache,memo)
-        self._path=deepcopy(other._path)
+        self._path=deepcopy(other._path,memo)
         self.__globals=deepcopy(other.__globals,memo)
         self.__cache=deepcopy(other.__cache,memo)
     def _invalidate_cache(self,index=None):
