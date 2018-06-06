@@ -69,7 +69,9 @@ class Select(dict_eval):
 
 class MergeMapping(list_eval):
     def _is_immediate(self): pass
-    def _validate(self,*args,**kwargs): assert(False)
+    def _validate(self,*args,**kwargs):
+        _logger.debug(f'{self._path}: do not validate !MergeMapping')
+        return
     def _result(self,globals,locals):
         result={}
         for d in self:
@@ -84,11 +86,10 @@ class MergeMapping(list_eval):
 
 class AppendSequence(list_eval):
     def _is_immediate(self): pass
-    def _validate(self,*args,**kwargs): assert(False)
     def _result(self,globals,locals):
         result=[]
         for d in self:
-            if not isinstance(d,collections.Mapping): continue
+            if not isinstance(d,collections.Sequence): continue
             if not d: continue
             if hasattr(d,'_raw_child'):
                 result.extend(d._raw_child())

@@ -103,6 +103,11 @@ def can_write(f):
 def day_of(d):
     return datetime.datetime(d.year,d.month,d.day)
 
+def ref(scope,key):
+    if hasattr(scope,'_raw'):
+        return scope._raw(key)
+    return scope[key]
+
 ## The CONFIG_TOOLS contains the tools available to configuration yaml
 ## "!calc" expressions in their "tools" variable.
 CONFIG_TOOLS=crow.tools.ImmutableMapping({

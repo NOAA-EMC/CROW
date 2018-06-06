@@ -453,6 +453,7 @@ def recursively_validate(obj,stage,validation_memo=None,inheritence_memo=None):
     if hasattr(obj,'_validate'):
         obj._validate(stage)
     if hasattr(obj,'_iter_raw'):
+        _logger.debug(f'{obj._path}: validate recursively into children')
         for subobj in obj._iter_raw():
             recursively_validate(subobj,stage,validation_memo,inheritence_memo)
 
