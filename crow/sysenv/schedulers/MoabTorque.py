@@ -43,7 +43,7 @@ class Scheduler(BaseScheduler):
             sio.write(f'#PBS -A {spec["project"]!s}\n')
         if 'account' in spec:
             sio.write(f'#PBS -A {spec["account"]!s}\n')
-        if 'partition' in spec and partition:
+        if 'partition' in spec and spec['partition']:
             sio.write(f'#PBS -l partition={spec["partition"]!s}\n')
         if 'jobname' in spec:
             sio.write(f'#PBS -N {spec["jobname"]}\n')
@@ -139,7 +139,7 @@ class Scheduler(BaseScheduler):
             sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
         if 'project' in spec:
             sio.write(f'{indent*space}<account>{spec["project"]!s}</account>\n')
-        if 'partition' in spec and partition:
+        if 'partition' in spec and spec['partition']:
             sio.write(f'{indent*space}<native>-l partition='
                       f'{spec["partition"]!s}</native>\n')
         if 'account' in spec:

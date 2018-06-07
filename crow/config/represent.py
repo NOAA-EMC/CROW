@@ -10,6 +10,7 @@ from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config,
 from crow.tools import to_timedelta, Clock
 from copy import copy
 import crow.sysenv
+from crow._superdebug import superdebug
 
 _logger=logging.getLogger('crow.config')
 
@@ -36,7 +37,7 @@ class JobResourceSpecMaker(list_eval):
         i=-1
         for spec in self:
             i+=1
-            _logger.debug(f'Look at spec #{i} in {self._path}...')
+            if superdebug: _logger.debug(f'Look at spec #{i} in {self._path}...')
             if not hasattr(spec,'_raw_child'):
                 rank_specs.append(spec)
                 continue
@@ -92,7 +93,8 @@ class AppendSequence(list_eval):
     def _result(self,globals,locals):
         result=[]
         for d in self:
-            if not isinstance(d,collections.Sequence): continue
+            if not isinstance(d,collections.Sequence) or isinstance(d,str):
+                raise TypeError(f'{self._path}: can only append lists.')
             if not d: continue
             if hasattr(d,'_raw_child'):
                 result.extend(d._raw_child())
@@ -158,11 +160,11 @@ class Conditional(list_eval):
                     f'{self._path}: no clauses match and no '
                     f'"otherwise" value was given. {keys} {values}')
             self.__result=self[otherwise_idx]._raw('otherwise')
-            _logger.debug(f'{self._path}: result=otherwise: {self.__result!r}')
+            if superdebug: _logger.debug(f'{self._path}: result=otherwise: {self.__result!r}')
             idx=otherwise_idx
         else:
             self.__result=values[idx]
-            _logger.debug(f'{self._path}: result index {idx}: {self.__result!r}')
+            if superdebug: _logger.debug(f'{self._path}: result index {idx}: {self.__result!r}')
         if 'message' in self[idx]:
             message=from_config('message',self[idx].message,globals,locals,self._path)
             _logger.info(f'{self._path}[{idx}]: {message}')

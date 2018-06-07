@@ -121,14 +121,13 @@ class ToEcflow(object):
                             'not a '+type(suite).__name__)
 
         try:
-            scheduler=suite.ecFlow.scheduler
             clock=copy(suite.Clock)
         except(AttributeError,IndexError,TypeError,ValueError) as e:
             raise ValueError(
                 'A Suite must define an ecFlow section containing '
-                'scheduler, and suite_name; and the suite must have a Clock')
+                'suite_name, and the suite must have a Clock')
 
-        update_globals={ 'sched':scheduler, 'to_ecflow':self, 'clock':clock,
+        update_globals={ 'to_ecflow':self, 'clock':clock,
                          'metasched':self }
 
         if 'parallelism' in suite.ecFlow:
@@ -144,9 +143,10 @@ class ToEcflow(object):
 
         self.suite=suite
         self.suite.update_globals(**update_globals)
+        if apply_overrides:
+            self.suite.apply_overrides()
         self.settings=self.suite.ecFlow
         self.indent=self.settings.get('indent','  ')
-        self.sched=scheduler
         self.clock=copy(self.suite.Clock)
         self.undated=OrderedDict()
         self.graph=Graph(self.suite,self.suite.Clock)
@@ -365,6 +365,6 @@ class ToEcflow(object):
         del self.suite
         return suite_def_files,ecf_files
 
-def to_ecflow(suite):
+def to_ecflow(suite,apply_overrides=True):
     typecheck('suite',suite,Suite)
-    return ToEcflow(suite).to_ecflow()
+    return ToEcflow(suite,apply_overrides=apply_overrides).to_ecflow()

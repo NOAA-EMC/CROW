@@ -19,6 +19,7 @@ from copy import copy, deepcopy
 from crow.config.exceptions import *
 from crow.config.eval_tools import dict_eval, strcalc, multidict, from_config, update_globals
 from crow.tools import to_timedelta, typecheck, NamedConstant, MISSING
+from crow._superdebug import superdebug
 
 __all__=[ 'SuiteView', 'Suite', 'Depend', 'LogicalDependency',
           'AndDependency', 'OrDependency', 'NotDependency',
@@ -484,11 +485,19 @@ class Suite(SuiteView):
     def get_alarm_with_name(self,alarm_name):
         return self["Alarms"][alarm_name]
     def apply_overrides(self):
-        if 'Overrides' not in self or not self.Overrides \
-           or 'rules' not in self.Overrides or not self.Overrides.rules:
+        if 'Overrides' not in self or self.Overrides is None:
+            _logger.info(f'{self.viewed._path}: no overrides requested.')
             return # no rules to apply
+        if not 'rules' in self.Overrides or not 'allowed' in self.Overrides:
+            raise ValueError(f'''{self.viewed.Overrides._path}: suite.Overrides must contain "allowed" and "rules"''')
+        if not self.Overrides.rules or not self.Overrides.allowed:
+            raise ValueError(f'''{self.viewed.Overrides._path}: suite.Overrides "allowed" and "rules" must not be empty''')
         if not 'allowed' in self.Overrides:
             raise KeyError(f'{self.viewed._path}: suite.Overrides must contain "allowed"')
+
+        _logger.info(f'{self.viewed._path}: apply overrides to suite')
+        _logger.debug(f'{self.viewed._path}: override rules: {self.Overrides.rules}')
+
         allowed=[ str(s) for s in self.Overrides.allowed ]
         replace_me=[]
         irule=-1
@@ -507,20 +516,26 @@ class Suite(SuiteView):
                     raise KeyError(f'{rule._path}[{irule}].{key}: this key is forbidden by {self.viewed._path}.Overrides.allowed')
                 replace_dict[key]=rule._raw(key)
             if not replace_dict:
+                _logger.debug(f'{self.viewed._path}: No override rules to apply.')
                 continue # rule only contains a Search
+            _logger.debug(f'Accept rule {search_regex} keys {{{", ".join(replace_dict.keys())}}}')
             replace_me.append([search_regex, descendant_expr, replace_dict])
 
         # Now loop through and do the overriding.
         for task in self.walk_task_tree(depth=True):
             for search_regex, descendant_expr, replace_dict in replace_me:
                 if not re.search(search_regex,task.task_path_str):
+                    _logger.debug(f'{task.task_path_str}: does not match override Search {search_regex}')
                     continue
+                _logger.debug(f'{task.task_path_str}: matches override Search {search_regex}')
                 for key,value in replace_dict.items():
                     if hasattr(value,'_copy_in_scope'):
                         value_copy=value._copy_in_scope(globals=task.viewed._get_globals(),locals=task.viewed)
                     else:
                         value_copy=copy(value)
-                    del task.viewed._raw_cache()[key]
+                    _logger.info(f'{task.viewed._path}: override {key}')
+                    if key in task.viewed._raw_cache():
+                        del task.viewed._raw_cache()[key]
                     task.viewed._raw_child()[key]=value_copy
         self._invalidate_non_dependables_in_tree()
 

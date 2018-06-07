@@ -27,7 +27,6 @@ class SelfReferentialDependency(RocotoConfigError): pass
 _KEY_WARNINGS={ 'cyclethrottle':'Did you mean cycle_throttle?' }
 
 _REQUIRED_KEYS={ 'workflow_install':'directory to receive Rocoto workflow',
-                'scheduler':'Scheduler class',
                 'workflow_xml': 'Contents of Rocoto XML file'}
 
 _ROCOTO_STATE_MAP={ COMPLETED:'SUCCEEDED',
@@ -204,15 +203,7 @@ class ToRocoto(object):
             raise TypeError('The suite argument must be a Suite, '
                             'not a '+type(suite).__name__)
 
-        try:
-            settings=suite.Rocoto.scheduler
-            scheduler=suite.Rocoto.scheduler
-        except(AttributeError,IndexError,TypeError,ValueError) as e:
-            raise ValueError('A Suite must define a Rocoto section containing '
-                             'a "parallelism" and a "scheduler."')
-
-        globals={ 'sched':scheduler, 'to_rocoto':self,
-                         'metasched':self }
+        globals={ 'to_rocoto':self,'metasched':self }
         if 'parallelism' in suite.Rocoto:
             globals['parallelism']=suite.Rocoto.parallelism
 
@@ -222,7 +213,6 @@ class ToRocoto(object):
         if apply_overrides:
             self.suite.apply_overrides()
         self.settings=self.suite.Rocoto
-        self.sched=scheduler
         self.__all_defined=set()
 
         self.__completes=dict()

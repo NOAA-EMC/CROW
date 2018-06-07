@@ -117,6 +117,7 @@ def follow_main(fd,reldir,main_globals=None):
             paths=[ x for x in glob.glob(os.path.join(reldir,item)) ]
         _logger.debug(f"{reldir}: {item}: paths = {paths}")
         for path in paths:
+            if path[0]=='.': continue # skip hidden files
             basename=os.path.basename(path)
             if basename in included: continue
             if not is_literal and basename in literals: continue

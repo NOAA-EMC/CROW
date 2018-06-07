@@ -34,6 +34,7 @@ from collections.abc import MutableMapping, MutableSequence, Sequence, Mapping
 from copy import copy,deepcopy
 from crow.config.exceptions import *
 from crow.tools import typecheck
+from crow._superdebug import superdebug
 
 __all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval',
           'list_eval', 'multidict', 'Eval', 'user_error_message' ]
@@ -79,9 +80,13 @@ def from_config(key,val,globals,locals,path):
     Other types are returned unmodified."""
     try:
         if hasattr(val,'_result'):
-            _logger.debug(f'{path}: evaluate _result() of a {type(val).__name__}')
+            if superdebug:
+                if isinstance(val,str):
+                    _logger.debug(f'{path}: evaluate _result() of a {val!r}')
+                else:
+                    _logger.debug(f'{path}: evaluate _result() of a {type(val).__name__}')
             result=val._result(globals,locals)
-            if hasattr(result,'_path'):
+            if superdebug and hasattr(result,'_path'):
                 _logger.debug(f'{path}: result is at path {result._path}')
             return from_config(key,result,globals,locals,path)
         return val
@@ -184,7 +189,8 @@ class dict_eval(MutableMapping):
         d.__globals=globals
         return d
     def _invalidate_cache(self,key=None):
-        _logger.debug(f'{self._path}: invalidate cache')
+        if superdebug:
+            _logger.debug(f'{self._path}: invalidate cache')
         self._is_validated=False
         if key is None:
             #print(f'{self._path}: reset')
@@ -249,13 +255,13 @@ class dict_eval(MutableMapping):
 
         # Inherit from other scopes:
         if 'Inherit' in self:
-            _logger.debug(f'{self._path}: has Inherit')
+            if superdebug: _logger.debug(f'{self._path}: has Inherit')
             if hasattr(self.Inherit,'_update'):
                 self.Inherit._update(self,self.__globals,self,stage,memo)
-                _logger.debug(f'{self._path}: after inherit, {{{", ".join([k for k in self.keys()])}}}')
+                if superdebug: _logger.debug(f'{self._path}: after inherit, {{{", ".join([k for k in self.keys()])}}}')
             else:
                 _logger.warning(f'{self._path}: Inherit is not an !Inherit.  Error?')
-        else:
+        elif superdebug:
             _logger.debug(f'{self._path}: no Inherit')
 
         # Validate this scope:
@@ -456,7 +462,7 @@ def recursively_validate(obj,stage,validation_memo=None,inheritence_memo=None):
     if hasattr(obj,'_validate'):
         obj._validate(stage)
     if hasattr(obj,'_iter_raw'):
-        _logger.debug(f'{obj._path}: validate recursively into children')
+        if superdebug: _logger.debug(f'{obj._path}: validate recursively into children')
         for subobj in obj._iter_raw():
             recursively_validate(subobj,stage,validation_memo,inheritence_memo)
 

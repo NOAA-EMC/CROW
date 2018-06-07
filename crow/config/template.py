@@ -19,6 +19,7 @@ from crow.config.exceptions import *
 from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config
 from crow.config.represent import GenericList, GenericDict, GenericOrderedDict
 from collections.abc import Mapping
+from crow._superdebug import superdebug
 
 _logger=logging.getLogger('crow.config')
 IGNORE_WHILE_INHERITING = [ 'Inherit', 'Template' ]
@@ -48,10 +49,10 @@ class Inherit(list_eval):
             except TemplateErrors as te:
                 errors.append(f'{target._path}: when including {scope._path}')
                 errors.extend(te.template_errors)
-            if not inherited:
+            if superdebug and not inherited:
                 _logger.debug(f'{target._path}: inherit nothing from {scopename} with regex {regex} keys {{{", ".join([k for k in scope.keys()])}}}')
         if errors: raise TemplateErrors(errors)
-        _logger.debug(f'{target._path}: now has keys {{{", ".join([k for k in target.keys()])}}}')
+        if superdebug: _logger.debug(f'{target._path}: now has keys {{{", ".join([k for k in target.keys()])}}}')
 
 class Template(dict_eval):
     """!Internal implementation of the YAML Template type.  Validates a
@@ -63,11 +64,15 @@ class Template(dict_eval):
 
     def _check_scope(self,scope,stage,memo):
         if self.__my_id in memo:
-            _logger.debug(f'{scope._path}: do not re-validate with {self._path}')
+            if superdebug:
+                _logger.debug(f'{scope._path}: do not re-validate with {self._path}')
             return
         memo.add(self.__my_id)
 
-        _logger.debug(f'{scope._path}: validate with {self._path}')
+        if stage:
+            _logger.debug(f'{scope._path}: validate with {self._path} for stage {stage}')
+        else:
+            _logger.debug(f'{scope._path}: validate with {self._path} (no stage)')
 
         checked=set()
         errors=list()
@@ -77,15 +82,28 @@ class Template(dict_eval):
         # Main validation loop.  Iteratively validate, adding new
         # Templates as they become available via is_present.
         for var in template:
-            _logger.debug(f'{scope._path}.{var}: validate...')
+            if superdebug:
+                if stage:
+                    _logger.debug(f'{scope._path}.{var}: validate for stage {stage}?')
+                else:
+                    _logger.debug(f'{scope._path}.{var}: validate (no stage)?')
             try:
                 scheme=template[var]
+                if superdebug:
+                    _logger.debug(f'{scope._path}.{var}: scheme {scheme._path} stage {scheme.get("stages","(none)")}')
                 if not isinstance(scheme,Mapping): continue # not a template
                 if stage and 'stages' in scheme:
                     if stage not in scheme.stages:
+                        if superdebug:
+                            _logger.debug(f'{scheme._path}: rule rejected: stage {stage} not in stages {scheme.stages} for {scheme._path}')
                         continue # skip validation; wrong stage
                 elif 'stages' in scheme:
+                    if superdebug:
+                        _logger.debug(f'{scheme._path}: rule rejected: not in stages {scheme.stages} for {scheme._path} (validating for no stage)')
                     continue # skip validation of stage-specific schemes
+
+                if superdebug:
+                    _logger.debug(f'{scheme._path}: rule accepted: validate for stage {stage} using {scheme._path}')
 
                 if 'precheck' in scheme:
                     scope[var]=scheme.precheck
@@ -105,7 +123,7 @@ class Template(dict_eval):
                     ip=from_config(
                         var,scheme._raw('if_present'),self._globals(),scope,
                         f'{scope._path}.{var}')
-                    _logger.debug(f'{scope._path}.{var}: result = {ip!r}')
+                    if superdebug: _logger.debug(f'{scope._path}.{var}: result = {ip!r}')
                     if not ip: continue
                     if not isinstance(ip,Template):
                         if not isinstance(ip,Mapping): continue
@@ -128,7 +146,6 @@ class Template(dict_eval):
             except ConfigError as ce:
                 errors.append(str(ce))
                 _logger.debug(f'{scope._path}.{var}: {type(ce).__name__}: {ce}',exc_info=True)
-
 
         # Insert default values for all templates found thus far and
         # detect any missing, non-optional, variables
