@@ -498,13 +498,14 @@ class Suite(SuiteView):
         _logger.info(f'{self.viewed._path}: apply overrides to suite')
         _logger.debug(f'{self.viewed._path}: override rules: {self.Overrides.rules}')
 
+        assert(len(self.Overrides.rules)==2)
+
         allowed=[ str(s) for s in self.Overrides.allowed ]
         replace_me=[]
-        irule=-1
 
         # Copy the override rules into a more useful data structure:
-        for rule in self.Overrides.rules:
-            irule+=1
+        for irule in range(len(self.Overrides.rules)):
+            rule=self.Overrides.rules[irule]
             if not 'Search' in rule or not isinstance(rule.Search,str):
                 raise KeyError(f'{rule._path}: all override rules must contain a "Search" string.')
             search_regex, descendant_expr = _make_regex_for_search_string(rule.Search)
@@ -516,16 +517,20 @@ class Suite(SuiteView):
                     raise KeyError(f'{rule._path}[{irule}].{key}: this key is forbidden by {self.viewed._path}.Overrides.allowed')
                 replace_dict[key]=rule._raw(key)
             if not replace_dict:
-                _logger.debug(f'{self.viewed._path}: No override rules to apply.')
+                _logger.info(f'{self.viewed._path}.Overrides.rules[irule]: No override rules to apply.')
                 continue # rule only contains a Search
             _logger.debug(f'Accept rule {search_regex} keys {{{", ".join(replace_dict.keys())}}}')
-            replace_me.append([search_regex, descendant_expr, replace_dict])
+            replace_me.append([search_regex, descendant_expr, replace_dict, rule.Search])
+
+        matches=[0]*len(replace_me)
 
         # Now loop through and do the overriding.
         for task in self.walk_task_tree(depth=True):
-            for search_regex, descendant_expr, replace_dict in replace_me:
+            for i in range(len(replace_me)):
+                search_regex, descendant_expr, replace_dict, orig_expr = replace_me[i]
                 if not re.search(search_regex,task.task_path_str):
-                    _logger.debug(f'{task.task_path_str}: does not match override Search {search_regex}')
+                    if superdebug:
+                        _logger.debug(f'{task.task_path_str}: does not match override Search {search_regex}')
                     continue
                 _logger.debug(f'{task.task_path_str}: matches override Search {search_regex}')
                 for key,value in replace_dict.items():
@@ -533,11 +538,16 @@ class Suite(SuiteView):
                         value_copy=value._copy_in_scope(globals=task.viewed._get_globals(),locals=task.viewed)
                     else:
                         value_copy=copy(value)
-                    _logger.info(f'{task.viewed._path}: override {key}')
+                    _logger.info(f'{task.viewed._path}: override {key} from rule {orig_expr}')
+                    matches[i]+=1
                     if key in task.viewed._raw_cache():
                         del task.viewed._raw_cache()[key]
                     task.viewed._raw_child()[key]=value_copy
         self._invalidate_non_dependables_in_tree()
+
+        for m in matches:
+            if not m:
+                _logger.warning(f'{self.viewed._path}: no match to override {replace_me[i][3]}')
 
 class Message(str):
     def _as_dependency(self,globals,locals,path):

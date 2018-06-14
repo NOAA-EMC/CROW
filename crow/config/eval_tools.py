@@ -34,6 +34,7 @@ from collections.abc import MutableMapping, MutableSequence, Sequence, Mapping
 from copy import copy,deepcopy
 from crow.config.exceptions import *
 from crow.tools import typecheck
+from crow.exceptions import CROWException
 from crow._superdebug import superdebug
 
 __all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval',
@@ -90,7 +91,7 @@ def from_config(key,val,globals,locals,path):
                 _logger.debug(f'{path}: result is at path {result._path}')
             return from_config(key,result,globals,locals,path)
         return val
-    except(KeyError,NameError,AttributeError) as ae:
+    except(KeyError,NameError,AttributeError,CROWException) as ae:
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
                            f'{type(ae).__name__} {str(ae)} --in-- '
                            f'{{{", ".join([ k for k in locals.keys() ])}}}')

@@ -104,6 +104,7 @@ class GenericNodeSpec(NodeSpec):
         self.settings=dict(settings)
         self.cores_per_node=int(settings['physical_cores_per_node'])
         self.cpus_per_core=int(settings.get('logical_cpus_per_core',1))
+        assert(self.cores_per_node>0)
         self.hyperthreading_allowed=bool(
             settings.get('hyperthreading_allowed',False))
         self.indent_text=str(settings.get('indent_text','  '))
@@ -149,7 +150,7 @@ class GenericNodeSpec(NodeSpec):
             max_per_node=min(max_ppn,max_per_node)
 
         if max_per_node<1:
-            raise MachineTooSmallError(f'Specification too large for node: max {threads_per_node} for {rank_spec!r}')
+            raise MachineTooSmallError(f'Specification too large for node: max threads {threads_per_node} for {rank_spec!r} in partition with {self.cores_per_node} cores per node.')
         return max_per_node
 
     def can_merge_ranks(self,R1,R2):
