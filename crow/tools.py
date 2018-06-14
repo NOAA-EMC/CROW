@@ -88,10 +88,18 @@ def gpfs_gb(dir,fileset,device,mmlsquota='mmlsquota'):
                    \s+ (?P<TBlimit> \d+  )
                    [^\r\n]* (?: [\r\n] | [\r\n]*\Z )
                 |
+                   (?P<device2>\S+) \s+ FILESET
+                   (?P<no_limits>\s+ no \s+ limits)
+                   [^\r\n]* (?: [\r\n] | [\r\n]*\Z )
+                |
                  (?P<bad> [^\r\n]*[\r\n] | [^\r\n]*\Z )
                )
                ''',mmlsquota):
-        
+
+        if m.group('device2'):
+            _logger.warning(f'{device}:{fileset}: no limit (assume 1 exabyte)')
+            return 1024**4.0
+            
         if m.group('bad') or not m.group('TBused') \
            or not m.group('TBlimit'):
             continue
