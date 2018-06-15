@@ -498,8 +498,6 @@ class Suite(SuiteView):
         _logger.info(f'{self.viewed._path}: apply overrides to suite')
         _logger.debug(f'{self.viewed._path}: override rules: {self.Overrides.rules}')
 
-        assert(len(self.Overrides.rules)==2)
-
         allowed=[ str(s) for s in self.Overrides.allowed ]
         replace_me=[]
 

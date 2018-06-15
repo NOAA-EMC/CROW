@@ -95,7 +95,8 @@ class AppendSequence(list_eval):
         for d in self:
             if not isinstance(d,collections.Sequence) or isinstance(d,str):
                 raise TypeError(f'{self._path}: can only append lists.')
-            if not d: continue
+            if not len(d):
+                continue
             if hasattr(d,'_raw_child'):
                 result.extend(d._raw_child())
             else:
