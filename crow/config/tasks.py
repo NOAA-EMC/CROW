@@ -490,10 +490,10 @@ class Suite(SuiteView):
             return # no rules to apply
         if not 'rules' in self.Overrides or not 'allowed' in self.Overrides:
             raise ValueError(f'''{self.viewed.Overrides._path}: suite.Overrides must contain "allowed" and "rules"''')
-        if not self.Overrides.rules or not self.Overrides.allowed:
-            raise ValueError(f'''{self.viewed.Overrides._path}: suite.Overrides "allowed" and "rules" must not be empty''')
-        if not 'allowed' in self.Overrides:
-            raise KeyError(f'{self.viewed._path}: suite.Overrides must contain "allowed"')
+        if not self.Overrides.allowed:
+            raise ValueError(f'''{self.viewed.Overrides._path}: suite.Overrides.allowed must not be empty''')
+        if not self.Overrides.rules:
+            _logger.info(f'{self.viewed._path}: override rules are empty; no overrides requested')
 
         _logger.info(f'{self.viewed._path}: apply overrides to suite')
         _logger.debug(f'{self.viewed._path}: override rules: {self.Overrides.rules}')
