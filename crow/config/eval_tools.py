@@ -37,7 +37,7 @@ from crow.tools import typecheck
 from crow.exceptions import CROWException
 from crow._superdebug import superdebug
 
-__all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval',
+__all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval', 'strref',
           'list_eval', 'multidict', 'Eval', 'user_error_message' ]
 _logger=logging.getLogger('crow.config')
 
@@ -75,6 +75,23 @@ class strcalc(str):
         c=copy(globals)
         c['this']=locals
         return eval(self,c,locals)
+
+class strref(str):
+    """Represents a reference to a variable within some scope (ie. abc.def[32].ghi)"""
+    def __repr__(self):
+        return '%s(%s)'%(type(self).__name__,
+                         super().__repr__())
+    def _result(self,globals,locals):
+        idot=self.rfind('.')
+        if idot<0:  raise ValueError(f'{self!r}: no key')
+        key=self[idot+1:]
+        if not key: raise ValueError(f'{self!r}: key is the empty string')
+        scope_expr=self[:idot]
+        if not scope_expr: raise ValueError(f'{self!r}: begins with "."')
+        c=copy(globals)
+        c['this']=locals
+        scope=eval(scope_expr,c,locals)
+        return scope._raw(key) if hasattr(scope,'_raw') else scope[key]
 
 def from_config(key,val,globals,locals,path):
     """!Converts s strcalc cor Conditional to another data type via eval().

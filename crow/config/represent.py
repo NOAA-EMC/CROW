@@ -6,7 +6,7 @@ import re, abc, logging, sys, collections
 from datetime import timedelta
 from copy import deepcopy
 from crow.config.exceptions import *
-from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc
+from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc, strref
 from crow.tools import to_timedelta, Clock
 from copy import copy
 import crow.sysenv
@@ -14,7 +14,7 @@ from crow._superdebug import superdebug
 
 _logger=logging.getLogger('crow.config')
 
-__all__=[ 'Action','Platform', 'Conditional', 'calc','FirstMin',
+__all__=[ 'Action','Platform', 'Conditional', 'ref','calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
           'GenericDict', 'GenericOrderedDict', 'ShellCommand',
           'Immediate', 'ClockMaker', 'JobResourceSpecMaker',
@@ -123,25 +123,30 @@ class Conditional(list_eval):
             has_otherwise = vk._has_raw('otherwise')
             has_when = vk._has_raw('when')
             has_do = vk._has_raw('do')
-            if has_otherwise and ( has_when or has_do ):
+            has_take = vk._has_raw('take')
+            if has_do and has_take:
                 raise ConditionalOverspecified(
-                    f'{self._path}[{i}]: cannot have "otherwise," '
-                    '"when," and "do" in the same entry')
+                    f'{self._path}[{i}]: cannot have "do" and "take" in one entry')
+            if has_otherwise and ( has_when or has_do or has_take ):
+                raise ConditionalOverspecified(
+                    f'{self._path}[{i}]: cannot have "otherwise" in the same entry '
+                    'as "when," "take," or "do"')
             elif has_otherwise and i!=len(self)-1:
                 raise ConditionalInvalidOtherwise(
                     f'{self._path}[{i}]: "otherwise" must be the last item')
             elif has_otherwise:
                 otherwise_idx=i
-            elif has_when and has_do:
-                values.append(vk._raw('do'))
+            elif has_when and ( has_do or has_take ):
+                values.append(vk._raw('do') if has_do else vk._raw('take'))
                 vk_locals=multidict(vk,locals)
                 raw_when=vk._raw('when')
                 keys.append(from_config('when',raw_when,globals,vk_locals,
                                         f'{self._path}[{i}]'))
             else:
                 raise ConditionalMissingDoWhen(
-                    f'{self._path}[{i}]: entries must have both "do" and "when"'
-                    'or "otherwise" (or "message").  Saw keys: '+
+                    f'{self._path}[{i}]: entries must have both "take" and "when"'
+                    'or "otherwise" (or "message").  You can use "do" in place of '
+                    '"take" for backward compatibility.  Saw keys: '+
                     ', '.join(list(vk.keys())))
         return keys, values, otherwise_idx
 
@@ -207,3 +212,4 @@ class FirstTrue(Conditional):
         return None
 
 class calc(strcalc): pass
+class ref(strref): pass

@@ -125,6 +125,7 @@ def add_yaml_string(key,cls):
 
 add_yaml_string(u'!expand',expand)
 add_yaml_string(u'!calc',calc)
+add_yaml_string(u'!ref',ref)
 add_yaml_string(u'!error',user_error_message)
 add_yaml_string(u'!Depend',Depend)
 add_yaml_string(u'!Message',Message)
