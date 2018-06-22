@@ -115,7 +115,7 @@ def dep_to_ecflow(fd,task,dep,clock,time_format,undated):
                           dep.event.path[-1],clock,time_format,False,undated)
 
 class ToEcflow(object):
-    def __init__(self,suite):
+    def __init__(self,suite,apply_overrides=True):
         if not isinstance(suite,Suite):
             raise TypeError('The suite argument must be a Suite, '
                             'not a '+type(suite).__name__)
@@ -142,15 +142,15 @@ class ToEcflow(object):
             raise ValueError(f'ecFlow.analyze_cycles: Cycles to analyze must be a subset of the suite clock.')
 
         self.suite=suite
-        self.suite.update_globals(**update_globals)
-        if apply_overrides:
-            self.suite.apply_overrides()
         self.settings=self.suite.ecFlow
+        self.type='ecflow'
         self.indent=self.settings.get('indent','  ')
         self.clock=copy(self.suite.Clock)
         self.undated=OrderedDict()
+        self.suite.update_globals(**update_globals)
+        if apply_overrides:
+            self.suite.apply_overrides()
         self.graph=Graph(self.suite,self.suite.Clock)
-        self.type='ecflow'
 
     def datestring(self,format):
         def replacer(m):
