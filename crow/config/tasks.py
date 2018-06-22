@@ -496,7 +496,7 @@ class Suite(SuiteView):
             _logger.info(f'{self.viewed._path}: override rules are empty; no overrides requested')
 
         _logger.info(f'{self.viewed._path}: apply overrides to suite')
-        _logger.debug(f'{self.viewed._path}: override rules: {self.Overrides.rules}')
+        #_logger.debug(f'{self.viewed._path}: override rules: {self.Overrides.rules}')
 
         allowed=[ str(s) for s in self.Overrides.allowed ]
         replace_me=[]

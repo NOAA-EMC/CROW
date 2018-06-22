@@ -72,7 +72,6 @@ class Select(dict_eval):
         return self._raw('otherwise')
 
 class MergeMapping(list_eval):
-    def _is_immediate(self): pass
     def _validate(self,*args,**kwargs):
         _logger.debug(f'{self._path}: do not validate !MergeMapping')
         return
@@ -89,7 +88,6 @@ class MergeMapping(list_eval):
         return result
 
 class AppendSequence(list_eval):
-    def _is_immediate(self): pass
     def _result(self,globals,locals):
         result=[]
         for d in self:

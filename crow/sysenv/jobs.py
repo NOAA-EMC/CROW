@@ -25,13 +25,15 @@ class JobRankSpec(Mapping):
     def __init__(self,OMP_NUM_THREADS=0,mpi_ranks=0,
                  exe=MISSING,args=MISSING,exclusive=True,
                  separate_node=False,hyperthreads=1,max_ppn=MISSING,
-                 **kwargs):
+                 memory_per_rank=MISSING,**kwargs):
         if OMP_NUM_THREADS is None: OMP_NUM_THREADS=0
         if mpi_ranks is None:       mpi_ranks=0
         if args is None:            args=MISSING
         if exclusive is None:       exclusive=True
         if hyperthreads is None:    hyperthreads=1
         if max_ppn is None:         max_ppn=MISSING
+        if memory_per_rank is None or memory_per_rank is MISSING:
+            memory_per_rank=0
         if OMP_NUM_THREADS == 'max':
             OMP_NUM_THREADS=MAXIMUM_THREADS
         self.__spec={
@@ -40,6 +42,7 @@ class JobRankSpec(Mapping):
             'separate_node':separate_node,
             'hyperthreads':int(hyperthreads),
             'OMP_NUM_THREADS':max(0,int(OMP_NUM_THREADS)),
+            'memory_per_rank':max(1,memory_per_rank),
             'exe':( None if exe is MISSING else exe ),
             'args':( [] if args is MISSING else list(args) ) }
 

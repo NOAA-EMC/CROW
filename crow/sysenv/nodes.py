@@ -104,6 +104,7 @@ class GenericNodeSpec(NodeSpec):
         self.settings=dict(settings)
         self.cores_per_node=int(settings['physical_cores_per_node'])
         self.cpus_per_core=int(settings.get('logical_cpus_per_core',1))
+        self.memory_per_node=int(settings.get('memory_per_node',0))
         assert(self.cores_per_node>0)
         self.hyperthreading_allowed=bool(
             settings.get('hyperthreading_allowed',False))
@@ -149,14 +150,18 @@ class GenericNodeSpec(NodeSpec):
         if max_ppn:
             max_per_node=min(max_ppn,max_per_node)
 
+        if self.memory_per_node:
+            max_per_node=int(min(max_per_node,self.memory_per_node/rank_spec.memory_per_rank))
+
         if max_per_node<1:
-            raise MachineTooSmallError(f'Specification too large for node: max threads {threads_per_node} for {rank_spec!r} in partition with {self.cores_per_node} cores per node.')
+            raise MachineTooSmallError(f'Specification too large for node: max threads {threads_per_node} for {rank_spec!r} in partition with {self.cores_per_node} cores per node{"" if not self.memory_per_node else ("and "+str(self.memory_per_node)+" MB of RAM per node")}.')
         return max_per_node
 
     def can_merge_ranks(self,R1,R2):
         return not R1['separate_node'] and not R2['separate_node'] and \
                R1['OMP_NUM_THREADS']==R2['OMP_NUM_THREADS'] and \
                R1.get('max_ppn',0)==R2.get('max_ppn',0) and \
+               R1.get('memory_per_node',1)==R2.get('memory_per_node',1) and \
                R1.get('exe','') == R2.get('exe','') and (
                  not self.hyperthreading_allowed or \
                  R1.get('hyperthreads',1) == R2.get('hyperthreads',1) )
@@ -164,6 +169,7 @@ class GenericNodeSpec(NodeSpec):
     def same_except_exe(self,R1,R2):
         return not R1['separate_node'] and not R2['separate_node'] and \
                R1['OMP_NUM_THREADS']==R2['OMP_NUM_THREADS'] and \
+               R1.get('memory_per_node',1)==R2.get('memory_per_node',1) and \
                R1.get('max_ppn',0)==R2.get('max_ppn',0) and ( \
                  not self.hyperthreading_allowed or \
                  R1.get('hyperthreads',1) == R2.get('hyperthreads',1) )
