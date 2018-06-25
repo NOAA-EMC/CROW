@@ -80,6 +80,8 @@ def from_dir(reldir,evaluate_immediates=True,validation_stage=None,main_globals=
     with io.StringIO() as fd:
         follow_main(fd,reldir,main_globals)
         yaml=fd.getvalue()
+    if not yaml:
+        raise ValueError(f'{reldir}: all YAML files in directory are empty or no YAML files are present')
     return from_string(yaml,evaluate_immediates=evaluate_immediates,
                        validation_stage=validation_stage)
 

@@ -94,8 +94,8 @@ class strref(str):
         return scope._raw(key) if hasattr(scope,'_raw') else scope[key]
 
 def from_config(key,val,globals,locals,path):
-    """!Converts s strcalc cor Conditional to another data type via eval().
-    Other types are returned unmodified."""
+    """!Converts a class with _result method to another data type by
+    calling that method.  Other types are returned unmodified."""
     try:
         if hasattr(val,'_result'):
             if superdebug:

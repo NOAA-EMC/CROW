@@ -77,7 +77,8 @@ class MergeMapping(list_eval):
         return
     def _result(self,globals,locals):
         result={}
-        for d in self:
+        for i in range(len(self)):
+            d=from_config('MergeMapping',self._raw(i),globals,locals,f'{self._path}[{i}]')
             if not isinstance(d,collections.Mapping): continue
             if not d: continue
             if hasattr(d,'_raw_child'):
@@ -90,7 +91,8 @@ class MergeMapping(list_eval):
 class AppendSequence(list_eval):
     def _result(self,globals,locals):
         result=[]
-        for d in self:
+        for i in range(len(self)):
+            d=from_config('AppendSequence',self._raw(i),globals,locals,f'{self._path}[{i}]')
             if not isinstance(d,collections.Sequence) or isinstance(d,str):
                 raise TypeError(f'{self._path}: can only append lists.')
             if not len(d):
