@@ -108,14 +108,20 @@ def from_config(key,val,globals,locals,path):
                 _logger.debug(f'{path}: result is at path {result._path}')
             return from_config(key,result,globals,locals,path)
         return val
-    except(KeyError,NameError,AttributeError,CROWException) as ae:
+    except(CROWException) as ce:
+        _logger.error(f'{path}: {type(ce).__name__} error {str(ce)[:80]}')
+        raise
+    except(KeyError,NameError,AttributeError) as ae:
+        _logger.error(f'{path}: {type(ae).__name__} error {str(ae)[:80]}')
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
                            f'{type(ae).__name__} {str(ae)} --in-- '
                            f'{{{", ".join([ k for k in locals.keys() ])}}}')
     except(SyntaxError,TypeError,IndexError) as ke:
         if 'f-string: unterminated string' in str(ke):
+            _logger.error(f'{path}: {type(ke).__name__} f string error {str(ke)[:80]}')
 #            raise CalcKeyError(f'{path}: {type(val).__name__} 
             raise CalcKeyError(f'''{path}: {type(val).__name__}: probable unbalanced parentheses ([{{"''"}}]) in {str(val)[0:80]} {str(ke)[:80]}''')
+        _logger.error(f'{path}: {type(ke).__name__} error {str(ke)[:80]}')
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
                            f'{type(ke).__name__} {str(ke)[:80]}')
     except RecursionError as re:
