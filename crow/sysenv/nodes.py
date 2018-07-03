@@ -104,7 +104,7 @@ class GenericNodeSpec(NodeSpec):
         self.settings=dict(settings)
         self.cores_per_node=int(settings['physical_cores_per_node'])
         self.cpus_per_core=int(settings.get('logical_cpus_per_core',1))
-        self.memory_per_node=int(settings.get('memory_per_node',0))
+        self.memory_per_node=float(settings.get('memory_per_node',0))
         assert(self.cores_per_node>0)
         self.hyperthreading_allowed=bool(
             settings.get('hyperthreading_allowed',False))
