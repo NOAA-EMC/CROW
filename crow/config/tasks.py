@@ -543,8 +543,8 @@ class Suite(SuiteView):
                     task.viewed._raw_child()[key]=value_copy
         self._invalidate_non_dependables_in_tree()
 
-        for m in matches:
-            if not m:
+        for i in range(len(matches)):
+            if not matches[i]:
                 _logger.warning(f'{self.viewed._path}: no match to override {replace_me[i][3]}')
 
 class Message(str):
