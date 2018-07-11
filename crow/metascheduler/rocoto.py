@@ -683,7 +683,9 @@ class ToRocoto(object):
 {self.__spacing*(indent+1)}<!-- All tasks must be complete or invalid for this cycle -->\n'''
         alarms = set(self.__alarms_used)
         alarms.add('')
-        for alarm_name in alarms:
+        # Reverse-sort the alarm names so the final tasks show up in
+        # the same order each time, with the task "final" at the end.
+        for alarm_name in reversed(sorted(alarms)):
             #print(f'find final for {alarm_name}')
             dep = self._final_task_deps_for_alarm(self.suite,alarm_name)
             dep = simplify(dep)
