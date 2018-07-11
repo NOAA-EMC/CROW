@@ -33,7 +33,7 @@ def _parse_slot(actor,slot,sdata,flow):
             val0=val[0]
             if isinstance(val0,str) or isinstance(val0,int) \
                or isinstance(val0,float) or isinstance(val0,datetime) \
-               or isinstance(val0,timdelta):
+               or isinstance(val0,timedelta):
                 metakeep[key]=[ v for v in val ]
     _logger.debug(f"{actor}.{slot}: metadata subsetted from {meta} is {metakeep}")
     if flow=='O':
