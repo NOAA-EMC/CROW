@@ -42,7 +42,7 @@ class JobRankSpec(Mapping):
             'separate_node':separate_node,
             'hyperthreads':int(hyperthreads),
             'OMP_NUM_THREADS':max(0,int(OMP_NUM_THREADS)),
-            'memory_per_rank':max(1,memory_per_rank),
+            'memory_per_rank':max(1,float(memory_per_rank)),
             'exe':( None if exe is MISSING else exe ),
             'args':( [] if args is MISSING else list(args) ) }
 
