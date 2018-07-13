@@ -41,13 +41,6 @@ __all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval', 'strref',
           'list_eval', 'multidict', 'Eval', 'user_error_message' ]
 _logger=logging.getLogger('crow.config')
 
-try:
-    import sandbox
-    sandbox_flag = sandbox.extern_sandbox
-except ImportError as ie:
-    sandbox_flag = False
-    pass
-
 class user_error_message(str):
     """!Used to embed assertions in configuration code."""
     def _result(self,globals,locals):
@@ -272,9 +265,7 @@ class dict_eval(MutableMapping):
     def __delitem__(self,k): del(self.__child[k], self.__cache[k])
     def __iter__(self):
         for k in self.__child.keys(): yield k
-    def _validate(self,stage,memo=None,sandbox=False):
-        if sandbox_flag:
-            sandbox = True
+    def _validate(self,stage,memo=None):
         """!Validates this dict_eval using its embedded Template object, if present """
         if self.__is_validated: return
         self.__is_validated=True
@@ -310,8 +301,7 @@ class dict_eval(MutableMapping):
                 if not isinstance(tmpl,Mapping): continue
                 if not hasattr(tmpl,'_check_scope'):
                     tmpl=Template(tmpl,self._path+'.Template',self.__globals)
-                if not sandbox:
-                    tmpl._check_scope(self,stage,memo)
+                tmpl._check_scope(self,stage,memo)
     def __getitem__(self,key):
         if key not in self.__cache:
             if key not in self.__child:
@@ -339,7 +329,8 @@ class dict_eval(MutableMapping):
     def _to_py(self,recurse=True):
         """!Converts to a python core object; does not work for cyclic object trees"""
         cls=type(self.__child)
-        return cls([(k, to_py(v)) for k,v in self.items()])
+        return cls([(k, 
+                     _to_py(v)) for k,v in self.items()])
     def _child(self): return self.__child
     def _recursively_set_globals(self,globals,memo=None):
         """Recurses through the object tree setting the globals for eval() calls"""
@@ -449,7 +440,7 @@ class list_eval(MutableSequence):
         return val
     def _to_py(self,recurse=True):
         """!Converts to a python core object; does not work for cyclic object trees"""
-        return [ to_py(v) for v in self ]
+        return [ _to_py(v) for v in self ]
     def _recursively_set_globals(self,globals,memo):
         if memo is None: memo=set()
         if id(self) in memo: return

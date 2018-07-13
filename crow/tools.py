@@ -4,13 +4,6 @@ from copy import deepcopy, copy
 from contextlib import suppress, contextmanager
 from collections.abc import Mapping
 
-try:
-    import sandbox
-    sandbox_flag = sandbox.extern_sandbox
-except ImportError as ie:
-    sandbox_flag = False
-    pass
-    
 __all__=['panasas_gb','gpfs_gb','to_timedelta','deliver_file','NamedConstant',
          'Clock','str_timedelta','memory_in_bytes','to_printf_octal',
          'str_to_posix_sh','typecheck','ZERO_DT','shell_to_python_type',
@@ -84,73 +77,37 @@ def panasas_gb(dir,pan_df='pan_df'):
 #Filesystem         1073741824-blocks      Used Available Capacity Mounted on
 #panfs://10.181.12.11/     94530     76432     18098      81% /scratch4/NCEPDEV/stmp3/
 
-def gpfs_gb(dir,fileset,device,mmlsquota='mmlsquota',sandbox=False):
-    sandbox = sandbox_flag
-    if sandbox:
-        return 10000
-    else:
-        mmlsquota=subprocess.check_output([
-            mmlsquota, '--block-size', '1T','-j',fileset,device])
-        for m in re.finditer(b'''(?isx)
-                   (?:
-                       (?P<device>\S+) \s+ FILESET
-                       \s+ (?P<TBused>  \d+  )
-                       \s+ (?P<TBquota> \d+  )
-                       \s+ (?P<TBlimit> \d+  )
-                       [^\r\n]* (?: [\r\n] | [\r\n]*\Z )
-                    |
-                       (?P<device2>\S+) \s+ FILESET
-                       (?P<no_limits>\s+ no \s+ limits)
-                       [^\r\n]* (?: [\r\n] | [\r\n]*\Z )
-                    |
-                     (?P<bad> [^\r\n]*[\r\n] | [^\r\n]*\Z )
-                   )
-                   ''',mmlsquota):
+def gpfs_gb(dir,fileset,device,mmlsquota='mmlsquota'):
+    mmlsquota=subprocess.check_output([
+        mmlsquota, '--block-size', '1T','-j',fileset,device])
+    for m in re.finditer(b'''(?isx)
+               (?:
+                   (?P<device>\S+) \s+ FILESET
+                   \s+ (?P<TBused>  \d+  )
+                   \s+ (?P<TBquota> \d+  )
+                   \s+ (?P<TBlimit> \d+  )
+                   [^\r\n]* (?: [\r\n] | [\r\n]*\Z )
+                |
+                   (?P<device2>\S+) \s+ FILESET
+                   (?P<no_limits>\s+ no \s+ limits)
+                   [^\r\n]* (?: [\r\n] | [\r\n]*\Z )
+                |
+                 (?P<bad> [^\r\n]*[\r\n] | [^\r\n]*\Z )
+               )
+               ''',mmlsquota):
 
-            if m.group('device2'):
-                _logger.warning(f'{device}:{fileset}: no limit (assume 1 exabyte)')
-                return 1024**4.0
+        if m.group('device2'):
+            _logger.warning(f'{device}:{fileset}: no limit (assume 1 exabyte)')
+            return 1024**4.0
             
-            if m.group('bad') or not m.group('TBused') \
-              or not m.group('TBlimit'):
-                continue
-            result=1024*(int(m.group('TBlimit')) - int(m.group('TBused')))
-            _logger.info(f'{device}:{fileset}: space={result}')
-            return result
-        _logger.error(f'{device}:{fileset}: not found or no quota')
-        return 0
-
-# def gpfs_gb(dir,fileset,device,mmlsquota='mmlsquota'):
-#     mmlsquota=subprocess.check_output([
-#         mmlsquota, '--block-size', '1T','-j',fileset,device])
-#     for m in re.finditer(b'''(?isx)
-#                (?:
-#                    (?P<device>\S+) \s+ FILESET
-#                    \s+ (?P<TBused>  \d+  )
-#                    \s+ (?P<TBquota> \d+  )
-#                    \s+ (?P<TBlimit> \d+  )
-#                    [^\r\n]* (?: [\r\n] | [\r\n]*\Z )
-#                 |
-#                    (?P<device2>\S+) \s+ FILESET
-#                    (?P<no_limits>\s+ no \s+ limits)
-#                    [^\r\n]* (?: [\r\n] | [\r\n]*\Z )
-#                 |
-#                  (?P<bad> [^\r\n]*[\r\n] | [^\r\n]*\Z )
-#                )
-#                ''',mmlsquota):
-#  
-#         if m.group('device2'):
-#             _logger.warning(f'{device}:{fileset}: no limit (assume 1 exabyte)')
-#             return 1024**4.0
-#              
-#         if m.group('bad') or not m.group('TBused') \
-#            or not m.group('TBlimit'):
-#             continue
-#         result=1024*(int(m.group('TBlimit')) - int(m.group('TBused')))
-#         _logger.info(f'{device}:{fileset}: space={result}')
-#         return result
-#     _logger.error(f'{device}:{fileset}: not found or no quota')
-#     return 0
+        if m.group('bad') or not m.group('TBused') \
+           or not m.group('TBlimit'):
+            continue
+        result=1024*(int(m.group('TBlimit')) - int(m.group('TBused')))
+        _logger.info(f'{device}:{fileset}: space={result}')
+        return result
+    _logger.error(f'{device}:{fileset}: not found or no quota')
+    return 0
     
 class ImmutableMapping(Mapping):
     """Immutable dictionary"""

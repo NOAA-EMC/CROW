@@ -22,9 +22,5 @@ class TestRankstoNodes(unittest.TestCase):
     def test_24_62(self):
         self.assertEqual([(2, 21),(1, 20)], ranks_to_nodes_ppn(24, 62))
 
-
-    def test_10_109(self):
-        self.assertEqual([(10, 10),(1, 9)], ranks_to_nodes_ppn(10, 109))
-
 if __name__ == '__main__':
     unittest.main()

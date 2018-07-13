@@ -76,14 +76,14 @@ def validate(obj,stage='',recurse=False):
 def document_root(obj):
     return obj._globals()['doc']
 
-def from_dir(reldir,evaluate_immediates=True,validation_stage=None,main_globals=None):    
+def from_dir(reldir,evaluate_immediates=True,validation_stage=None,main_globals=None):
     with io.StringIO() as fd:
         follow_main(fd,reldir,main_globals)
         yaml=fd.getvalue()
     if not yaml:
         raise ValueError(f'{reldir}: all YAML files in directory are empty or no YAML files are present')
     return from_string(yaml,evaluate_immediates=evaluate_immediates,
-                   validation_stage=validation_stage)
+                       validation_stage=validation_stage)
 
 def follow_main(fd,reldir,main_globals=None):
     if main_globals is None: main_globals={}
@@ -93,7 +93,7 @@ def follow_main(fd,reldir,main_globals=None):
     includes=[ "*.yaml" ]
     if os.path.exists(mainfile):
         _logger.debug(f"{mainfile}: read \"include\" array")
-        maindat=crow.config.from_file(mainfile)
+        maindat=from_file(mainfile)
         maindat.update(main_globals)
         if "include" not in maindat or \
            not isinstance(maindat.include,Sequence):

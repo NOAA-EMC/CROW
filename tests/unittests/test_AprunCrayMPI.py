@@ -26,6 +26,7 @@ class TestAprunCrayMPI(unittest.TestCase):
         aprun.sch=get_scheduler('LSFAlps',settings)
 
     def test_AprunCrayMPI_big(aprun):
+        
         ranks=[ { 'mpi_ranks':12, 'hyperthreads':1, 'OMP_NUM_THREADS':4, 'exe':'exe1',
                   'AprunCrayMPI_extra':[ '-gdb', '-envall' ] },
                 { 'mpi_ranks':48,                   'OMP_NUM_THREADS':1, 'exe':'exe2',
@@ -47,6 +48,7 @@ class TestAprunCrayMPI(unittest.TestCase):
         aprun.assertTrue( 'True' == 'True' )
          
     def test_AprunCrayMPI_max_ppn(aprun):
+        
         ranks=[ { 'mpi_ranks':12, 'max_ppn':2, 'exe':'doit' },
                 { 'mpi_ranks':12, 'max_ppn':4, 'exe':'doit' } ]
 
