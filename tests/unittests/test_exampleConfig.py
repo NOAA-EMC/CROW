@@ -1,6 +1,7 @@
 #! /usr/bin/env python3.6
 
 import unittest
+from context import crow
 import crow.config
 from datetime import timedelta, date, datetime
 from collections import OrderedDict

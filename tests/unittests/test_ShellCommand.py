@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 import unittest
-
+from context import crow
 from crow.sysenv import ShellCommand
 
 import os, subprocess

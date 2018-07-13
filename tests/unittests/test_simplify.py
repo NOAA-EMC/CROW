@@ -2,6 +2,7 @@
 f'This script requires python 3.6 or later'
 
 import unittest
+from context import crow
 import crow.metascheduler.algebra as ag
 import crow.config
 from datetime import timedelta

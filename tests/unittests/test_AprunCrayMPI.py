@@ -2,6 +2,8 @@
 
 import unittest, os, sys, logging
 
+from context import crow
+
 from crow import config
 from crow import metascheduler
 from crow.sysenv import JobResourceSpec

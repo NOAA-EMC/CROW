@@ -2,6 +2,7 @@
 f'This script requires python 3.6 or later'
 
 import unittest
+from context import crow
 from crow.sysenv import jobs
 class TestBoth(unittest.TestCase):
 
