@@ -25,6 +25,10 @@ class NodeSpec(object):
         """!Given a JobRankSpec, return the maximum number of these ranks that
         can fit on one compute node.        """
     @abstractmethod
+    def hyperthreads_for(rank_spec):
+        """!Given a JobRankSpec, return the number of hyperthreads that will
+        be used by each rank."""
+    @abstractmethod
     def omp_threads_for(rank_spec):
         """!Given a JobRankSpec, return the number of OpenMP threads it should
         use.  This will perform the OMP_NUM_THREADS=max calculation if the
@@ -113,6 +117,11 @@ class GenericNodeSpec(NodeSpec):
     def __repr__(self):
         return f'GenericNodeSpec{self.settings!r}'
 
+    def hyperthreads_for(self,rank_spec):
+        if not self.hyperthreading_allowed: return 1
+        if not rank_spec.get('hyperthreading',False): return 1
+        return self.cpus_per_core
+    
     # Implement NodeSpec abstract methods:
 
     def omp_threads_for(self,rank_spec):

@@ -197,7 +197,7 @@ class Scheduler(BaseScheduler):
         else:
             # This is an MPI program.
             
-            # Split into (nodes,ranks_per_node) pairs.  Ignore differeing
+            # Split into (nodes,ranks_per_node) pairs.  Ignore differing
             # executables between ranks while merging them (del_exe):
             nodes_ranks=self.nodes.to_nodes_ppn(
                 spec,can_merge_ranks=self.nodes.same_except_exe)

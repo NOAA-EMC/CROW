@@ -20,7 +20,7 @@ MAXIMUM_THREADS=sys.maxsize
 class JobRankSpec(Mapping):
     OPTIONAL_ATTRIBUTES=[
         'walltime', 'memory', 'outer', 'stdout', 'stderr', 'jobname',
-        'batch_memory', 'compute_memory' ]
+        'batch_memory', 'compute_memory', 'lsf_affinity' ]
 
     def __init__(self,OMP_NUM_THREADS=0,mpi_ranks=0,
                  exe=MISSING,args=MISSING,exclusive=True,

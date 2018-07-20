@@ -127,6 +127,7 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'dirname':os.path.dirname,
     'abspath':os.path.abspath,
     'realpath':os.path.realpath,
+    'readlink':os.readlink,
     'can_write':can_write,
     'isdir':os.path.isdir,
     'isfile':os.path.isfile,
