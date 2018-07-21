@@ -235,7 +235,7 @@ class Scheduler(BaseScheduler):
 
     # Generation of Rocoto XML
 
-    def _rocoto_stdout_stderr(self,spec,sio):
+    def _rocoto_stdout_stderr(self,spec,indent,space,sio):
         if 'outerr' in spec:
             sio.write(f'{indent*space}<join>{spec["outerr"]}</join>\n')
         else:
@@ -260,7 +260,7 @@ class Scheduler(BaseScheduler):
             sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
         if 'jobname' in spec:
             sio.write(f'{indent*space}<jobname>{spec["jobname"]!s}</jobname>\n')
-        self._rocoto_stdout_stderr(spec,sio)
+        self._rocoto_stdout_stderr(spec,indent,space,sio)
         ret=sio.getvalue()
         sio.close()
         return ret
@@ -288,7 +288,7 @@ class Scheduler(BaseScheduler):
             sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
 
         # Stdout and stderr if specified:
-        self._rocoto_stdout_stderr(spec[0],sio)
+        self._rocoto_stdout_stderr(spec[0],indent,space,sio)
 
         # Write nodes=x:ppn=y
         # Split into (nodes,ranks_per_node) pairs.  Ignore differing
