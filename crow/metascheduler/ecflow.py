@@ -335,6 +335,7 @@ class ToEcflow(object):
 
     def _make_ecf_files_for_one_cycle(self,ecf_files):
         ecf_file_set=self.settings.get('ecf_file_set','ecf_files')
+        file_set_paths[ecf_file_set]=self.settings.ecf_file_path
         for t in self.suite.child_iter():
             if t.is_task():
                 self._make_task_ecf_files(ecf_files,ecf_file_set,list(),t)
@@ -344,9 +345,11 @@ class ToEcflow(object):
 
     ####################################################################
 
-    def to_ecflow(self):
+    def to_ecflow(self,ecf_files_first_cycle_only=True):
         suite_def_files=dict()
         ecf_files=collections.defaultdict(dict)
+        file_set_paths=dict()
+        is_first_cycle=True
         self._initialize_graph()
         for cycle in self._foreach_cycle(self._cycles_to_write()):
             _logger.info(f'{cycle:%Y%m%d%H%M}: make suite definition in memory...')
@@ -360,10 +363,12 @@ class ToEcflow(object):
             assert(isinstance(suite_name,str))
             assert(isinstance(suite_def,str))
             suite_def_files[filename]={ 'name':suite_name, 'def':suite_def }
-            _logger.info(f'{cycle:%Y%m%d%H%M}: make ecf files in memory...')
-            self._make_ecf_files_for_one_cycle(ecf_files)
+            if is_first_cycle or not ecf_files_first_cycle_only:
+                _logger.info(f'{cycle:%Y%m%d%H%M}: make ecf files in memory...')
+                self._make_ecf_files_for_one_cycle(ecf_files,ecf_file_paths)
+                is_first_cycle=False
         del self.suite
-        return suite_def_files,ecf_files
+        return suite_def_files,ecf_files,file_set_paths
 
 def to_ecflow(suite,apply_overrides=True):
     typecheck('suite',suite,Suite)
