@@ -320,7 +320,7 @@ class ToEcflow(object):
             return
         path_in_ecf_file_set=path_in_ecf_file_set+[task.path[-1]]
         path_string='/'.join(path_in_ecf_file_set)
-        ecflow_suite.add_ecf_file(ecf_file_set_name,path_in_ecf_file_set,
+        ecflow_suite.add_ecf_file(ecf_file_set_name,path_string,
                                   task.ecf_file)
 
     def _make_family_ecf_files(self,ecflow_suite,parent_file_set_name,
@@ -329,6 +329,7 @@ class ToEcflow(object):
         if skip_fun(self.graph.get_node(family.at(dt).path)):
             return
 
+        ecflow_suite.add_family('/'.join(family.path[1:-1]))
         ecf_file_set=family.get('ecf_file_set',None)
         if not ecf_file_set:
             # subfamily in same file set
@@ -336,7 +337,7 @@ class ToEcflow(object):
             path_in_ecf_file_set=path_in_ecf_file_set+[family.path[-1]]
         else:
             # new file set for this path
-            ecf_file_set_name='/'.join(family.path[1:])
+            ecf_file_set_name='/' + '/'.join(family.path[1:])
             ecflow_suite.add_ecf_file_set(ecf_file_set_name,ecf_file_set.disk_path)
             path_in_ecf_file_set=list()
 
@@ -355,7 +356,6 @@ class ToEcflow(object):
                 self._make_task_ecf_files(ecflow_suite,'/',list(),t)
             elif t.is_family():
                 self._make_family_ecf_files(ecflow_suite,'/',list(),t)
-        return ecf_files
 
     ####################################################################
 
@@ -376,10 +376,9 @@ class ToEcflow(object):
             assert(isinstance(suite_name,str))
             assert(isinstance(suite_def,str))
             ecflow_suite.add_suite(filename,suite_name,suite_def)
-            if is_first_cycle or not ecf_files_first_cycle_only:
-                _logger.info(f'{cycle:%Y%m%d%H%M}: make ecf files in memory...')
-                self._make_ecf_files_for_one_cycle(ecflow_suite)
-                is_first_cycle=False
+            _logger.info(f'{cycle:%Y%m%d%H%M}: make ecf files in memory...')
+            self._make_ecf_files_for_one_cycle(ecflow_suite)
+            is_first_cycle=False
         del self.suite
         return ecflow_suite
 
@@ -397,29 +396,35 @@ class EcflowSuiteFiles(object):
         self.suite_defs_by_file[suite_file]=[ suite_name, suite_def ]
     def add_family(self,family_path):
         self.job_mkdirs.append(family_path)
+
     def add_ecf_file_set(self,name,path):
         self.ecf_file_set_paths[name]=path
-        self.ecf_files[ecf_file_set_name]=collections.defaultdict(dict)
-    def add_ecf_file(self,ecf_file_set_name,path_in_file_set,ecf_file_contents):
-        self.ecf_files[ecf_file_set_name][path_in_file_set]=ecf_file_contents
+        self.ecf_files[name]=collections.defaultdict(dict)
+
+    def add_ecf_file(self,ecf_file_set_name,path_string,ecf_file_contents):
+        typecheck('ecf_file_set_name',ecf_file_set_name,str)
+        typecheck('path_string',path_string,str)
+        typecheck('ecf_file_contents',ecf_file_contents,str)
+        self.ecf_files[ecf_file_set_name][path_string]=ecf_file_contents
 
     def have_file_set(self,fileset):
         return fileset in self.ecf_file_set_paths
     def have_suite_file(self,file):
-        return file in self.suite_defs.by_file
+        return file in self.suite_defs_by_file
 
     def each_suite(self):
-        for suite_name,suite_vals in self.suite_defs.items():
-            yield suite_name,suite_vals[0],suite_vals[1]
+        for suite_name,stuff in self.suite_defs_by_name.items():
+            suite_file, suite_def = stuff
+            yield suite_name,suite_file,suite_def
     def each_family_path(self):
         for family_name in self.job_mkdirs:
             yield family_name
     def each_ecf_file_set(self):
-        for set_name,set_path in self.ecf_files.items():
+        for set_name,set_path in self.ecf_file_set_paths.items():
             yield set_name,set_path
     def each_ecf_file(self,ecf_file_set):
-        for task_path,ecf_file_contents in self.ecf_files[ecf_file_set].items():
-            yield task_path,ecf_file_contents
+        for task_path,contents in self.ecf_files[ecf_file_set].items():
+            yield task_path,contents
         
 
 def to_ecflow(suite,apply_overrides=True):
