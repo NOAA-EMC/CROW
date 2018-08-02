@@ -170,9 +170,6 @@ class GenericNodeSpec(NodeSpec):
         if self.memory_per_node:
             max_per_node=int(min(max_per_node,self.memory_per_node/rank_spec.memory_per_rank))
 
-        if omp_threads!=MAXIMUM_THREADS:
-            assert(max_per_node*omp_threads <= max_threads_per_node)
-
         if max_per_node<1:
             raise MachineTooSmallError(f'Specification too large for node: max threads {threads_per_node} for {rank_spec!r} in partition with {self.cores_per_node} cores per node{"" if not self.memory_per_node else ("and "+str(self.memory_per_node)+" MB of RAM per node")}.')
 
