@@ -34,21 +34,20 @@ class ShellCommand(dict_eval): pass
 class JobResourceSpecMaker(list_eval):
     def _result(self,globals,locals):
         rank_specs=list()
-        i=-1
-        for spec in self:
-            i+=1
+        for i in range(len(self)):
+            spec=from_config('JobResourceSpecMaker',self._raw(i),globals,locals,f'{self._path}[{i}]')
             if superdebug: _logger.debug(f'Look at spec #{i} in {self._path}...')
             if not hasattr(spec,'_raw_child'):
                 rank_specs.append(spec)
                 continue
-            # Create a new dict_eval containing parent locals:
-            spec2dict=copy(locals)
-            spec2dict.update(spec._raw_child())
-            spec2=dict_eval(spec2dict,f'{self._path}[{i}]',self._get_globals())
 
             # Get the value, from that new dict_eval, of all keys in spec.
             # Store it in the rank_specs list for the later constructor.
-            rank_specs.append(dict([ (k,spec2[k]) for k in spec ]))
+            with_parent_scope=multidict(spec,self._get_locals(),locals)
+            ranks=dict()
+            for key in spec.keys():
+                ranks[key]=from_config(key,with_parent_scope._raw(key),globals,locals,f'{self._path}[{i}].{key}')
+            rank_specs.append(ranks)
         return crow.sysenv.JobResourceSpec(rank_specs)
 
 class ClockMaker(dict_eval):
@@ -77,7 +76,8 @@ class MergeMapping(list_eval):
         return
     def _result(self,globals,locals):
         result={}
-        for d in self:
+        for i in range(len(self)):
+            d=from_config('MergeMapping',self._raw(i),globals,locals,f'{self._path}[{i}]')
             if not isinstance(d,collections.Mapping): continue
             if not d: continue
             if hasattr(d,'_raw_child'):
@@ -90,7 +90,8 @@ class MergeMapping(list_eval):
 class AppendSequence(list_eval):
     def _result(self,globals,locals):
         result=[]
-        for d in self:
+        for i in range(len(self)):
+            d=from_config('AppendSequence',self._raw(i),globals,locals,f'{self._path}[{i}]')
             if not isinstance(d,collections.Sequence) or isinstance(d,str):
                 raise TypeError(f'{self._path}: can only append lists.')
             if not len(d):

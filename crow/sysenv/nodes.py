@@ -104,47 +104,64 @@ class GenericNodeSpec(NodeSpec):
         self.settings=dict(settings)
         self.cores_per_node=int(settings['physical_cores_per_node'])
         self.cpus_per_core=int(settings.get('logical_cpus_per_core',1))
-        self.memory_per_node=int(settings.get('memory_per_node',0))
+        self.memory_per_node=float(settings.get('memory_per_node',0))
         assert(self.cores_per_node>0)
         self.hyperthreading_allowed=bool(
             settings.get('hyperthreading_allowed',False))
         self.indent_text=str(settings.get('indent_text','  '))
+
+    def __repr__(self):
+        return f'GenericNodeSpec{self.settings!r}'
 
     # Implement NodeSpec abstract methods:
 
     def omp_threads_for(self,rank_spec):
         typecheck('rank_spec',rank_spec,crow.sysenv.jobs.JobRankSpec)
         omp_threads=max(1,rank_spec.get('OMP_NUM_THREADS',1))
+
+#        print('omp_thread = ',omp_threads)
         if omp_threads != MAXIMUM_THREADS:
             return omp_threads
-
+            
         can_hyper=self.hyperthreading_allowed
-        max_ranks_per_node=self.cores_per_node
-        if can_hyper and rank_spec.get('hyperthreading',False):
-            max_ranks_per_node*=self.cpus_per_core
-        if rank_spec.is_mpi():
-            ppn=max_ranks_per_node
-        else:
-            ppn=1
+        max_threads_per_node=self.cores_per_node
+        if can_hyper and rank_spec.get('hyperthreads',False):
+            max_threads_per_node*=max(1,min(self.cpus_per_core,rank_spec.hyperthreads))
 
-        max_ppn=rank_spec.get('max_ppn',0)
-        if max_ppn:
-            ppn=min(max_ppn,ppn)
+        result=max_threads_per_node // self.max_ranks_per_node(rank_spec)
+#        print('max_threads_per_node = ', max_threads_per_node)
+#        print('self.max_ranks_per_node(rank_spec) = ',self.max_ranks_per_node(rank_spec))
+        return result
+        # if rank_spec.is_mpi():
+        #     ppn=max_ranks_per_node
+        # else:
+        #     ppn=1
 
-        return max_ranks_per_node//ppn
+        # max_ppn=rank_spec.get('max_ppn',0)
+        # if max_ppn:
+        #     ppn=min(max_ppn,ppn)
+
+        # return max_ranks_per_node//ppn
 
     def max_ranks_per_node(self,rank_spec):
         typecheck('rank_spec',rank_spec,crow.sysenv.jobs.JobRankSpec,
                   print_contents=True)
         can_hyper=self.hyperthreading_allowed
         max_per_node=self.cores_per_node
-        if can_hyper and rank_spec.get('hyperthreading',False):
-            max_per_node*=self.cpus_per_core
+        max_threads_per_node=self.cores_per_node
+
+        if can_hyper and rank_spec.get('hyperthreads',False):
+            max_threads_per_node*=max(1,min(self.cpus_per_core,rank_spec.hyperthreads))
+            max_per_node*=max(1,min(self.cpus_per_core,rank_spec.hyperthreads))
+
         threads_per_node=max_per_node
         omp_threads=max(1,rank_spec.get('OMP_NUM_THREADS',1))
 
         if omp_threads!=MAXIMUM_THREADS:
             max_per_node //= omp_threads
+        elif rank_spec.mpi_ranks<2:
+            # Special case: maximum threads with non-MPI job, so return 1
+            return 1
 
         max_ppn=rank_spec.get('max_ppn',0)
         if max_ppn:
@@ -153,8 +170,12 @@ class GenericNodeSpec(NodeSpec):
         if self.memory_per_node:
             max_per_node=int(min(max_per_node,self.memory_per_node/rank_spec.memory_per_rank))
 
+        if omp_threads!=MAXIMUM_THREADS:
+            assert(max_per_node*omp_threads <= max_threads_per_node)
+
         if max_per_node<1:
             raise MachineTooSmallError(f'Specification too large for node: max threads {threads_per_node} for {rank_spec!r} in partition with {self.cores_per_node} cores per node{"" if not self.memory_per_node else ("and "+str(self.memory_per_node)+" MB of RAM per node")}.')
+
         return max_per_node
 
     def can_merge_ranks(self,R1,R2):
@@ -178,6 +199,6 @@ class GenericNodeSpec(NodeSpec):
         typecheck('rank_spec',rank_spec,crow.sysenv.jobs.JobRankSpec)
         can_hyper=self.hyperthreading_allowed
         max_per_node=self.cores_per_node
-        if can_hyper and rank_spec.get('hyperthreading',False):
-            max_per_node*=self.cpus_per_core
+        if can_hyper and rank_spec.get('hyperthreads',False):
+            max_per_node*=max(1,min(self.cpus_per_core,rank_spec.hyperthreads))
         return max_per_node

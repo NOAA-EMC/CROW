@@ -370,7 +370,7 @@ _SHELL_CLASS_MAP={ 'int':int, 'float':float, 'bool':bool, 'str':str }
 
 def shell_to_python_type(arg):
     split=arg.split('::',1)
-    if len(split)>1 and split[0] in CLASS_MAP:
+    if len(split)>1 and split[0] in _SHELL_CLASS_MAP:
         typename, strval=split
         if typename not in _SHELL_CLASS_MAP:
             raise ValueError(f'{arg}: unknown type {typename}')

@@ -94,8 +94,8 @@ class strref(str):
         return scope._raw(key) if hasattr(scope,'_raw') else scope[key]
 
 def from_config(key,val,globals,locals,path):
-    """!Converts s strcalc cor Conditional to another data type via eval().
-    Other types are returned unmodified."""
+    """!Converts a class with _result method to another data type by
+    calling that method.  Other types are returned unmodified."""
     try:
         if hasattr(val,'_result'):
             if superdebug:
@@ -108,14 +108,20 @@ def from_config(key,val,globals,locals,path):
                 _logger.debug(f'{path}: result is at path {result._path}')
             return from_config(key,result,globals,locals,path)
         return val
-    except(KeyError,NameError,AttributeError,CROWException) as ae:
+    except(CROWException) as ce:
+        _logger.error(f'{path}: {type(ce).__name__} error {str(ce)[:80]}')
+        raise
+    except(KeyError,NameError,AttributeError) as ae:
+        _logger.error(f'{path}: {type(ae).__name__} error {str(ae)[:80]}')
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
                            f'{type(ae).__name__} {str(ae)} --in-- '
                            f'{{{", ".join([ k for k in locals.keys() ])}}}')
     except(SyntaxError,TypeError,IndexError) as ke:
         if 'f-string: unterminated string' in str(ke):
+            _logger.error(f'{path}: {type(ke).__name__} f string error {str(ke)[:80]}')
 #            raise CalcKeyError(f'{path}: {type(val).__name__} 
             raise CalcKeyError(f'''{path}: {type(val).__name__}: probable unbalanced parentheses ([{{"''"}}]) in {str(val)[0:80]} {str(ke)[:80]}''')
+        _logger.error(f'{path}: {type(ke).__name__} error {str(ke)[:80]}')
         raise CalcKeyError(f'{path}: {type(val).__name__} {str(val)[0:80]} - '
                            f'{type(ke).__name__} {str(ke)[:80]}')
     except RecursionError as re:
@@ -132,7 +138,7 @@ class multidict(MutableMapping):
         self.__dicts=list(args)
         self.__keys=frozenset().union(*args)
     def __len__(self):            return len(self.__keys)
-    def __contains__(self,k):     return k in self.__keys
+#    def __contains__(self,k):     return k in self.__keys
     def __copy__(self):           return multidict(self.__dicts)
     def __setitem__(self,k,v):    raise NotImplementedError('immutable')
     def __delitem__(self,k):      raise NotImplementedError('immutable')
@@ -323,7 +329,8 @@ class dict_eval(MutableMapping):
     def _to_py(self,recurse=True):
         """!Converts to a python core object; does not work for cyclic object trees"""
         cls=type(self.__child)
-        return cls([(k, to_py(v)) for k,v in self.items()])
+        return cls([(k, 
+                     _to_py(v)) for k,v in self.items()])
     def _child(self): return self.__child
     def _recursively_set_globals(self,globals,memo=None):
         """Recurses through the object tree setting the globals for eval() calls"""
@@ -433,7 +440,7 @@ class list_eval(MutableSequence):
         return val
     def _to_py(self,recurse=True):
         """!Converts to a python core object; does not work for cyclic object trees"""
-        return [ to_py(v) for v in self ]
+        return [ _to_py(v) for v in self ]
     def _recursively_set_globals(self,globals,memo):
         if memo is None: memo=set()
         if id(self) in memo: return
