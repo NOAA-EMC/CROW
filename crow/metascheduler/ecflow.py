@@ -238,7 +238,7 @@ class ToEcflow(object):
                 sio.write(f'{self.indent}{line.rstrip()}\n')
 
         ECF_FILES=self.suite.ecf_file_set.ECF_FILES
-        sio.write(f"{self.indent}edit ECF_FILES='{ECF_FILES}'")
+        sio.write(f"{self.indent}edit ECF_FILES='{ECF_FILES}'\n")
 
         def exit_fun(node):
             if node.is_family():
@@ -256,9 +256,9 @@ class ToEcflow(object):
                 started=f' # /{suite_name}/{node.view.task_path_str}'
                 started=re.sub('/+','/',started)
                 sio.write(started)
-                if 'ecf_file_set' in node:
-                    ECF_FILES=nodeecf_file_set.ECF_FILES
-                    sio.write(f"{self.indent}edit ECF_FILES='{ECF_FILES}'")
+                if 'ecf_file_set' in node.view:
+                    ECF_FILES=node.view.ecf_file_set.ECF_FILES
+                    sio.write(f"\n{self.indent}edit ECF_FILES='{ECF_FILES}'")
 
             sio.write('\n')
 
@@ -329,7 +329,7 @@ class ToEcflow(object):
         if skip_fun(self.graph.get_node(family.at(dt).path)):
             return
 
-        ecflow_suite.add_family('/'.join(family.path[1:-1]))
+        ecflow_suite.add_family('/'.join(family.path[1:]))
         ecf_file_set=family.get('ecf_file_set',None)
         if not ecf_file_set:
             # subfamily in same file set
