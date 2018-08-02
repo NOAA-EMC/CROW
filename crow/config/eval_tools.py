@@ -326,11 +326,6 @@ class dict_eval(MutableMapping):
             self[name]=value
     def __delattr__(self,name):
         del self[name]
-    def _to_py(self,recurse=True):
-        """!Converts to a python core object; does not work for cyclic object trees"""
-        cls=type(self.__child)
-        return cls([(k, 
-                     _to_py(v)) for k,v in self.items()])
     def _child(self): return self.__child
     def _recursively_set_globals(self,globals,memo=None):
         """Recurses through the object tree setting the globals for eval() calls"""
@@ -438,9 +433,6 @@ class list_eval(MutableSequence):
                 self.__child[index]=val
         assert(val is not self)
         return val
-    def _to_py(self,recurse=True):
-        """!Converts to a python core object; does not work for cyclic object trees"""
-        return [ _to_py(v) for v in self ]
     def _recursively_set_globals(self,globals,memo):
         if memo is None: memo=set()
         if id(self) in memo: return
