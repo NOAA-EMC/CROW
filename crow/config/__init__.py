@@ -19,7 +19,7 @@ from .eval_tools import invalidate_cache, update_globals
 from .eval_tools import evaluate_immediates as _evaluate_immediates
 from .exceptions import ConfigError, ConfigUserError
 
-__all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
+__all__=["from_string","from_file", 'Action', 'Platform', 'Template',
          'TaskStateAnd', 'TaskStateOr', 'TaskStateNot', 'TaskStateIs',
          'Taskable', 'Task', 'Family', 'CycleAt', 'CycleTime', 'Cycle',
          'Trigger', 'Depend', 'Timespec', 'SuitePath', 'ShellEvent', 'Event',
@@ -27,9 +27,6 @@ __all__=["from_string","from_file","to_py", 'Action', 'Platform', 'Template',
          'TaskExistsDependency', 'follow_main', 'from_dir', 'update_globals' ]
 
 _logger=logging.getLogger('crow.config')
-
-def to_py(obj):
-    return obj._to_py() if hasattr(obj,'_to_py') else obj
 
 def expand_text(text,scope):
     if hasattr(scope,'_expand_text'):
@@ -93,7 +90,7 @@ def follow_main(fd,reldir,main_globals=None):
     includes=[ "*.yaml" ]
     if os.path.exists(mainfile):
         _logger.debug(f"{mainfile}: read \"include\" array")
-        maindat=crow.config.from_file(mainfile)
+        maindat=from_file(mainfile)
         maindat.update(main_globals)
         if "include" not in maindat or \
            not isinstance(maindat.include,Sequence):

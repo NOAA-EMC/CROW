@@ -77,9 +77,13 @@ def panasas_gb(dir,pan_df='pan_df'):
 #Filesystem         1073741824-blocks      Used Available Capacity Mounted on
 #panfs://10.181.12.11/     94530     76432     18098      81% /scratch4/NCEPDEV/stmp3/
 
-def gpfs_gb(dir,fileset,device,mmlsquota='mmlsquota'):
-    mmlsquota=subprocess.check_output([
-        mmlsquota, '--block-size', '1T','-j',fileset,device])
+def gpfs_gb(dir,fileset,device,mmlsquota='mmlsquota',default=None):
+    try:
+        mmlsquota=subprocess.check_output([
+            mmlsquota, '--block-size', '1T','-j',fileset,device])
+    except subprocess.CalledProcessError as e:
+        if default is not None: return default
+        raise
     for m in re.finditer(b'''(?isx)
                (?:
                    (?P<device>\S+) \s+ FILESET
@@ -370,7 +374,7 @@ _SHELL_CLASS_MAP={ 'int':int, 'float':float, 'bool':bool, 'str':str }
 
 def shell_to_python_type(arg):
     split=arg.split('::',1)
-    if len(split)>1 and split[0] in CLASS_MAP:
+    if len(split)>1 and split[0] in _SHELL_CLASS_MAP:
         typename, strval=split
         if typename not in _SHELL_CLASS_MAP:
             raise ValueError(f'{arg}: unknown type {typename}')

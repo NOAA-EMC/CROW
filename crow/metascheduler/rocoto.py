@@ -174,7 +174,7 @@ def _to_rocoto_dep_impl(dep,fd,indent):
                 dt=crow.tools.str_timedelta(event.age).sub('d',':')
                 fd.write(f' age={dt}')
             if 'minsize' in dep:
-                nbytes=crow.tools.in_bytes(event.size)
+                nbytes=crow.tools.memory_in_bytes(event.size)
                 fd.write(f' size={nbytes}')
             fd.write(f'><cyclestr')
             if dep.event.path[0]:
