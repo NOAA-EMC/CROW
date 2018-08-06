@@ -238,7 +238,7 @@ class ToEcflow(object):
                 sio.write(f'{self.indent}{line.rstrip()}\n')
 
         ECF_FILES=self.suite.ecf_file_set.ECF_FILES
-        sio.write(f"{self.indent}edit ECF_FILES='{ECF_FILES}'\n")
+        sio.write(f"{self.indent}edit ECF_FILES '{ECF_FILES}'\n")
 
         def exit_fun(node):
             if node.is_family():
@@ -258,7 +258,7 @@ class ToEcflow(object):
                 sio.write(started)
                 if 'ecf_file_set' in node.view:
                     ECF_FILES=node.view.ecf_file_set.ECF_FILES
-                    sio.write(f"\n{self.indent}edit ECF_FILES='{ECF_FILES}'")
+                    sio.write(f"\n{self.indent}edit ECF_FILES '{ECF_FILES}'")
 
             sio.write('\n')
 
