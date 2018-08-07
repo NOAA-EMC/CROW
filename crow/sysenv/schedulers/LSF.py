@@ -19,7 +19,7 @@ class Scheduler(BaseScheduler):
         self.settings=dict(settings)
         self.settings.update(kwargs)
         self.nodes=GenericNodeSpec(settings)
-        self.rocoto_name='lsfcray'
+        self.rocoto_name='lsf'
         self.specify_affinity=bool(settings.get('specify_affinity',True))
         self.specify_n_ranks=bool(settings.get('specify_n_ranks',True))
         self.indent_text=str(settings.get('indent_text','  '))
