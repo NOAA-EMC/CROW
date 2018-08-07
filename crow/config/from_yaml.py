@@ -11,10 +11,12 @@ following python concept:
 
 from datetime import timedelta
 from collections import namedtuple, OrderedDict
-import re
-import yaml
-from yaml import YAMLObject
 
+import collections, re, yaml, logging
+
+from yaml import YAMLObject
+from yaml.nodes import MappingNode
+import crow.config.eval_tools
 from crow.config.eval_tools import *
 from crow.config.represent import *
 from crow.config.tasks import *
@@ -25,8 +27,11 @@ import crow.sysenv
 
 __all__=['ConvertFromYAML']
 
+logger=logging.getLogger('crow.config')
+
 # YAML representation objects:
 class PlatformYAML(YAMLObject):   yaml_tag=u'!Platform'
+class SelectYAML(YAMLObject):     yaml_tag=u'!Select'
 class ActionYAML(YAMLObject):     yaml_tag=u'!Action'
 #class TemplateYAML(YAMLObject):   yaml_tag=u'!Template'
 
@@ -36,11 +41,19 @@ class FirstTrueYAML(list):        yaml_tag=u'!FirstTrue'
 class LastTrueYAML(list):         yaml_tag=u'!LastTrue'
 class ImmediateYAML(list):        yaml_tag=u'!Immediate'
 class InheritYAML(list):          yaml_tag=u'!Inherit'
+class MergeMappingYAML(list):     yaml_tag=u'!MergeMapping'
+class AppendSequenceYAML(list):     yaml_tag=u'!AppendSequence'
 
 class ClockYAML(dict):            yaml_tag=u'!Clock'
 class EvalYAML(dict): pass
 class ShellCommandYAML(dict): pass
+class DataEventYAML(dict): pass
+class ShellEventYAML(dict): pass
 class TaskYAML(OrderedDict): pass
+class TaskArrayYAML(OrderedDict): pass
+class TaskElementYAML(OrderedDict): pass
+class DataEventElementYAML(OrderedDict): pass
+class ShellEventElementYAML(OrderedDict): pass
 class FamilyYAML(OrderedDict): pass
 class CycleYAML(OrderedDict): pass
 class TemplateYAML(OrderedDict): pass
@@ -51,13 +64,20 @@ class JobResourceSpecMakerYAML(list): pass
 # Mapping from YAML representation class to a pair:
 # * internal representation class
 # * python core class for intermediate conversion
-TYPE_MAP={ PlatformYAML:     [ Platform,     dict,       None ], 
-           TemplateYAML:     [ Template,     OrderedDict, None ],
-           ActionYAML:       [ Action,       dict,       None  ],
-           ShellCommandYAML: [ ShellCommand, OrderedDict, None ],
-           TaskYAML:         [ Task,         OrderedDict, None ],
-           CycleYAML:        [ Cycle,        OrderedDict, None ],
-           FamilyYAML:       [ Family,       OrderedDict, None ]
+TYPE_MAP={ PlatformYAML:          [ Platform,     dict,        None ], 
+           SelectYAML:            [ Select,       dict,        None ], 
+           TemplateYAML:          [ Template,     OrderedDict, None ],
+           ActionYAML:            [ Action,       dict,        None ],
+           ShellCommandYAML:      [ ShellCommand, OrderedDict, None ],
+           TaskYAML:              [ Task,         OrderedDict, None ],
+           CycleYAML:             [ Cycle,        OrderedDict, None ],
+           FamilyYAML:            [ Family,       OrderedDict, None ],
+           DataEventYAML:         [ DataEvent,    dict,        None ],
+           ShellEventYAML:        [ ShellEvent,   dict,        None ],
+           TaskArrayYAML:         [ TaskArray,    OrderedDict, None ],
+           TaskElementYAML:       [ TaskElement,  OrderedDict, None ],
+           DataEventElementYAML:  [ DataEventElement,   OrderedDict, None ],
+           ShellEventElementYAML: [ ShellEventElement,  OrderedDict, None ],
          }
 
 def type_for(t,path):
@@ -105,6 +125,7 @@ def add_yaml_string(key,cls):
 
 add_yaml_string(u'!expand',expand)
 add_yaml_string(u'!calc',calc)
+add_yaml_string(u'!ref',ref)
 add_yaml_string(u'!error',user_error_message)
 add_yaml_string(u'!Depend',Depend)
 add_yaml_string(u'!Message',Message)
@@ -122,6 +143,8 @@ def add_yaml_mapping(key,cls):
     yaml.add_constructor(key,constructor)
 
 add_yaml_mapping(u'!ShellCommand',ShellCommandYAML)
+add_yaml_mapping(u'!DataEvent',DataEventYAML)
+add_yaml_mapping(u'!ShellEvent',ShellEventYAML)
 
 ########################################################################
 
@@ -141,6 +164,8 @@ add_yaml_sequence(u'!LastTrue',LastTrueYAML)
 add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
 add_yaml_sequence(u'!Immediate',ImmediateYAML)
 add_yaml_sequence(u'!Inherit',InheritYAML)
+add_yaml_sequence(u'!AppendSequence',AppendSequenceYAML)
+add_yaml_sequence(u'!MergeMapping',MergeMappingYAML)
 add_yaml_sequence(u'!JobRequest',JobResourceSpecMakerYAML)
 
 ## @var CONDITIONALS
@@ -153,13 +178,29 @@ CONDITIONALS={ FirstMaxYAML:FirstMax,
 
 ########################################################################
 
+def construct_ordered_dict(loader, node, deep=False):
+    if not isinstance(node, MappingNode):
+        raise ConstructorError(None, None,
+                    "expected a mapping node, but found %s" % node.id,
+                    node.start_mark)
+    mapping = OrderedDict()
+    loader.flatten_mapping(node)
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if not isinstance(key, collections.Hashable):
+            raise ConstructorError("while constructing a mapping", node.start_mark,
+                                   "found unhashable key", key_node.start_mark)
+        value = loader.construct_object(value_node, deep=deep)
+        mapping[key] = value
+    return mapping
+
 def add_yaml_ordered_dict(key,cls):
     """!Generates and registers representers and constructors for custom
     YAML map types    """
     def representer(dumper,data):
         return dumper.represent_ordered_dict(key,data)
     def constructor(loader,node):
-        return cls(loader.construct_pairs(node))
+        return cls(construct_ordered_dict(loader,node))
     #yaml.add_representer(cls,representer)
     yaml.add_constructor(key,constructor)
 
@@ -170,13 +211,23 @@ add_yaml_ordered_dict(u'!Clock',ClockYAML)
 add_yaml_ordered_dict(u'!Cycle',CycleYAML)
 add_yaml_ordered_dict(u'!Template',TemplateYAML)
 add_yaml_ordered_dict(u'!Task',TaskYAML)
+add_yaml_ordered_dict(u'!TaskArray',TaskArrayYAML)
+add_yaml_ordered_dict(u'!TaskElement',TaskElementYAML)
+add_yaml_ordered_dict(u'!DataEventElement',DataEventElementYAML)
+add_yaml_ordered_dict(u'!ShellEventElement',ShellEventElementYAML)
 add_yaml_ordered_dict(u'!Family',FamilyYAML)
 
 SUITE={ EvalYAML: Eval,
         CycleYAML: Cycle,
         TemplateYAML: Template,
         TaskYAML: Task,
+        DataEventYAML: DataEvent,
+        ShellEventYAML: ShellEvent,
         FamilyYAML: Family,
+        TaskArrayYAML: TaskArray,
+        TaskElementYAML: TaskElement,
+        DataEventElementYAML: DataEventElement,
+        ShellEventElementYAML: ShellEventElement,
         ClockYAML:ClockMaker,
         OutputSlotYAML: OutputSlot,
         InputSlotYAML: InputSlot}
@@ -196,15 +247,23 @@ class ConvertFromYAML(object):
         self.tree=tree
         self.tools=tools
         self.validatable=dict()
+        self.immediates=dict()
         self.ENV=ENV
 
-    def convert(self,validation_stage):
+    def convert(self,validation_stage,evaluate_immediates):
         self.result=self.from_dict(self.tree,path='doc')
         globals={ 'tools':self.tools, 'doc':self.result, 'ENV': self.ENV }
         self.result._recursively_set_globals(globals)
+        if evaluate_immediates:
+            logger.debug('evaluate immediates')
+            crow.config.eval_tools.evaluate_immediates(
+                self.result,recurse=True)
         if validation_stage is not None:
-            for i,v in self.validatable.items():
-                v._validate(validation_stage)
+            logger.debug(f'validate in {validation_stage}')
+            crow.config.eval_tools.recursively_validate(
+                self.result,validation_stage)
+        else:
+            logger.debug('do not validate')
         return self.result
 
     def to_eval(self,v,locals,path):
@@ -229,6 +288,10 @@ class ConvertFromYAML(object):
             return self.from_list(v,locals,Immediate,path)
         elif cls is InheritYAML:
             return self.from_list(v,locals,Inherit,path)
+        elif cls is MergeMappingYAML:
+            return self.from_list(v,locals,MergeMapping,path)
+        elif cls is AppendSequenceYAML:
+            return self.from_list(v,locals,AppendSequence,path)
         elif cls is JobResourceSpecMakerYAML:
             return self.from_list(v,locals,JobResourceSpecMaker,path)
         elif isinstance(v,list) and v and isinstance(v[0],tuple) \

@@ -9,60 +9,13 @@ sys.path.append(os.path.abspath(os.path.join(
 
 from create_comrot import create_COMROT
 import crow.config, crow.metascheduler, crow.dataflow
-from crow.config import Platform
+from crow.config import Platform, follow_main
 
 logger=logging.getLogger("setup_case")
 
 def epicfail(why):
     logger.error(why)
     sys.exit(1)
-
-def follow_main(fd,reldir,more_globals):
-    logger.debug(f"{reldir}: enter directory")
-    mainfile=os.path.join(reldir,"_main.yaml")
-
-    includes=[ "*.yaml" ]
-    if os.path.exists(mainfile):
-        logger.debug(f"{mainfile}: read \"include\" array")
-        maindat=crow.config.from_file(mainfile)
-        maindat.update(more_globals)
-        if "include" not in maindat or \
-           not isinstance(maindat.include,Sequence):
-            epicfail(f"{mainfile} has no \"include\" array")
-        includes=maindat.include
-
-    logger.debug(f"{reldir}: scan {includes}")
-
-    literals=set()
-    # First pass: scan for literal files:
-    for item in includes:
-        if not re.search(r'[*?\[\]{}]',item):
-            literals.add(item)
-
-    # Second pass: read files:
-    included=set()
-    for item in includes:
-        if item in included: continue
-        is_literal=item in literals
-        if is_literal:
-            paths=[ os.path.join(reldir,item) ]
-        else:
-            paths=[ x for x in glob.glob(os.path.join(reldir,item)) ]
-        logger.debug(f"{reldir}: {item}: paths = {paths}")
-        for path in paths:
-            basename=os.path.basename(path)
-            if basename in included: continue
-            if not is_literal and basename in literals: continue
-            if basename == "_main.yaml": continue
-            if os.path.isdir(path):
-                follow_main(fd,path,more_globals)
-            else:
-                logger.debug(f"{path}: read yaml")
-                included.add(basename)
-                with open(path,"rt") as pfd:
-                    fd.write(f"#--- {path}\n")
-                    fd.write(pfd.read())
-                    fd.write(f"\n#--- end {path}\n")
 
 def read_contents(case):
     for case_file in [ case,f"{case}.yaml",f"cases/{case}",
