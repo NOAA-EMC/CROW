@@ -1,0 +1,17 @@
+suite test_suite
+  edit ECF_FILES     '/gpfs/dell2/emc/modeling/noscrub/emc.fv3/nwpara/gfs.v15.0.0pre1/ecf/ecfutils/CROW/examples/test_suite/scripts'
+  edit ECF_OUT       '/gpfs/dell2/emc/modeling/noscrub/emc.fv3/nwpara/gfs.v15.0.0pre1/ecf/ecfutils/CROW/examples/test_suite/output'
+  edit ECF_HOME      '/gpfs/dell2/emc/modeling/noscrub/emc.fv3/nwpara/gfs.v15.0.0pre1/ecf/ecfutils/CROW/examples/test_suite/submit'
+  edit ECF_INCLUDE   '/gpfs/dell2/emc/modeling/noscrub/emc.fv3/nwpara/gfs.v15.0.0pre1/ecf/ecfutils/CROW/examples/test_suite/include'
+  edit TEST_LOG      '%ECF_OUT%/test.log'
+  edit ECF_JOB_CMD   '%ECF_JOB% 1> %ECF_JOBOUT% 2>&1 &'
+  edit ECF_KILL_CMD  '%kill -2 %ECF_RID% && kill -15 %ECF_RID%'
+  family family1
+    task task1
+    task task2
+    task task3
+      trigger task1==complete
+  endfamily
+  task task4
+    trigger family1==complete
+endsuite

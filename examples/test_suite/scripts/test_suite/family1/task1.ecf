@@ -1,0 +1,5 @@
+#! /bin/sh
+set -x
+%include <head.h>
+echo hello from task 1 >> %TEST_LOG%
+%include <tail.h>
