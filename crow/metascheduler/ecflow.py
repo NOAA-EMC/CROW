@@ -320,6 +320,8 @@ class ToEcflow(object):
             return
         path_in_ecf_file_set=path_in_ecf_file_set+[task.path[-1]]
         path_string='/'.join(path_in_ecf_file_set)
+        if ecflow_suite.have_ecf_file(ecf_file_set_name,path_string):
+            return
         ecflow_suite.add_ecf_file(ecf_file_set_name,path_string,
                                   task.ecf_file)
 
@@ -398,6 +400,7 @@ class EcflowSuiteFiles(object):
         self.job_mkdirs.append(family_path)
 
     def add_ecf_file_set(self,name,path):
+        if name in self.ecf_files: return
         self.ecf_file_set_paths[name]=path
         self.ecf_files[name]=collections.defaultdict(dict)
 
@@ -406,11 +409,14 @@ class EcflowSuiteFiles(object):
         typecheck('path_string',path_string,str)
         typecheck('ecf_file_contents',ecf_file_contents,str)
         self.ecf_files[ecf_file_set_name][path_string]=ecf_file_contents
+        assert(self.have_ecf_file(ecf_file_set_name,path_string))
 
     def have_file_set(self,fileset):
         return fileset in self.ecf_file_set_paths
     def have_suite_file(self,file):
         return file in self.suite_defs_by_file
+    def have_ecf_file(self,ecf_file_set_name,path_string):
+        return path_string in self.ecf_files[ecf_file_set_name]
 
     def each_suite(self):
         for suite_name,stuff in self.suite_defs_by_name.items():

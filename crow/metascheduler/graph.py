@@ -215,6 +215,7 @@ class Graph(object):
 
     def _add_child(self,cycle,child_view,parent_node,memo):
         if child_view.path in memo: return
+        memo.add(child_view.path)
         child_node=Node(child_view,self.__clock.now)
         if parent_node is not None:
             parent_node.children[child_node.path]=child_node

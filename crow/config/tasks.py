@@ -487,6 +487,9 @@ class Suite(SuiteView):
     def apply_overrides(self):
         if 'Overrides' not in self or self.Overrides is None:
             _logger.info(f'{self.viewed._path}: no overrides requested.')
+            # We still have to expand TaskArrays
+            for task in self.walk_task_tree(depth=True): pass
+            self._invalidate_non_dependables_in_tree()
             return # no rules to apply
         if not 'rules' in self.Overrides or not 'allowed' in self.Overrides:
             raise ValueError(f'''{self.viewed.Overrides._path}: suite.Overrides must contain "allowed" and "rules"''')
@@ -494,7 +497,10 @@ class Suite(SuiteView):
             raise ValueError(f'''{self.viewed.Overrides._path}: suite.Overrides.allowed must not be empty''')
         if not self.Overrides.rules:
             _logger.info(f'{self.viewed._path}: override rules are empty; no overrides requested')
-
+            # We still have to expand TaskArrays
+            for task in self.walk_task_tree(depth=True): pass
+            self._invalidate_non_dependables_in_tree()
+            return
         _logger.info(f'{self.viewed._path}: apply overrides to suite')
         #_logger.debug(f'{self.viewed._path}: override rules: {self.Overrides.rules}')
 
@@ -547,16 +553,30 @@ class Suite(SuiteView):
             if not matches[i]:
                 _logger.warning(f'{self.viewed._path}: no match to override {replace_me[i][3]}')
 
+MESSAGE_CACHE=dict()
+
 class Message(str):
     def _as_dependency(self,globals,locals,path):
         try:
+            if self in MESSAGE_CACHE:
+                obj=MESSAGE_CACHE[self]
+            else:
+                obj=compile(self,'!message','eval')
+                MESSAGE_CACHE[self]=obj
             return eval(self,globals,locals)
         except(ValueError,SyntaxError,TypeError,KeyError,NameError,IndexError,AttributeError) as ke:
             raise DependError(f'!Message {self}: {ke}')
 
+DEPEND_CACHE=dict()
+
 class Depend(str):
     def _as_dependency(self,globals,locals,path):
         try:
+            if self in DEPEND_CACHE:
+                obj=DEPEND_CACHE[self]
+            else:
+                obj=compile(self,'!Depend','eval')
+                DEPEND_CACHE[self]=obj
             result=eval(self,globals,locals)
             result=as_dependency(result,path)
             return result

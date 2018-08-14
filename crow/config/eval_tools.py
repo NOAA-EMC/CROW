@@ -49,6 +49,10 @@ class user_error_message(str):
         raise ConfigUserError(eval("f'''"+self+"'''",c,locals))
     def _is_error(self): pass
 
+CALC_CACHE=dict()
+REF_CACHE=dict()
+EXPAND_CACHE=dict()
+
 class expand(str):
     """!Represents a literal format string."""
     def _result(self,globals,locals):
@@ -62,7 +66,12 @@ class expand(str):
             cmd=cmd[:-1] + "\\" + cmd[-1]
         c=copy(globals)
         c['this']=locals
-        return eval("f'''"+cmd+"'''",c,locals)
+        if cmd in EXPAND_CACHE:
+            obj=EXPAND_CACHE[cmd]
+        else:
+            obj=compile("f'''"+cmd+"'''",'!expand','eval')
+            EXPAND_CACHE[cmd]=obj
+        return eval(obj,c,locals)
 
 #f''''blah bla'h \''''
 
@@ -74,7 +83,12 @@ class strcalc(str):
     def _result(self,globals,locals):
         c=copy(globals)
         c['this']=locals
-        return eval(self,c,locals)
+        if self in CALC_CACHE:
+            obj=CALC_CACHE[self]
+        else:
+            obj=compile(self.lstrip(),'!calc','eval')
+            CALC_CACHE[self]=obj
+        return eval(obj,c,locals)
 
 class strref(str):
     """Represents a reference to a variable within some scope (ie. abc.def[32].ghi)"""
@@ -90,7 +104,12 @@ class strref(str):
         if not scope_expr: raise ValueError(f'{self!r}: begins with "."')
         c=copy(globals)
         c['this']=locals
-        scope=eval(scope_expr,c,locals)
+        if scope_expr in REF_CACHE:
+            obj=REF_CACHE[scope_expr]
+        else:
+            obj=compile(scope_expr.lstrip(),'!ref','eval')
+            REF_CACHE[scope_expr]=obj
+        scope=eval(obj,c,locals)
         return scope._raw(key) if hasattr(scope,'_raw') else scope[key]
 
 def from_config(key,val,globals,locals,path):
@@ -218,7 +237,7 @@ class dict_eval(MutableMapping):
         self._is_validated=False
         if key is None:
             #print(f'{self._path}: reset')
-            self.__cache=copy(self.__child)
+            self.__cache=dict(self.__child)
             #if 'ecflow_def' in self:
             #    print(f'ecflow_def = {self.__cache["ecflow_def"]!r}')
         else:
