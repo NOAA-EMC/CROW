@@ -18,10 +18,22 @@ MAXIMUM_THREADS=sys.maxsize
 ########################################################################
 
 class JobRankSpec(Mapping):
+    OPTIONAL_ATTRIBUTES=[
+        'walltime', 'memory', 'outer', 'stdout', 'stderr', 'jobname',
+        'batch_memory', 'compute_memory', 'lsf_affinity' ]
+
     def __init__(self,OMP_NUM_THREADS=0,mpi_ranks=0,
                  exe=MISSING,args=MISSING,exclusive=True,
                  separate_node=False,hyperthreads=1,max_ppn=MISSING,
-                 **kwargs):
+                 memory_per_rank=MISSING,**kwargs):
+        if OMP_NUM_THREADS is None: OMP_NUM_THREADS=0
+        if mpi_ranks is None:       mpi_ranks=0
+        if args is None:            args=MISSING
+        if exclusive is None:       exclusive=True
+        if hyperthreads is None:    hyperthreads=1
+        if max_ppn is None:         max_ppn=MISSING
+        if memory_per_rank is None or memory_per_rank is MISSING:
+            memory_per_rank=0
         if OMP_NUM_THREADS == 'max':
             OMP_NUM_THREADS=MAXIMUM_THREADS
         self.__spec={
@@ -30,6 +42,7 @@ class JobRankSpec(Mapping):
             'separate_node':separate_node,
             'hyperthreads':int(hyperthreads),
             'OMP_NUM_THREADS':max(0,int(OMP_NUM_THREADS)),
+            'memory_per_rank':max(1,float(memory_per_rank)),
             'exe':( None if exe is MISSING else exe ),
             'args':( [] if args is MISSING else list(args) ) }
 
@@ -37,9 +50,11 @@ class JobRankSpec(Mapping):
             self.__spec['max_ppn']=int(max_ppn)
 
         for key,value in kwargs.items():
-            if not key.endswith('_extra'):
+            if not key in JobRankSpec.OPTIONAL_ATTRIBUTES \
+                    and not key.endswith('_extra'):
                 raise TypeError(f'Unknown argument {key}')
             self.__spec[key]=value
+
         if not isinstance(exe,str) and exe is not MISSING and \
            exe is not None:
             raise TypeError('exe must be a string, not a %s'%(
@@ -72,6 +87,9 @@ class JobRankSpec(Mapping):
         newspec=dict(self.__spec)
         newspec.update(*args,**kwargs)
         return JobRankSpec(**newspec)
+
+    # Nicities
+    def __getattr__(self,key):    return self[key]
 
     # Implement Mapping abstract methods:
     def __getitem__(self,key):    return self.__spec[key]

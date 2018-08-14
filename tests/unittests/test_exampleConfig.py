@@ -82,10 +82,10 @@ class TestExampleConfig(unittest.TestCase):
     def test_inline_namelist(self):
         namelist_for_test = self.config.fcst.some_namelist
         cmpline=["&some_namelist", "  int_array = 1, 2, 3, 4, 5", 
-                 "  bool_array = .True., .False., .True.", 
+                 "  bool_array = .true., .false., .true.", 
                  "  string_array = 'a', 'b', 'c', 'd', 'e'", 
                  "  type = 'hydro'", "  mono = 'mono'", 
-                 "  shal_cnv = .True.", "  agrid_vel_rst= .True.", 
+                 "  shal_cnv = .true.", "  agrid_vel_rst= .true.", 
                  "/", ""]
         for lnum, line in enumerate(namelist_for_test.split('\n')):
             #print("\nline   XXX"+line+"XXX")
@@ -101,10 +101,10 @@ class TestExampleConfig(unittest.TestCase):
         namelist2_for_test = crow.config.expand_text(namelist_nl,self.config.fcst)
 
         cmpline=["&some_namelist", "  int_array = 1, 2, 3, 4, 5", 
-                 "  bool_array = .True., .False., .True.", 
+                 "  bool_array = .true., .false., .true.", 
                  "  string_array = 'a', 'b', 'c', 'd', 'e'", 
                  "  type = 'hydro'", "  mono = 'mono'", 
-                 "  shal_cnv = .True.", "  agrid_vel_rst= .True.", 
+                 "  shal_cnv = .true.", "  agrid_vel_rst= .true.", 
                  "/", ""]
         for lnum, line in enumerate(namelist2_for_test.split('\n')):
             #print("\nline   XXX"+line+"XXX")

@@ -1,6 +1,7 @@
-import itertools
+import itertools, math
 from io import StringIO
 
+import crow.tools as tools
 from crow.sysenv.exceptions import *
 from crow.sysenv.util import ranks_to_nodes_ppn
 from crow.sysenv.jobs import JobResourceSpec
@@ -14,58 +15,205 @@ __all__=['Scheduler']
 
 class Scheduler(BaseScheduler):
 
-    def __init__(self,settings):
+    def __init__(self,settings,**kwargs):
         self.settings=dict(settings)
+        self.settings.update(kwargs)
         self.nodes=GenericNodeSpec(settings)
-        self.rocoto_name='lsf'
+        self.rocoto_name='lsfcray'
         self.indent_text=str(settings.get('indent_text','  '))
+
+    def max_ranks_per_node(self,spec):
+        return max([ self.nodes.max_ranks_per_node(j) for j in spec ])
 
     ####################################################################
 
-    # Public methods
+    # Generation of batch cards
 
-    def rocoto_accounting(self,spec,indent=0):
+    def batch_accounting(self,*args,**kwargs):
+        spec=tools.make_dict_from(args,kwargs)
         space=self.indent_text
         sio=StringIO()
         if 'queue' in spec:
-            sio.write(f'{indent*space}<queue>{spec.queue!s}</queue>\n')
-        if 'account' in spec:
-            sio.write(f'{indent*space}<account>{spec.account!s}</account>\n')
+            sio.write(f'#BSUB -q {spec["queue"]!s}\n')
         if 'project' in spec:
-            sio.write(f'{indent*space}<account>{spec.project!s}</account>\n')
-        if 'partition' in spec:
-            sio.write(f'{indent*space}<native>-l partition='
-                      f'{spec.partition!s}</native>\n')
+            sio.write(f'#BSUB -P {spec["project"]!s}\n')
         if 'account' in spec:
-            sio.write(f'{indent*space}<account>{spec.account!s}</account>\n')
+            sio.write(f'#BSUB -P {spec["account"]!s}\n')
+        if 'jobname' in spec:
+            sio.write(f'#BSUB -J {spec["jobname"]!s}\n')
+        if 'outerr' in spec:
+            sio.write(f'#BSUB -o {spec["outerr"]}\n')
+        else:
+            if 'stdout' in spec:
+                sio.write('#BSUB -o {spec["stdout"]}\n')
+            if 'stderr' in spec:
+                sio.write('#BSUB -e {spec["stderr"]}\n')
+        ret=sio.getvalue()
+        sio.close()
+        return ret
+
+    def batch_resources(self,spec,**kwargs):
+        if kwargs:
+            spec=dict(spec,**kwargs)
+        space=self.indent_text
+        sio=StringIO()
+        if not isinstance(spec,JobResourceSpec):
+            spec=JobResourceSpec(spec)
+
+        result=''
+        if spec[0].get('walltime',''):
+            dt=tools.to_timedelta(spec[0]['walltime'])
+            dt=dt.total_seconds()
+            hours=int(dt//3600)
+            minutes=int((dt%3600)//60)
+            seconds=int(math.floor(dt%60))
+            sio.write(f'#BSUB -W {hours}:{minutes:02d}\n')
+
+        # Handle memory.
+        if spec[0].is_exclusive() and spec[0].get('batch_memory',''):
+            bytes=tools.memory_in_bytes(spec[0]['batch_memory'])
+        elif not spec[0].is_exclusive() and spec[0].get('compute_memory',''):
+            bytes=tools.memory_in_bytes(spec[0]['compute_memory'])
+        elif spec[0].get('memory',''):
+            bytes=tools.memory_in_bytes(spec[0]['memory'])
+        else:
+            bytes=2000*1048576.
+
+        megabytes=int(math.ceil(bytes/1048576.))
+
+        sio.write(f'#BSUB -R rusage[mem={megabytes:d}]\n')
+
+        if spec[0].get('outerr',''):
+            sio.write(f'#BSUB -o {spec[0]["outerr"]}\n')
+        else:
+            if spec[0].get('stdout',''):
+                sio.write('#BSUB -o {spec[0]["stdout"]}\n')
+            if spec[0].get('stderr',''):
+                sio.write('#BSUB -e {spec[0]["stderr"]}\n')
+        # --------------------------------------------------------------
+
+        # With LSF+ALPS on WCOSS Cray, to my knowledge, you can only
+        # request one node size for all ranks.  This code calculates
+        # the largest node size required (hyperthreading vs. non)
+
+        requested_nodes=1
+
+        nodesize=max([ self.nodes.node_size(r) for r in spec ])
+
+        if spec[0].is_exclusive() is False:
+            # Shared program.  This requires a different batch card syntax            
+            nranks=max(1,spec.total_ranks())
+            sio.write(f'#BSUB -n {nranks}\n')
+        else:
+            if not spec.is_pure_serial() and not spec.is_pure_openmp():
+                # This is an MPI program.
+                nodes_ranks=self.nodes.to_nodes_ppn(spec)
+                requested_nodes=sum([ n for n,p in nodes_ranks ])
+            sio.write('#BSUB -extsched CRAYLINUX[]\n')
+            if self.settings.get('use_export_nodes',True):
+                sio.write(f'export NODES={requested_nodes}')
+            else:
+                sio.write("#BSUB -R '1*{select[craylinux && !vnode]} + ")
+                sio.write('%d'%requested_nodes)
+                sio.write("*{select[craylinux && vnode]span[")
+                sio.write(f"ptile={nodesize}] cu[type=cabinet]}}'")
+        
+        ret=sio.getvalue()
+        sio.close()
+        return ret
+
+    ####################################################################
+
+    # Generation of Rocoto XML
+
+    def rocoto_accounting(self,*args,indent=0,**kwargs):
+        spec=tools.make_dict_from(args,kwargs)
+        space=self.indent_text
+        sio=StringIO()
+        if 'queue' in spec:
+            sio.write(f'{indent*space}<queue>{spec["queue"]!s}</queue>\n')
+        if 'account' in spec:
+            sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
+        if 'project' in spec:
+            sio.write(f'{indent*space}<account>{spec["project"]!s}</account>\n')
+        if 'account' in spec:
+            sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
+        if 'jobname' in spec:
+            sio.write(f'{indent*space}<jobname>{spec["jobname"]!s}</jobname>\n')
+        if 'outerr' in spec:
+            sio.write(f'{indent*space}<join>{spec["outerr"]}</join>\n')
+        else:
+            if 'stdout' in spec:
+                sio.write('{indent*space}<stdout>{spec["stdout"]}</stdout>\n')
+            if 'stderr' in spec:
+                sio.write('{indent*space}<stderr>{spec["stderr"]}</stderr>\n')
         ret=sio.getvalue()
         sio.close()
         return ret
 
     def rocoto_resources(self,spec,indent=0):
+        sio=StringIO()
         space=self.indent_text
         if not isinstance(spec,JobResourceSpec):
             spec=JobResourceSpec(spec)
 
-        if spec.is_pure_serial():
-            if spec[0].is_exclusive() in [True,None]:
-                return indent*space+'<nodes>1:ppn=2</nodes>\n'
-            else:
-                return indent*space+'<cores>1</cores>\n'
-        elif spec.is_pure_openmp():
-            # Pure threaded.  Treat as exclusive serial.
-            return indent*space+'<nodes>1:ppn=2</nodes>\n'
+        if spec[0].get('walltime',''):
+            dt=tools.to_timedelta(spec[0]['walltime'])
+            dt=dt.total_seconds()
+            hours=int(dt//3600)
+            minutes=int((dt%3600)//60)
+            seconds=int(math.floor(dt%60))
+            sio.write(f'{indent*space}<walltime>{hours}:{minutes:02d}:{seconds:02d}</walltime>\n')
+       
 
-        # This is an MPI program.
+        # Handle memory.
+        if spec[0].is_exclusive() and spec[0].get('batch_memory',''):
+            bytes=tools.memory_in_bytes(spec[0]['batch_memory'])
+        elif not spec[0].is_exclusive() and spec[0].get('compute_memory',''):
+            bytes=tools.memory_in_bytes(spec[0]['compute_memory'])
+        elif spec[0].get('memory',''):
+            bytes=tools.memory_in_bytes(spec[0]['memory'])
+        else:
+            bytes=2000*1048576.
 
-        # Split into (nodes,ranks_per_node) pairs.  Ignore differeing
-        # executables between ranks while merging them (del_exe):
-        nodes_ranks=self.nodes.to_nodes_ppn(
-            spec,can_merge_ranks=self.nodes.same_except_exe)
+        megabytes=int(math.ceil(bytes/1048576.))
 
-        return indent*space+'<nodes>' \
-            + '+'.join([f'{n}:ppn={p}' for n,p in nodes_ranks ]) \
-            + '</nodes>\n'
+        sio.write(f'{indent*space}<memory>{megabytes:d}M</memory>\n')
+
+        if 'outerr' in spec:
+            sio.write(f'{indent*space}<join>{spec["outerr"]}</join>\n')
+        else:
+            if 'stdout' in spec:
+                sio.write('{indent*space}<stdout>{spec["stdout"]}</stdout>\n')
+            if 'stderr' in spec:
+                sio.write('{indent*space}<stderr>{spec["stderr"]}</stderr>\n')
+
+
+        nodesize=max([ self.nodes.node_size(r) for r in spec ])
+        requested_nodes=1
+
+        if spec[0].is_exclusive() is False:
+            # Shared program.  This requires a different batch card syntax            
+            nranks=max(1,spec.total_ranks())
+            sio.write(f'{indent*space}<cores>{max(1,spec.total_ranks())}</cores>\n'
+                      f'{indent*space}<shared></shared>\n')
+        else:
+            if not spec.is_pure_serial() and not spec.is_pure_openmp():
+                # This is an MPI program.
+                nodes_ranks=self.nodes.to_nodes_ppn(spec)
+                requested_nodes=sum([ n for n,p in nodes_ranks ])
+
+            nodes_ranks=self.nodes.to_nodes_ppn(
+                spec,can_merge_ranks=lambda x,y: False)
+            
+            sio.write(indent*space+'<nodes>' \
+                + '+'.join([f'{max(n,1)}:ppn={max(p,1)}' for n,p in nodes_ranks ]) \
+                + '</nodes>\n')
+
+            #sio.write(f'{indent*space}<nodes>{requested_nodes}:ppn={nodesize}</nodes>')
+        ret=sio.getvalue()
+        sio.close()
+        return ret
 
 def test():
     settings={ 'physical_cores_per_node':24,

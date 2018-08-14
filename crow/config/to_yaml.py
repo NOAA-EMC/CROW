@@ -43,6 +43,8 @@ add_yaml_list_eval(u'!FirstTrue',FirstTrue)
 add_yaml_list_eval(u'!Immediate',Immediate)
 add_yaml_list_eval(u'!JobRequest',JobResourceSpecMaker)
 add_yaml_list_eval(u'!Inherit',Inherit)
+add_yaml_list_eval(u'!MergeMapping',MergeMapping)
+add_yaml_list_eval(u'!AppendSequence',AppendSequence)
 add_yaml_list_eval(None,GenericList)
 
 ########################################################################
@@ -67,6 +69,7 @@ def add_yaml_dict_eval(key,cls):
 
 add_yaml_dict_eval(None,GenericDict)
 add_yaml_dict_eval(u'!Platform',Platform)
+add_yaml_dict_eval(u'!Select',Select)
 add_yaml_dict_eval(u'!Action',Action)
 add_yaml_dict_eval(u'!Eval',Eval)
 add_yaml_dict_eval(u'!InputSlot',InputSlot)
@@ -115,8 +118,14 @@ def add_yaml_taskable(key,cls):
         return rep
     yaml.add_representer(cls,representer)
 
+add_yaml_taskable(u'!DataEvent',DataEvent)
+add_yaml_taskable(u'!ShellEvent',ShellEvent)
 add_yaml_taskable(u'!Task',Task)
 add_yaml_taskable(u'!Family',Family)
+add_yaml_taskable(u'!TaskArray',TaskArray)
+add_yaml_taskable(u'!TaskElement',TaskElement)
+add_yaml_taskable(u'!ShellEventElement',ShellEventElement)
+add_yaml_taskable(u'!DataEventElement',DataEventElement)
 add_yaml_taskable(u'!Cycle',Cycle)
 add_yaml_taskable(u'!Template',Template)
 
