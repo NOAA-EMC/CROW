@@ -599,6 +599,8 @@ def as_dependency(obj,path=MISSING,state=COMPLETED):
         return obj
     elif obj is None:
         return None
+    elif isinstance(obj,int) or isinstance(obj,bool):
+        return TRUE_DEPENDENCY if obj else FALSE_DEPENDENCY
     raise TypeError(
         f'{type(obj).__name__} is not a valid type for a dependency')
 
