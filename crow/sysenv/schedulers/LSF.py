@@ -74,7 +74,7 @@ class Scheduler(BaseScheduler):
             ppn=self.nodes.max_ranks_per_node(ranks)
             mpi_ranks=max(1,int(ranks.get('mpi_ranks',1)))
             num_nodes=int(math.ceil(mpi_ranks/float(ppn)))
-            span=f'ptile={ppn}'
+            span=f'ptile={min(mpi_ranks,ppn)}'
 
             if 'lsf_affinity' in ranks:
                 affinity=ranks['lsf_affinity']
@@ -208,7 +208,7 @@ class Scheduler(BaseScheduler):
             if rusage:
                 sio.write(f"""#BSUB -R '{rusage}'\n""")
             sio.write(f"""#BSUB -R 'affinity[{affinity}]'\n""")
-            sio.write(f"""#BSUB -R 'span[{max_ppn}]'\n""")
+            sio.write(f"""#BSUB -R 'span[{min(spec.total_ranks(),max_ppn)}]'\n""")
             sio.write(f"""#BSUB -n {spec.total_ranks()}\n""")
             
         else:
