@@ -37,6 +37,7 @@ import time as std_time
 from datetime import datetime, timedelta
 import uuid
 import shutil
+import re
 
 import sqlite3,datetime,collections
 import xml.etree.ElementTree as ET
@@ -848,13 +849,14 @@ def get_tasklist(workflow_file):
     base_delemiter = '_'
     first_found = True
     for dotasks in tasks_ordered:
-        if  dotasks[0][:9] == 'final_for':
-            continue
         dotask_check = dotasks[0]
-        if "archive.jgdas_enkf_archive" in dotask_check:
-            base_delemiter = '.'
+        if  dotask_check[:9] == 'final_for':
+            continue
+        base_delemiter = re.search(r'\_|\.', dotask_check[::-1])
+        if base_delemiter is not None:
+            base_delemiter = base_delemiter.group()
         else:
-            base_delemiter = '_'
+            continue
         dotask_check_base = dotasks[0].rsplit(base_delemiter,1)[0]
         if dotask_check_base == dotask_check_justlast_base:
             if first_found:
@@ -868,10 +870,7 @@ def get_tasklist(workflow_file):
        
         if not len(dotask_list) == 0 and first_found == True:
             new_metatask = []
-            if "archive.jgdas_enkf_archive" in dotask_list[0]:
-                base_delemiter = '.'
-            else:
-                base_delemiter = '_'
+            base_delemiter = re.search(r'\_|\.', dotask_list[0][::-1]).group()
             new_metatask.append(  dotask_list[0].rsplit(base_delemiter,1)[0] )
             for dotask_get in dotask_list:
                 new_metatask.append(  dotask_get )
@@ -1171,7 +1170,7 @@ def main(screen):
     from produtil.fileop import check_file, makedirs, deliver_file, remove_file, make_symlinks_in
     from produtil.prog import shbackslash
 
-    header_string       = ' '*11+'CYCLE'+' '*17+'TASK'+' '*39+'JOBID'+' '*6+'STATE'+' '*9+'EXIT'+' '*2+'TRIES'+' '*2+'DURATION'
+    header_string       = ' '*18+'CYCLE'+' '*17+'TASK'+' '*39+'JOBID'+' '*6+'STATE'+' '*9+'EXIT'+' '*2+'TRIES'+' '*2+'DURATION'
     header_string_under = '=== (updated:tttttttttttttttt) =================== PSLOT: pslot '+'='*44
 
     global use_performance_metrics
