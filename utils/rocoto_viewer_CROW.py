@@ -39,6 +39,7 @@ import uuid
 import shutil
 import re
 
+#from subprocess import run
 import sqlite3,datetime,collections
 import xml.etree.ElementTree as ET
 import cPickle
@@ -53,7 +54,7 @@ except ImportError:
 # Global Variables
 database_file_agmented = None
 use_performance_metrics = False
-default_column_length_master = 120
+default_column_length_master = 125
 stat_read_time_delay = 3*60
 header_string = ''
 format_string = "jobid slots submit_time start_time cpu_used run_time delimiter=';'"
@@ -98,11 +99,45 @@ save_checkfile_path = None
 use_multiprocessing = True
 get_user = getpass.getuser()
 
+rocotoboot = None
+rocotorun = None
+rocotocheck = None
+rocotocomplete = None
+rocotostat = None
+rocotorewind = None
+
 screen_resized = False
 debug = None
 
 mlines = 0
 mcols = 0
+
+def get_rocoto_commands():
+    global rocotoboot 
+    global rocotorun 
+    global rocotocheck 
+    global rocotocomplete 
+    global rocotostat 
+    global rocotorewind 
+    from produtil.run import run,runstr, batchexe
+    cmd_run = batchexe('which') ['rocotorun']
+    cmd_boot = batchexe('which') ['rocotoboot']
+    cmd_check = batchexe('which') ['rocotocheck']
+    cmd_complete = batchexe('which') ['rocotocomplete']
+    cmd_rewind = batchexe('which') ['rocotorewind']
+    cmd_stat= batchexe('which') ['rocotostat']
+    try:
+        rocoto_installed = False
+        rocotorun = runstr(cmd_run).strip()
+        rocotostat = runstr(cmd_stat).strip()
+        rocotoboot = runstr(cmd_boot).strip()
+        rocotorewind = runstr(cmd_rewind).strip()
+        rocotocheck = runstr(cmd_check).strip()
+        rocoto_installed = True
+        rocotocomplete = runstr(cmd_complete).strip()
+    except Exception:
+        pass
+    return rocoto_installed
 
 def sigwinch_handler(signum, frame):
     global screen_resized
@@ -119,7 +154,7 @@ def sigwinch_handler(signum, frame):
 def usage(message=None):
     curses.endwin()
     print>>sys.stderr, '''
-Usage: rocoto_status_viewer.py  -w workflow.xml -d database.db [--listtasks]\n                                                               [--html=filename.html]\n                                                               [--perfmetrics={True,False}]
+Usage: rocoto_status_viewer.py  -w workflow.xml -d database.db [--listtasks] [--html=filename.html]
 
 Mandatory arguments:
   -w workflow.xml
@@ -127,8 +162,9 @@ Mandatory arguments:
 Optional arguments:
   --listtasks             --- print out a list of all tasks
   --html=filename.html    --- creates an HTML document of status
-  --perfmetrics=True      --- turn on/off extra columns for performance metrics 
   --help                  --- print this usage message'''
+#  --perfmetrics=True      --- turn on/off extra columns for performance metrics 
+#                         [--perfmetrics={True,False}]
 
     if message is not None:
         print>>sys.stderr,'\n'+str(message).rstrip()+'\n'
@@ -230,8 +266,8 @@ def get_arguments():
             database_file = v
         elif k in ('-f','--checkfile'):
             save_checkfile_path = v
-        elif k in ('--perfmetrics'):
-            perfmetrics_on = v
+        #elif k in ('--perfmetrics'):
+        #    perfmetrics_on = v
         elif k in ('--listtasks'):
             global list_tasks
             list_tasks = True
@@ -253,8 +289,8 @@ def get_arguments():
 
     if perfmetrics_on is None:
         use_performance_metrics = False
-    elif perfmetrics_on.lower() == 'true':
-        use_performance_metrics = True
+#    elif perfmetrics_on.lower() == 'true':
+#        use_performance_metrics = True
     elif perfmetrics_on.lower() == 'false':
         use_performance_metrics = False
     elif perfmetrics_on is not None:
@@ -660,7 +696,7 @@ def list_selector( screen, selected_strings, strings ):
 def get_rocoto_check(params, queue_check):
     from produtil.run import run,runstr, batchexe, exe
     workflow_file, database_file, task, cycle, process = params
-    cmd=batchexe('rocotocheck')['-v',10,'-w',workflow_file,'-d',database_file,'-c',cycle,'-t',task]
+    cmd=batchexe(rocotocheck)['-v',10,'-w',workflow_file,'-d',database_file,'-c',cycle,'-t',task]
     check=runstr(cmd)
     if check is None:
         curses.endwin()
@@ -671,15 +707,11 @@ def get_rocoto_check(params, queue_check):
 def rocoto_boot(params):
     from produtil.run import run,runstr, batchexe, exe
     workflow_file, database_file, cycle, metatask_list, task_list = params
-    run( exe('yes') | exe('head')['-1']  > '.yes.txt')
-    if len(task_list) == 0 and len(metatask_list) != 0:
-        cmd=batchexe('rocotoboot')['--workflow', workflow_file,'--database',database_file,'--cycles',cycle,'--metatasks', metatask_list] < '.yes.txt'
-    elif len(task_list) != 0 and len(metatask_list) == 0:
-        cmd=batchexe('rocotoboot')['--workflow', workflow_file,'--database',database_file,'--cycles',cycle,'--tasks', task_list ] < '.yes.txt'
-    elif len(task_list) != 0 and len(metatask_list) != 0:
-        cmd=batchexe('rocotoboot')['--workflow', workflow_file,'--database',database_file,'--cycles',cycle,'--tasks', task_list, '--metatasks', metatask_list ] < '.yes.txt'
+    if len(task_list) != 0:
+        run( exe('yes') | exe('head')['-1']  > '.yes.txt')
+        cmd=batchexe(rocotoboot)['--workflow', workflow_file,'--database',database_file,'--cycles',cycle,'--tasks', task_list ] < '.yes.txt'
     else:
-        return 'Warning: No metatasks or tasks where selected when rocotboot was called'
+        cmd=batchexe(rocotoboot)['--workflow', workflow_file,'--database',database_file,'--cycles',cycle,'--tasks', task_list ]
     stat=runstr(cmd)
     if stat is None:
         display_results( 'rcotoboot falied!!','')
@@ -688,7 +720,7 @@ def rocoto_boot(params):
 def rocoto_rewind(params):
     from produtil.run import run,runstr, batchexe
     workflow_file, database_file, cycle, process = params
-    cmd=batchexe('rocotorewind')['-w',workflow_file,'-d',database_file,'-c',cycle,process]
+    cmd=batchexe(rocotorewind)['-w',workflow_file,'-d',database_file,'-c',cycle,process]
     stat=runstr(cmd)
     if stat is None:
         display_results('rcotorewind falied!!','')
@@ -697,7 +729,7 @@ def rocoto_rewind(params):
 def rocoto_run(params):
     from produtil.run import run,runstr, batchexe
     workflow_file, database_file = params
-    cmd=batchexe('rocotorun')['-w',workflow_file,'-d',database_file]
+    cmd=batchexe(rocotorun)['-w',workflow_file,'-d',database_file]
     stat=runstr(cmd )
     stat = ''
     if stat is None:
@@ -1166,7 +1198,7 @@ def main(screen):
         use_multiprocessing = False
 
     import produtil.run, produtil.numerics
-    from produtil.run import run,runstr, batchexe
+    from produtil.run import batchexe
     from produtil.fileop import check_file, makedirs, deliver_file, remove_file, make_symlinks_in
     from produtil.prog import shbackslash
 
@@ -1253,14 +1285,6 @@ def main(screen):
         highlightText = curses.A_STANDOUT
         highlightSelectedText = curses.color_pair(5)
         normalText = curses.A_NORMAL
-
-        cmd = batchexe('which') ['rocotorun']
-        try:
-            which_rocoto = runstr(cmd).strip()
-        except Exception,e:
-            curses.endwin()
-            print '\n\nCRITICAL ERROR: rocotorun is not in your path, user "module load rocoto"'
-            sys.exit(0)
 
     os.environ['TZ']='UTC'
     std_time.tzset()
@@ -2215,30 +2239,17 @@ def main(screen):
                 boot_metatask_list = '' ; metatasks_to_boot = []
                 if highlight_CYCLE:
                     screen.addstr('You have selected to boot the entire cycle %s:\n\n'%execute_cycle,curses.A_BOLD)
-                    metatasks_to_boot = metatask_list_per_cycle[cycle] 
                     tasks_to_boot = tasks_in_cycle[cycle]
-                elif len(selected_tasks[execute_cycle]) != 0 or len(selected_meta_tasks[execute_cycle]) != 0:
-                    screen.addstr('You have a list selected tasks and/or metatasks to boot:\n\n',curses.A_BOLD)
-                    metatasks_to_boot = selected_tasks[execute_cycle]
+                elif len(selected_tasks[execute_cycle]) != 0:
+                    screen.addstr('You have a list selected tasks boot:\n\n',curses.A_BOLD)
                     tasks_to_boot = selected_tasks[execute_cycle]
-                elif execute_metatask_check:
-                    screen.addstr('Are you sure you want boot the entire meta task %s by running:\n\n'%execute_metatask)
-                    metatasks_to_boot.append(execute_metatask)
-                elif len(selected_tasks[execute_cycle]) == 0:
-                    tasks_to_boot.append(execute_task)
-                    screen.addstr('Are you sure you want boot the task %s by running rocotoboot with:'%execute_task)
+                elif len( selected_meta_tasks[execute_cycle] ) != 0:
+                    screen.addstr('Are you sure you want boot the metatask %s by running rocotoboot with:'%selected_meta_tasks[execute_cycle][0])
+                    execute_task =  selected_meta_tasks[execute_cycle]
                 else:
-                    update_pad = True
-                    continue
+                    screen.addstr('Are you sure you want boot the task %s by running rocotoboot with:'%execute_task)
+                    tasks_to_boot.append( execute_task)
 
-                if len(metatasks_to_boot) > 0:
-                    list_meta_tasks = '   '
-                    screen.addstr('Metatasks selected in cycle:\n\n',curses.A_BOLD)
-                    for meta_task in metatasks_to_boot:
-                        list_meta_tasks += meta_task+' '
-                        boot_metatask_list += meta_task+','
-                    boot_metatask_list = boot_metatask_list[:-1]
-                    screen.addstr( list_meta_tasks )
                 if len(tasks_to_boot) > 0:
                     list_of_tasks = '   '
                     screen.addstr('\n\nTasks selected in cycle:\n\n',curses.A_BOLD)
@@ -2249,11 +2260,9 @@ def main(screen):
                     screen.addstr( list_of_tasks )
 
                 screen.addstr('\n\nAre you sure you want to boot all the tasks and/or metatasks in the cycle %s by running:\n\n'%execute_cycle,curses.A_BOLD)
-                if len(boot_metatask_list) != 0:
-                    list_meta_tasks = '--metatasks '+"'"+boot_metatask_list+"'"
                 if len(boot_task_list) != 0:
                     list_of_tasks = ' --tasks '+"'"+boot_task_list+"'"
-                screen.addstr('rocotoboot -d %s -w %s %s\n\n'%(basename(database_file),basename(workflow_file),list_meta_tasks+list_of_tasks))
+                screen.addstr(rocotoboot + ' -c %s -d %s -w %s %s\n\n'%(execute_cycle,basename(database_file),basename(workflow_file),list_meta_tasks+list_of_tasks))
                 screen.addstr('Enter: <Y>es or <N>o',curses.A_BOLD)
 
                 while True:
@@ -2387,6 +2396,9 @@ def main(screen):
 if __name__ == '__main__':
     if not load_produtil_pythonpath():
         print '\n\nCRITICAL ERROR: The produtil package could not be loaded from your system'
+        sys.exit(-1)
+    if not get_rocoto_commands():
+        print '\n\nCRITICAL ERROR: Rocoto run-time environemnt not installed'
         sys.exit(-1)
     try:
         signal.signal(signal.SIGWINCH, sigwinch_handler)
