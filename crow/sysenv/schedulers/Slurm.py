@@ -18,7 +18,7 @@ class Scheduler(BaseScheduler):
         self.settings=dict(settings)
         self.settings.update(kwargs)
         self.nodes=GenericNodeSpec(settings)
-        self.rocoto_name='MoabTorque'
+        self.rocoto_name='Slurm'
         self.indent_text=str(settings.get('indent_text','  '))
 
     def max_ranks_per_node(self,spec):

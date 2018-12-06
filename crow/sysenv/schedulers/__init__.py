@@ -4,13 +4,15 @@ from crow.sysenv.schedulers.MoabAlps import Scheduler as MoabAlpsScheduler
 from crow.sysenv.schedulers.MoabAlpsSh import Scheduler as MoabAlpsShScheduler
 from crow.sysenv.schedulers.LSFAlps import Scheduler as LSFAlpsScheduler
 from crow.sysenv.schedulers.LSF import Scheduler as LSFScheduler
+from crow.sysenv.schedulers.Slurm import Scheduler as SlurmScheduler
 
 KNOWN_SCHEDULERS={
     'MoabTorque': MoabTorqueScheduler,
     'MoabAlps': MoabAlpsScheduler,
     'MoabAlpsSh': MoabAlpsShScheduler,
     'LSFAlps': LSFAlpsScheduler,
-    'LSF': LSFScheduler
+    'LSF': LSFScheduler,
+    'Slurm': SlurmScheduler
     }
 
 def get_scheduler(name,settings):
