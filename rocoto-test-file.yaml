@@ -1,6 +1,6 @@
 
 wcoss_cray: &wcoss_cray !Platform
-  machine: THEIA
+  machine: WCOSS
   ACCOUNT: fv3-cpu
   QUEUE: batch
   QUEUE_ARCH: service
