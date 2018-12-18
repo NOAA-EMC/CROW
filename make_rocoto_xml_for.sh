@@ -14,7 +14,7 @@ here=$( cd "$dir0" ; pwd -P )
 
 export WORKTOOLS_VERBOSE=NO
 
-crowdir=$( cd CROW ; pwd -P )
+crowdir=$( pwd -P )
 
 # Make sure this directory is in the python path so we find worktools.py:
 export PYTHONPATH=$here:$crowdir:${PYTHONPATH:+:$PYTHONPATH}
@@ -31,9 +31,10 @@ export EXPDIR="$1"
 if [[ ! ( -d /scratch4 && -d /scratch3 || \
           -d /usrx/local && ! -e /etc/redhat-release || \
           -d /lfs3 || \
-          -d /lustre/f1 ) \
+          -d /lustre/f1 || \
+          -d /gpfs/dell2 ) \
     ]] ; then
-   echo "ERROR: This script only runs on Jet and Theia" 1>&2
+   echo "ERROR: This script only runs on supported platforms: WCOSS and RDHPCS Theia/Jet/Gaea" 1>&2
    exit 1
 fi
 
