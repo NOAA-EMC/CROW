@@ -1,4 +1,0 @@
-include:
-  - runtime.yaml
-  - rocoto.yaml
-  - "*.yaml"
