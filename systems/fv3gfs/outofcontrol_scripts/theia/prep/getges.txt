@@ -1,1 +1,0 @@
-prep=/scratch4/NCEPDEV/global/save/glopara/svn/obsproc/releases/obsproc_prep_RB-4.0.0/ush/getges.sh

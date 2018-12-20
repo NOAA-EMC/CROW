@@ -1,4 +1,0 @@
-include:
-  - base.yaml
-  - "*.yaml"
-  - final.yaml
