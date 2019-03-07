@@ -64,33 +64,32 @@ PYTHON_FILE_COMPARE=${PYTHON_FILE_COMPARE:-'TRUE'}
 #CREATE_EXP='FALSE'
 #BUILD='FALSE'
 #RUNROCOTO='FALSE'
-JOB_LEVEL_CHECK='TRUE'
+#JOB_LEVEL_CHECK='TRUE'
 #RZDM_RESULTS='TRUE'
 #PYTHON_FILE_COMPARE='FALSE'
 
-idate='2018012306'
-edate='2018012312'
-
-fv3gfs_git_branch='master'
+fv3gfs_git_branch='slurm_beta'
 # Leave fv3gfs_svn_url blank to use git branch in fv3gfs_git_branch
 fv3gfs_svn_url=''
-load_rocoto='rocoto/1.2.4'
+module use /scratch4/NCEPDEV/global/save/Terry.McGuinness/git/Rocoto-fix-terry-3/modulefile
+load_rocoto='fix-terry-3_local'
 
 ICS_dir_cray='/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/ICS'
 PTMP_cray='/gpfs/hps3/ptmp'
-ICS_dir_theia='/scratch4/NCEPDEV/global/noscrub/glopara/ICS/FV3GFS'
+ICS_dir_theia='None'
 PTMP_theia='/scratch4/NCEPDEV/stmp4'
 
 # system dependent
 #----------------- 
 if [[ -d /scratch4/NCEPDEV ]]; then
   system="theia"
-elif [[ -d /gpfs/hps3 ]]; then
-  system="wcoss_cray"
+#elif [[ -d /gpfs/hps3 ]]; then
+#  system="wcoss_cray"
 else
   log_message "CRITICAL" "Unknown machine $system, not supported"
 fi
 
+# TODO prepare for JET, Gaea
 if [[ $system == "wcoss_cray" ]]; then
  ICS_dir=$ICS_dir_cray
  PTMP=$PTMP_cray
@@ -112,8 +111,8 @@ if [[ -z ${rocotostatcmd} ]]; then
   log_message "CRITICAL" "($rocotostatcmd) not found on system"
 fi
 
-fv3gfs_ver='v15.0.0'
-num_expected_exec='29'
+#fv3gfs_ver='v15.0.0'
+num_expected_exec='51'
 
 if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
  if [[ -z $1 || $1 == "--non-interactive" ]]; then
@@ -126,80 +125,26 @@ if [[ ! -d $1 ]] && [[ ! -f $1 ]]; then
 fi
 
 
-# CASE = C192_C192_low
-# HASH for org BUILD branch b169ca6dd3840edb909fefa00292523cdeeda422
-#
-# On disk snapshot for flat master low res
-# =========================================
-# ./setup_expt.py --pslot crowmaster192 --configdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/$fv3gfs_ver/parm/config/ --idate 2018010500 --edate 2018010506 --icsdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/ICS --comrot /gpfs/hps2/ptmp/emc.glopara/ROTDIRS_CROW --expdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/ --resdet 192 --resens 192 --nens 20 --gfs_cyc 4
-#
-# CASE = C768_C384_high
-#
-# On disk snapshot for flat master high res
-# =========================================
-# ./setup_expt.py --pslot crowmaster768 --configdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/$fv3gfs_ver/parm/config/ --idate 2018010500 --edate 2018010506 --icsdir /gpfs/hps3/emc/global/noscrub/emc.glopara/ICS --comrot /gpfs/hps2/ptmp/emc.glopara/ROTDIRS_CROW --expdir /gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209 --resdet 768 --resens 384 --nens 80 --gfs_cyc 4
+#=======================================
+# CASE = global-slurm-test
+# ./setup_expt.py --pslot gw_C384C192_2019021400_IC --comrot /scratch4/NCEPDEV/global/noscrub/Terry.McGuinness/ROTDIRS --expdir /scratch4/NCEPDEV/global/noscrub/Terry.McGuinness/expdir --idate 2019021400 --edate 2019021412 --configdir /scratch4/NCEPDEV/global/save/Terry.McGuinness/git/global-workflow/parm/config --resdet 384 --resens 192 --nens 80 --gfs_cyc 4
 
-pslot_basename='fv3gfs'
+pslot_basename='global-fv3gfs'
 checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
 pslot="${pslot_basename}_exp_${regressionID}"
 
 # Check to see if user entered a CASE from regressionID
 CASE=$regressionID
 
-if [[ $CASE == "BUILD" || $CASE == "BUILD_org" ]]; then
-
- log_message "INFO" "Running special $CASE case"
- regressionID=${CASE}
-
- setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
- setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
- config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
- if [[ $CASE == "BUILD_org" ]]; then
-    fv3gfs_git_branch='b169ca6dd3840edb909fefa00292523cdeeda422'
- else
-    fv3gfs_git_branch='BUILD'
- fi
- EXTRA_SETUP_STRING="--resdet 192 --resens 192 --nens 20 --gfs_cyc 4"
-
-elif [[ $CASE == "C192_C192_low" ]]; then 
-
- log_message "INFO" "Running special case: $CASE for this regression test"
- config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
- setup_expt=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_expt.py
- setup_workflow=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_workflow.py
- EXTRA_SETUP_STRING="--resdet 192 --resens 192 --nens 20 --gfs_cyc 4"
- idate=2018010500
- edate=2018010506
- ICS_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/ICS
- CHECKOUT='FALSE'
- BUILD='FALSE'
- log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so CHECKOUT is set to FALSE"
- log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so BUILD is set to FALSE"
-
-elif [[ $CASE == "C768_C384_high" ]]; then
-
- log_message "INFO" "Running special case: $CASE for this regression test"
- config_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/parm/config
- setup_expt=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_expt.py
- setup_workflow=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/snapshot_master_20180209/gfs.$fv3gfs_ver/ush/rocoto/setup_workflow.py
- EXTRA_SETUP_STRING="--resdet 768 --resens 384 --nens 80 --gfs_cyc 4"
- idate=2018010500
- edate=2018010506
- ICS_dir=/gpfs/hps3/emc/global/noscrub/emc.glopara/CROW/ICS
- CHECKOUT='FALSE'
- BUILD='FALSE'
- log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so CHECKOUT is set to FALSE"
- log_message "INFO" "Because we are running with CASE $CASE the script is using snapshot on disk so BUILD is set to FALSE"
-
-else:
- 
- CASE='master'
- log_message "INFO" "Running default case with regressionID: $regressionID" 
- setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
- setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
- config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
-
+if [[ $CASE == "slurm" ]]; then
+  log_message "INFO" "using slurm so loading slurm module for running test case"
+  module load slurm
 fi
+
+log_message "INFO" "Running default case with regressionID: $regressionID" 
+setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
+setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
+config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
 
 username=`echo ${USER} | tr '[:upper:]' '[:lower:]'`
 
@@ -207,7 +152,18 @@ comrot=${CHECKOUT_DIR}/${REGRESSSION_COMROT_BASENAME}
 comrot_test_dir=${comrot}/${pslot}
 exp_dir_fullpath=${CHECKOUT_DIR}/${pslot}
 
-exp_setup_string="--pslot ${pslot} --icsdir $ICS_dir --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR} $EXTRA_SETUP_STRING"
+#TODO Stop HERE and make sure default values for baseline canned case are present
+
+link_args='emc theia'
+idate='2019021400'
+edate='2019021412'
+EXTRA_SETUP_STRING="--resdet 384 --resens 192 --nens 80 --gfs_cyc 4"
+if [[ $ICS_dir == "None" ]]; then
+   exp_setup_string="--pslot ${pslot} --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR} $EXTRA_SETUP_STRING"
+else
+   exp_setup_string="--pslot ${pslot} --icsdir $ICS_dir --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR} $EXTRA_SETUP_STRING"
+fi
+
 
 # If RZDM is set then the viewer will attempt to post the state of the workflow in html on the rzdm server
 #RZDM='tmcguinness@emcrzdm.ncep.noaa.gov:/home/www/emc/htdocs/gc_wmb/tmcguinness'
@@ -326,6 +282,7 @@ echo "edate        = $edate"
 echo "CHECKOUT_DIR = $CHECKOUT_DIR"
 echo "CHECKOUT     = $CHECKOUT"
 echo "BUILD        = $BUILD"
+echo "link args    = $link_args"
 echo "CREATE_EXP   = $CREATE_EXP"
 echo "COMPARE_BASE = $COMPARE_BASE"
 #echo "RZDM_RESULTS = $RZDM_RESULTS"
@@ -372,10 +329,11 @@ if [[ $CHECKOUT == 'TRUE' ]]; then
     svn co $fv3gfs_svn_url ${checkout_dir_basename}
 
   else
-
+  
+   fv3gfs_repo_name='global-workflow'
    log_message "INFO" "cloning fvgfs from git with branch $fv3gfs_git_branch"
-   log_message "INFO" "git clone ssh://${username}@vlab.ncep.noaa.gov:29418/fv3gfs ${checkout_dir_basename}"
-   git clone ssh://${username}@vlab.ncep.noaa.gov:29418/fv3gfs ${checkout_dir_basename}
+   log_message "INFO" "git clone ssh://${username}@vlab.ncep.noaa.gov:29418/$fv3gfs_repo_name ${checkout_dir_basename}"
+   git clone ssh://${username}@vlab.ncep.noaa.gov:29418/$fv3gfs_repo_name ${checkout_dir_basename}
 
    if [[ ! -z "${fv3gfs_git_branch}// }" ]]; then
     cd ${checkout_dir_basename}
@@ -385,6 +343,41 @@ if [[ $CHECKOUT == 'TRUE' ]]; then
    fi
 
   fi
+fi
+
+if [[ $BUILD == 'TRUE' ]]; then
+
+   cd ${checkout_dir_basename}/sorc
+
+   # This is in BUILD branch for you
+   #sed -i  's/cd gsi.fd/cd gsi.fd\n    checkout DA-FV3-IMPL/' checkout.sh
+   #log_message "WARNING" "just updated checkout.sh script and added line to checkout DA-FV3-IMPL branch for gsi instead of master"
+
+   log_message "INFO" "running checkout script: $PWD/checkout.sh $username"
+   export GIT_TERMINAL_PROMPT=0
+  ./checkout.sh
+   if [[ $? -ne 0 ]]; then
+      log_message "CRITICAL" "checkout.sh script failed"
+   fi
+   log_message "INFO" "running build script: $PWD/build_all.sh $build_all_args"
+  ./build_all.sh
+   if [[ $? -ne 0 ]]; then
+      log_message "CRITICAL" "build_all.sh script failed"
+   fi
+   log_message "INFO" "running link_fv3gfs.sh $link_args"
+  ./link_fv3gfs.sh $link_args
+   if [[ $? -ne 0 ]]; then
+      log_message "CRITICAL" "link_fv3gfs.sh $link_args script failed"
+   fi
+  num_shared_exec=`ls -1 ../exec | wc -l`
+  if [[ $num_shared_exec != $num_expected_exec ]]; then
+    log_message "WARNING" "number of executables in shared exec: $num_shared_exec was found and was expecting $num_expected_exec"
+    filepath='../exe'
+    fullpath=`echo $(cd $(dirname $filepath ) ; pwd ) /$(basename $filepath )`
+    log_message "WARNING" "check the executables found in: $fullpath"
+  else
+   log_message "INFO" "number of executables in shared exec: $num_shared_exec"
+ fi
 fi
 
 
@@ -412,55 +405,22 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     log_message "INFO" "setting up workflow: ${setup_workflow} --expdir $exp_dir_fullpath"
     yes | ${setup_workflow} --expdir $exp_dir_fullpath
 
+    if [[ $ICS_dir == "None" ]]; then
+      warm_start_files='/scratch3/NCEPDEV/stmp1/Kate.Friedman/FV3GFS_ICS/2019021400'
+      log_message "INFO" "moving FV3GFS warmstart files for 2019021400 from: $warm_start_files"
+      rsync -av $warm_start_files/enkfgdas.20190214/ $PWD/enkfgdas.20190214
+      rsync -av $warm_start_files/gdas.20190214/ $PWD/gdas.20190214
+      log_message "INFO" "finished setting up warmstart files for 2019021400"
+    fi
+
     if [[ -d $exp_dir_fullpath ]]; then
-
-       if [[ $CASE == "C192_C192_low" || $CASE == "BUILD" ]]; then
-         log_message "WARNING" "updated config.base and changed FHMAX_GFS=240"
-         sed -i 's/^export FHMAX_GFS=.*/export FHMAX_GFS=\"240\"        \# WARNING changed to 240 by regression script/' $exp_dir_fullpath/config.base
-         log_message "WARNING" "updated config.vrfy and changed VRFYTRAK=NO"
-         sed -i 's/^export VRFYTRAK=.*/export VRFYTRAK=\"NO\"        \# WARNING changed to 240 by regression script/' $exp_dir_fullpath/config.vrfy
-         log_message "WARNING" "updated config.vrfy and changed VRFYGENESIS=NO"
-         sed -i 's/^export VRFYGENESIS=.*/export VRFYGENESIS=\"NO\"        \# WARNING changed to 240 by regression script/' $exp_dir_fullpath/config.vrfy
-       fi
-
+       log_message "INFO" "the experiment directory is present: $exp_dir_fullpath"
     else
        log_message "CRITICAL" "The experment directory was not created correctly"
     fi
 
-    #sed -i 's/^export VRFYG2OBS=.*/export VRFYG2OBS=\"NO\"          \# WARNING changed by regression script/' $exp_dir_fullpath/config.vrfy
-    #log_message "WARNING" "modified config.vrfy with VRFYG2OBS=NO because it do not make sense for it to be on for only one cycle"
 fi
 
-if [[ $BUILD == 'TRUE' ]]; then
-
-   cd ${checkout_dir_basename}/sorc
-
-   # This is in BUILD branch for you
-   #sed -i  's/cd gsi.fd/cd gsi.fd\n    checkout DA-FV3-IMPL/' checkout.sh
-   #log_message "WARNING" "just updated checkout.sh script and added line to checkout DA-FV3-IMPL branch for gsi instead of master"
-
-   log_message "INFO" "running checkout script: $PWD/checkout.sh $username"
-   export GIT_TERMINAL_PROMPT=0
-  ./checkout.sh $username
-   if [[ $CASE == "BASE_org" ]]; then
-     build_all_args='cray'
-   else
-     build_all_args='config=fv3gfs_build.cfg'
-   fi  
-   log_message "INFO" "running build script: $PWD/build_all.sh $build_all_args"
-  ./build_all.sh $build_all_args
-   log_message "INFO" "running link_fv3gfs.sh"
-  ./link_fv3gfs.sh
-  num_shared_exec=`ls -1 ../exec | wc -l`
- if [[ $num_shared_exec != $num_expected_exec ]]; then
-   log_message "WARNING" "number of executables in shared exec: $num_shared_exec was found and was expecting $num_expected_exec"
-   filepath='../exe'
-   fullpath=`echo $(cd $(dirname $filepath ) ; pwd ) /$(basename $filepath )`
-   log_message "WARNING" "check the executables found in: $fullpath"
- else
-   log_message "INFO" "number of executables in shared exec: $num_shared_exec"
- fi
-fi
 
 run_file_compare_python () {
 
