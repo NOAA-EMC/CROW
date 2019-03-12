@@ -16,7 +16,7 @@ def get_args():
 
     parser = argparse.ArgumentParser()
     #group  = parser.add_mutually_exclusive_group(required=True)
-    parser.add_argument('--cmp_dirs',nargs=2,metavar=('COMROT_baseline','COMROT_testrun'),help='compare COMROT foloders')
+    parser.add_argument('--cmp_dirs',nargs=2,metavar=('COMROT_baseline','COMROT_testrun'),help='compare COMROT folders')
     parser.add_argument('-ujf','--cmp_dirs_with_joblevel_file', nargs=1, metavar=('file_list.yaml'), help='(u)se stored (j)ob level (f)ile list when comparing COMROTs')
     parser.add_argument('-cjf','--creat_jobslevel_file',nargs=3,metavar=('job_name','COMROT','file_list.yaml'),help='(c)reate (j)ob level (f)ile from output')
     parser.add_argument('-f','--diff_list_file',dest="diff_list_file",help='name of file containing a list of differing files')

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 export REGRESSSION_COMROT_BASENAME='fv3gfs_regression_COMROTs'
 
@@ -11,8 +11,37 @@ usage () {
    echo -e "\ttwo arguments (dir) (dir) : does a bitwise compare on the gfs files from the first dir to the second\n"
    echo -e "\tthird optional argument is used when acctually running the script so no promps are given, otherwize the script will report on the settings.\n"
    echo -e "\033[1mEXAMPLE:\033[0m\n\tnohup ./fv3gfs_regression.sh baseline --non-interactive > & fv3gfs_regression_baseline_run.log &\n"
-   echo -e "\033[1mNOTE:\033[0m\n\tSupported CASES are BUILD, BUILD_org, C192_C192_low, and C192_C192_high. Any of these CASES are run by using them by names as (str)\n"
+   echo -e "\033[1mNOTE:\033[0m\n\tCurret supported CASES: slurm (uses module load slurm and thus creates slurm ready XML)\n"
    exit
+}
+
+find_data_dir () {
+
+    local _check_baseline_dir=$1
+
+    STARTTIME=$(date +%s)
+    while IFS= read -r -d '' file
+    do
+       gfsfile=`basename $file | cut -f 1 -d"."`
+       if [[ $gfsfile == "enkf" ]]; then
+          check_real_base_dir=`dirname $file`
+          if ls $check_real_base_dir/gdas.* 1> /dev/null 2>&1; then
+           real_base_dir=$check_real_base_dir
+           break 
+          fi
+       fi
+       if [[ $(($ENDTIME - $STARTTIME)) > 65 ]]; then
+         log_message "CRITICAL" "looking for valid baseline directory put then gave up after a minute"
+         exit -1
+       fi
+    ENDTIME=$(date +%s)
+    done < <(find $_check_baseline_dir -print0 )
+
+    if [[ -z $real_base_dir ]]; then
+      exit -1
+    fi
+    _check_baseline_dir=`dirname $file`
+    echo $_check_baseline_dir
 }
 
 INTERACTIVE='TRUE'
@@ -129,86 +158,30 @@ fi
 # CASE = global-slurm-test
 # ./setup_expt.py --pslot gw_C384C192_2019021400_IC --comrot /scratch4/NCEPDEV/global/noscrub/Terry.McGuinness/ROTDIRS --expdir /scratch4/NCEPDEV/global/noscrub/Terry.McGuinness/expdir --idate 2019021400 --edate 2019021412 --configdir /scratch4/NCEPDEV/global/save/Terry.McGuinness/git/global-workflow/parm/config --resdet 384 --resens 192 --nens 80 --gfs_cyc 4
 
-pslot_basename='global-fv3gfs'
-checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
-pslot="${pslot_basename}_exp_${regressionID}"
-
-# Check to see if user entered a CASE from regressionID
-CASE=$regressionID
-
-if [[ $CASE == "slurm" ]]; then
-  log_message "INFO" "using slurm so loading slurm module for running test case"
-  module load slurm
-fi
-
-log_message "INFO" "Running default case with regressionID: $regressionID" 
-setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
-setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
-config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
-
-username=`echo ${USER} | tr '[:upper:]' '[:lower:]'`
-
-comrot=${CHECKOUT_DIR}/${REGRESSSION_COMROT_BASENAME}
-comrot_test_dir=${comrot}/${pslot}
-exp_dir_fullpath=${CHECKOUT_DIR}/${pslot}
-
-#TODO Stop HERE and make sure default values for baseline canned case are present
-
-link_args='emc theia'
-idate='2019021400'
-edate='2019021412'
-EXTRA_SETUP_STRING="--resdet 384 --resens 192 --nens 80 --gfs_cyc 4"
-if [[ $ICS_dir == "None" ]]; then
-   exp_setup_string="--pslot ${pslot} --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR} $EXTRA_SETUP_STRING"
-else
-   exp_setup_string="--pslot ${pslot} --icsdir $ICS_dir --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR} $EXTRA_SETUP_STRING"
-fi
 
 
 # If RZDM is set then the viewer will attempt to post the state of the workflow in html on the rzdm server
 #RZDM='tmcguinness@emcrzdm.ncep.noaa.gov:/home/www/emc/htdocs/gc_wmb/tmcguinness'
 #ROCOTOVIEWER='/u/Terry.McGuinness/bin/rocoto_viewer.py'
 
-find_data_dir () {
-
-    local _check_baseline_dir=$1
-
-    STARTTIME=$(date +%s)
-    while IFS= read -r -d '' file
-    do
-       gfsfile=`basename $file | cut -f 1 -d"."`
-       if [[ $gfsfile == "enkf" ]]; then
-          check_real_base_dir=`dirname $file`
-          if ls $check_real_base_dir/gdas.* 1> /dev/null 2>&1; then
-           real_base_dir=$check_real_base_dir
-           break 
-          fi
-       fi
-       if [[ $(($ENDTIME - $STARTTIME)) > 65 ]]; then
-         log_message "CRITICAL" "looking for valid baseline directory put then gave up after a minute"
-         exit -1
-       fi
-    ENDTIME=$(date +%s)
-    done < <(find $_check_baseline_dir -print0 )
-
-    if [[ -z $real_base_dir ]]; then
-      exit -1
-    fi
-    _check_baseline_dir=`dirname $file`
-    echo $_check_baseline_dir
-}
-
 log_message "INFO" "running regression script on host $HOST with PID $BASHPID"
 
 COMPARE_BASE='FALSE'
 JUST_COMPARE_TWO_DIRS='FALSE'
+
 if [[ -d $1 ]] && [[ -d $2 ]]; then
  CHECKOUT='FALSE'
  BUILD='FALSE'
  CREATE_EXP='FALSE'
  RUNROCOTO='FALSE'
+
+ check_baseline_dir_with_this_dir=`readlink -f $2`
  check_baseline_dir=`readlink -f $1`
- check_baseline_dir_get=$( find_data_dir $check_baseline_dir )
+
+ #TODO this needs to be simplified and refactored
+ #check_baseline_dir_get=$( find_data_dir $check_baseline_dir )
+ check_baseline_dir_get=$check_baseline_dir
+
  if [[ -z $check_baseline_dir_get ]]; then
    log_message "CRITICAL" "$check_baseline_dir_get is not a directory with a baseline to test in it"
  fi
@@ -216,8 +189,11 @@ if [[ -d $1 ]] && [[ -d $2 ]]; then
    check_baseline_dir=$check_baseline_dir_get
    log_message "WARNING" "given directory did not have gfs data, but a subsequent subdirectory was found that did:\n$check_baseline_dir"
  fi  
- check_baseline_dir_with_this_dir=`readlink -f $2`
- check_baseline_dir_with_this_dir_get=$( find_data_dir $check_baseline_dir_with_this_dir )
+
+ #TODO this needs to be simplified and refactored
+ #check_baseline_dir_with_this_dir_get=$( find_data_dir $check_baseline_dir_with_this_dir )
+ check_baseline_dir_with_this_dir_get=$check_baseline_dir_with_this_dir
+
  if [[ -z $check_baseline_dir_with_this_dir_get ]]; then
    log_message "CRITICAL" "$check_baseline_dir_with_this_get is not a directory with a baseline to test in it"
  fi
@@ -256,7 +232,9 @@ elif [[ -d $1 && ! -d $2 ]]; then
   fi
   log_message "INFO" "running test run ($regressionID) agaist regression baseline in directory $check_baseline_dir"
   COMPARE_BASE='TRUE'
-  check_baseline_dir_get=$( find_data_dir $check_baseline_dir )
+  #TODO need to refactor check_baseline_dir_get : multiple arg logic tricky and hard to support
+  #check_baseline_dir_get=$( find_data_dir $check_baseline_dir )
+  check_baseline_dir_get=$check_baseline_dir
   if [[ -z $check_baseline_dir_get ]]; then
    log_message "CRITICAL" "$check_baseline_dir_get is not a directory with a baseline to test in it"
   fi
@@ -271,27 +249,72 @@ fi
 #  RZDM_RESULTS="FALSE"
 #fi
 
-regressionID=${regressionID:-'test_run'}
 
-echo -e "\nCurrent Script Settings are"
+# Check to see if user entered a CASE from regressionID
+CASE=$regressionID
+special_case_found="FALSE"
+
+if [[ $CASE == "slurm" ]]; then
+  log_message "INFO" "using slurm so loading slurm module for running test case"
+  module load slurm
+  special_case_found="TRUE"
+fi
+
+regressionID=${regressionID:-'test_run'}
+pslot_basename='fv3gfs'
+checkout_dir_basename="${pslot_basename}_sorc_${regressionID}"
+pslot="${pslot_basename}_exp_${regressionID}"
+setup_expt=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_expt.py
+
+log_message "INFO" "Running default case with regressionID: $regressionID" 
+setup_workflow=${CHECKOUT_DIR}/${checkout_dir_basename}/ush/rocoto/setup_workflow.py
+config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
+
+username=`echo ${USER} | tr '[:upper:]' '[:lower:]'`
+
+comrot=${CHECKOUT_DIR}/${REGRESSSION_COMROT_BASENAME}
+comrot_test_dir=${comrot}/${pslot}
+exp_dir_fullpath=${CHECKOUT_DIR}/${pslot}
+
+#TODO Stop HERE and make sure default values for baseline canned case are present
+
+link_args='emc theia'
+idate='2019021400'
+edate='2019021406'
+EXTRA_SETUP_STRING="--resdet 384 --resens 192 --nens 80 --gfs_cyc 4"
+
+if [[ $ICS_dir == "None" ]]; then
+   exp_setup_string="--pslot ${pslot} --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR} $EXTRA_SETUP_STRING"
+else
+   exp_setup_string="--pslot ${pslot} --icsdir $ICS_dir --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR} $EXTRA_SETUP_STRING"
+fi
+
+echo -e "\nScript Control Settings (env vars)"
+echo -e "===================================="
+
+echo "CHECKOUT     = $CHECKOUT"
+echo "BUILD        = $BUILD"
+echo "CREATE_EXP   = $CREATE_EXP"
+echo "RUNROCOTO    = $RUNROCOTO"
+echo "COMPARE_BASE = $COMPARE_BASE"
+if [[ $special_case_found == "TRUE" ]]; then
+echo "Special CASE = $CASE"
+fi
+
+echo -e "\nRepo and filepaths Settings"
 echo -e "============================"
 echo "regressionID = $regressionID"
 echo "git branch   = $fv3gfs_git_branch"
-echo "idate        = $idate"
-echo "edate        = $edate"
 echo "CHECKOUT_DIR = $CHECKOUT_DIR"
-echo "CHECKOUT     = $CHECKOUT"
-echo "BUILD        = $BUILD"
 echo "link args    = $link_args"
-echo "CREATE_EXP   = $CREATE_EXP"
-echo "COMPARE_BASE = $COMPARE_BASE"
 #echo "RZDM_RESULTS = $RZDM_RESULTS"
-echo -e "RUNROCOTO    = $RUNROCOTO\n"
 echo "PYTHON_FILE_COMPARE = $PYTHON_FILE_COMPARE"
 echo -e "JOB_LEVEL_CHECK = $JOB_LEVEL_CHECK\n"
 
 echo -e "\nModel Workflow Configuration Settings"
 echo "======================================"
+echo "idate  : $idate"
+echo "edate  : $edate"
 echo "PSLOT  : $pslot"
 echo "COMROT : $comrot"
 echo "CONFIG : $config_dir"
@@ -301,20 +324,25 @@ echo "EDATE  : $edate"
 echo "EXPDIR : $exp_dir_fullpath"
 echo -e "EXTRA  : $EXTRA_SETUP_STRING\n"
 
-if [ $INTERACTIVE == "TRUE" ] || [ $- == *i* ]; then
-   while read -n1 -r -p "Are these the correct settings (y/n): " answer
-    do
-    if [[ $answer == "n" ]]; then
-     echo -e "\n"
-     exit
-    fi 
-    if [[ $answer == "y" ]]; then
-     echo -e "\n"
-     break 
-    fi
-    echo ""
-   done
+if [[ $INTERACTIVE == "TRUE" ]]; then
+  echo -e "To run with these settings append --non-interactive for the final argument and re-run this script\n\n"
+  exit 0
 fi
+
+#if [ $INTERACTIVE == "TRUE" ] || [ $- == *i* ]; then
+#   while read -n1 -r -p "Are these the correct settings (y/n): " answer
+#    do
+#    if [[ $answer == "n" ]]; then
+#     echo -e "\n"
+#     exit
+#    fi 
+#    if [[ $answer == "y" ]]; then
+#     echo -e "\n"
+#     break 
+#    fi
+#    echo ""
+#   done
+#fi
 
 SCRIPT_STARTTIME=$(date +%s)
 
@@ -376,7 +404,7 @@ if [[ $BUILD == 'TRUE' ]]; then
     fullpath=`echo $(cd $(dirname $filepath ) ; pwd ) /$(basename $filepath )`
     log_message "WARNING" "check the executables found in: $fullpath"
   else
-   log_message "INFO" "number of executables in shared exec: $num_shared_exec"
+   log_message "INFO" "number of executables in shared exec found as expected: $num_shared_exec"
  fi
 fi
 
@@ -405,18 +433,20 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     log_message "INFO" "setting up workflow: ${setup_workflow} --expdir $exp_dir_fullpath"
     yes | ${setup_workflow} --expdir $exp_dir_fullpath
 
-    if [[ $ICS_dir == "None" ]]; then
-      warm_start_files='/scratch3/NCEPDEV/stmp1/Kate.Friedman/FV3GFS_ICS/2019021400'
-      log_message "INFO" "moving FV3GFS warmstart files for 2019021400 from: $warm_start_files"
-      rsync -av $warm_start_files/enkfgdas.20190214/ $PWD/enkfgdas.20190214
-      rsync -av $warm_start_files/gdas.20190214/ $PWD/gdas.20190214
-      log_message "INFO" "finished setting up warmstart files for 2019021400"
-    fi
-
     if [[ -d $exp_dir_fullpath ]]; then
        log_message "INFO" "the experiment directory is present: $exp_dir_fullpath"
     else
        log_message "CRITICAL" "The experment directory was not created correctly"
+    fi
+
+    if [[ $ICS_dir == "None" ]]; then
+      warm_start_files='/scratch3/NCEPDEV/stmp1/Kate.Friedman/FV3GFS_ICS/2019021400'
+      log_message "INFO" "moving FV3GFS warmstart files for 2019021400 from: $warm_start_files"
+      mkdir -p $comrot_test_dir/enkfgdas.20190214
+      mkdir -p $comrot_test_dir/gdas.20190214
+      rsync -rlptgoDv $warm_start_files/enkfgdas.20190214/ $comrot_test_dir/enkfgdas.20190214
+      rsync -rlptgoDv $warm_start_files/gdas.20190214/ $comrot_test_dir/gdas.20190214
+      log_message "INFO" "finished setting up warmstart files for 2019021400"
     fi
 
 fi
@@ -433,8 +463,11 @@ run_file_compare_python () {
      log_message "CRITICAL" "one of the target directories does not exist"
    fi
 
-   log_message "INFO" "running: compare_folders.py $check_baseline_dir $comrot_test_dir -n $regressionID"
-   compare_folders.py --cmp_dirs $check_baseline_dir $comrot_test_dir -n $regressionID
+   log_message "INFO" "loading module nccmp"
+   module load nccmp
+   log_message "INFO" "processing at lease $total_number_files using comprehensive pyton global file comparitor" 
+   log_message "INFO" "running: compare_folders.py --ctotal_number_filesmp_dirs $check_baseline_dir $comrot_test_dir"
+   compare_folders.py --cmp_dirs $check_baseline_dir $comrot_test_dir
 
 }
 
