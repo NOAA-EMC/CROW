@@ -127,15 +127,33 @@ else
  PTMP=$PTMP_theia
 fi
 
+module unload intelpython
+python_check=$(which python)
+if [[ -z ${python_check} ]]; then
+   log_message "CRITICAL" "python two shoule be in /usr/bin/python and was not found (check your path)"
+fi
+python_version=$($python_check --version 2>&1)
+log_message "INFO" "using python two from $python_check $python_version"
+
+module use /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/python/modulefiles
+module load python/3.6.1-emc
+
+python_check=$(which python3)
+if [[ -z ${python_check} ]]; then
+   log_message "CRITICAL" "python three shoule be in your path from ../NCEPDEV/nems/noscrub/emc.nemspara/python/modulefiles via module load python/3.6.1-emc\nbut module failed to load"
+fi
+python_version=$($python_check --version 2>&1)
+log_message "INFO" "using python three from $python_check $python_version"
+
 module load $load_rocoto
-rocotoruncmd=`which rocotorun`
+rocotoruncmd=$(which rocotorun)
 if [[ -z ${rocotoruncmd} ]]; then
   log_message "CRITICAL" "module load for rocoto ($load_rocoto) on system failed"
 fi
 
-rocotover=`$rocotoruncmd --version`
+rocotover=$($rocotoruncmd --version)
 log_message "INFO" "using rocoto version $rocotover"
-rocotostatcmd=`which rocotostat`
+rocotostatcmd=$(which rocotostat)
 if [[ -z ${rocotostatcmd} ]]; then
   log_message "CRITICAL" "($rocotostatcmd) not found on system"
 fi
