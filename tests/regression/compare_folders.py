@@ -532,27 +532,24 @@ if __name__ == '__main__':
     logger.info(logger_hdr+'checking for matching file counts in directories')
 
     results = compare(folder1, folder2)
-    if len(results['left']) !=0 and len(results['right']) !=0:
-        left_right = ('left','right')
-        out_of_order_file_name = os.path.join( os.path.dirname( diff_file_name ), os.path.basename(diff_file_name).split('.',1)[0]+'.file_imbalance')
-        out_of_order_file = open(out_of_order_file_name ,'w')
-        for each_side in left_right:
-            if each_side == 'left':
-                foldera = folder1
-                folderb = folder2
-            else:
-                folderb = folder1
-                foldera = folder2
-            num_missmatched_files = len(results[each_side])
-            if num_missmatched_files != 0:
-                logger.info('%d files found in %s that are not in %s list written to %s'\
-                %(num_missmatched_files,os.path.basename(foldera),os.path.basename(folderb), out_of_order_file_name))
-                out_of_order_file.write('%d files found in %s that are not in %s:\n'%(num_missmatched_files,os.path.basename(foldera),os.path.basename(folderb)))
-                for file in results[each_side]:
-                    out_of_order_file.write('   %s'%file+'\n')
-                out_of_order_file.flush()
-    else:
-        logger.info('after applying filters, both directories have matching file counts')
+    left_right = ('left','right')
+    out_of_order_file_name = os.path.join( os.path.dirname( diff_file_name ), os.path.basename(diff_file_name).split('.',1)[0]+'.file_imbalance')
+    out_of_order_file = open(out_of_order_file_name ,'w')
+    for each_side in left_right:
+        if each_side == 'left':
+            foldera = folder1
+            folderb = folder2
+        else:
+            folderb = folder1
+            foldera = folder2
+        num_missmatched_files = len(results[each_side])
+        if num_missmatched_files != 0:
+            logger.info('%d files found in %s that are not in %s list written to %s'\
+            %(num_missmatched_files,os.path.basename(foldera),os.path.basename(folderb), out_of_order_file_name))
+            out_of_order_file.write('%d files found in %s that are not in %s:\n'%(num_missmatched_files,os.path.basename(foldera),os.path.basename(folderb)))
+            for file in results[each_side]:
+                out_of_order_file.write('   %s'%file+'\n')
+            out_of_order_file.flush()
     logger.info(logger_hdr+'checking for file differences...')
     compare_files = filecmp.dircmp(folder1, folder2, ignore=egnore_file_list)
     print_diff_files( compare_files )
