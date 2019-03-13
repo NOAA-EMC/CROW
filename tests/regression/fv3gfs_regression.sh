@@ -135,8 +135,25 @@ fi
 python_version=$($python_check --version 2>&1)
 log_message "INFO" "using python two from $python_check $python_version"
 
-module use /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/python/modulefiles
-module load python/3.6.1-emc
+if [[ $PYTHON_FILE_COMPARE == "TRUE" ]]; then
+   execPATH="`dirname \"$0\"`"
+   execPATH="`( cd \"$execPATH\" && pwd )`"
+   if [ -z "$execPATH" ] ; then
+    log_message "CRITICAL" "can not access locate $execPATH where this script was lauched"
+   fi
+
+   COMPARE_FOLDERS=$execPATH/compare_folders.py
+   if [[ ! -f $COMPARE_FOLDERS ]]; then
+     log_message "CRITICAL" "the python script compare_folders.py could not be located\nit should be located in the same directory where the regression script is lauched $execPATH"
+   fi
+
+   if [[ $system == "theia" ]]; then
+    module use /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/python/modulefiles
+    module load python/3.6.1-emc
+   else
+    log_message "CRITICAL" "this script needs to be ported to the non-Thiea systems"
+   fi
+fi
 
 python_check=$(which python3)
 if [[ -z ${python_check} ]]; then
@@ -485,7 +502,7 @@ run_file_compare_python () {
    module load nccmp
    log_message "INFO" "processing at lease $total_number_files using comprehensive pyton global file comparitor" 
    log_message "INFO" "running: compare_folders.py --ctotal_number_filesmp_dirs $check_baseline_dir $comrot_test_dir"
-   compare_folders.py --cmp_dirs $check_baseline_dir $comrot_test_dir
+   $COMPARE_FOLDERS --cmp_dirs $check_baseline_dir $comrot_test_dir
 
 }
 
