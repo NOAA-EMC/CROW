@@ -299,6 +299,7 @@ elif [[ $CASE == "master" ]]; then
   log_message "INFO" "using spcial case (master) so global-worfflow will be cloning from master"
   special_case_found="TRUE"
   fv3gfs_git_branch='master'
+  ICS_dir=$PWD
 fi
 
 regressionID=${regressionID:-'test_run'}
@@ -323,6 +324,8 @@ link_args='emc theia'
 idate='2019021400'
 edate='2019021406'
 EXTRA_SETUP_STRING="--resdet 384 --resens 192 --nens 80 --gfs_cyc 4"
+COPY_WARM_ICS=${COPY_WARM_ICS:-'TRUE'}
+
 
 if [[ $ICS_dir == "None" ]]; then
    exp_setup_string="--pslot ${pslot} --configdir ${config_dir} --comrot ${comrot} --idate $idate --edate $edate --expdir ${CHECKOUT_DIR} $EXTRA_SETUP_STRING"
@@ -333,11 +336,12 @@ fi
 echo -e "\nScript Control Settings (env vars)"
 echo -e "===================================="
 
-echo "CHECKOUT     = $CHECKOUT"
-echo "BUILD        = $BUILD"
-echo "CREATE_EXP   = $CREATE_EXP"
-echo "RUNROCOTO    = $RUNROCOTO"
-echo "COMPARE_BASE = $COMPARE_BASE"
+echo "CHECKOUT      = $CHECKOUT"
+echo "BUILD         = $BUILD"
+echo "CREATE_EXP    = $CREATE_EXP"
+echo "RUNROCOTO     = $RUNROCOTO"
+echo "COMPARE_BASE  = $COMPARE_BASE"
+echo "COPY_WARM_ICS = $COPY_WARM_ICS"
 
 echo -e "\nRepo and filepaths Settings"
 echo -e "============================"
@@ -347,7 +351,7 @@ echo "CHECKOUT_DIR = $CHECKOUT_DIR"
 echo "link args    = $link_args"
 #echo "RZDM_RESULTS = $RZDM_RESULTS"
 echo "PYTHON_FILE_COMPARE = $PYTHON_FILE_COMPARE"
-echo -e "JOB_LEVEL_CHECK = $JOB_LEVEL_CHECK\n"
+echo -e "JOB_LEVEL_CHECK = $JOB_LEVEL_CHECK"
 if [[ $special_case_found == "TRUE" ]]; then
 echo "Special CASE = $CASE"
 fi
@@ -471,7 +475,7 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
        log_message "CRITICAL" "The experment directory was not created correctly"
     fi
 
-    if [[ $ICS_dir == "None" ]]; then
+    if [[ $COPY_WARM_ICS == "TRUE" ]]; then
       warm_start_files='/scratch3/NCEPDEV/stmp1/Kate.Friedman/FV3GFS_ICS/2019021400'
       log_message "INFO" "moving FV3GFS warmstart files for 2019021400 from: $warm_start_files"
       mkdir -p $comrot_test_dir/enkfgdas.20190214
