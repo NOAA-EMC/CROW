@@ -475,16 +475,17 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
        log_message "CRITICAL" "The experment directory was not created correctly"
     fi
 
-    if [[ $COPY_WARM_ICS == "TRUE" ]]; then
-      warm_start_files='/scratch3/NCEPDEV/stmp1/Kate.Friedman/FV3GFS_ICS/2019021400'
-      log_message "INFO" "moving FV3GFS warmstart files for 2019021400 from: $warm_start_files"
-      mkdir -p $comrot_test_dir/enkfgdas.20190214
-      mkdir -p $comrot_test_dir/gdas.20190214
-      rsync -rlptgoDv $warm_start_files/enkfgdas.20190214/ $comrot_test_dir/enkfgdas.20190214
-      rsync -rlptgoDv $warm_start_files/gdas.20190214/ $comrot_test_dir/gdas.20190214
-      log_message "INFO" "finished setting up warmstart files for 2019021400"
-    fi
+fi
 
+
+if [[ $COPY_WARM_ICS == "TRUE" ]]; then
+  warm_start_files='/scratch3/NCEPDEV/stmp1/Kate.Friedman/FV3GFS_ICS/2019021400'
+  log_message "INFO" "moving FV3GFS warmstart files for 2019021400 from: $warm_start_files"
+  mkdir -p $comrot_test_dir/enkfgdas.20190214
+  mkdir -p $comrot_test_dir/gdas.20190214
+  rsync -rlptgoDv $warm_start_files/enkfgdas.20190214/ $comrot_test_dir/enkfgdas.20190214
+  rsync -rlptgoDv $warm_start_files/gdas.20190214/ $comrot_test_dir/gdas.20190214
+  log_message "INFO" "finished setting up warmstart files for 2019021400"
 fi
 
 
