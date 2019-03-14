@@ -98,8 +98,7 @@ PYTHON_FILE_COMPARE=${PYTHON_FILE_COMPARE:-'TRUE'}
 #PYTHON_FILE_COMPARE='FALSE'
 
 fv3gfs_git_branch='slurm_beta'
-# Leave fv3gfs_svn_url blank to use git branch in fv3gfs_git_branch
-fv3gfs_svn_url=''
+
 module use /scratch4/NCEPDEV/global/save/Terry.McGuinness/git/Rocoto-fix-terry-3/modulefile
 load_rocoto='fix-terry-3_local'
 
@@ -141,12 +140,12 @@ if [[ $PYTHON_FILE_COMPARE == "TRUE" ]]; then
    if [ -z "$execPATH" ] ; then
     log_message "CRITICAL" "can not access locate $execPATH where this script was lauched"
    fi
-
+  
    COMPARE_FOLDERS=$execPATH/compare_folders.py
    if [[ ! -f $COMPARE_FOLDERS ]]; then
      log_message "CRITICAL" "the python script compare_folders.py could not be located\nit should be located in the same directory where the regression script is lauched $execPATH"
    fi
-
+  
    if [[ $system == "theia" ]]; then
     module use /scratch4/NCEPDEV/nems/noscrub/emc.nemspara/python/modulefiles
     module load python/3.6.1-emc
@@ -154,7 +153,7 @@ if [[ $PYTHON_FILE_COMPARE == "TRUE" ]]; then
     log_message "CRITICAL" "this script needs to be ported to the non-Thiea systems"
    fi
 fi
-
+  
 python_check=$(which python3)
 if [[ -z ${python_check} ]]; then
    log_message "CRITICAL" "python three shoule be in your path from ../NCEPDEV/nems/noscrub/emc.nemspara/python/modulefiles via module load python/3.6.1-emc\nbut module failed to load"
@@ -167,7 +166,7 @@ rocotoruncmd=$(which rocotorun)
 if [[ -z ${rocotoruncmd} ]]; then
   log_message "CRITICAL" "module load for rocoto ($load_rocoto) on system failed"
 fi
-
+ 
 rocotover=$($rocotoruncmd --version)
 log_message "INFO" "using rocoto version $rocotover"
 rocotostatcmd=$(which rocotostat)
@@ -288,11 +287,18 @@ fi
 # Check to see if user entered a CASE from regressionID
 CASE=$regressionID
 special_case_found="FALSE"
+fv3gfs_git_branch='slurm_beta'
 
 if [[ $CASE == "slurm" ]]; then
   log_message "INFO" "using slurm so loading slurm module for running test case"
+  log_message "INFO" "otherwise for the time being the default branch is slurm_beta but would use moab"
   module load slurm
   special_case_found="TRUE"
+  fv3gfs_git_branch='slurm_beta'
+elif [[ $CASE == "master" ]]; then
+  log_message "INFO" "using spcial case (master) so global-worfflow will be cloning from master"
+  special_case_found="TRUE"
+  fv3gfs_git_branch='master'
 fi
 
 regressionID=${regressionID:-'test_run'}
@@ -332,9 +338,6 @@ echo "BUILD        = $BUILD"
 echo "CREATE_EXP   = $CREATE_EXP"
 echo "RUNROCOTO    = $RUNROCOTO"
 echo "COMPARE_BASE = $COMPARE_BASE"
-if [[ $special_case_found == "TRUE" ]]; then
-echo "Special CASE = $CASE"
-fi
 
 echo -e "\nRepo and filepaths Settings"
 echo -e "============================"
@@ -345,6 +348,9 @@ echo "link args    = $link_args"
 #echo "RZDM_RESULTS = $RZDM_RESULTS"
 echo "PYTHON_FILE_COMPARE = $PYTHON_FILE_COMPARE"
 echo -e "JOB_LEVEL_CHECK = $JOB_LEVEL_CHECK\n"
+if [[ $special_case_found == "TRUE" ]]; then
+echo "Special CASE = $CASE"
+fi
 
 echo -e "\nModel Workflow Configuration Settings"
 echo "======================================"
@@ -383,30 +389,21 @@ SCRIPT_STARTTIME=$(date +%s)
 
 if [[ $CHECKOUT == 'TRUE' ]]; then
   cd ${CHECKOUT_DIR}
-  if [[ ! -z ${fv3gfs_svn_url} ]]; then
-
-    if [[ -d ${checkout_dir_basename} ]]; then
-       rm -Rf ${checkout_dir_basename}
-    fi
-    log_message "INFO" "checking out fv3gfs from svn $fv3gfs_svn_url"
-    svn co $fv3gfs_svn_url ${checkout_dir_basename}
-
-  else
   
-   fv3gfs_repo_name='global-workflow'
-   log_message "INFO" "cloning fvgfs from git with branch $fv3gfs_git_branch"
-   log_message "INFO" "git clone ssh://${username}@vlab.ncep.noaa.gov:29418/$fv3gfs_repo_name ${checkout_dir_basename}"
-   git clone ssh://${username}@vlab.ncep.noaa.gov:29418/$fv3gfs_repo_name ${checkout_dir_basename}
+  fv3gfs_repo_name='global-workflow'
+  log_message "INFO" "git clone ssh://${username}@vlab.ncep.noaa.gov:29418/$fv3gfs_repo_name ${checkout_dir_basename}"
+  git clone ssh://${username}@vlab.ncep.noaa.gov:29418/$fv3gfs_repo_name ${checkout_dir_basename}
 
-   if [[ ! -z "${fv3gfs_git_branch}// }" ]]; then
-    cd ${checkout_dir_basename}
-    git checkout remotes/origin/${fv3gfs_git_branch} -b ${fv3gfs_git_branch}
-    git rev-parse HEAD | xargs git show --stat
-    cd ${CHECKOUT_DIR}
-   fi
-
+  if [[ ${fv3gfs_git_branch} != "master" ]]; then
+   log_message "INFO" "git is now checkingout branch $fv3gfs_git_branch"
+   cd ${checkout_dir_basename}
+   git checkout remotes/origin/${fv3gfs_git_branch} -b ${fv3gfs_git_branch}
+   git rev-parse HEAD | xargs git show --stat
+   cd ${CHECKOUT_DIR}
+  else
+   log_message "INFO" "git clone left in master branch and no checkout was performed"
   fi
-fi
+fi  
 
 if [[ $BUILD == 'TRUE' ]]; then
 
