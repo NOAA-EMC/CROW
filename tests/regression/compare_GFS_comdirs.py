@@ -53,7 +53,7 @@ def _recursive_dircmp(folder1, folder2 ):
     data = {
         'left': [r'{}/{}'.format(folder1, i) for i in comparison.left_only],
         'right': [r'{}/{}'.format(folder2, i) for i in comparison.right_only],
-        'both': [r'{}/{}'.format(folder1, i) for i in comparison.common_files],
+        'both': [r'{}/{}'.format(folder1, i) for i in comparison.common_files]
     }
 
     for datalist in data.values():
@@ -315,7 +315,7 @@ def print_diff_files(dcmp):
     import subprocess
     from subprocess import run
 
-    global diff_file; global cwd; global verbose
+    global diff_file; global cwd; global verbose; global zero_sized_files_list
     global fixed_dir_experment_name
     if len(dcmp.common_dirs) != 0 and not verbose:
         logger.info(logger_hdr+'checking directories: %s'%' '.join(dcmp.common_dirs))
@@ -347,6 +347,9 @@ def print_diff_files(dcmp):
         file1_shortpath = '/'+dcmp.left.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
         file2_shortpath = '/'+dcmp.right.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
         diff_tar_members = []
+        if len(zero_sized_files_list) > 0:
+            for zero_sized_file in zero_sized_files_list:
+                diff_file.write('warning: this is a zero legth file: %s'%zero_sized_file)
         if 'master.grb2' in name:
             if not cmp_master_grb2( file1, file2 ):
                 diff_file.write( 'grib2 file %s has data differences in directories %s and %s\n'%(name,file1_shortpath,file2_shortpath))
@@ -461,6 +464,7 @@ if __name__ == '__main__':
 
     verbose = args.verbose_tar
     file_dic_list = collections.defaultdict(list)
+    zero_sized_files_list = list()
 
     if args.creat_jobslevel_file is not None:
 
@@ -525,13 +529,24 @@ if __name__ == '__main__':
 
     total_file_count_dir1 = sum([len(files) for r, d, files in os.walk(folder1)])
     total_file_count_dir2 = sum([len(files) for r, d, files in os.walk(folder2)])
+
+    import pathlib
+    logger.info(logger_hdr+'a safty sanity check for zero sized files is processing')
+    for folder in (folder1,folder2):
+        for path, subdirs, files in os.walk(folder):
+            for name in files:
+                file_name_found = pathlib.PurePath(path,name)
+                if os.path.getsize( file_name_found ) == 0:
+                    zero_sized_files_list.append(file_name_found)
+                    logger.warning( "%s is a zero sized file "%file_name_found )
+
     logger.info(logger_hdr+'total number of files in %s is %d'%(folder1,total_file_count_dir1))
     logger.info(logger_hdr+'total number of files in %s is %d'%(folder2,total_file_count_dir2))
-
     logger.info(logger_hdr+'comparing folders:\n   %s\n   %s'%(folder1,folder2))
-    logger.info(logger_hdr+'checking for matching file counts in directories')
 
     results = compare(folder1, folder2)
+
+    logger.info(logger_hdr+'checking for matching file counts in directories')
     left_right = ('left','right')
     out_of_order_file_name = os.path.join( os.path.dirname( diff_file_name ), os.path.basename(diff_file_name).split('.',1)[0]+'.file_imbalance')
     out_of_order_file = open(out_of_order_file_name ,'w')
