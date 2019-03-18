@@ -141,9 +141,9 @@ if [[ $PYTHON_FILE_COMPARE == "TRUE" ]]; then
     log_message "CRITICAL" "can not access locate $execPATH where this script was lauched"
    fi
   
-   COMPARE_FOLDERS=$execPATH/compare_folders.py
+   COMPARE_FOLDERS=$execPATH/compare_GFS_comdirs.py
    if [[ ! -f $COMPARE_FOLDERS ]]; then
-     log_message "CRITICAL" "the python script compare_folders.py could not be located\nit should be located in the same directory where the regression script is lauched $execPATH"
+     log_message "CRITICAL" "the python script compare_GFS_comdirs.py could not be located\nit should be located in the same directory where the regression script is lauched $execPATH"
    fi
   
    if [[ $system == "theia" ]]; then
@@ -503,7 +503,7 @@ run_file_compare_python () {
    log_message "INFO" "loading module nccmp"
    module load nccmp
    log_message "INFO" "processing at lease $total_number_files using comprehensive pyton global file comparitor" 
-   log_message "INFO" "running: compare_folders.py --ctotal_number_filesmp_dirs $check_baseline_dir $comrot_test_dir"
+   log_message "INFO" "running: compare_GFS_comdirs.py --ctotal_number_filesmp_dirs $check_baseline_dir $comrot_test_dir"
    $COMPARE_FOLDERS --cmp_dirs $check_baseline_dir $comrot_test_dir
 
 }
