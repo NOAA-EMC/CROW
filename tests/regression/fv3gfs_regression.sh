@@ -488,10 +488,10 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     sed -i 's/USE_RADSTAT=\"NO\"/USE_RADSTAT=\"YES\"/' $exp_dir_fullpath/config.eobs
     sed -i 's/USE_RADSTAT=\"NO\"/USE_RADSTAT=\"YES\"/' $exp_dir_fullpath/config.anal
     log_message "INFO" "updated config.eobs and config.anal with USE_RADSTAT=YES"
-    sed -i 's/FHMAX_GFS_06=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
-    sed -i 's/FHMAX_GFS_12=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
-    sed -i 's/FHMAX_GFS_18=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
-    log_message "INFO" "updated config.base to have the GFS forecast length to be 160"
+    #sed -i 's/FHMAX_GFS_06=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
+    #sed -i 's/FHMAX_GFS_12=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
+    #sed -i 's/FHMAX_GFS_18=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
+    #log_message "INFO" "updated config.base to have the GFS forecast length to be 160"
 
 fi
 
