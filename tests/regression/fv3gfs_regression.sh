@@ -192,6 +192,9 @@ fi
 # CASE = global-slurm-test
 # ./setup_expt.py --pslot gw_C384C192_2019021400_IC --comrot /scratch4/NCEPDEV/global/noscrub/Terry.McGuinness/ROTDIRS --expdir /scratch4/NCEPDEV/global/noscrub/Terry.McGuinness/expdir --idate 2019021400 --edate 2019021412 --configdir /scratch4/NCEPDEV/global/save/Terry.McGuinness/git/global-workflow/parm/config --resdet 384 --resens 192 --nens 80 --gfs_cyc 4
 
+#======================================
+# CASE defualt
+# $HOMEgfs/setup_expt.py --pslot $yourPSLOT --resdet 384 --resens 192 --comrot $yourROTDIRS --expdir $yourEXPDIR --idate 2017073118 --edate 2017080100 --icsdir /scratch4/NCEPDEV/da/noscrub/Catherine.Thomas/ICSDIR --configdir $HOMEgfs/parm/config --nens 24 --cdump gdas --gfs_cyc 1
 
 
 # If RZDM is set then the viewer will attempt to post the state of the workflow in html on the rzdm server
@@ -288,10 +291,16 @@ fi
 CASE=$regressionID
 special_case_found="FALSE"
 fv3gfs_git_branch='slurm_beta'
+ICS_dir="/scratch4/NCEPDEV/da/noscrub/Catherine.Thomas/ICSDIR"
+if [[ ! -d "$ICS_dir" ]]; then
+   log_message "CRITICAL" "Using base case but ICSDIR directory does not exsist: $ICS_dir"
+fi
+log_message "INFO" "Using ICSDIR from Cathy as default base case"
+log_message "INFO" "ICSDIR: $ICS_dir"
 
 if [[ $CASE == "slurm" ]]; then
+  log_message "INFO" "using special CASE slurm so using branch beta_slurm"
   log_message "INFO" "using slurm so loading slurm module for running test case"
-  log_message "INFO" "otherwise for the time being the default branch is slurm_beta but would use moab"
   module load slurm
   special_case_found="TRUE"
   fv3gfs_git_branch='slurm_beta'
@@ -299,7 +308,6 @@ elif [[ $CASE == "master" ]]; then
   log_message "INFO" "using spcial case (master) so global-worfflow will be cloning from master"
   special_case_found="TRUE"
   fv3gfs_git_branch='master'
-  ICS_dir=$PWD
 fi
 
 regressionID=${regressionID:-'test_run'}
@@ -321,10 +329,12 @@ exp_dir_fullpath=${CHECKOUT_DIR}/${pslot}
 #TODO Stop HERE and make sure default values for baseline canned case are present
 
 link_args='emc theia'
-idate='2019021400'
-edate='2019021406'
-EXTRA_SETUP_STRING="--resdet 384 --resens 192 --nens 80 --gfs_cyc 4"
-COPY_WARM_ICS=${COPY_WARM_ICS:-'TRUE'}
+
+idate='2017073118'
+edate='2017080100'
+
+EXTRA_SETUP_STRING="--resdet 384 --resens 192 --nens 24 --gfs_cyc 4"
+COPY_WARM_ICS=${COPY_WARM_ICS:-'FALSE'}
 
 
 if [[ $ICS_dir == "None" ]]; then
@@ -474,6 +484,14 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     else
        log_message "CRITICAL" "The experment directory was not created correctly"
     fi
+
+    sed -i 's/USE_RADSTAT=\"NO\"/USE_RADSTAT=\"YES\"/' $exp_dir_fullpath/config.eobs
+    sed -i 's/USE_RADSTAT=\"NO\"/USE_RADSTAT=\"YES\"/' $exp_dir_fullpath/config.anal
+    log_message "INFO" "updated config.eobs and config.anal with USE_RADSTAT=YES"
+    sed -i 's/FHMAX_GFS_06=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
+    sed -i 's/FHMAX_GFS_12=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
+    sed -i 's/FHMAX_GFS_18=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
+    log_message "INFO" "updated config.base to have the GFS forecast length to be 160"
 
 fi
 
