@@ -333,7 +333,7 @@ link_args='emc theia'
 idate='2017073118'
 edate='2017080100'
 
-EXTRA_SETUP_STRING="--resdet 384 --resens 192 --nens 24 --gfs_cyc 4"
+EXTRA_SETUP_STRING="--resdet 384 --resens 192 --nens 24 --gfs_cyc 1"
 COPY_WARM_ICS=${COPY_WARM_ICS:-'FALSE'}
 
 

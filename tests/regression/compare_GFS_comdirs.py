@@ -349,7 +349,7 @@ def print_diff_files(dcmp):
         diff_tar_members = []
         if len(zero_sized_files_list) > 0:
             for zero_sized_file in zero_sized_files_list:
-                diff_file.write('warning: this is a zero legth file: %s'%zero_sized_file)
+                diff_file.write('warning: this is a zero legth file: %s\n'%zero_sized_file)
         if 'master.grb2' in name:
             if not cmp_master_grb2( file1, file2 ):
                 diff_file.write( 'grib2 file %s has data differences in directories %s and %s\n'%(name,file1_shortpath,file2_shortpath))
