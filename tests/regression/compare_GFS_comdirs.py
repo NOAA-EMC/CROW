@@ -537,8 +537,9 @@ if __name__ == '__main__':
             for name in files:
                 file_name_found = pathlib.PurePath(path,name)
                 if os.path.getsize( file_name_found ) == 0:
-                    zero_sized_files_list.append(file_name_found)
-                    logger.warning( "%s is a zero sized file "%file_name_found )
+                    if file_name_found[-4:] != '_run'
+                        zero_sized_files_list.append(file_name_found)
+                        logger.warning( "%s is a zero sized file "%file_name_found )
 
     logger.info(logger_hdr+'total number of files in %s is %d'%(folder1,total_file_count_dir1))
     logger.info(logger_hdr+'total number of files in %s is %d'%(folder2,total_file_count_dir2))
