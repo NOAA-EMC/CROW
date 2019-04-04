@@ -369,8 +369,8 @@ fi
 
 echo -e "\nModel Workflow Configuration Settings"
 echo "======================================"
-echo "idate  : $idate"
-echo "edate  : $edate"
+echo "IDATE  : $idate"
+echo "EDATE  : $edate"
 echo "PSLOT  : $pslot"
 echo "COMROT : $comrot"
 echo "CONFIG : $config_dir"
@@ -486,11 +486,13 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
        log_message "CRITICAL" "The experment directory was not created correctly"
     fi
 
+    # Using Cathy T.'s case as defalut always when creating exp
     sed -i 's/USE_RADSTAT=\"NO\"/USE_RADSTAT=\"YES\"/' $exp_dir_fullpath/config.eobs
     sed -i 's/USE_RADSTAT=\"NO\"/USE_RADSTAT=\"YES\"/' $exp_dir_fullpath/config.anal
     log_message "INFO" "updated config.eobs and config.anal with USE_RADSTAT=YES"
-    sed -i 's/export l4densvar=\".true.\" /export l4densvar=\".false.\"' exp_dir_fullpath/config.base
-    log_message "INFO" "updated config.base to have the  l4densvar=\'.false.\'"
+    sed -i 's/export l4densvar=\".true.\" /export l4densvar=\".false.\"' $exp_dir_fullpath/config.base
+    log_message "INFO" "updated config.base to have the  l4densvar=\".false.\""
+
     #sed -i 's/FHMAX_GFS_06=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
     #sed -i 's/FHMAX_GFS_12=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
     #sed -i 's/FHMAX_GFS_18=180/FHMAX_GFS_18=160' $exp_dir_fullpath/config.base
