@@ -168,6 +168,7 @@ if [[ -z ${rocotoruncmd} ]]; then
 fi
  
 rocotover=$($rocotoruncmd --version)
+log_message "INFO" "rocotorun found here: $rocotoruncmd"
 log_message "INFO" "using rocoto version $rocotover"
 rocotostatcmd=$(which rocotostat)
 if [[ -z ${rocotostatcmd} ]]; then
