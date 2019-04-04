@@ -537,7 +537,7 @@ if __name__ == '__main__':
             for name in files:
                 file_name_found = pathlib.PurePath(path,name)
                 if os.path.getsize( file_name_found ) == 0:
-                    if file_name_found[-4:] != '_run'
+                    if file_name_found[-4:] != '_run':
                         zero_sized_files_list.append(file_name_found)
                         logger.warning( "%s is a zero sized file "%file_name_found )
 
