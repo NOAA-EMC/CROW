@@ -309,6 +309,12 @@ elif [[ $CASE == "master" ]]; then
   log_message "INFO" "using spcial case (master) so global-worfflow will be cloning from master"
   special_case_found="TRUE"
   fv3gfs_git_branch='master'
+  module unload slurm
+  log_message "INFO" "using spcial case (master) so module unload slurm was issued"
+elif [[ $CASE == "baseline" ]]; then
+  log_message "INFO" "using spcial case (baseline) so module unload slrum is issued"
+  special_case_found="TRUE"
+  module unload slurm
 fi
 
 regressionID=${regressionID:-'test_run'}
@@ -332,7 +338,7 @@ exp_dir_fullpath=${CHECKOUT_DIR}/${pslot}
 link_args='emc theia'
 
 idate='2017073118'
-edate='2017080100'
+edate='2017080106'
 
 EXTRA_SETUP_STRING="--resdet 384 --resens 192 --nens 24 --gfs_cyc 1"
 COPY_WARM_ICS=${COPY_WARM_ICS:-'FALSE'}
@@ -478,6 +484,18 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
 
     yes | ${setup_expt} ${exp_setup_string}
     log_message "INFO" "setting up workflow: ${setup_workflow} --expdir $exp_dir_fullpath"
+
+    # Using Cathy T.'s case as defalut always when creating exp
+    log_message "INTO" "Applying canned case configuration for exerment \'baseline\' which differs slightly from master branch"
+    sed -i 's/USE_RADSTAT=\"NO\"/USE_RADSTAT=\"YES\"  # USE_RADSTAT set to YES by fv3gfs_regression.sh script/' $exp_dir_fullpath/config.eobs
+
+    sed -i '/npe_gsi=$npe_anal/ i export USE_RADSTAT=\"YES\" # added by fv3gfs_regression.sh' $exp_dir_fullpath/config.anal
+    log_message "INFO" "updated config.eobs and config.anal with USE_RADSTAT=YES"
+
+    sed -i 's/export l4densvar=\".true.\"/export l4densvar=\".false.\"   #  l4densvar updated to be set to false by fv3gfs_regression.sh script/' $exp_dir_fullpath/config.base
+    log_message "INFO" "updated config.base to have the  l4densvar=\".false.\""
+
+
     yes | ${setup_workflow} --expdir $exp_dir_fullpath
 
     if [[ -d $exp_dir_fullpath ]]; then
@@ -485,13 +503,6 @@ if [[ $CREATE_EXP == 'TRUE' ]]; then
     else
        log_message "CRITICAL" "The experment directory was not created correctly"
     fi
-
-    # Using Cathy T.'s case as defalut always when creating exp
-    sed -i 's/USE_RADSTAT=\"NO\"/USE_RADSTAT=\"YES\"  # USE_RADSTAT set to YES by fv3gfs_regression.sh script/' $exp_dir_fullpath/config.eobs
-    sed -i 's/USE_RADSTAT=\"NO\"/USE_RADSTAT=\"YES\"  # USE_RADSTAT set to YES by fv3gfs_regression.sh script/' $exp_dir_fullpath/config.anal
-    log_message "INFO" "updated config.eobs and config.anal with USE_RADSTAT=YES"
-    sed -i 's/export l4densvar=\".true.\"/export l4densvar=\".false.\"   #  l4densvar updated to be set to false by fv3gfs_regression.sh script/' $exp_dir_fullpath/config.base
-    log_message "INFO" "updated config.base to have the  l4densvar=\".false.\""
 
 fi
 
