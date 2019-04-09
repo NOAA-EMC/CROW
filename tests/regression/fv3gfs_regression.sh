@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-export REGRESSSION_COMROT_BASENAME='fv3gfs_regression_COMROTs'
+export REGRESSSION_ROTDIR_BASENAME='fv3gfs_regression_ROTDIRS'
 
 usage () {
    echo -e "\033[1mUSAGE:\033[0m\n\t$0 [[baseline]] [[compare]] [[--non-interactive]]\n"
@@ -329,7 +329,7 @@ config_dir=${CHECKOUT_DIR}/${checkout_dir_basename}/parm/config
 
 username=`echo ${USER} | tr '[:upper:]' '[:lower:]'`
 
-comrot=${CHECKOUT_DIR}/${REGRESSSION_COMROT_BASENAME}
+comrot=${CHECKOUT_DIR}/${REGRESSSION_ROTDIR_BASENAME}
 comrot_test_dir=${comrot}/${pslot}
 exp_dir_fullpath=${CHECKOUT_DIR}/${pslot}
 
@@ -378,7 +378,7 @@ echo "======================================"
 echo "IDATE  : $idate"
 echo "EDATE  : $edate"
 echo "PSLOT  : $pslot"
-echo "COMROT : $comrot"
+echo "ROTDIR : $comrot"
 echo "CONFIG : $config_dir"
 echo "ICDIR  : $ICS_dir"
 echo "IDATE  : $idate"

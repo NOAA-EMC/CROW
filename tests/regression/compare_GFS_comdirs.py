@@ -16,9 +16,9 @@ def get_args():
 
     parser = argparse.ArgumentParser()
     #group  = parser.add_mutually_exclusive_group(required=True)
-    parser.add_argument('--cmp_dirs',nargs=2,metavar=('COMROT_baseline','COMROT_testrun'),help='compare COMROT folders')
-    parser.add_argument('-ujf','--cmp_dirs_with_joblevel_file', nargs=1, metavar=('file_list.yaml'), help='(u)se stored (j)ob level (f)ile list when comparing COMROTs')
-    parser.add_argument('-cjf','--creat_jobslevel_file',nargs=3,metavar=('job_name','COMROT','file_list.yaml'),help='(c)reate (j)ob level (f)ile from output')
+    parser.add_argument('--cmp_dirs',nargs=2,metavar=('ROTDIR_baseline','ROTDIR_testrun'),help='compare ROTDIR folders')
+    parser.add_argument('-ujf','--cmp_dirs_with_joblevel_file', nargs=1, metavar=('file_list.yaml'), help='(u)se stored (j)ob level (f)ile list when comparing ROTDIRS')
+    parser.add_argument('-cjf','--creat_jobslevel_file',nargs=3,metavar=('job_name','ROTDIR','file_list.yaml'),help='(c)reate (j)ob level (f)ile from output')
     parser.add_argument('-f','--diff_list_file',dest="diff_list_file",help='name of file containing a list of differing files')
     parser.add_argument('-vt','--verbose_tar', help='include names of differing files witin tar files', action='store_true',default=False)
 
@@ -344,8 +344,12 @@ def print_diff_files(dcmp):
         #    logger.info(logger_hdr+'file %s not in yaml file'%name)
 
         file1 = os.path.join(dcmp.left,name); file2 = os.path.join(dcmp.right,name)
-        file1_shortpath = '/'+dcmp.left.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
-        file2_shortpath = '/'+dcmp.right.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
+        file1_shortpath = dcmp.left.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
+        file2_shortpath = dcmp.right.replace(cwd,'').replace(fixed_dir_experment_name,'').lstrip('/')
+        if '/' in file1_shortpath:
+            file1_shortpath = '/'+file1_shortpath
+        if '/' in file2_shortpath:
+            file2_shortpath = '/'+file2_shortpath
         diff_tar_members = []
         if len(zero_sized_files_list) > 0:
             for zero_sized_file in zero_sized_files_list:
@@ -433,10 +437,10 @@ if __name__ == '__main__':
     logger,logger_hdr = get_logger()
     args = get_args()
 
-    if 'REGRESSSION_COMROT_BASENAME' in os.environ:
-        fixed_dir_experment_name = environ.get('REGRESSSION_COMROT_BASENAME')
+    if 'REGRESSSION_ROTDIR_BASENAME' in os.environ:
+        fixed_dir_experment_name = environ.get('REGRESSSION_ROTDIR_BASENAME')
     else:
-        fixed_dir_experment_name = 'fv3gfs_regression_ROTDIRs'
+        fixed_dir_experment_name = 'fv3gfs_regression_ROTDIRS'
     using_file_list = False
 
     NCCMP='/gpfs/hps3/emc/nems/noscrub/emc.nemspara/FV3GFS_V0_RELEASE/util/nccmp'
@@ -469,26 +473,26 @@ if __name__ == '__main__':
     if args.creat_jobslevel_file is not None:
 
         job_name = args.creat_jobslevel_file[0]
-        COMROT = args.creat_jobslevel_file[1]
-        COMROT_Path = Path( args.creat_jobslevel_file[1] )
-        if not COMROT_Path.is_dir():
-            logger.critical(logger_hdr+'COMROT %s is not a directory')
+        ROTDIR = args.creat_jobslevel_file[1]
+        ROTDIR_Path = Path( args.creat_jobslevel_file[1] )
+        if not ROTDIR_Path.is_dir():
+            logger.critical(logger_hdr+'ROTDIR %s is not a directory')
             sys.exit(-1)
-        COMROT = os.path.realpath( COMROT ) 
+        ROTDIR = os.path.realpath( ROTDIR ) 
         yaml_files_filename =  os.path.realpath( args.creat_jobslevel_file[2] )
-        logger.info(logger_hdr+'determining job level files for job %s in file %s from COMROT %s'%(job_name, os.path.basename(yaml_files_filename),COMROT))
-        file_list_current = capture_files_dir( COMROT )
+        logger.info(logger_hdr+'determining job level files for job %s in file %s from ROTDIR %s'%(job_name, os.path.basename(yaml_files_filename),ROTDIR))
+        file_list_current = capture_files_dir( ROTDIR )
         yaml_files_filename_Path = Path(yaml_files_filename)
         if yaml_files_filename_Path.is_file():
             yaml_files_fptr = open(  yaml_files_filename )
             file_dic_list = yaml.load( yaml_files_fptr  )
             yaml_files_fptr.close()
 
-        if 'prior_COMROT' in file_dic_list:
+        if 'prior_ROTDIR' in file_dic_list:
             result = []
             logger.info(logger_hdr+'prior out from last job found %s'%yaml_files_filename )
             for file in file_list_current:
-                if file not in file_dic_list['prior_COMROT']:
+                if file not in file_dic_list['prior_ROTDIR']:
                     result.append(file)
             file_dic_list[job_name] = result
             logger.info(logger_hdr+'%d files added from job %s'%( len(file_dic_list[job_name]), job_name ))
@@ -496,7 +500,7 @@ if __name__ == '__main__':
             logger.info(logger_hdr+'no prior job found job, %d files added to list from job %s'%( len(file_list_current), job_name ) )
             file_dic_list[job_name] = file_list_current
             
-        file_dic_list['prior_COMROT'] = file_list_current
+        file_dic_list['prior_ROTDIR'] = file_list_current
         logger.info(logger_hdr+'write out file %s'%yaml_files_filename )
         with open(yaml_files_filename, 'w') as outfile:
             yaml.dump(file_dic_list, outfile, default_flow_style=False)
@@ -537,7 +541,8 @@ if __name__ == '__main__':
             for name in files:
                 file_name_found = pathlib.PurePath(path,name)
                 if os.path.getsize( file_name_found ) == 0:
-                    if file_name_found.name[-4:] != '_run':
+                    #print( 'TEST SPLIT: %s'%file_name_found.name.split('_')[-1])
+                    if file_name_found.name.split('_')[-1] not in ('run','events'):
                         zero_sized_files_list.append(file_name_found)
                         logger.warning( "%s is a zero sized file "%file_name_found )
 
