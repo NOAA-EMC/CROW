@@ -6,7 +6,7 @@ import os,sys
 from pathlib import Path
 from pathlib import PurePath
 
-egnore_file_list = ['*.grp*','*.log','*.log*','INPUT','logs','*.idx']
+egnore_file_list = ['.git','*.grp*','*.log','*.log*','INPUT','logs','*.idx']
 
 def get_args():
     import argparse
@@ -539,12 +539,12 @@ if __name__ == '__main__':
     for folder in (folder1,folder2):
         for path, subdirs, files in os.walk(folder):
             for name in files:
-                file_name_found = pathlib.PurePath(path,name)
-                if os.path.getsize( file_name_found ) == 0:
-                    #print( 'TEST SPLIT: %s'%file_name_found.name.split('_')[-1])
-                    if file_name_found.name.split('_')[-1] not in ('run','events'):
-                        zero_sized_files_list.append(file_name_found)
-                        logger.warning( "%s is a zero sized file "%file_name_found )
+                if pathlib.Path(pathlib.PurePath(path,name)).exists():
+                    file_name_found = pathlib.PurePath(path,name)
+                    if os.path.getsize( file_name_found ) == 0:
+                        if file_name_found.name.split('_')[-1] not in ('run','events'):
+                            zero_sized_files_list.append(file_name_found)
+                            logger.warning( "%s is a zero sized file "%file_name_found )
 
     logger.info(logger_hdr+'total number of files in %s is %d'%(folder1,total_file_count_dir1))
     logger.info(logger_hdr+'total number of files in %s is %d'%(folder2,total_file_count_dir2))
