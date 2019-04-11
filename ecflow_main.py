@@ -8,8 +8,8 @@ import sys, os;
 
 sys.path.append(os.getcwd() + "/CROW")
 
-os.environ['ECF_HOME'] = os.getcwd()
-os.environ['ECF_ROOT'] = os.getcwd()
+os.environ['ECF_HOME'] = os.getcwd(+ "../../")
+os.environ['ECF_ROOT'] = os.getcwd(+ "../../")
 os.environ['ECF_HOST'] = "ldecflow1"
 os.environ['ECF_PORT'] = "32065"
 
