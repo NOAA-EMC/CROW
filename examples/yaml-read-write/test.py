@@ -1,6 +1,9 @@
 #! /usr/bin/env python3.6
 
-import sys
+import os,sys
+
+sys.path.append(os.getcwd() + '/../../')
+
 import crow.config
 
 toyml=crow.config.from_file('original.yaml')
