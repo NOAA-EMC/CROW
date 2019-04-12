@@ -1,8 +1,11 @@
 #! /usr/bin/env python3.6
 
-## Simple test program for crow.config module
+## Unit test program for crow.config module
 
-import sys
+import sys, os
+
+sys.path.append(os.getcwd() + '/../../')
+
 import logging
 from datetime import timedelta
 import crow.config

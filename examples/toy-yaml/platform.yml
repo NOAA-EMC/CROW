@@ -66,6 +66,10 @@ wcoss_ibm: &wcoss_ibm !Platform
 
   detect: !calc tools.isdir('/gpfs/hps') and tools.isfile('/etc/redhat-release')
 
+sandbox: &sandbox !Platform
+  machine: sandbox
+  scrub: '../../../../../' 
+
 platform: !FirstTrue
   - do: *wcoss_cray
     when: !calc do.detect
@@ -73,4 +77,4 @@ platform: !FirstTrue
     when: !calc do.detect
   - do: *wcoss_ibm
     when: !calc do.detect
-  - otherwise: !error This platform is unsupported or unknown.
+  - otherwise: *sandbox 
