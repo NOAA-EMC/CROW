@@ -46,10 +46,9 @@ accounting:
   queue: '%QUEUE%'
   project: GFS-T2O
 
-ecf_file_template: &ecf_file_template !expand |
+ecf_file_template: 
+  &ecf_file_template !expand |
   #! /bin/sh
-  {sched.batch_accounting(doc.accounting,jobname=jobname,outerr=logfile)
-  }{sched.batch_resources(resources)}
   %include <head.h>
   echo ${{JOBgfs}}/{J_JOB}
   %include <tail.h>
@@ -81,6 +80,10 @@ suite: !Cycle
     edit ECF_SOME_OTHER_VAR 'abcd'
     edit QUEUE 'debug'
 
+  ecf_file_set:
+    disk_path: toy_ecflow
+    ECF_FILES: toy_ecflow
+
   task0: !Task
     # Time: !timedelta +2:00:00
     resources: *sample_shared_serial
@@ -102,7 +105,6 @@ suite: !Cycle
         event manually_written_event
       ecf_file: !expand |
         #! /bin/sh
-        {sched.batch_accounting(doc.accounting,jobname=jobname)}{sched.batch_resources(resources)}
         %include <head.h>
         echo ${{JOBgfs}}/{J_JOB}
         ecflow_client --event=some_event

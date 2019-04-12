@@ -1,6 +1,9 @@
 #! /usr/bin/env python3.6
 
 import os, sys, logging
+
+sys.path.append(os.getcwd() + "/../../../")
+
 import crow.config
 from crow.config import Platform
 import crow.metascheduler
