@@ -604,6 +604,43 @@ def make_rocoto_xml_for(yamldir):
     assert(suite.viewed._path)
     loudly_make_dir_if_missing(f'{conf.places.ROTDIR}/logs')
     make_rocoto_xml(suite,f'{yamldir}/workflow.xml')
+    create_crontab(conf)
+    
+def create_crontab(conf,cronint=5):
+    '''
+        Create crontab to execute rocotorun every cronint (5) minutes
+    '''
+
+    cronintstr = '*/%d * * * *' % cronint
+    rocotorunstr = '%s -d %s/workflow.db -w %s/workflow.xml' % ('rocotorun',conf.places.EXPDIR,conf.places.EXPDIR)
+
+    # On WCOSS, rocoto module needs to be loaded everytime cron runs
+    if conf.platform.name in ['WCOSS']:
+        rocotoloadstr = '. /usrx/local/Modules/default/init/sh; module use -a /usrx/local/emc_rocoto/modulefiles; module load rocoto/20170119-master)'
+        rocotorunstr = '(%s %s)' % (rocotoloadstr, rocotorunstr)
+
+    
+    if(conf.accounting.user_email == 'none'):
+        REPLYTO = ""
+    else:
+        REPLYTO = conf.accounting.user_email
+
+    strings = []
+
+    strings.append('\n')
+    strings.append('#################### %s ####################\n' % conf.names.experiment)
+    strings.append('MAILTO="%s"\n' % REPLYTO)
+    strings.append('%s %s\n' % (cronintstr, rocotorunstr))
+    strings.append('#################################################################\n')
+    strings.append('\n')
+
+    cronfile = 'workflow.crontab'
+    fh = open(os.path.join(conf.places.EXPDIR, cronfile), 'w')
+    fh.write(''.join(strings))
+    print(f'{fh.name}: Rocoto Crontab document created here.')
+    fh.close()
+
+    return
 
 def setup_case_usage(why=None):
     sys.stderr.write(f'''USAGE: setup_case.py CASE_NAME EXPERIMENT_NAME\n

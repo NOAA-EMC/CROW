@@ -6,8 +6,8 @@ Created on Jul 11, 2018
 
 import sys, os;
 
-sys.path.append("/Users/jiankuang/Documents/Eclipse_workspace/ecfutils_007/CROW")
+sys.path.append(os.getcwd())
 
 import worktools ; 
 if __name__ == '__main__':
-    worktools.make_rocoto_xml_for(os.getcwd() + '/expdir/casetest1')
+    worktools.make_rocoto_xml_for('/export/emc-lw-jkuang/jkuang//expdir/test1')
