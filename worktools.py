@@ -8,16 +8,12 @@ from getopt import getopt
 from contextlib import suppress
 logger=logging.getLogger('crow.model.fv3gfs')
 
-os.chdir('../')
-
 YAML_DIRS_TO_COPY={ '../schema':'schema',
                     '../defaults':'defaults',
                     '../config':'config',
                     '../runtime':'runtime' } # important: no ending /
 YAML_FILES_TO_COPY={ '../_expdir_main.yaml': '_main.yaml',
                      '../user.yaml': 'user.yaml' }
-
-os.chdir('CROW/')
 
 try:
     import crow
@@ -94,7 +90,8 @@ def find_available_platforms(platdir):
 
 def sandbox_platforms(platdir):
     available={}
-    plat=from_file('../user.yaml',f'{platdir}/_common.yaml',f'{platdir}/_sandbox.yaml')
+#    plat=from_file('../user.yaml',f'{platdir}/_common.yaml',f'{platdir}/_sandbox.yaml')
+    plat=from_file(f'{platdir}/_common.yaml',f'{platdir}/_sandbox.yaml')
     available[plat.platform.name]=plat
     return available
 
