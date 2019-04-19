@@ -35,15 +35,6 @@ task_schema: &task_schema !Template
     type: string
     stages: [ execution ]
 
-  more_vars:
-    description: >-
-      List of variables that should be added to Rocoto envar blocks,
-      ecflow suite definition edits, and ecf file exports.  Overriding
-      ecflow_def will prevent this from being passed through as edits
-      in the suite definition.
-    type: string list
-    stages: [ execution ]
-
   ecf_environment_settings:
     description: "Tuning variables like KMP_AFFINITY and OMP_STACKSIZE."
     type: string
@@ -61,25 +52,6 @@ task_schema: &task_schema !Template
     description: >-
       Generates additional resource specification variables such as
       ntasks, threads, and ptile.
-    type: string
-    default: ""
-    stages: [ execution ]
-
-  ecf_maybe_ntasks:
-    description: "Sets the $ntasks variable (number of MPI ranks) if needed"
-    type: string
-    default: ""
-    stages: [ execution ]
-
-  ecf_maybe_threads:
-    description: "Sets the $threads variable (number of OpenMP threads) if needed"
-    type: string
-    default: ""
-    stages: [ execution ]
-
-  ecf_maybe_ptile:
-    description: >-
-      Sets the $ptile variable (maximum number of MPI ranks per node) if needed
     type: string
     default: ""
     stages: [ execution ]
