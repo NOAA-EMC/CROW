@@ -39,13 +39,15 @@ def reg_case_setup():
     logger.setLevel(logging.INFO)
     crow.set_superdebug(True)           # superdebug on
     force=True                          # Force rewrite
-    skip_comrot=False                    # Not skip comrot
+    skip_comrot=False                   # Not skip comrot
     force_platform_rewrite=True         # Overwrite platform every time
 
     case_name='regression_case'
     experiment_name='regtest_tmp'
-
-    valid_platforms=sandbox_platforms("../test_data/regtest/platforms/")
+      
+    userfile = list(YAML_FILES_TO_COPY.keys())[list(YAML_FILES_TO_COPY.values()).index('user.yaml')]
+    
+    valid_platforms=sandbox_platforms(userfile,"../test_data/regtest/platforms/")
     platdoc = select_platform(None,valid_platforms)
 
     EXPDIR = make_yaml_files_in_expdir(

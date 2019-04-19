@@ -81,10 +81,10 @@ def find_available_platforms(platdir):
         # All platforms "can be skipped" so skip none:
         return matches
 
-def sandbox_platforms(platdir):
+def sandbox_platforms(userfile,platdir):
     available={}
-#    plat=from_file('../user.yaml',f'{platdir}/_common.yaml',f'{platdir}/_sandbox.yaml')
-    plat=from_file(f'{platdir}/_common.yaml',f'{platdir}/_sandbox.yaml')
+    plat=from_file(userfile,f'{platdir}/_common.yaml',f'{platdir}/_sandbox.yaml')
+#    plat=from_file(f'{platdir}/_common.yaml',f'{platdir}/_sandbox.yaml')
     available[plat.platform.name]=plat
     return available
 
@@ -298,7 +298,6 @@ def make_yaml_files_in_expdir(srcdir,YAML_DIRS_TO_COPY,YAML_FILES_TO_COPY,case_n
             iter(YAML_DIRS_TO_COPY.items()),
             iter(YAML_FILES_TO_COPY.items())):
         tgtfile=os.path.join(tgtdir,tgtbase)
-        print(srcfile)
         if os.path.isdir(srcfile):
             logger.info(f'{srcfile}: copy yaml directory tree to {tgtfile}')
             if os.path.exists(tgtfile):
@@ -680,14 +679,16 @@ def setup_case(command_line_arguments):
                      'alphanumeric and start with a letter.')
         exit(1)
 
-    if not os.path.exists('../user.yaml'):
+    userfile = list(YAML_FILES_TO_COPY.keys())[list(YAML_FILES_TO_COPY.values()).index('user.yaml')]
+    
+    if not os.path.exists(userfile):
         logger.error('You did not create user.yaml!')
         logger.error('Copy user.yaml.default to user.yaml and edit.')
         exit(1)
-
+    
     requested_platform=options.get('-p',None)
     if sandbox:
-        valid_platforms=sandbox_platforms("../platforms/")
+        valid_platforms=sandbox_platforms(userfile,"../platforms/")
         platdoc = select_platform(requested_platform,valid_platforms)
     else:
         valid_platforms=find_available_platforms("../platforms/")
