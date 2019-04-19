@@ -8,13 +8,6 @@ from getopt import getopt
 from contextlib import suppress
 logger=logging.getLogger('crow.model.fv3gfs')
 
-YAML_DIRS_TO_COPY={ '../schema':'schema',
-                    '../defaults':'defaults',
-                    '../config':'config',
-                    '../runtime':'runtime' } # important: no ending /
-YAML_FILES_TO_COPY={ '../_expdir_main.yaml': '_main.yaml',
-                     '../user.yaml': 'user.yaml' }
-
 try:
     import crow
 except ImportError as ie:
@@ -214,7 +207,7 @@ def make_config_files_in_expdir(doc,expdir):
         with open(filename,'wt') as fd:
             fd.write(content)
 
-def make_yaml_files_in_expdir(srcdir,case_name,experiment_name,platdoc,force,skip_comrot,force_platform_rewrite):
+def make_yaml_files_in_expdir(srcdir,YAML_DIRS_TO_COPY,YAML_FILES_TO_COPY,case_name,experiment_name,platdoc,force,skip_comrot,force_platform_rewrite):
     logger.info(f'{srcdir}: get yaml files from here')
     logger.info(f'{case_name}: use this case')
 
@@ -282,6 +275,8 @@ def make_yaml_files_in_expdir(srcdir,case_name,experiment_name,platdoc,force,ski
     with open(f'{tgtdir}/names.yaml','wt') as fd:
         fd.write(names_yaml)
 
+    
+    
     if redo and os.path.exists(f'{tgtdir}/platform.yaml') and not force_platform_rewrite:
         logger.warning('I am NOT replacing platform.yaml.  This is a safeguard to prevent automatic scrub space detection from switching scrub spaces mid-workflow.')
         logger.warning('You must edit platform.yaml manually or use -F to force me to overwrite platform.yaml.  Using -F on a running workflow is inadvisable.')
@@ -292,17 +287,18 @@ def make_yaml_files_in_expdir(srcdir,case_name,experiment_name,platdoc,force,ski
         logger.info(f'{tgtdir}/platform.yaml: write platform logic')
         with open(f'{tgtdir}/platform.yaml','wt') as fd:
             fd.write(platform_yaml)
-
+              
     logger.info(f'{case_file}: use this case file')
     shutil.copy2(case_file,os.path.join(tgtdir,'case.yaml'))
 
     logger.info(f'{workflow_file}: use this workflow file')
     shutil.copy2(workflow_file,os.path.join(tgtdir,'workflow.yaml'))
-
+    
     for srcfile,tgtbase in itertools.chain(
             iter(YAML_DIRS_TO_COPY.items()),
             iter(YAML_FILES_TO_COPY.items())):
         tgtfile=os.path.join(tgtdir,tgtbase)
+        print(srcfile)
         if os.path.isdir(srcfile):
             logger.info(f'{srcfile}: copy yaml directory tree to {tgtfile}')
             if os.path.exists(tgtfile):
@@ -652,6 +648,13 @@ def setup_case_usage(why=None):
 def setup_case(command_line_arguments):
     options,positionals=getopt(command_line_arguments,'sdvfcp:DF')
     options=dict(options)
+    
+    YAML_DIRS_TO_COPY={ '../schema':'schema',
+                    '../defaults':'defaults',
+                    '../config':'config',
+                    '../runtime':'runtime' } # important: no ending /
+    YAML_FILES_TO_COPY={ '../_expdir_main.yaml': '_main.yaml',
+                     '../user.yaml': 'user.yaml' }
 
     init_logging('-v' in options,'-d' in options or '-D' in options)
 
@@ -693,7 +696,7 @@ def setup_case(command_line_arguments):
     logger.info(f'{platdoc.platform.name}: selected this platform.')
 
     EXPDIR = make_yaml_files_in_expdir(
-        os.path.abspath('../'),case_name,experiment_name,platdoc,force,
+        os.path.abspath('../'),YAML_DIRS_TO_COPY,YAML_FILES_TO_COPY,case_name,experiment_name,platdoc,force,
         skip_comrot,force_platform_rewrite)
 
     doc=from_dir(EXPDIR,validation_stage='setup')

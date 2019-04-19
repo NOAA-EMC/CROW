@@ -5,6 +5,7 @@ from collections import OrderedDict
 from copy import copy
 from getopt import getopt
 from contextlib import suppress
+logger=logging.getLogger('crow.model.fv3gfs')
 
 sys.path.append(os.getcwd() + "/../../")
 
@@ -12,19 +13,30 @@ import crow
 import crow.tools, crow.config
 from crow.metascheduler import to_ecflow, to_rocoto, to_dummy
 from crow.config import from_dir, Suite, from_file, to_yaml
-from crow.tools import Clock
-import worktools as wt
+from crow.tools import Clock    #import worktools as wt
 
-YAML_DIRS_TO_COPY={ '../test_data/regtest/schema':'schema',
-                    '../test_data/regtest/defaults':'defaults',
-                    '../test_data/regtest/config':'config',
-                    '../test_data/regtest/runtime':'runtime' } # important: no ending /
-YAML_FILES_TO_COPY={ '../test_data/regtest/_expdir_main.yaml': '_main.yaml',
-                     '../test_data/regtest/user.yaml': 'user.yaml' }
-
+from worktools import loudly_make_dir_if_missing
+from worktools import loudly_make_symlink
+from worktools import make_parent_dir, find_available_platforms, sandbox_platforms
+from worktools import select_platform, create_COMROT, find_case_yaml_file_for
+from worktools import read_yaml_suite, make_config_files_in_expdir
+from worktools import make_yaml_files_in_expdir, make_clocks_for_cycle_range
+from worktools import generate_ecflow_suite_in_memory, make_ecflow_job_and_out_directories
+from worktools import make_log_directories, write_ecflow_suite_to_disk
+from worktools import get_target_dir_and_check_ecflow_env, check_or_populate_ecf_include
+from worktools import create_new_ecflow_workflow, update_existing_ecflow_workflow
+from worktools import load_ecflow_suites, begin_ecflow_suites, make_rocoto_xml
 
 def reg_case_setup():
     
+    YAML_DIRS_TO_COPY={ '../test_data/regtest/schema':'schema',
+                    '../test_data/regtest/defaults':'defaults',
+                    '../test_data/regtest/config':'config',
+                    '../test_data/regtest/runtime':'runtime' } # important: no ending /
+    YAML_FILES_TO_COPY={ '../test_data/regtest/_expdir_main.yaml': '_main.yaml',
+                     '../test_data/regtest/user.yaml': 'user.yaml' }
+
+    logger.setLevel(logging.INFO)
     crow.set_superdebug(True)           # superdebug on
     force=True                          # Force rewrite
     skip_comrot=False                    # Not skip comrot
@@ -33,20 +45,20 @@ def reg_case_setup():
     case_name='regression_case'
     experiment_name='regtest_tmp'
 
-    valid_platforms=wt.sandbox_platforms("../test_data/regtest/platforms/")
-    platdoc = wt.select_platform(None,valid_platforms)
+    valid_platforms=sandbox_platforms("../test_data/regtest/platforms/")
+    platdoc = select_platform(None,valid_platforms)
 
-    EXPDIR = wt.make_yaml_files_in_expdir(
-        os.path.abspath('../'),case_name,experiment_name,platdoc,force,
+    EXPDIR = make_yaml_files_in_expdir(
+        os.path.abspath('../test_data/regtest/'),YAML_DIRS_TO_COPY,YAML_FILES_TO_COPY,case_name,experiment_name,platdoc,force,
         skip_comrot,force_platform_rewrite)
 
-    doc=wt.from_dir(EXPDIR,validation_stage='setup')
+    doc=from_dir(EXPDIR,validation_stage='setup')
     suite=Suite(doc.suite)
-    wt.to_dummy(suite)
+    to_dummy(suite)
     suite_doc=suite._globals()['doc']
-    wt.make_config_files_in_expdir(suite_doc,EXPDIR)
+    make_config_files_in_expdir(suite_doc,EXPDIR)
 
-    wt.create_COMROT(doc,force)
+    create_COMROT(doc,force)
 
     print()
     print(f'CROW Regression Case set up completed')
