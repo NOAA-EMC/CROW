@@ -26,18 +26,12 @@ from worktools import make_log_directories, write_ecflow_suite_to_disk
 from worktools import get_target_dir_and_check_ecflow_env, check_or_populate_ecf_include
 from worktools import create_new_ecflow_workflow, update_existing_ecflow_workflow
 from worktools import load_ecflow_suites, begin_ecflow_suites, make_rocoto_xml
+from worktools import create_crontab
 
-def reg_case_setup():
+def reg_case_setup(YAML_DIRS_TO_COPY, YAML_FILES_TO_COPY):
     
-    YAML_DIRS_TO_COPY={ '../test_data/regtest/schema':'schema',
-                    '../test_data/regtest/defaults':'defaults',
-                    '../test_data/regtest/config':'config',
-                    '../test_data/regtest/runtime':'runtime' } # important: no ending /
-    YAML_FILES_TO_COPY={ '../test_data/regtest/_expdir_main.yaml': '_main.yaml',
-                     '../test_data/regtest/user.yaml': 'user.yaml' }
-
     logger.setLevel(logging.INFO)
-    crow.set_superdebug(True)           # superdebug on
+    crow.set_superdebug(True)           # superdebugging on
     force=True                          # Force rewrite
     skip_comrot=False                   # Not skip comrot
     force_platform_rewrite=True         # Overwrite platform every time
@@ -74,21 +68,66 @@ def reg_case_setup():
     print(f'  Rocoto: ./make_rocoto_xml_for.sh {EXPDIR}')
     print(f'  ecFlow: ./make_ecflow_files_for.sh -v {EXPDIR} SDATE EDATE')
     print()
+    return EXPDIR
 
+def reg_ecflow(yamldir,first_cycle_str,last_cycle_str):
+    ECF_HOME=os.getcwd()+ "/../test_data/regtest"           # Pseudo link place to ECF_HOME
+    conf,suite=read_yaml_suite(yamldir)
+    loudly_make_dir_if_missing(f'{conf.places.ROTDIR}/logs')
 
-def reg_ecflow():
+    first_cycle=datetime.datetime.strptime(first_cycle_str,'%Y%m%d%H')
+    first_cycle=max(suite.Clock.start,first_cycle)
+
+    last_cycle=datetime.datetime.strptime(last_cycle_str,'%Y%m%d%H')
+    last_cycle=max(first_cycle,min(suite.Clock.end,last_cycle))
+
+    ecflow_suite, first_cycle, last_cycle = generate_ecflow_suite_in_memory(
+        suite,first_cycle,last_cycle,2)
+    defdir=conf.places.ecflow_def_dir
+    ECF_OUT=conf.places.ECF_OUT
+    check_or_populate_ecf_include(conf)
+    make_log_directories(conf,suite,first_cycle,last_cycle)
+    make_ecflow_job_and_out_directories(ECF_HOME, ECF_OUT, ecflow_suite)
+    written_suite_defs = write_ecflow_suite_to_disk(
+        defdir, ECF_HOME, ecflow_suite)
     return(0)
 
-def reg_rocoto():
+def reg_rocoto(yamldir):
+    conf,suite=read_yaml_suite(yamldir)
+    workflow_xml=conf.places.get('rocoto_workflow_xml',f'{yamldir}/workflow.xml')
+    assert(suite.viewed._path)
+    loudly_make_dir_if_missing(f'{conf.places.ROTDIR}/logs')
+    make_rocoto_xml(suite,f'{yamldir}/workflow.xml')
+    create_crontab(conf)
     return(0)
 
 def reg_compare():
     return(0)
 
 if __name__ == '__main__':
-    print(f'CROW Regression Case begins')
-    reg_case_setup()
-    reg_ecflow()
-    reg_rocoto()
+    
+    os.environ['ECF_HOME'] = os.getcwd()+ "/../test_data/regtest"
+    os.environ['ECF_ROOT'] = os.getcwd()+ "/../test_data/regtest"
+    os.environ['ECF_HOST'] = "ldecflow1"
+    os.environ['ECF_PORT'] = "32065"
+    
+    if(os.path.isfile(os.getcwd()+ "/../test_data/head.h")):
+        os.remove(os.getcwd()+ "/../test_data/head.h")
+        os.remove(os.getcwd()+ "/../test_data/tail.h")
+        os.remove(os.getcwd()+ "/../test_data/envir-xc40")
+
+    YAML_DIRS_TO_COPY={ '../test_data/regtest/schema':'schema',
+                    '../test_data/regtest/defaults':'defaults',
+                    '../test_data/regtest/config':'config',
+                    '../test_data/regtest/runtime':'runtime' } # important: no ending /
+    YAML_FILES_TO_COPY={ '../test_data/regtest/_expdir_main.yaml': '_main.yaml',
+                     '../test_data/regtest/user.yaml': 'user.yaml' }
+    
+    
+    print(f'CROW Regression Test begins')
+    EXPDIR = reg_case_setup(YAML_DIRS_TO_COPY, YAML_FILES_TO_COPY)
+    print(EXPDIR)
+    reg_ecflow(EXPDIR,'2015112800','2015112900')
+    reg_rocoto(EXPDIR)
     reg_compare()
-    print(os.getcwd())
+    print(f'CROW Regression Test passed')

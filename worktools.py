@@ -30,7 +30,7 @@ from crow.metascheduler import to_ecflow, to_rocoto, to_dummy
 from crow.config import from_dir, Suite, from_file, to_yaml
 from crow.tools import Clock
 
-ECFNETS_INCLUDE = "/ecf/ecfnets/include"
+#ECFNETS_INCLUDE = "/ecf/ecfnets/include"
 SIX_HOURS = datetime.timedelta(seconds=6*3600)
 
 def loudly_make_dir_if_missing(dirname):
@@ -411,7 +411,7 @@ def write_ecflow_suite_to_disk(defdir, scriptdir, ecflow_suite):
 
     return written_suite_defs
 
-def get_target_dir_and_check_ecflow_env():
+def get_target_dir_and_check_ecflow_env(ECFNETS_INCLUDE='/ecf/ecfnets/include'):
     ECF_HOME=os.environ.get('ECF_HOME',None)
 
     if not ECF_HOME:
