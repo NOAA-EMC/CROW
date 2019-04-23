@@ -5,6 +5,7 @@ from collections import OrderedDict
 from copy import copy
 from getopt import getopt
 from contextlib import suppress
+import filecmp as fcp
 logger=logging.getLogger('crow.model.fv3gfs')
 
 sys.path.append(os.getcwd() + "/../../")
@@ -71,7 +72,7 @@ def reg_case_setup(YAML_DIRS_TO_COPY, YAML_FILES_TO_COPY):
     return EXPDIR
 
 def reg_ecflow(yamldir,first_cycle_str,last_cycle_str):
-    ECF_HOME=os.getcwd()+ "/../test_data/regtest"           # Pseudo link place to ECF_HOME
+    ECF_HOME=os.getcwd()+ "/../test_data/regtest/cache"           # Pseudo link place to ECF_HOME
     conf,suite=read_yaml_suite(yamldir)
     loudly_make_dir_if_missing(f'{conf.places.ROTDIR}/logs')
 
@@ -100,14 +101,11 @@ def reg_rocoto(yamldir):
     make_rocoto_xml(suite,f'{yamldir}/workflow.xml')
     create_crontab(conf)
     return(0)
-
-def reg_compare():
-    return(0)
-
+    
 if __name__ == '__main__':
     
-    os.environ['ECF_HOME'] = os.getcwd()+ "/../test_data/regtest"
-    os.environ['ECF_ROOT'] = os.getcwd()+ "/../test_data/regtest"
+    os.environ['ECF_HOME'] = os.getcwd()+ "/../test_data/regtest/cache"
+    os.environ['ECF_ROOT'] = os.getcwd()+ "/../test_data/regtest/cache"
     os.environ['ECF_HOST'] = "ldecflow1"
     os.environ['ECF_PORT'] = "32065"
     
@@ -127,7 +125,22 @@ if __name__ == '__main__':
     print(f'CROW Regression Test begins')
     EXPDIR = reg_case_setup(YAML_DIRS_TO_COPY, YAML_FILES_TO_COPY)
     print(EXPDIR)
+    print(f'Continuing...')
     reg_ecflow(EXPDIR,'2015112800','2015112900')
+    print(f'Continuing...')
     reg_rocoto(EXPDIR)
-    reg_compare()
-    print(f'CROW Regression Test passed')
+    print(f'Continuing...')
+    a = fcp.dircmp(EXPDIR+'/../../../control',EXPDIR+'/../../')
+    print(f'\nRegression test completed: \nDifferent files:\n')
+    a.report_full_closure()
+    
+#    print(a.report_full_closure())
+#    if(len(a.diff_files) == 0 and len(a.left_only) == 0 and len(a.right_only) == 0):
+#        print(f'CROW Regression Test passed')
+#    else:
+#        print(f'CROW Regression Test failed! different files:\n')
+#        print(a.diff_files)
+#        print(f'missing files:\n')
+#        print(a.left_only)
+#        print(f'newly added files:\n')
+#        print(a.right_only)

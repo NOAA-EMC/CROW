@@ -1,0 +1,71 @@
+accounting: {cpu_project: none, ecflow_header: envir-p3.h, ecflow_machine: venus,
+  exclusive_partition: !calc 'doc.platform.partitions.default_exclusive', hpss_project: none,
+  service_partition: !calc 'doc.platform.partitions.default_service', shared_partition: !calc 'doc.platform.partitions.default_shared',
+  user_email: none}
+partition_common:
+  Evaluate: false
+  default_resources: &id001 {}
+  resources: &id002 !MergeMapping [!calc 'doc.default_resources', !calc 'doc.platform.default_resources',
+    !calc 'default_resources', !calc 'doc.case.get(''resources'',{})', !calc 'doc.get(''user_resources'',{})']
+platform: !Platform
+  BASE_GIT: /gpfs/hps3/emc/global/noscrub/emc.glopara/git
+  BASE_SVN: /gpfs/hps3/emc/global/noscrub/emc.glopara/svn
+  CHGRP_RSTPROD_COMMAND: chgrp rstprod
+  DMPDIR: !calc 'doc.user_places.PROJECT_DIR'
+  EXP_PARENT_DIR: !calc 'doc.user_places.PROJECT_DIR'
+  Evaluate: true
+  NWPROD: /gpfs/hps/nco/ops/nwprod
+  RTMFIX: $CRTM_FIX
+  config_base_extras: sandbox
+  default_resources: &id003 {}
+  detect: true
+  long_term_temp: !calc 'doc.user_places.PROJECT_DIR'
+  metasched_more: !expand '{metasched.defvar(doc.schedvar.exclusive_queue, doc.accounting.exclusive_partition.exclusive_queue)}
+
+    {metasched.defvar(doc.schedvar.shared_queue, doc.accounting.shared_partition.shared_queue)}
+
+    {metasched.defvar(doc.schedvar.service_queue, doc.accounting.service_partition.service_queue)}
+
+    {metasched.defvar(doc.schedvar.cpu_project, doc.accounting.cpu_project)}
+
+    '
+  name: sandbox
+  partitions:
+    Evaluate: false
+    default_exclusive: !calc 'doc.platform.partitions.sandbox'
+    default_service: !calc 'doc.platform.partitions.sandbox'
+    default_shared: !calc 'doc.platform.partitions.sandbox'
+    sandbox:
+      Evaluate: false
+      default_resources: *id001
+      exclusive_accounting_ref: {project: !calc 'metasched.varref(doc.schedvar.cpu_project)',
+        queue: !calc 'metasched.varref(doc.schedvar.exclusive_queue)'}
+      exclusive_queue: dev
+      nodes: !calc 'tools.node_tool_for(scheduler_settings.node_type, scheduler_settings)
+
+        '
+      parallelism: !calc 'tools.get_parallelism(scheduler_settings.parallelism_name,
+        scheduler_settings)
+
+        '
+      resources: *id002
+      scheduler: !calc 'tools.get_scheduler(scheduler_settings.scheduler_name, scheduler_settings)
+
+        '
+      scheduler_settings: {hyperthreading_allowed: true, indent_text: '  ', logical_cpus_per_core: 2,
+        memory_per_node: !calc '(64*1024)', node_type: generic, parallelism_name: LSFAlps,
+        physical_cores_per_node: 24, scheduler_name: LSFAlps}
+      service_accounting_ref: {project: !calc 'metasched.varref(doc.schedvar.cpu_project)',
+        queue: !calc 'metasched.varref(doc.schedvar.service_queue)'}
+      service_queue: dev
+      shared_accounting_ref: {project: !calc 'metasched.varref(doc.schedvar.cpu_project)',
+        queue: !calc 'metasched.varref(doc.schedvar.shared_queue)'}
+      shared_queue: dev
+      specification: null
+  public_release_ics: /gpfs/hps3/emc/global/noscrub/emc.glopara/FV3GFS_V1_RELEASE/ICs
+  short_term_temp: !calc 'doc.user_places.PROJECT_DIR'
+  skip_if_others_present: true
+platform_common:
+  Evaluate: false
+  default_resources: *id003
+user_places: {PROJECT_DIR: !calc 'doc.default_places.HOMEcrow + ''/tests/test_data/regtest/cache'''}

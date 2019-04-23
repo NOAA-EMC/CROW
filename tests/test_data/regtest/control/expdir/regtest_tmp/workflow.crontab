@@ -1,0 +1,6 @@
+
+#################### regtest_tmp ####################
+MAILTO=""
+*/5 * * * * rocotorun -d /Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/test_data/regtest/cache/expdir/regtest_tmp/workflow.db -w /Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/test_data/regtest/cache/expdir/regtest_tmp/workflow.xml
+#################################################################
+

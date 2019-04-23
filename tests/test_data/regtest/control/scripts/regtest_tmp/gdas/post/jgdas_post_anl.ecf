@@ -1,0 +1,52 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %CPU_PROJECT%
+#BSUB -J gdas.post.jgdas_post_anl
+#BSUB -o %COM%/logs/%PDY%%CYC%/gdas.post.jgdas_post_anl.log.%J
+#BSUB -W 0:30
+#BSUB -R rusage[mem=3072]
+#BSUB -extsched CRAYLINUX[]
+export NODES=6
+%include <head.h>
+%include <envir-p3.h>
+
+set -x
+
+export ntasks=72
+export ptile=12
+export threads=1
+
+export model=%model:gfs%
+export NET=%NET:gfs%
+export RUN=%RUN%
+
+%include <experiment-regtest_tmp.h>
+
+############################################################
+# Load modules
+############################################################
+#. $MODULESHOME/init/sh
+source "$HOMEgfs/ush/load_fv3gfs_modules.sh" exclusive
+module load prod_util
+module list
+export ECF_PORT=%ECF_PORT%  # workaround for ecflow module bug
+
+
+############################################################
+# WCOSS environment settings
+############################################################
+%include <experiment-regtest_tmp.h>
+# date variables will be set by header file.
+
+############################################################
+export cyc=%CYC%
+source $EXPDIR/config.base
+
+export post_times=%FHR% FHRLST=%FHR% FHRGRP=%FHR%
+$HOMEgfs/jobs/JGLOBAL_NCEPPOST
+
+
+%include <tail.h>
+%manual
+
+%end
