@@ -83,7 +83,7 @@ class Scheduler(BaseScheduler):
             hours=int(dt//3600)
             minutes=int((dt%3600)//60)
             seconds=int(math.floor(dt%60))
-            sio.write(f'#SBATCH -t {hours:d}:{minutes:02d}'
+            sio.write(f'#SBATCH -t {hours:02d}:{minutes:02d}'
                       f':{seconds:02d}\n')
 
         megabytes=self.get_memory_from_resource_spec(spec)
@@ -172,7 +172,7 @@ class Scheduler(BaseScheduler):
             hours=int(dt//3600)
             minutes=int((dt%3600)//60)
             seconds=int(math.floor(dt%60))
-            sio.write(f'{indent*space}<walltime>{hours}:{minutes:02d}:{seconds:02d}</walltime>\n')
+            sio.write(f'{indent*space}<walltime>{hours:02d}:{minutes:02d}:{seconds:02d}</walltime>\n')
        
         megabytes=self.get_memory_from_resource_spec(spec)
         if megabytes is not None:
