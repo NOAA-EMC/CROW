@@ -1,1 +1,1 @@
-Batch card generation using LSF, Slurm, MOAB.
+Connection to Rocoto and more.
