@@ -1,0 +1,50 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %CPU_PROJECT%
+#BSUB -J gdas.forecast.jgdas_forecast_high
+#BSUB -o %COM%/logs/%PDY%%CYC%/gdas.forecast.jgdas_forecast_high.log.%J
+#BSUB -W 0:30
+#BSUB -R rusage[mem=1024]
+#BSUB -extsched CRAYLINUX[]
+export NODES=3
+%include <head.h>
+%include <envir-p3.h>
+
+set -x
+
+export ntasks=10
+export ptile=4
+export threads=5
+
+export model=%model:gfs%
+export NET=%NET:gfs%
+export RUN=%RUN%
+
+%include <experiment-regtest_tmp.h>
+
+############################################################
+# Load modules
+############################################################
+#. $MODULESHOME/init/sh
+source "$HOMEgfs/ush/load_fv3gfs_modules.sh" exclusive
+module load prod_util
+module list
+export ECF_PORT=%ECF_PORT%  # workaround for ecflow module bug
+
+
+############################################################
+# WCOSS environment settings
+############################################################
+%include <experiment-regtest_tmp.h>
+# date variables will be set by header file.
+
+############################################################
+export cyc=%CYC%
+source $EXPDIR/config.base
+
+$HOMEgfs/jobs/JGLOBAL_FORECAST
+
+%include <tail.h>
+%manual
+
+%end

@@ -1,0 +1,321 @@
+suite: !Cycle
+  <<: *suite_defaults
+
+  Alarms:
+    <<: *cycled_suite_alarms
+
+  ######################################################################
+  ## GDAS FAMILY #######################################################
+  ######################################################################
+
+  gdas: !Family
+    RUN: gdas
+    ecflow_def: "edit RUN 'gdas'"
+
+    dump: !Family
+      ecflow_def: "# NCO will need to add NCO dump job here"
+      Dummy: true  ## <-- Node is not implemented yet
+      Trigger: !Depend  forecast.at('-6:00:00')
+      jgdas_ics: !Task
+        <<: *exclusive_task_template
+        release_gdas00_ics: !DataEvent {file="/dev/null"}
+        resources: !calc partition.resources.run_one_hour_exclusive
+
+      #jgdas_dump_post: !Task
+      #  Trigger: !Depend jgdas_dump
+      #  release_sfcprep: !DataEvent {file="/dev/null"}
+      #  release_gdas00_dump_alert: !DataEvent {file="/dev/null"}
+      #  ecf_file: *ecf_file_template
+      #  resources: !calc partition.resources.run_nothing
+      #  accounting: *exclusive_accounting
+      #  J_JOB: nothing
+
+      jgdas_tropcy_qc_reloc: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend jgdas_dump
+        Time: !FirstTrue
+          - when: !calc doc.settings.realtime
+            do: !timedelta +5:45:00
+          - otherwise: null
+        resources: !calc partition.resources.run_one_hour_exclusive
+
+      #Replaced by emc version of dump job 
+      #This dump job should be using NCO version when delivery to NCO
+      jgdas_dump: !Task
+        <<: *exclusive_task_template
+        release_sfcprep: !DataEvent {file="/dev/null"}
+        Time: !FirstTrue
+          - when: !calc doc.settings.realtime
+            do: !timedelta +5:50:00
+          - otherwise: null
+        resources: !calc partition.resources.run_one_hour_exclusive
+    #endfamily dump
+
+    prep: !Family
+      Trigger: !Depend ( up.gdas.forecast.at('-6:00:00') )
+      Complete: !Depend ( ~ suite.has_cycle('-6:00:00') )
+      jgdas_emcsfc_sfc_prep: !Task
+#        Disable: !calc not doc.data_assimilation.DO_EMCSFC
+        <<: *exclusive_task_template
+        Trigger: !Depend ( up.dump.jgdas_dump.release_sfcprep )
+        ecf_environment_settings: !calc doc.settings.ecflow_rocoto_cdate_workaround
+        resources: !calc partition.resources.run_prep
+        config_list: [ base, prep, prepbufr ]
+        J_JOB: JGLOBAL_EMCSFC_SFC_PREP
+
+      jgdas_prep: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend ( up.dump.jgdas_dump & up.up.gdas.post.at('-6:00:00') )
+        ecflow_def:
+          edit model 'obsproc_global'
+        resources: !calc partition.resources.run_prep
+        ecf_environment_settings: !calc doc.settings.ecflow_rocoto_cdate_workaround
+        J_JOB: JGLOBAL_PREP
+        model: obsproc_global    # for four cycle mode
+        J_JOB_PATH: '$HOMEobsproc_global/jobs'
+        config_list: [ base, prep, prepbufr ]
+
+    jgdas_tropcy_cp: !Task
+      <<: *exclusive_task_template
+      Dummy: True
+      Trigger: !Depend prep.jgdas_prep
+      resources: !calc partition.resources.run_one_hour_exclusive
+      J_JOB: rocoto/tropcy_cp.sh
+      ecf_environment_settings: !calc doc.settings.ecflow_rocoto_cdate_workaround
+
+    analysis: !Family
+      Complete: !Depend ( ~ suite.has_cycle('-6:00:00') )
+      jgdas_analysis_high: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend ( up.prep.jgdas_prep )
+        #release_fcst: !DataEvent {file="/dev/null"}
+        resources: !calc partition.resources.run_anal
+        J_JOB: JGLOBAL_ANALYSIS
+
+    forecast: !Family
+      jgdas_forecast_high: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend ( up.analysis.jgdas_analysis_high ) | ~ suite.has_cycle('-6:00:00')
+        resources_remap: !JobRequest [ { <<: *remap_resource_template } ]
+        #release_fcst: !DataEvent {file="/dev/null"}
+        resources: !calc partition.resources.run_gdasfcst
+        J_JOB: JGLOBAL_FORECAST
+
+    #endfamily gempak
+
+    post: !TaskArray
+      RUN: !calc up.RUN
+      Dimensions:
+        fhr: !calc doc.settings.output_hours
+      post_manager_el: !TaskElement
+        <<: *exclusive_task_template
+        RUN: !calc up.RUN
+        Trigger: !FirstTrue
+          - when: !calc not doc.settings.realtime
+            take:  !Depend ( up.forecast.is_running() )
+          - otherwise: !Depend "up.forecast.is_running() | up.forecast"
+        Disable: !calc metasched.type=='rocoto'
+        Foreach: []
+        J_JOB: JGLOBAL_POST_MANAGER
+        Name: jgdas_post_manager
+        resources: !calc partition.resources.run_gdas_post_manager
+        release_postanl: !DataEvent
+          file: !expand >-
+            {metasched.varref("COM")}/gdas.{metasched.datestring("%Y%m%d/%H/")}gdas.t{metasched.datestring("%H")}z.logf000.nemsio
+        release_post_fhr: !DataEventElement
+          Name: !expand "release_post"
+          Foreach: [ fhr ]
+          file: !expand >
+            {metasched.varref("COM")}/gdas.{metasched.datestring("%Y%m%d/%H/")}gdas.t{metasched.datestring("%H")}z.logf{dimval.fhr:03d}.nemsio
+        # NOTE: the above files must match the logic in scripts/exglobal_pmgr.sh.ecf
+
+      # The post_anl has to be a !TaskElement to ensure it shows up between
+      # the post manager and forecast hour posts:
+      jgdas_post_anl_el: !TaskElement
+        <<: *exclusive_task_template
+        Foreach: []
+        FHR: 'anl'
+        Name: jgdas_post_anl
+        Trigger: !FirstTrue
+          - when: !calc not doc.settings.realtime
+            take: !Depend jgdas_post_manager.release_postanl
+          - otherwise: !Depend jgdas_post_manager.release_postanl | up.forecast
+        release_pgrb2_anl: !DataEvent {file="/dev/null"}
+        resources: !calc partition.resources.run_gdaspost
+        ecflow_def: !expand "edit FHR '{FHR}'"
+        J_JOB: JGLOBAL_NCEPPOST
+        ecflow_command: !expand |
+          export post_times=%FHR% FHRLST=%FHR% FHRGRP=%FHR%
+          $HOMEgfs/jobs/{J_JOB}
+        rocoto_command: !expand >-
+          {rocoto_load_modules} ;
+          /usr/bin/env FHRGRP={FHR} post_times={FHR} FHRLST={FHR} &HOMEgfs;/jobs/{J_JOB}
+
+  #endfamily gdas
+
+  ######################################################################
+  ## GFS FAMILY ########################################################
+  ######################################################################
+
+  gfs: !Family
+    Disable: !calc doc.settings.gfs_cyc==0
+    Complete: !Depend ~ suite.has_cycle('-6:00:00')
+    AlarmName: gfs
+    RUN: 'gfs'
+    ecflow_def: "edit RUN 'gfs'"
+
+    dump: !Family
+      Trigger: !Depend  up.gdas.forecast.at('-6:00:00')
+      Complete: !Depend ~ suite.has_cycle('-6:00:00') 
+      Dummy: true  ## <-- Node is not implemented yet
+      ecflow_def: "# NCO will need to add NCO dump job here"
+      jgfs_tropcy_qc_reloc: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend jgfs_dump
+        jtwc_bull_email: !DataEvent {file="/dev/null"}
+        resources: !calc partition.resources.run_one_hour_exclusive
+        Time: !FirstTrue
+          - when: !calc doc.settings.realtime
+            do: !timedelta +2:41:00
+          - otherwise: null
+
+      jgfs_dump: !Task
+        <<: *exclusive_task_template
+        ecflow_def: '#NCO needs to replace this with the real dump job'
+        release_sfcprep: !DataEvent {file="/dev/null"}
+        resources: !calc partition.resources.run_one_hour_exclusive
+        Time: !FirstTrue
+          - when: !calc doc.settings.realtime
+            do: !timedelta +2:47:00
+          - otherwise: null
+
+    prep: !Family
+      Trigger: !Depend ( ( dump.jgfs_dump.release_sfcprep ) & up.gdas.forecast.at('-6:00:00') )
+      Complete: !Depend ~ suite.has_cycle('-6:00:00') 
+      jgfs_emcsfc_sfc_prep: !Task
+#        Disable: !calc not doc.data_assimilation.DO_EMCSFC
+        <<: *exclusive_task_template
+        Trigger: !Depend ( up.dump.jgfs_dump.release_sfcprep )
+        resources: !calc partition.resources.run_sfc_prep
+        J_JOB: JGLOBAL_EMCSFC_SFC_PREP
+        ecf_environment_settings: !expand |
+          {doc.settings.ecflow_rocoto_cdate_workaround}
+          export DATAROOT="$DATAROOT.$job"
+        config_list: [ base, prep, prepbufr ]
+
+      jgfs_prep: !Task
+        <<: *exclusive_task_template
+        ecflow_def:
+          edit model 'obsproc_global'
+        Trigger: !Depend up.dump
+        resources: !calc partition.resources.run_prep
+        ecf_environment_settings: !expand |
+          {doc.settings.ecflow_rocoto_cdate_workaround}
+          export DATAROOT="$DATAROOT.$job"
+        J_JOB: JGLOBAL_PREP
+        model: obsproc_global    # for four cycle mode
+        J_JOB_PATH: '$HOMEobsproc_global/jobs'
+        config_list: [ base, prep, prepbufr ]
+
+    jgfs_tropcy_cp: !Task
+      <<: *exclusive_task_template
+      Dummy: True
+      Trigger: !Depend prep.jgfs_prep
+      resources: !calc partition.resources.run_one_hour_exclusive
+      ecf_environment_settings: !calc doc.settings.ecflow_rocoto_cdate_workaround
+      J_JOB: rocoto/tropcy_cp.sh
+
+    jgfs_analysis: !Task
+      <<: *exclusive_task_template
+      Trigger: !Depend ( prep.jgfs_prep )
+      resources: !calc partition.resources.run_anal
+      J_JOB: JGLOBAL_ANALYSIS
+      Complete: !Depend ~ suite.has_cycle('-6:00:00') 
+
+    forecast: !Family
+      Complete: !Depend ~ suite.has_cycle('-6:00:00') 
+      jgfs_forecast_high: !Task
+        <<: *exclusive_task_template
+        Trigger: !Depend up.jgfs_analysis
+        resources: !calc partition.resources.run_gfsfcst
+        J_JOB: JGLOBAL_FORECAST
+        resources_remap: !JobRequest [ { <<: *remap_resource_template } ]
+
+    post: !TaskArray
+      RUN: !calc up.RUN
+      Dimensions:
+        fhr: !calc doc.settings.output_hours
+      jgfs_post_manager_el: !TaskElement
+        <<: *exclusive_task_template
+        RUN: !calc up.RUN
+        Disable: !calc metasched.type == 'rocoto'
+        Trigger: !FirstTrue
+          - when: !calc not doc.settings.realtime
+            take: !Depend "up.forecast.is_running()"
+          - otherwise: !Depend "up.forecast.is_running() | up.forecast"
+        Foreach: [ ]
+        J_JOB: JGLOBAL_POST_MANAGER
+        Name: jgfs_post_manager
+        resources: !calc partition.resources.run_gfs_post_manager
+        release_postanl: !DataEvent
+          file: !expand >-
+            {metasched.varref("COM")}/gfs.{metasched.datestring("%Y%m%d/%H/")}gfs.t{metasched.datestring("%H")}z.logf000.nemsio
+        release_post_fhr: !DataEventElement
+          Name: !expand "release_post"
+          Foreach: [ fhr ]
+          file: !expand >-
+            {metasched.varref("COM")}/gfs.{metasched.datestring("%Y%m%d/%H/")}gfs.t{metasched.datestring("%H")}z.logf{dimval.fhr:03d}.nemsio
+        # NOTE: the above files must match post_manager.yaml
+
+      jgfs_post_anl_el: !TaskElement
+        <<: *exclusive_task_template
+        Foreach: []
+        FHR: anl
+        Name: jgfs_post_anl
+        Trigger: !FirstTrue
+          - when: !calc doc.settings.realtime
+            take: !Depend jgfs_post_manager.release_postanl
+          - otherwise: !Depend jgfs_post_manager.release_postanl | up.forecast
+
+        ecflow_def: !expand "edit FHR '{FHR}'"
+        release_pgrb2_anl: !DataEvent {file="/dev/null"}
+        resources: !calc partition.resources.run_gfspost
+        J_JOB: JGLOBAL_NCEPPOST
+        ecflow_command: !expand |
+          export post_times=%FHR% FHRLST=%FHR% FHRGRP=%FHR%
+          $HOMEgfs/jobs/{J_JOB}
+        rocoto_command: !expand >-
+          {rocoto_load_modules} ;
+          /usr/bin/env post_times=anl &HOMEgfs;/jobs/{J_JOB}
+
+      jgfs_post_fhr_el: !TaskElement
+        <<: *exclusive_task_template
+        Foreach: [ fhr  ]
+        resources: !calc partition.resources.run_gfspost
+        Name: !expand jgfs_post_el
+        FHR: "arbitary"
+        J_JOB: JGLOBAL_NCEPPOST
+        Trigger: !Depend up.forecast
+        ecflow_def: !expand "edit FHR '{FHR}'"
+        ecflow_command: !expand |
+          export post_times=%FHR% FHRLST=%FHR% FHRGRP=%FHR%
+          $HOMEgfs/jobs/{J_JOB}
+        rocoto_command: !expand >-
+          {rocoto_load_modules} ;
+          /usr/bin/env post_times={FHR} FHRLST={FHR} FHRGRP={FHR} &HOMEgfs;/jobs/{J_JOB}
+
+    #endfamily post
+
+  ######################################################################
+  ## CYCLE COMPLETION TASKS ############################################
+  ######################################################################
+
+  cycle_end: *cycle_end_task
+
+  final: !Task
+    <<: *service_task_template
+    Disable: !calc not metasched.type=="rocoto"
+    resources: !calc partition.resources.run_nothing
+    rocoto_command: /bin/true
+    RUN: gfs # useless but required
+

@@ -1,0 +1,499 @@
+<?xml version="1.0"?>
+<!DOCTYPE workflow [
+  <!ENTITY LOG_DIR "/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/test_data/regtest/cache/comrot/regtest_tmp/logs">
+  <!ENTITY TASK_THROTTLE "5">
+  <!ENTITY MAX_TRIES "5">
+  <!ENTITY EXPDIR "/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/test_data/regtest/cache/expdir/regtest_tmp">
+  <!ENTITY DATAROOT "/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/test_data/regtest/cache/RUNDIRS/regtest_tmp">
+  <!ENTITY PSLOT "regtest_tmp">
+  <!ENTITY HOMEgfs "/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW">
+  <!ENTITY HOMEobsproc_network "/gpfs/hps3/emc/global/noscrub/emc.glopara/git/obsproc/obsproc_global_RB-3.2.0">
+  <!ENTITY HOMEobsproc_prep "/gpfs/hps3/emc/global/noscrub/emc.glopara/git/obsproc/obsproc_prep_RB-5.2.0">
+  <!ENTITY COM "/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/test_data/regtest/cache/comrot/regtest_tmp">
+<!ENTITY QUEUE "dev">
+<!ENTITY QUEUESHARED "dev">
+<!ENTITY QUEUESERV "dev">
+<!ENTITY CPU_PROJECT "none">
+  
+]>
+<workflow realtime="F"
+          cyclethrottle="&CYCLE_THROTTLE;"
+          scheduler="lsfcray"
+          taskthrottle="&TASK_THROTTLE;" >
+  <log><cyclestr>&COM;/logs/@Y@m@d@H/rocoto.log</cyclestr></log>
+  <cycledef group="first">201602100000 201602100000 06:00:00</cycledef>
+  <cycledef group="gdas">201602100000 201602120000 06:00:00</cycledef>
+  <cycledef group="gfs">201602100600 201602120000 06:00:00</cycledef>
+  <cycledef group="gfs_00_12">201602100000 201602120000 12:00:00</cycledef>
+  <cycledef>201602100000 201602120000 06:00:00</cycledef>
+
+  <metatask name="gdas">
+    <var name="dummy_var_2">DUMMY_VALUE</var>
+    <metatask name="gdas.prep">
+      <var name="dummy_var_3">DUMMY_VALUE</var>
+      <task name="gdas.prep.jgdas_emcsfc_sfc_prep" maxtries="5">
+        <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; source $EXPDIR/config.base ; source $EXPDIR/config.prep ; source $EXPDIR/config.prepbufr ; $HOMEgfs/jobs/JGLOBAL_EMCSFC_SFC_PREP'</command>
+        <queue>&QUEUE;</queue>
+        <account>&CPU_PROJECT;</account>
+        <jobname>gdas.prep.jgdas_emcsfc_sfc_prep</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gdas.prep.jgdas_emcsfc_sfc_prep.log</cyclestr></join>
+        
+        <walltime>0:15:00</walltime>
+        <memory>3072M</memory>
+        <nodes>1:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+        <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>DUMP</name><value>gdas</value></envar>
+        <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+        <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+        <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+        <envar><name>job</name><value>jgdas_emcsfc_sfc_prep_<cyclestr>@H</cyclestr></value></envar>
+        
+        
+        <dependency>
+          <and>
+            <metataskdep metatask="gdas.forecast" cycle_offset="-06:00:00"/>
+            <true></true><!-- data dependency with no file -->
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gdas.prep.jgdas_prep" maxtries="5">
+        <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; source $EXPDIR/config.base ; source $EXPDIR/config.prep ; source $EXPDIR/config.prepbufr ; $HOMEobsproc_global/jobs/JGLOBAL_PREP'</command>
+        <queue>&QUEUE;</queue>
+        <account>&CPU_PROJECT;</account>
+        <jobname>gdas.prep.jgdas_prep</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gdas.prep.jgdas_prep.log</cyclestr></join>
+        
+        <walltime>0:15:00</walltime>
+        <memory>3072M</memory>
+        <nodes>1:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+        <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>DUMP</name><value>gdas</value></envar>
+        <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+        <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+        <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+        <envar><name>job</name><value>jgdas_prep_<cyclestr>@H</cyclestr></value></envar>
+        
+        
+        <dependency>
+          <and>
+            <metataskdep metatask="gdas.forecast" cycle_offset="-06:00:00"/>
+            <metataskdep metatask="gdas.post" cycle_offset="-06:00:00"/>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+    </metatask>
+    <metatask name="gdas.analysis">
+      <var name="dummy_var_4">DUMMY_VALUE</var>
+      <task name="gdas.analysis.jgdas_analysis_high" maxtries="5">
+        <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; source $EXPDIR/config.base ; $HOMEgfs/jobs/JGLOBAL_ANALYSIS'</command>
+        <queue>&QUEUE;</queue>
+        <account>&CPU_PROJECT;</account>
+        <jobname>gdas.analysis.jgdas_analysis_high</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gdas.analysis.jgdas_analysis_high.log</cyclestr></join>
+        
+        <walltime>1:30:00</walltime>
+        <memory>3072M</memory>
+        <nodes>24:ppn=6</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+        <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>DUMP</name><value>gdas</value></envar>
+        <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+        <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+        <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+        <envar><name>job</name><value>jgdas_analysis_high_<cyclestr>@H</cyclestr></value></envar>
+        
+        
+        <dependency>
+          <and>
+            <or>
+              <taskdep task="gdas.prep.jgdas_prep"/>
+              <not>
+                <cycleexistdep cycle_offset="-06:00:00"/>
+              </not>
+            </or>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+    </metatask>
+    <metatask name="gdas.forecast">
+      <var name="dummy_var_5">DUMMY_VALUE</var>
+      <task name="gdas.forecast.jgdas_forecast_high" maxtries="5">
+        <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; source $EXPDIR/config.base ; $HOMEgfs/jobs/JGLOBAL_FORECAST'</command>
+        <queue>&QUEUE;</queue>
+        <account>&CPU_PROJECT;</account>
+        <jobname>gdas.forecast.jgdas_forecast_high</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gdas.forecast.jgdas_forecast_high.log</cyclestr></join>
+        
+        <walltime>0:30:00</walltime>
+        <memory>1024M</memory>
+        <nodes>1:ppn=4+2:ppn=3</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+        <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>DUMP</name><value>gdas</value></envar>
+        <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+        <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+        <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+        <envar><name>job</name><value>jgdas_forecast_high_<cyclestr>@H</cyclestr></value></envar>
+        
+        
+        <dependency>
+          <or>
+            <taskdep task="gdas.analysis.jgdas_analysis_high"/>
+            <not>
+              <cycleexistdep cycle_offset="-06:00:00"/>
+            </not>
+          </or>
+        </dependency>
+      </task>
+    </metatask>
+    <metatask name="gdas.post">
+      <var name="dummy_var_6">DUMMY_VALUE</var>
+      <task name="gdas.post.jgdas_post_anl" maxtries="5">
+        <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; /usr/bin/env FHRGRP=anl post_times=anl FHRLST=anl &HOMEgfs;/jobs/JGLOBAL_NCEPPOST'</command>
+        <queue>&QUEUE;</queue>
+        <account>&CPU_PROJECT;</account>
+        <jobname>gdas.post.jgdas_post_anl</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gdas.post.jgdas_post_anl.log</cyclestr></join>
+        
+        <walltime>0:30:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+        <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>DUMP</name><value>gdas</value></envar>
+        <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+        <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+        <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+        <envar><name>job</name><value>jgdas_post_anl_<cyclestr>@H</cyclestr></value></envar>
+        
+        
+        <dependency>
+          <datadep><cyclestr>&COM;/gdas.@Y@m@d/@H/gdas.t@Hz.logf000.nemsio</cyclestr></datadep>
+        </dependency>
+      </task>
+    </metatask>
+  </metatask>
+  <metatask name="gfs">
+    <var name="dummy_var_7">DUMMY_VALUE</var>
+    <metatask name="gfs.prep">
+      <var name="dummy_var_8">DUMMY_VALUE</var>
+      <task name="gfs.prep.jgfs_emcsfc_sfc_prep" maxtries="5" cycledefs="gfs">
+        <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; source $EXPDIR/config.base ; source $EXPDIR/config.prep ; source $EXPDIR/config.prepbufr ; $HOMEgfs/jobs/JGLOBAL_EMCSFC_SFC_PREP'</command>
+        <queue>&QUEUE;</queue>
+        <account>&CPU_PROJECT;</account>
+        <jobname>gfs.prep.jgfs_emcsfc_sfc_prep</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gfs.prep.jgfs_emcsfc_sfc_prep.log</cyclestr></join>
+        
+        <walltime>0:02:00</walltime>
+        <memory>1024M</memory>
+        <nodes>1:ppn=1</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+        <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>DUMP</name><value>gfs</value></envar>
+        <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+        <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+        <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+        <envar><name>job</name><value>jgfs_emcsfc_sfc_prep_<cyclestr>@H</cyclestr></value></envar>
+        
+        
+        <dependency>
+          <and>
+            <true></true><!-- data dependency with no file -->
+            <metataskdep metatask="gdas.forecast" cycle_offset="-06:00:00"/>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.prep.jgfs_prep" maxtries="5" cycledefs="gfs">
+        <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; source $EXPDIR/config.base ; source $EXPDIR/config.prep ; source $EXPDIR/config.prepbufr ; $HOMEobsproc_global/jobs/JGLOBAL_PREP'</command>
+        <queue>&QUEUE;</queue>
+        <account>&CPU_PROJECT;</account>
+        <jobname>gfs.prep.jgfs_prep</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gfs.prep.jgfs_prep.log</cyclestr></join>
+        
+        <walltime>0:15:00</walltime>
+        <memory>3072M</memory>
+        <nodes>1:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+        <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>DUMP</name><value>gfs</value></envar>
+        <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+        <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+        <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+        <envar><name>job</name><value>jgfs_prep_<cyclestr>@H</cyclestr></value></envar>
+        
+        
+        <dependency>
+          <and>
+            <true></true><!-- data dependency with no file -->
+            <metataskdep metatask="gdas.forecast" cycle_offset="-06:00:00"/>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+    </metatask>
+    <task name="gfs.jgfs_analysis" maxtries="5" cycledefs="gfs">
+      <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; source $EXPDIR/config.base ; $HOMEgfs/jobs/JGLOBAL_ANALYSIS'</command>
+      <queue>&QUEUE;</queue>
+      <account>&CPU_PROJECT;</account>
+      <jobname>gfs.jgfs_analysis</jobname>
+      <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gfs.jgfs_analysis.log</cyclestr></join>
+      
+      <walltime>1:30:00</walltime>
+      <memory>3072M</memory>
+      <nodes>24:ppn=6</nodes>
+      
+      <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+      <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+      <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+      <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+      <envar><name>DUMP</name><value>gfs</value></envar>
+      <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+      <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+      <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+      <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+      <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+      <envar><name>job</name><value>jgfs_analysis_<cyclestr>@H</cyclestr></value></envar>
+      
+      
+      <dependency>
+        <and>
+          <or>
+            <taskdep task="gfs.prep.jgfs_prep"/>
+            <not>
+              <cycleexistdep cycle_offset="-06:00:00"/>
+            </not>
+          </or>
+          <cycleexistdep cycle_offset="-06:00:00"/>
+        </and>
+      </dependency>
+    </task>
+    <metatask name="gfs.forecast">
+      <var name="dummy_var_9">DUMMY_VALUE</var>
+      <task name="gfs.forecast.jgfs_forecast_high" maxtries="5" cycledefs="gfs">
+        <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; source $EXPDIR/config.base ; $HOMEgfs/jobs/JGLOBAL_FORECAST'</command>
+        <queue>&QUEUE;</queue>
+        <account>&CPU_PROJECT;</account>
+        <jobname>gfs.forecast.jgfs_forecast_high</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gfs.forecast.jgfs_forecast_high.log</cyclestr></join>
+        
+        <walltime>6:00:00</walltime>
+        <memory>1024M</memory>
+        <nodes>12:ppn=4</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+        <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>DUMP</name><value>gfs</value></envar>
+        <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+        <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+        <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+        <envar><name>job</name><value>jgfs_forecast_high_<cyclestr>@H</cyclestr></value></envar>
+        
+        
+        <dependency>
+          <and>
+            <or>
+              <taskdep task="gfs.jgfs_analysis"/>
+              <not>
+                <cycleexistdep cycle_offset="-06:00:00"/>
+              </not>
+            </or>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+    </metatask>
+    <metatask name="gfs.post">
+      <var name="dummy_var_10">DUMMY_VALUE</var>
+      <task name="gfs.post.jgfs_post_anl" maxtries="5" cycledefs="gfs">
+        <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; /usr/bin/env post_times=anl &HOMEgfs;/jobs/JGLOBAL_NCEPPOST'</command>
+        <queue>&QUEUE;</queue>
+        <account>&CPU_PROJECT;</account>
+        <jobname>gfs.post.jgfs_post_anl</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gfs.post.jgfs_post_anl.log</cyclestr></join>
+        
+        <walltime>0:10:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+        <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>DUMP</name><value>gfs</value></envar>
+        <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+        <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+        <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+        <envar><name>job</name><value>jgfs_post_anl_<cyclestr>@H</cyclestr></value></envar>
+        
+        
+        <dependency>
+          <and>
+            <or>
+              <datadep><cyclestr>&COM;/gfs.@Y@m@d/@H/gfs.t@Hz.logf000.nemsio</cyclestr></datadep>
+              <metataskdep metatask="gfs.forecast"/>
+            </or>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+      <task name="gfs.post.jgfs_post_el" maxtries="5" cycledefs="gfs">
+        <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; /usr/bin/env post_times=arbitary FHRLST=arbitary FHRGRP=arbitary &HOMEgfs;/jobs/JGLOBAL_NCEPPOST'</command>
+        <queue>&QUEUE;</queue>
+        <account>&CPU_PROJECT;</account>
+        <jobname>gfs.post.jgfs_post_el</jobname>
+        <join><cyclestr>&LOG_DIR;/@Y@m@d@H/gfs.post.jgfs_post_el.log</cyclestr></join>
+        
+        <walltime>0:10:00</walltime>
+        <memory>3072M</memory>
+        <nodes>6:ppn=12</nodes>
+        
+        <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+        <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+        <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+        <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+        <envar><name>DUMP</name><value>gfs</value></envar>
+        <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+        <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+        <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+        <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+        <envar><name>job</name><value>jgfs_post_el_<cyclestr>@H</cyclestr></value></envar>
+        
+        
+        <dependency>
+          <and>
+            <metataskdep metatask="gfs.forecast"/>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </and>
+        </dependency>
+      </task>
+    </metatask>
+  </metatask>
+
+  <!-- The final task dependencies are automatically generated to handle Complate and Trigger conditions. -->
+
+  <task name="final" final="true">
+    <command>sh -c '/bin/true'</command>
+    <queue>&QUEUESERV;</queue>
+    <account>&CPU_PROJECT;</account>
+    <jobname>final</jobname>
+    <join><cyclestr>&LOG_DIR;/@Y@m@d@H/final.log</cyclestr></join>
+    
+    <walltime>0:02:00</walltime>
+    <memory>300M</memory>
+    <cores>1</cores>
+    <shared></shared>
+    
+    <envar><name>CDATE</name><value><cyclestr>@Y@m@d@H</cyclestr></value></envar>
+    <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
+    <envar><name>cyc</name><value><cyclestr>@H</cyclestr></value></envar>
+    <envar><name>EXPDIR</name><value>&EXPDIR;</value></envar>
+    <envar><name>DUMP</name><value>gfs</value></envar>
+    <envar><name>RUN_ENVIR</name><value>emc</value></envar>
+    <envar><name>HOMEgfs</name><value>&HOMEgfs;</value></envar>
+    <envar><name>HOMEobsproc_network</name><value>&HOMEobsproc_network;</value></envar>
+    <envar><name>HOMEobsproc_global</name><value>&HOMEobsproc_network;</value></envar>
+    <envar><name>HOMEobsproc_prep</name><value>&HOMEobsproc_prep;</value></envar>
+    <envar><name>job</name><value>final_<cyclestr>@H</cyclestr></value></envar>
+    
+    
+    <dependency>
+      <and>
+        <or>
+          <and>
+            <or>
+              <and>
+                <taskdep task="gdas.prep.jgdas_emcsfc_sfc_prep"/>
+                <taskdep task="gdas.prep.jgdas_prep"/>
+                <taskdep task="gdas.analysis.jgdas_analysis_high"/>
+              </and>
+              <not>
+                <cycleexistdep cycle_offset="-06:00:00"/>
+              </not>
+            </or>
+            <taskdep task="gdas.forecast.jgdas_forecast_high"/>
+            <taskdep task="gdas.post.jgdas_post_anl"/>
+          </and>
+          <and>
+            <metataskdep metatask="gdas.prep"/>
+            <metataskdep metatask="gdas.analysis"/>
+            <metataskdep metatask="gdas.forecast"/>
+            <metataskdep metatask="gdas.post"/>
+          </and>
+        </or>
+        <or>
+          <and>
+            <taskdep task="gfs.prep.jgfs_emcsfc_sfc_prep"/>
+            <taskdep task="gfs.prep.jgfs_prep"/>
+            <taskdep task="gfs.jgfs_analysis"/>
+            <taskdep task="gfs.forecast.jgfs_forecast_high"/>
+            <taskdep task="gfs.post.jgfs_post_anl"/>
+            <taskdep task="gfs.post.jgfs_post_el"/>
+          </and>
+          <not>
+            <cycleexistdep cycle_offset="-06:00:00"/>
+          </not>
+          <and>
+            <metataskdep metatask="gfs.prep"/>
+            <or>
+              <taskdep task="gfs.jgfs_analysis"/>
+              <not>
+                <cycleexistdep cycle_offset="-06:00:00"/>
+              </not>
+            </or>
+            <metataskdep metatask="gfs.forecast"/>
+            <metataskdep metatask="gfs.post"/>
+          </and>
+        </or>
+      </and>
+    </dependency>
+  </task>
+
+</workflow>

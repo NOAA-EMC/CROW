@@ -1,0 +1,50 @@
+#! /bin/sh
+#BSUB -q %QUEUE%
+#BSUB -P %CPU_PROJECT%
+#BSUB -J gdas.jgdas_tropcy_cp
+#BSUB -o %COM%/logs/%PDY%%CYC%/gdas.jgdas_tropcy_cp.log.%J
+#BSUB -W 0:02
+#BSUB -R rusage[mem=300]
+#BSUB -extsched CRAYLINUX[]
+export NODES=1
+%include <head.h>
+%include <envir-p3.h>
+
+set -x
+
+export ntasks=2
+export ptile=24
+# No OpenMP in use, so I am not setting $threads
+
+export model=%model:gfs%
+export NET=%NET:gfs%
+export RUN=%RUN%
+
+%include <experiment-regtest_tmp.h>
+
+############################################################
+# Load modules
+############################################################
+#. $MODULESHOME/init/sh
+source "$HOMEgfs/ush/load_fv3gfs_modules.sh" exclusive
+module load prod_util
+module list
+export ECF_PORT=%ECF_PORT%  # workaround for ecflow module bug
+
+
+############################################################
+# WCOSS environment settings
+############################################################
+%include <experiment-regtest_tmp.h>
+# date variables will be set by header file.
+
+############################################################
+export cyc=%CYC%
+source $EXPDIR/config.base
+
+$HOMEgfs/jobs/rocoto/tropcy_cp.sh
+
+%include <tail.h>
+%manual
+
+%end

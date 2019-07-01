@@ -1,0 +1,16 @@
+user_places: &user_places
+  PROJECT_DIR: !calc doc.default_places.HOMEcrow + '/tests/test_data/regtest/cache'
+
+accounting: &accounting
+  # Project for CPU accounting.
+  user_email: none # only when you want automatic status report
+  cpu_project: none #!error What accounting code do I use to submit jobs? # ie.: global
+  hpss_project: none #!error Where do I put data on HPSS?   # ie.: emc-global
+  ecflow_machine: venus   # only relevant on WCOSS using ecFlow
+  ecflow_header: envir-p3.h
+
+  # Choose the partition used for each job type.  Default is set in
+  # the platform yaml files.
+  shared_partition: !calc doc.platform.partitions.default_shared
+  exclusive_partition: !calc doc.platform.partitions.default_exclusive
+  service_partition: !calc doc.platform.partitions.default_service

@@ -1,0 +1,53 @@
+extern /totality_limit:TOTALITY
+suite regtest_tmp_2016021000
+  autocancel 5
+  edit PDY '20160210'
+  
+  edit ECF_TRIES '5'
+  # edit ECF_HOME '/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/regtest/../test_data/regtest/cache'
+  edit CYC '00'
+  edit MACHINE 'venus'
+  edit ENVIR 'prod'
+  edit ECF_OUT '/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/regtest/../test_data/regtest/cache/output'
+  edit ECF_LOG '/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/regtest/../test_data/regtest/cache/ecf.log'
+  edit E 'j'
+  edit ECF_INCLUDE '/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/regtest/../test_data/regtest/cache/include'
+  edit COM '/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/test_data/regtest/cache/comrot/regtest_tmp'
+  
+  
+  
+  
+  edit QUEUE 'dev'
+  edit QUEUESHARED 'dev'
+  edit QUEUESERV 'dev'
+  edit CPU_PROJECT 'none'
+  
+  # EMC overrides.  Should remove before implementation:
+  edit DATAROOT '/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/test_data/regtest/cache/RUNDIRS/regtest_tmp'
+  edit NWROOT '/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow'
+  
+  edit ECF_FILES '/Users/jiankuang/Documents/Eclipse_workspace/global-workflow/workflow/CROW/tests/regtest/../test_data/regtest/cache/scripts/regtest_tmp'
+  family gdas # /regtest_tmp_2016021000/gdas
+    edit RUN 'gdas'
+    task jgdas_tropcy_cp
+      edit ECF_DUMMY_TASK ''
+      defstatus complete
+    family forecast # /regtest_tmp_2016021000/gdas/forecast
+      task jgdas_forecast_high
+    endfamily # /regtest_tmp_2016021000/gdas/forecast
+    family post # /regtest_tmp_2016021000/gdas/post
+      task jgdas_post_manager
+        trigger ../forecast == active
+        event 1 release_postanl
+        event 2 release_post
+      task jgdas_post_anl
+        edit FHR 'anl'
+        trigger ./jgdas_post_manager:release_postanl
+        event 1 release_pgrb2_anl
+    endfamily # /regtest_tmp_2016021000/gdas/post
+  endfamily # /regtest_tmp_2016021000/gdas
+  task cycle_end
+    edit ECF_JOB_CMD '%ECF_JOB% 1> %ECF_JOBOUT% 2>&1'
+    edit ECF_KILL_CMD 'kill -15 %ECF_RID%'
+    time 23:00
+endsuite # /regtest_tmp_2016021000
