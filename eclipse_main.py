@@ -12,7 +12,7 @@ import worktools;
 
 if __name__ == '__main__':
 #    print("Hello world CROW!")   
-    option1 = '-sf'
-    casename = 'tutorial_case'
-    username = 'datest'
+    option1 = '-sfD'
+    casename = 'tutorial_cycled'
+    username = 'test3'
     worktools.setup_case([option1,casename,username])

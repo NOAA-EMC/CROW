@@ -20,8 +20,8 @@ os.environ['ECF_PORT'] = "32065"
 import worktools; 
 
 # Edit your writting directory and comment out the following line:
-output = '/Users/jiankuang/Documents/Eclipse_workspace//expdir/test'
+output = '/Users/jiankuang/Documents/expdir/expdir/test3'
 
 if __name__ == '__main__':
     print(os.getcwd())
-    worktools.make_ecflow_files_for_cycles(output,'2018112800','2018112900')
+    worktools.make_ecflow_files_for_cycles(output,'2019050100','2019050200')

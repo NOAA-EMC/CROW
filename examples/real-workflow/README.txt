@@ -1,4 +1,3 @@
-early efforts to build a workflow from the ground up
 BThis is an actual workflow driven by CROW.
 
 Steps to run:
@@ -26,3 +25,5 @@ You need to run the Rocoto workflow that resides in that directory.
 you@theia> cd /scratch4/NCEPDEV/stmp3/Samuel.Trahan/expt/
 you@theia> module load rocoto
 you@theia> rocotorun -w expt.xml -d expt.db --verbose 10 # repeat until complete (or bored)
+
+

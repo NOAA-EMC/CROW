@@ -83,7 +83,7 @@ class Scheduler(BaseScheduler):
             hours=int(dt//3600)
             minutes=int((dt%3600)//60)
             seconds=int(math.floor(dt%60))
-            sio.write(f'#SBATCH -t {hours:d}:{minutes:02d}'
+            sio.write(f'#SBATCH -t {hours:02d}:{minutes:02d}'
                       f':{seconds:02d}\n')
 
         megabytes=self.get_memory_from_resource_spec(spec)
@@ -134,14 +134,13 @@ class Scheduler(BaseScheduler):
         space=self.indent_text
         sio=StringIO()
         if 'queue' in spec:
-            sio.write(f'{indent*space}<queue>{spec["queue"]!s}</queue>\n')
+            sio.write(f'{indent*space}<queue>{"batch"}</queue>\n')
+        if 'partition' in spec:
+            sio.write(f'{indent*space}<partition>{spec["partition"]!s}</partition>\n')
         if 'account' in spec:
             sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
         if 'project' in spec:
             sio.write(f'{indent*space}<account>{spec["project"]!s}</account>\n')
-        if 'partition' in spec and spec['partition']:
-            sio.write(f'{indent*space}<native>-l partition='
-                      f'{spec["partition"]!s}</native>\n')
         if 'account' in spec:
             sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
         if 'jobname' in spec:
@@ -172,7 +171,7 @@ class Scheduler(BaseScheduler):
             hours=int(dt//3600)
             minutes=int((dt%3600)//60)
             seconds=int(math.floor(dt%60))
-            sio.write(f'{indent*space}<walltime>{hours}:{minutes:02d}:{seconds:02d}</walltime>\n')
+            sio.write(f'{indent*space}<walltime>{hours:02d}:{minutes:02d}:{seconds:02d}</walltime>\n')
        
         megabytes=self.get_memory_from_resource_spec(spec)
         if megabytes is not None:
