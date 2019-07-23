@@ -665,6 +665,8 @@ def setup_case(command_line_arguments):
                     '../defaults':'defaults',
                     '../config':'config',
                     '../runtime':'runtime' } # important: no ending /
+    
+    
 
     init_logging('-v' in options,'-d' in options or '-D' in options)
 
