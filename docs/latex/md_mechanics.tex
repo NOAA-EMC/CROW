@@ -1,0 +1,165 @@
+The C\-R\-O\-W toolbox utilizes the same two-\/step, Configuration + Generation approach, as the “setup experiment → setup workflow” concept of the legacy global workflow. This approach was taken in order to better serve users of the legacy global workflow and shorten the learning curve as much as possible as they migrate to this new method of instantiating workflows. The figure below shows the flow of the C\-R\-O\-W configuration and generation approach to generate a workflow, in this case a model experiment.
+
+This section will give a detailed explanation of the process of workflow creation as well as the scripts involved, and compare it with legacy configuration process. It also gives preliminary introduction of the input files which meets the needs of most general users.
+
+
+
+
+\begin{DoxyItemize}
+\item Gray arrows in this chart indicates the flow of configuration information.
+\item Round-\/cornered boxes are A\-S\-C\-I\-I files at various stages, while diamond-\/shapes are scripts run by the user.
+\item Yellow color indicates places for user input, while dark green boxes are the final products.
+\end{DoxyItemize}
+
+For general users, the major difference with the legacy workflow system is that, instead of having users manually edit each config, C\-R\-O\-W designates central places to put configuration parameters. The files that require user input are the (1) user file and (2) case file. They are highly templated text files storing user information and high-\/level configuration settings of each experiment. Detailed description and formatting will be discussed in “\-Structures” section .
+
+After the user input stage are validation and setup stages handled internally by the toolbox. (1) The inputted user information (user file) and experiment design (case file) are validated against known allowed values built in by the developers of the particular system (i.\-e. model). (2) The output folders (e.\-g. C\-O\-M directory) are established and populated with initial input data (if designed). (3) The workflow files are built and placed in your main experiment directory (e.\-g. xml file for Rocoto or suite definition files for ec\-Flow).
+
+\subsection*{1. User input stage }
+
+Set up user and case files User file
+
+The “user file” is a text file containing user specific information like their H\-P\-C account code. The user will find a default one that they should start with called “user.\-yaml.\-default” under /workflow. Make a copy called “user.\-yaml”\-:
+
+\begin{quotation}
+cp user.\-yaml.\-default user.\-yaml
+
+\end{quotation}
+
+
+...and modify as needed.
+
+Required settings in default user.\-yaml \mbox{[}user.\-yaml.\-default\mbox{]}\-: The “!error” contents are error messages that will pop up when the corresponding field is missing.
+
+user\-\_\-places\-: \&user\-\_\-places P\-R\-O\-J\-E\-C\-T\-\_\-\-D\-I\-R\-: !error Please select a project directory. accounting\-: \& accounting cpu\-\_\-project\-: !error What accounting code do I use to submit jobs? \# ie.\-: global hpss\-\_\-project\-: !error Where do I put data on H\-P\-S\-S? \# ie.\-: emc-\/global User file example\-: \mbox{[}user.\-yaml\mbox{]}
+
+user\-\_\-places\-: \&user\-\_\-places P\-R\-O\-J\-E\-C\-T\-\_\-\-D\-I\-R\-: /mnt/lfs3/projects/hfv3gfs/ accounting\-: \& accounting cpu\-\_\-project\-: hfv3gfs hpss\-\_\-project\-: emc-\/global
+
+All other settings allowed in the user file have defaults and may be left commented out. P\-R\-O\-J\-E\-C\-T\-\_\-\-D\-I\-R, cpu\-\_\-project, and hpss\-\_\-project are the only required modifications because there are no default values for these variables. Replace or comment out the !error messages and insert the needed values.
+
+
+\begin{DoxyItemize}
+\item P\-R\-O\-J\-E\-C\-T\-\_\-\-D\-I\-R -\/ location where experiment directory will be created, needs to be a place where user has write access.
+\item cpu\-\_\-project -\/ the user’s account code to submit supercomputer job (e.\-g. global)
+\item hpss\-\_\-project -\/ the user’s H\-P\-S\-S group for archival (e.\-g. emc-\/global)
+\end{DoxyItemize}
+
+More variables can be defined in this section. In general, two categories of variables could be defined in this file. Detailed explanation of this file is discussed in the “\-Structure” section.
+
+The following list contains frequently included variables in user.\-yaml\-:
+
+
+\begin{DoxyItemize}
+\item User\-\_\-email = user email address where auto-\/generated status emails are sent to. For example, the crontab email address. \mbox{[}Optional\mbox{]}
+\item L\-O\-N\-G\-\_\-\-T\-E\-R\-M\-\_\-\-T\-E\-M\-P = Temporary area that is scrubbed less often (can be the same as R\-O\-T\-D\-I\-R). If left commented out the toolbox will determine the long term temporary space with the most room at setup time. The location options for short term space are built into toolbox by developers when ported to H\-P\-C. Recommend leaving commented out.
+\item S\-H\-O\-R\-T\-\_\-\-T\-E\-R\-M\-\_\-\-T\-E\-M\-P = Temporary area that is scrubbed quickly (can be the same as D\-A\-T\-A\-R\-O\-O\-T) and which is used at runtime by jobs. If left commented out the toolbox will determine the short term temporary space with the most room at setup time. The location options for short term space are built into toolbox by developers when ported to H\-P\-C. Recommend leaving commented out.
+\item R\-O\-T\-D\-I\-R = R\-O\-Tating D\-I\-Rectory, where model inputs and outputs will reside. Main output directory. Subdirectories are organized in \$\-R\-U\-N.\$\-P\-D\-Y/\$\-H\-O\-U\-R convention (e.\-g. gdas.\-2019021400/00, gfs.\-2019021400/06 ). At this moment, this is usually the same value as L\-O\-N\-G\-\_\-\-T\-E\-R\-M\-\_\-\-T\-E\-M\-P.
+\item D\-A\-T\-A\-R\-O\-O\-T = Run-\/time directory. Subdirectories are created for each job. All input files, restart files, and executables will be soft-\/linked to the corresponding subdirectory under this place. Namelists and temporary outputs will be generated here. When a job has finished successfully, outputs will either be copied or linked to R\-O\-T\-D\-I\-R. Usually put in S\-H\-O\-R\-T\-\_\-\-T\-E\-R\-M\-\_\-\-T\-E\-M\-P.
+\item I\-C\-S\-D\-I\-R = Path to your generated initial conditions on disk, if created beforehand.
+\item ecflow\-\_\-machine = Server for ec\-Flow (W\-C\-O\-S\-S only currently). This variable only makes sense when running ec\-Flow-\/driven workflow.
+\item $\ast$\-\_\-partition = Partition to run on. Some supercomputers (e.\-g. R\-D\-H\-P\-C\-S-\/jet) have “partitions”, which are subsets of computing resources. Specifying these could enable users to run a job on certain partitions based on the feature of the given job (extensive computing? Large Memory? … ).
+\end{DoxyItemize}
+
+Case file
+
+The “case file” is a text file containing configuration settings for your experiment (a.\-k.\-a. experiment design). The format of the case file is straightforward, as a section / subsection / key / value structure. Python-\/like indentation rules have to be followed to avoid error and ambiguous.
+
+The following sample case file is provided for particular scenarios and can act as your starting point to set up your own experimental configuration. Only mandatory variables are included initially. Settings not expressed in this case file can be added (see list of available settings “structures” section and Appendix). Validation will occur on all settings in your case file during the first “configuration” step. Settings/variables not expressed in case file will end up with their default values (established by the developers of the particular system). Several other pre-\/built case files are also included in the repository for reference purpose.
+
+Case file example\-: \mbox{[}tutorial\-\_\-case.\-yaml\mbox{]}
+
+case\-: fv3\-\_\-settings\-: C\-A\-S\-E\-: C192 L\-E\-V\-S\-: 65
+
+places\-: workflow\-\_\-file\-: workflow/cycled\-\_\-gfs.\-yaml
+
+settings\-: S\-D\-A\-T\-E\-: 2016-\/02-\/10t00\-:00\-:00 E\-D\-A\-T\-E\-: 2016-\/02-\/12t00\-:00\-:00
+
+D\-U\-M\-P\-\_\-\-S\-U\-F\-F\-I\-X\-: \char`\"{}p\char`\"{} run\-\_\-gsi\-: No chgres\-\_\-and\-\_\-convert\-\_\-ics\-: No gfs\-\_\-cyc\-: 4 \# run gfs every cycle
+
+Detailed explanation of these files can be found in the “\-Structure / User Input Files” section.
+
+The full configuration set are stored in a series of definition files written in Y\-A\-M\-L, a data serialization language in A\-S\-C\-I\-I format (to be discussed later). Most of them are for background definition settings (Background Files there-\/after) which reflect the structures and features of a given modeling system (e.\-g. Global Workflow, Regional Workflow, H\-M\-O\-N, etc.). Most configuration parameters come with default values which are also stored in these directories. These files are not designed to be edited by general users. However, when substantial upgrade of the modeling system happens where workflow-\/level modification is needed, these files need to be upgraded correspondingly, with collaboration between workflow and modeling teams.
+
+Detailed explanation of these definition files will be given in the “\-Structure / Background Files” section.
+\begin{DoxyEnumerate}
+\item Configuration stage Run experiment setup script
+\end{DoxyEnumerate}
+
+The setup\-\_\-case.\-sh script is the entry point of the configuration step. It does the following\-:
+
+Validate platform Ingests user and case files along with all background files Runs validation on inputted information -\/ will exit here with validation errors and description Builds experiment directory (including configs) Builds C\-O\-M directory
+
+When setting up an experiment, the user needs to specify at least two required arguments to the setup\-\_\-case.\-sh script\-: (1) case name (or full path to case file), and (2) experiment name (defined by the user). A third input is required if running on a H\-P\-C with multiple platforms (see -\/p flag in option flags information below). \begin{DoxyVerb}> setup_case.sh [options] $CASE_FILE  $EXPERIMENT_NAME
+\end{DoxyVerb}
+
+
+Examples\-:
+
+\begin{quotation}
+setup\-\_\-case.\-sh tutorial\-\_\-case test
+
+\end{quotation}
+
+
+O\-R \begin{DoxyVerb}> setup_case.sh ../cases/tutorial_case.yaml test
+\end{DoxyVerb}
+
+
+Note\-: the user can include the “.\-yaml” part of the case file name but it is not required unless providing the full path to the file
+
+Option flags\-:
+
+
+\begin{DoxyItemize}
+\item -\/p \$\-H\-P\-C specify platform name \$\-H\-P\-C, required if multiple platforms available (W\-C\-O\-S\-S options\-: W\-C\-O\-S\-S\-\_\-\-C, W\-C\-O\-S\-S\-\_\-\-D\-E\-L\-L\-\_\-\-P3)
+\item -\/c skip C\-O\-M directory creation (recommend to use when making your own initial conditions)
+\item -\/f force C\-O\-M directory re-\/creation and overwrite experimental directory files (does N\-O\-T overwrite platform.\-yaml)
+\item -\/\-F force C\-O\-M directory re-\/creation and overwrite experimental directory files (overwrite platform.\-yaml)
+\item -\/v verbose mode
+\item -\/d debug mode
+\item -\/\-D super debug mode
+\item -\/v -\/d -\/\-D, more and more screen output during workflow generation. -\/\-D will slow down the process quite significantly. Only recommended for developers.
+\item -\/s sandbox mode.
+\end{DoxyItemize}
+
+Enables workflow generation without supercomputer access. This option is developed for pure debugging purpose for C\-R\-O\-W and workflow developers. When activated, C\-R\-O\-W will skip platform validation. Ptmp, stmp and expdir will all defined under P\-R\-O\-J\-E\-C\-T\-\_\-\-D\-I\-R. User need to make sure writing access is granted for P\-R\-O\-J\-E\-C\-T\-\_\-\-D\-I\-R. \begin{DoxyVerb}Example:    > setup_case.sh -fc -p WCOSS_DELL_P3 tutorial_case test
+\end{DoxyVerb}
+
+
+\subsection*{3. Generation stage }
+
+Run workflow generation script
+
+There are two equivalent scripts for setting up the experiment’s workflow (equivalent of setup\-\_\-workflow.\-sh in the legacy configuration system)\-: make\-\_\-rocoto\-\_\-xml\-\_\-for.\-sh and make\-\_\-ecflow\-\_\-files\-\_\-for.\-sh. The usage of them is almost identical with the setup\-\_\-workflow.\-sh script of the legacy configuration system.
+
+These two scripts are the entry points of the second step of creating a workflow, named Generation. They are shell scripts designed to set up the python environment and initiate the python functions inside “worktools.\-py”. The \$\-E\-X\-P\-E\-R\-I\-M\-E\-N\-T\-\_\-\-D\-I\-R\-E\-C\-T\-O\-R\-Y variable below is the location of your experiment files (e.\-g. configs). This is also known as \$\-E\-X\-P\-D\-I\-R in some models.
+
+Build Rocoto workflow
+
+\begin{quotation}
+make\-\_\-rocoto\-\_\-xml\-\_\-for.\-sh \$\-E\-X\-P\-E\-R\-I\-M\-E\-N\-T\-\_\-\-D\-I\-R\-E\-C\-T\-O\-R\-Y
+
+\end{quotation}
+
+
+This will write a Rocoto xml file and a crontab file for recurring job. The usage and outcome is almost identical with the “setup\-\_\-workflow.\-py” script of the legacy configuration system. However, instead of reading the config files, this file gets the configuration information totally by reading Y\-A\-M\-L configuration files under \$\-E\-X\-P\-E\-R\-I\-M\-E\-N\-T\-\_\-\-D\-I\-R\-E\-C\-T\-O\-R\-Y. So, modifying the config files in the experiment directory won’t affect the outcome. Experiment directory config files are used by workflow jobs at run-\/time.
+
+Rocoto is designed to be a self-\/contained and localized system that runs entirely in user space. It is easy for end-\/users to install, and run without help from systems administrators.
+
+Detailed Rocoto documentation\-:
+
+\href{https://github.com/christopherwharrop/rocoto}{\tt https\-://github.\-com/christopherwharrop/rocoto}
+
+Build ec\-Flow workflow \begin{DoxyVerb}> make_ecflow_files_for.sh  $EXPERIMENT_DIRECTORY
+\end{DoxyVerb}
+
+
+Note\-: When running with ec\-Flow, the four “\-E\-C\-F” environment variables (\$\-E\-C\-F\-\_\-\-H\-O\-M\-E, \$\-E\-C\-F\-\_\-\-R\-O\-O\-T, \$\-E\-C\-F\-\_\-\-P\-O\-R\-T and \$\-E\-C\-F\-\_\-\-H\-O\-S\-T) need to be properly set in your environment. (More details see ec\-Flow Training)
+
+The major difference between ec\-Flow and Rocoto is that, ec\-Flow is a centralized workflow manager, which means it is usually installed in a designated place to serve all users of the system. The additional benefits of using ec\-Flow include a built-\/in graphic user interface, capability to handle dependencies on clock time, and elimination of crontab jobs. Furthermore, since N\-O\-A\-A/\-N\-C\-O has been using ec\-Flow as the workflow manager of operational workflows for years, using ec\-Flow will make it considerably easier for R2\-O transition compared with Rocoto.
+
+ec\-Flow is a free software developed by E\-C\-M\-W\-F and licenced under Apache License 2.\-0. Currently Ec\-Flow is built for all partitions of N\-O\-A\-A/\-W\-C\-O\-S\-S; Setting up ec\-Flow service for R\-D\-H\-P\-C\-S is still under going. \begin{DoxyVerb}Detailed ecFlow documentation: 
+\end{DoxyVerb}
+
+
+\href{https://confluence.ecmwf.int/display/ECFLOW}{\tt https\-://confluence.\-ecmwf.\-int/display/\-E\-C\-F\-L\-O\-W} 

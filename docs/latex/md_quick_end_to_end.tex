@@ -1,0 +1,52 @@
+How to setup a stock experiment with Rocoto\-:
+
+Checkout repository “\-C\-R\-O\-Wdemo2” branch
+
+\begin{quotation}
+git clone gerrit\-:global-\/workflow cd global-\/workflow git checkout C\-R\-O\-Wdemo2
+
+\end{quotation}
+
+
+Get C\-R\-O\-W submodule
+
+\begin{quotation}
+git submodule update --init --recursive
+
+\end{quotation}
+
+
+Build/link global-\/workflow \begin{DoxyVerb}> cd sorc
+> sh checkout.sh
+> sh build_all.sh
+> sh link_fv3gfs.sh emc $target
+...where $target is machine (wcoss_cray, theia, jet, or dell)
+\end{DoxyVerb}
+
+
+Set up user file
+
+While at the top of global-\/workflow clone\-: \begin{quotation}
+cd workflow
+
+\end{quotation}
+Copy default user file to your user file $>$ cp user.\-yaml.\-default user.\-yaml Open and modify user.\-yaml, the following are required to be set\-: P\-R\-O\-J\-E\-C\-T\-\_\-\-D\-I\-R, cpu\-\_\-project and hpss\-\_\-project
+
+Run experiment setup script \begin{DoxyVerb}> cd CROW
+\end{DoxyVerb}
+ \begin{quotation}
+./setup\-\_\-case.sh tutorial\-\_\-free\-\_\-forecast test
+
+\end{quotation}
+
+
+Run workflow generation script \begin{DoxyVerb}> ./make_rocoto_xml_for.sh $EXPERIMENT_DIRECTORY
+\end{DoxyVerb}
+
+
+...where \$\-E\-X\-P\-E\-R\-I\-M\-E\-N\-T\-\_\-\-D\-I\-R\-E\-C\-T\-O\-R\-Y is the location of the folder created in the prior step (which contains your generated config files); this is where your resulting xml file will be found
+
+Navigate to your experiment directory and start your experiment with Rocoto\-:
+
+\begin{quotation}
+module load rocoto rocotorun -\/d workflow.\-db -\/w workflow.\-xml \end{quotation}
