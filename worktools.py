@@ -645,21 +645,26 @@ def setup_case_usage(why=None):
     exit(1)
 
 def setup_case(command_line_arguments):
-    options,positionals=getopt(command_line_arguments,'sdvfcpm:DF')
+    options,positionals=getopt(command_line_arguments,'sdvfcp:mDF')
     options=dict(options)
-    
-    YAML_DIRS_TO_COPY={ '../schema':'schema',
-                    '../defaults':'defaults',
-                    '../config':'config',
-                    '../runtime':'runtime' } # important: no ending /
     
     if '-m' in options:
         logger.warning('Using manual mode \n ')
         YAML_FILES_TO_COPY={ '../_expdir_main_manual.yaml': '_main.yaml',
-                     '../user.yaml': 'user.yaml' }
+                             '../top.yaml':'top.yaml',
+                             '../defaults/resources.yaml':'resources.yaml',
+                             '../defaults/base.yaml':'base.yaml',
+                             '../defaults/places.yaml':'places.yaml',
+                             '../user.yaml': 'user.yaml' }
+        YAML_DIRS_TO_COPY={ '../runtime':'runtime' } # important: no ending /
+
     else:
         YAML_FILES_TO_COPY={ '../_expdir_main_auto.yaml': '_main.yaml',
                      '../user.yaml': 'user.yaml' }
+        YAML_DIRS_TO_COPY={ '../schema':'schema',
+                    '../defaults':'defaults',
+                    '../config':'config',
+                    '../runtime':'runtime' } # important: no ending /
     
     
 
