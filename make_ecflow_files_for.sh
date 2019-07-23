@@ -14,10 +14,10 @@ here=$( cd "$dir0" ; pwd -P )
 
 export WORKTOOLS_VERBOSE=NO
 
-crowdir=$( cd CROW ; pwd -P )
+yamldir=$( cd ../ ; pwd -P )
 
 # Make sure this directory is in the python path so we find worktools.py:
-export PYTHONPATH=$here:$crowdir:${PYTHONPATH:+:$PYTHONPATH}
+export PYTHONPATH=$here:$yamldir:${PYTHONPATH:+:$PYTHONPATH}
 
 source "$dir0/worktools.sh.inc"
 
@@ -35,7 +35,7 @@ export LAST_CYCLE="${3:-}"
 #   exit 1
 #fi
 
-check_ecf_variables
+#check_ecf_variables
 
 if [[ "${WORKTOOLS_VERBOSE:-NO}" == YES ]] ; then 
     echo "make_ecflow_files_for.sh: verbose mode"
