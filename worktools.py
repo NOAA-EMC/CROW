@@ -652,6 +652,8 @@ def setup_case(command_line_arguments):
         logger.warning('Using manual mode \n ')
         YAML_FILES_TO_COPY={ '../_expdir_main_manual.yaml': '_main.yaml',
                              '../top.yaml':'top.yaml',
+                             '../schema/task.yaml':'schema.yaml',
+                             '../schema/varnames.yaml':'varnames.yaml',
                              '../defaults/resources.yaml':'resources.yaml',
                              '../defaults/base.yaml':'base.yaml',
                              '../defaults/places.yaml':'places.yaml',
