@@ -715,7 +715,6 @@ def setup_case(command_line_arguments):
         os.path.abspath('../'),YAML_DIRS_TO_COPY,YAML_FILES_TO_COPY,case_name,experiment_name,platdoc,force,
         skip_comrot,force_platform_rewrite)
 
-    print('I got here')
     doc=from_dir(EXPDIR,validation_stage='setup')
     suite=Suite(doc.suite)
     logger.info('creating a dummy workflow in memory...')
