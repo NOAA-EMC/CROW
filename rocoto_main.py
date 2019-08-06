@@ -10,4 +10,4 @@ sys.path.append(os.getcwd())
 
 import worktools ; 
 if __name__ == '__main__':
-    worktools.make_rocoto_xml_for('/Users/jiankuang/Documents/expdir/expdir/test3')
+    worktools.make_rocoto_xml_for('/export/emc-lw-jkuang/jkuang/expdir/expdir/manual_dev')
