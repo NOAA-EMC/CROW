@@ -34,7 +34,7 @@ def get_args():
         if Path(args.cmp_dirs_with_joblevel_file[0]).is_file():
             yaml_file_open =  open(args.cmp_dirs_with_joblevel_file[0], 'r')
             try:
-                file_dic_list = yaml.load( yaml_file_open )
+                file_dic_list = yaml.load( yaml_file_open, Loader=yaml.Loader )
                 using_file_list = True
             except yaml.YAMLError as exc:
                 logger.critical(logger_hdr+'argument %s is not a valid YAML file')
@@ -485,7 +485,7 @@ if __name__ == '__main__':
         yaml_files_filename_Path = Path(yaml_files_filename)
         if yaml_files_filename_Path.is_file():
             yaml_files_fptr = open(  yaml_files_filename )
-            file_dic_list = yaml.load( yaml_files_fptr  )
+            file_dic_list = yaml.full_load( yaml_files_fptr  )
             yaml_files_fptr.close()
 
         if 'prior_ROTDIR' in file_dic_list:

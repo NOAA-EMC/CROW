@@ -39,7 +39,7 @@ evaluate_immediates=_evaluate_immediates
 
 def from_string(s,evaluate_immediates=True,validation_stage=None):
     if not s: raise TypeError('Cannot parse null string')
-    c=ConvertFromYAML(yaml.load(s),CONFIG_TOOLS,ENV)
+    c=ConvertFromYAML(yaml.load(s, Loader=yaml.Loader),CONFIG_TOOLS,ENV)
     result=c.convert(validation_stage=validation_stage,
                      evaluate_immediates=evaluate_immediates)
     return result
