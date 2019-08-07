@@ -655,8 +655,9 @@ def setup_case(command_line_arguments):
                              '../schema/task.yaml':'schema.yaml',
                              '../schema/varnames.yaml':'varnames.yaml',
                              '../defaults/resources.yaml':'resources.yaml',
-                             '../defaults/base.yaml':'base.yaml',
+                             '../defaults/settings.yaml':'settings.yaml',
                              '../defaults/places.yaml':'places.yaml',
+                             '../config/base.yaml':'base.yaml',
                              '../user.yaml': 'user.yaml' }
         YAML_DIRS_TO_COPY={ '../runtime':'runtime' } # important: no ending /
 
