@@ -6,6 +6,7 @@ set -ue
 # yaml files are there:
 dir0=$( dirname "$0" )
 here=$( cd "$dir0" ; pwd -P )
+utils=$here/utils
 
 #if [[ ! -s .in-the-ecfutils-dir ]] ; then
 #    echo "This script must be within the ecf/ecfutils directory when running it." 1>&2
@@ -17,9 +18,9 @@ export WORKTOOLS_VERBOSE=NO
 yamldir=$( cd ../ ; pwd -P )
 
 # Make sure this directory is in the python path so we find worktools.py:
-export PYTHONPATH=$here:$yamldir:${PYTHONPATH:+:$PYTHONPATH}
+export PYTHONPATH=$here:$utils:$yamldir:${PYTHONPATH:+:$PYTHONPATH}
 
-source "$dir0/worktools.sh.inc"
+source "$dir0/utils/worktools.sh.inc"
 
 # Parse arguments:
 if [[ "$1" == "-v" ]] ; then
