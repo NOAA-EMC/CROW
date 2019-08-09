@@ -19,7 +19,7 @@ crowdir=$( pwd -P )
 # Make sure this directory is in the python path so we find worktools.py:
 export PYTHONPATH=$here:$crowdir:${PYTHONPATH:+:$PYTHONPATH}
 
-source "$dir0/worktools.sh.inc"
+source "$dir0/utils/worktools.sh.inc"
 
 # Parse arguments:
 if [[ "$1" == "-v" ]] ; then
