@@ -109,10 +109,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 - hpss_project: hpss project that you are working with.
 </pre><p>Run experiment setup script </p>
 <pre class="fragment">&gt; cd CROW
-</pre> <blockquote class="doxtable">
-<p>./setup_case.sh tutorial_free_forecast test</p>
-<p></p>
-</blockquote>
+&gt; ./setup_case.sh tutorial_free_forecast test
+</pre><p>If you see the following error: </p>
+<pre class="fragment">ERROR:crow.model.fv3gfs:More than one platform is available: $PLAT1, $PLAT2
+ERROR:crow.model.fv3gfs:Pick one with -p option
+</pre><p>That means you could access more than one computing platform from this environment (which is good). You need to make selection of computing platform between $PLAT1 and $PLAT2 by do the following:</p>
+<p>In CROW, there's a '-p' command option to the setup_case command: </p>
+<pre class="fragment">&gt; ./setup_case.sh -p $PLAT_x tutorial_free_forecast test
+</pre><p>Execute this instead of the standard one, while $PLAT_x is the platform that you want to select.</p>
 <p>Run workflow generation script </p>
 <pre class="fragment">&gt; ./make_rocoto_xml_for.sh $EXPERIMENT_DIRECTORY
 </pre><p>...where $EXPERIMENT_DIRECTORY is the location of the folder created in the prior step (which contains your generated config files); this is where your resulting xml file will be found</p>

@@ -39,12 +39,22 @@ Copy default user file to your user file\-: \begin{DoxyVerb}> cp user.yaml.defau
 
 
 Run experiment setup script \begin{DoxyVerb}> cd CROW
+> ./setup_case.sh tutorial_free_forecast test
 \end{DoxyVerb}
- \begin{quotation}
-./setup\-\_\-case.sh tutorial\-\_\-free\-\_\-forecast test
 
-\end{quotation}
 
+If you see the following error\-: \begin{DoxyVerb}ERROR:crow.model.fv3gfs:More than one platform is available: $PLAT1, $PLAT2
+ERROR:crow.model.fv3gfs:Pick one with -p option
+\end{DoxyVerb}
+
+
+That means you could access more than one computing platform from this environment (which is good). You need to make selection of computing platform between \$\-P\-L\-A\-T1 and \$\-P\-L\-A\-T2 by do the following\-:
+
+In C\-R\-O\-W, there's a '-\/p' command option to the setup\-\_\-case command\-: \begin{DoxyVerb}> ./setup_case.sh -p $PLAT_x tutorial_free_forecast test
+\end{DoxyVerb}
+
+
+Execute this instead of the standard one, while \$\-P\-L\-A\-T\-\_\-x is the platform that you want to select.
 
 Run workflow generation script \begin{DoxyVerb}> ./make_rocoto_xml_for.sh $EXPERIMENT_DIRECTORY
 \end{DoxyVerb}
