@@ -1,0 +1,86 @@
+resources: &resources
+  - exe: placeholder
+    OMP_NUM_THREADS: 4
+    mpi_ranks: 12
+    walltime: 00:02:00
+    memory: "5M"
+
+scheduler_settings:
+  name: LSFAlps
+  physical_cores_per_node: 24
+  logical_cpus_per_core: 2
+  hyperthreading_allowed: true
+  
+sched: !calc |
+  tools.get_scheduler(doc.scheduler_settings.name,
+                      doc.scheduler_settings)
+
+accounting:
+  queue: '%QUEUE%'
+  project: GFS-T2O
+
+ecf_file_template: &ecf_file_template !expand |
+  #! /bin/sh
+  %include <head.h>
+  echo ${{JOBgfs}}/{J_JOB}
+  %include <tail.h>
+
+suite: !Cycle
+  Clock: !Clock
+    start: 2018-01-01T18:00:00
+    end: 2018-01-02T18:00:00
+    step: !timedelta "6:00:00"
+
+  Alarms:
+    twelve_hourly: !Clock
+      start: 2018-01-01T00:00:00
+      end: 2018-01-02T12:00:00
+      step: !timedelta "12:00:00"
+    zero_utc: !Clock
+      start: 2018-01-01T00:00:00
+      end: 2018-01-02T00:00:00
+      step: !timedelta "24:00:00"
+
+  ecf_file_set:
+    ECF_FILES: 'dummy address for ECF files'
+    disk_path: 'dummy address for ECF files'
+
+  ecFlow:
+    suite_def_filename: "prod%H.def"
+    suite_name: "prod%H"
+    scheduler: !calc doc.scheduler
+
+  simple_task: !Task
+    resources: *resources
+    ecf_file: *ecf_file_template
+    J_JOB: JGFS_TASK23
+
+  my_array: !TaskArray
+    Trigger: !Depend simple_task
+    Dimensions:
+      number: [ 1, 2, 3 ]
+      letter: [ a, b, c ]
+
+    task_letter: !TaskElement
+      Foreach: [ letter ]
+      Name: !expand task_{dimval.letter:s}
+      LETTER: !expand '{dimval.letter:s}'
+      ecflow_def: |
+        edit LETTER '{LETTER}'
+      resources: *resources
+      ecf_file: *ecf_file_template
+      J_JOB: JGFS_TASK_N
+
+    two_task: !TaskElement
+      Name: !expand tusk_{dimval.number:02d}_{dimval.letter:s}
+      NUMBER: !expand '{dimval.number:02d}'
+      LETTER: !expand '{dimval.letter:s}'
+      ecflow_def: |
+        edit NUMBER '{NUMBER}'
+        edit LETTER '{LETTER}'
+      resources: *resources
+      ecf_file: *ecf_file_template
+      J_JOB: !expand |
+        JGFS_TUSK_N
+      Foreach: [ number, letter ]
+      Trigger: !Depend this.depend("task_{L}",L=doc.suite.my_array.Dimensions.letter)
