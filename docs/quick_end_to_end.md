@@ -25,10 +25,13 @@ Set up user file
 
 While at the top of global-workflow clone:
 > cd workflow
-Copy default user file to your user file
+Copy default user file to your user file:
+
 	> cp user.yaml.default user.yaml
 Open and modify user.yaml, the following are required to be set:
-	PROJECT_DIR, cpu_project and hpss_project
+	- PROJECT_DIR: Place for experiment directory, make sure you have write access.
+	- cpu_project: cpu project that you are working with.
+	- hpss_project: hpss project that you are working with.
 
 Run experiment setup script
 
