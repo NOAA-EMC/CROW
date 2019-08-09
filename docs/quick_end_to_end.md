@@ -37,7 +37,20 @@ Open and modify user.yaml, the following are required to be set:
 Run experiment setup script
 
 	> cd CROW
-> ./setup_case.sh tutorial_free_forecast test
+	> ./setup_case.sh tutorial_free_forecast test
+	
+If you see the following error:
+
+	ERROR:crow.model.fv3gfs:More than one platform is available: $PLAT1, $PLAT2
+	ERROR:crow.model.fv3gfs:Pick one with -p option
+
+That means you could access more than one computing platform from this environment (which is good). You need to make selection of computing platform between $PLAT1 and $PLAT2 by do the following:
+
+In CROW, there's a '-p' command option to the setup_case command:
+
+	> ./setup_case.sh -p $PLAT_x tutorial_free_forecast test
+	
+Execute this instead of the standard one, while $PLAT_x is the platform that you want to select.
 
 Run workflow generation script
 
