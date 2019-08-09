@@ -101,8 +101,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p>cd workflow</p>
 <p></p>
 </blockquote>
-<p>Copy default user file to your user file &gt; cp user.yaml.default user.yaml Open and modify user.yaml, the following are required to be set: PROJECT_DIR, cpu_project and hpss_project</p>
-<p>Run experiment setup script </p>
+<p>Copy default user file to your user file: </p>
+<pre class="fragment">&gt; cp user.yaml.default user.yaml
+</pre><p> Open and modify user.yaml, the following are required to be set: </p>
+<pre class="fragment">- PROJECT_DIR: Place for experiment directory, make sure you have write access.
+- cpu_project: cpu project that you are working with.
+- hpss_project: hpss project that you are working with.
+</pre><p>Run experiment setup script </p>
 <pre class="fragment">&gt; cd CROW
 </pre> <blockquote class="doxtable">
 <p>./setup_case.sh tutorial_free_forecast test</p>

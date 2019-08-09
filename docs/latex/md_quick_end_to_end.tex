@@ -30,7 +30,13 @@ While at the top of global-\/workflow clone\-: \begin{quotation}
 cd workflow
 
 \end{quotation}
-Copy default user file to your user file $>$ cp user.\-yaml.\-default user.\-yaml Open and modify user.\-yaml, the following are required to be set\-: P\-R\-O\-J\-E\-C\-T\-\_\-\-D\-I\-R, cpu\-\_\-project and hpss\-\_\-project
+Copy default user file to your user file\-: \begin{DoxyVerb}> cp user.yaml.default user.yaml
+\end{DoxyVerb}
+ Open and modify user.\-yaml, the following are required to be set\-: \begin{DoxyVerb}- PROJECT_DIR: Place for experiment directory, make sure you have write access.
+- cpu_project: cpu project that you are working with.
+- hpss_project: hpss project that you are working with.
+\end{DoxyVerb}
+
 
 Run experiment setup script \begin{DoxyVerb}> cd CROW
 \end{DoxyVerb}
