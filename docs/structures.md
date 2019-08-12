@@ -2,12 +2,14 @@ Structures
 ========================
 
 YAML in general
+------------------------
 
 YAML(acronym of “YAML Ain't Markup Language”) is a human-readable data serialization language. Native YAML encodes data types that are specifically suitable for configuration. In this application, an enhanced format called CROW-YAML is developed along with a series of advanced functionalities and data types to support the configuration of the workflows of NOAA.
 
 The CROW package has two-way conversion functions between YAML text files and configuration suite in memory. The configuration suite is essentially a python dictionary with all configuration settings. The settings are then parsed into config files, rocoto XML and ecFlow suite.
 
 Processing of YAML files
+-------------------------
 
 As a serialization language, YAML is extremely suitable to handle configuration practice because of it’s keyword-free syntax, highly human-readable nature, and the conveniency of handling multiple types of value within a single object. 
 
@@ -18,6 +20,8 @@ CROW YAML is developed on top of PyYAML with the addition of several customized 
 
 
 Features:
+--------------------
+
 Only once. Though not recommended, CROW enables users to specify a certain variable and override it at a later stage. But, only one value of a certain variable could be passed into the targeted workflow that is generated.
 All or none. CROW always reads all YAML files at one time. This design helps ensure consistency within the Configuration Suite and Workflow Suite.
 Diagnosable. In CROW, the experiment directory has effectively become a “checkpoint” for the configuration. This helps minimize human error and increase accountability, comparing with manually editing throughout experiment directory.
@@ -25,6 +29,7 @@ Diagnosable. In CROW, the experiment directory has effectively become a “check
 This file will be read by crow.config and become a eval_dict object of python. There are two sections in the eval_dict created, original contents are stored in _child and calculated values are stored in _cache.
 
 CROW based workflow suite
+---------------------------
 
 CROW is a python based toolbox driven by a series of shell based utility scripts. In CROW-enabled modeling systems, top level directory /workflow is the designated place to start working with workflow generation. Under this directory locates the sub-repository CROW. Users need to perform a “git submodule” command to pull CROW from the cloud. Outside CROW repository, a user.yaml file and a case/ directory is needed to accommodate user and case settings. In addition to these, CROW needs a set of background files to fulfill its functionality. These files are stored in workflow/defaults; workflow/workflow; workflow/runtime; workflow/platforms and /schema.
 
@@ -57,8 +62,10 @@ The basic component of a CROW configuration suite is called a task. In a workflo
 Fig 3. Detailed explanation of how tasks are defined will be given later
 
 Example of task object creation: 
+------------------------------
 
 This is what has been defined in task_schema (rocoto section) :
+
 task_schema: &task_schema !Template
           Rocoto:                    # Variable name
             description: >-            # Short description
@@ -92,6 +99,7 @@ Template: *task_schema        # Load task_schema
         …(More variables)...
 
 This is what has been inherited and defined in forecast_task_template, 
+
 forecast_task_template: &exclusive_task_template    # This is a task template
       <<: *task_template                    # It loads this template
       partition: !calc doc.accounting.exclusive_partition    # Running on this partition
@@ -151,6 +159,8 @@ At this moment, configuration settings of each individual task are still coming 
 
 
 User Input Files
+--------------------
+
 Format
 
 The YAML files that require user inputs are all formatted in a classical and intuitive “Name: Value” convention. Python-style indentation rule is applied to differentiate multiple levels of variable sections. Top level named is “case” for case file; while “user_places” and “accounting” is used for user file.  Lower levels of contents include required and optional subsections. Order does not matter. 
