@@ -118,7 +118,8 @@ J_JOB: JGLOBAL_FORECAST        # This is the associated J-Job
 
 This is the task in Rocoto XML generated from CROW:
 
-  <task name="gdas.forecast.jgdas_forecast_high" maxtries="5">
+
+    <task name="gdas.forecast.jgdas_forecast_high" maxtries="5">
         <command>sh -c ' source $HOMEgfs/ush/load_fv3gfs_modules.sh exclusive ; module list ; source $EXPDIR/config.base ; $HOMEgfs/jobs/JGLOBAL_FORECAST'</command>
         <queue>&QUEUE;</queue>
         <account>&CPU_PROJECT;</account>
@@ -150,7 +151,7 @@ This is the task in Rocoto XML generated from CROW:
                     </not>
               </or>
         </dependency>
-  </task>
+    </task>
 
 Fig 4. Relationship between Configuration Suite and Workflow Suite
 
@@ -167,8 +168,8 @@ The YAML files that require user inputs are all formatted in a classical and int
 
 
 
-case:
-fv3_settings:
+    case:
+          fv3_settings:
             CASE: C768
             LEVS: 65
 
@@ -185,10 +186,10 @@ This file contains user-specific information of a given computing platform. Two 
 
 A template of this file named “user.yaml.default” is included in the repository under workflow/. Users need to make their own “user.yaml” by modifying the values within the template when running CROW for the first time. 
 
-user_places:
+ - user_places:
 This section is of the same structure as “places” in case.yaml. The intention is to include settings that are more connected to the user other than the experiment. Such variables are marked red in the list. However, the user has the freedom to put all these variables into either one. When a certain variable get specified in both files, the one in this section will overwrite the one within case.yaml.
 
-accounting:
+ - accounting:
 This section is designed to accommodate settings of supercomputer account and queue information.  
 
 
