@@ -29,16 +29,6 @@ if [[ "$1" == "-v" ]] ; then
 fi
 export EXPDIR="$1"
 
-if [[ ! ( -d /scratch4 && -d /scratch3 || \
-          -d /usrx/local && ! -e /etc/redhat-release || \
-          -d /lfs3 || \
-          -d /lustre/f1 || \
-          -d /gpfs/dell2 ) \
-    ]] ; then
-   echo "ERROR: This script only runs on supported platforms: WCOSS and RDHPCS Theia/Jet/Gaea" 1>&2
-   exit 1
-fi
-
 set +e
 find_python36
 set -e
