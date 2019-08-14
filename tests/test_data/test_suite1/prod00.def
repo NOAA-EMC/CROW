@@ -1,0 +1,8 @@
+suite prod00
+  repeat day 1
+  edit ECF_TRIES '1'
+  edit ECF_SOME_OTHER_VAR 'abcd'
+  edit QUEUE 'debug'
+  edit ECF_FILES 'toy_ecflow'
+  task task0
+endsuite # /prod00

@@ -1,1 +1,0 @@
-ecflow suite example

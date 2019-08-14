@@ -1,0 +1,4 @@
+#! /bin/sh
+%include <head.h>
+echo ${JOBgfs}/JGFS_TASK23
+%include <tail.h>

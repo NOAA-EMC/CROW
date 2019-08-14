@@ -1,0 +1,31 @@
+extern /prod00/family2/task21
+suite prod06
+  repeat day 1
+  edit ECF_TRIES '1'
+  edit ECF_SOME_OTHER_VAR 'abcd'
+  edit QUEUE 'debug'
+  edit ECF_FILES 'toy_ecflow'
+  task task0
+  family family1 # /prod06/family1
+    edit SOMEVAR '1'
+    edit ANOTHERVAR '2'
+    trigger /prod00/family2/task21 == complete and ./task0 == complete
+    task task11
+      edit WHATEVER '333'
+      event manually_written_event
+      event 1 some_event
+      event 2 another_event
+    task task12
+      trigger ./task11:some_event
+  endfamily # /prod06/family1
+  family family2 # /prod06/family2
+    trigger ./family1/task11:another_event
+    task task21
+      trigger ../family1/task12 == complete
+    family family3 # /prod06/family2/family3
+      task task32
+    endfamily # /prod06/family2/family3
+    task task23
+      trigger ./task21 == complete
+  endfamily # /prod06/family2
+endsuite # /prod06
