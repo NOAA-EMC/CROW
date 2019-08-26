@@ -206,6 +206,12 @@ def make_config_files_in_expdir(doc,expdir):
         logger.info(f'{filename}: write')
         with open(filename,'wt') as fd:
             fd.write(content)
+    value = doc['partition_common']['resources']
+    filename = os.path.join(expdir,'resource.yaml')
+    logger.debug(f'{filename}: expand')
+    content = crow.config.to_yaml(value)
+    with open(filename,'wt') as fd:
+        fd.write(content)
 
 def make_yaml_files_in_expdir(srcdir,YAML_DIRS_TO_COPY,YAML_FILES_TO_COPY,case_name,experiment_name,platdoc,force,skip_comrot,force_platform_rewrite):
     logger.info(f'{srcdir}: get yaml files from here')
