@@ -206,10 +206,19 @@ def make_config_files_in_expdir(doc,expdir):
         logger.info(f'{filename}: write')
         with open(filename,'wt') as fd:
             fd.write(content)
+#    value = doc['partition_common']['resources']
+#    test1 = from_file('tests/test_data/yaml-io/original.yaml')
     value = doc['partition_common']['resources']
-    filename = os.path.join(expdir,'resource.yaml')
+#    value = { 'resources_sum': doc['partition_common']['resources']}
+    filename = os.path.join(expdir,'resources_sum.yaml')
     logger.debug(f'{filename}: expand')
-    content = crow.config.to_yaml(value)
+    content = to_yaml(value)
+    with open(filename,'wt') as fd:
+        fd.write(content)
+    resource_sum = from_file(filename)
+    value = { 'resources_sum': resource_sum }
+    logger.debug(f'{filename}: expand')
+    content = to_yaml(value)
     with open(filename,'wt') as fd:
         fd.write(content)
 
@@ -658,6 +667,7 @@ def setup_case(command_line_arguments):
         logger.warning('Using manual mode \n ')
         YAML_FILES_TO_COPY={ '../_expdir_main_manual.yaml': '_main.yaml',
                              '../top.yaml':'top.yaml',
+                             '../resources_sum.yaml':'resources_sum.yaml',
                              '../schema/task.yaml':'schema.yaml',
                              '../schema/varnames.yaml':'varnames.yaml',
                              '../defaults/resources.yaml':'resources.yaml',
@@ -669,6 +679,7 @@ def setup_case(command_line_arguments):
 
     else:
         YAML_FILES_TO_COPY={ '../_expdir_main_auto.yaml': '_main.yaml',
+                     '../resources_sum.yaml':'resources_sum.yaml',
                      '../user.yaml': 'user.yaml' }
         YAML_DIRS_TO_COPY={ '../schema':'schema',
                     '../defaults':'defaults',
