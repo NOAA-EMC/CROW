@@ -208,6 +208,8 @@ def make_config_files_in_expdir(doc,expdir):
             fd.write(content)
 #    value = doc['partition_common']['resources']
 #    test1 = from_file('tests/test_data/yaml-io/original.yaml')
+    doc.partition_common.Evaluate=True
+    crow.config.evaluate_immediates(doc.partition_common)
     value = doc['partition_common']['resources']
 #    value = { 'resources_sum': doc['partition_common']['resources']}
     filename = os.path.join(expdir,'resources_sum.yaml')
