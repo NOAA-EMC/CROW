@@ -10,8 +10,8 @@ logger=logging.getLogger('crow.model.fv3gfs')
 
 try:
     import crow
-except ImportError as ie:
     crowdir=os.path.dirname(os.path.abspath(__file__))
+except ImportError as ie:
     thisdir=os.path.realpath(os.path.join(crowdir,"../"))
     topdir=os.path.realpath(os.path.join(crowdir,"../../../"))
     sys.path.append(topdir)
@@ -612,6 +612,10 @@ def make_rocoto_xml_for(yamldir):
     workflow_xml=conf.places.get('rocoto_workflow_xml',f'{yamldir}/workflow.xml')
     assert(suite.viewed._path)
     loudly_make_dir_if_missing(f'{conf.places.ROTDIR}/logs')
+    try:
+        os.symlink(f'{crowdir}/rocoto_viewer.py', f'{yamldir}/rocoto_viewer.py')
+    except FileExistsError:
+        pass
     make_rocoto_xml(suite,f'{yamldir}/workflow.xml')
     create_crontab(conf)
     
