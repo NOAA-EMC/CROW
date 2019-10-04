@@ -90,6 +90,10 @@ class strcalc(str):
             CALC_CACHE[self]=obj
         return eval(obj,c,locals)
 
+class stricalc(strcalc):
+    """Represents a string that should be run through eval()"""
+    def _is_immediate(self): return True
+
 class strref(str):
     """Represents a reference to a variable within some scope (ie. abc.def[32].ghi)"""
     def __repr__(self):
@@ -530,12 +534,15 @@ def invalidate_cache(obj,key=None,recurse=False):
 
 def evaluate_one(obj,key,val,memo):
     if hasattr(val,'_is_immediate'):
+        _ = obj[key]
         if memo is not None:
-            evaluate_immediates_impl(obj[key],memo)
-        else:
-            _ = obj[key]
-    elif not hasattr(val,'_result') and memo is not None:
-        evaluate_immediates_impl(obj[key],memo)
+            evaluate_immediates_impl(val,memo)
+    if memo is not None and (
+            hasattr(val,'_recurse_evaluate_immediates') or \
+            not hasattr(val,'_result') ):
+        evaluate_immediates_impl(val,memo)
+    else:
+        print(f'do not recurse into {type(obj).__name__} key {key} type {type(val).__name__}')
 
 def evaluate_immediates_impl(obj,memo=None):
     if memo is not None:
