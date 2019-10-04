@@ -2,7 +2,7 @@
 
 ## Unit test program for crow.config module
 
-import sys, os, shutil
+import sys, os, shutil, collections, copy
 
 sys.path.append(os.getcwd() + '/../../')
 
@@ -19,7 +19,34 @@ doc=from_file('_common.yaml','_sandbox.yaml','case.yaml','default_resources.yaml
 
 filename = 'resources_sum.yaml'
 rc_config = doc['partition_common']['resources']
-content = to_yaml(rc_config)
+
+def to_py(o,memo=None):
+    if memo is None: memo=dict()
+    i=id(o)
+    if i in memo: return memo[i]
+    if isinstance(o,bytes) or isinstance(o,str):
+        ret=copy.copy(o)
+        memo[i]=ret
+    elif isinstance(o,collections.abc.Mapping):
+        ret=dict()
+        memo[i]=ret
+        for k,v in o.items():
+            py_k=to_py(k,memo)
+            py_v=to_py(v,memo)
+            ret[py_k]=py_v
+    elif isinstance(o,collections.abc.Sequence):
+        ret=list()
+        memo[i]=ret
+        for v in o:
+            py_v=to_py(v,memo)
+            ret.extend(py_v)
+    else:
+        ret=copy.copy(o)
+        memo[i]=ret
+    return ret
+
+py_config=to_py(rc_config)
+content = to_yaml(py_config)
 with open(filename,'wt') as fd:
      fd.write(content)
 resource_sum = from_file(filename)
