@@ -13,13 +13,13 @@ default_resources: &default_resources
       walltime: !timedelta "00:02:00"
 
   run_job1: !JobRequest
-    - batch_memory: !calc doc.sample_resource_table.job1[4]
-      mpi_ranks: !calc doc.sample_resource_table.job1[0]
-      walltime: !calc doc.sample_resource_table.job1[2]
-      max_ppn: !calc doc.sample_resource_table.job1[1]
+    - batch_memory: !icalc doc.sample_resource_table.job1[4]
+      mpi_ranks: !icalc doc.sample_resource_table.job1[0]
+      walltime: !icalc doc.sample_resource_table.job1[2]
+      max_ppn: !icalc doc.sample_resource_table.job1[1]
 
   run_job2: !JobRequest
-    - batch_memory: !calc doc.sample_resource_table.job2[4]
-      mpi_ranks: !calc doc.sample_resource_table.job2[0]
-      walltime: !calc doc.sample_resource_table.job2[2]
-      max_ppn: !calc doc.sample_resource_table.job2[1]
+    - batch_memory: !icalc doc.sample_resource_table.job2[4]
+      mpi_ranks: !icalc doc.sample_resource_table.job2[0]
+      walltime: !icalc doc.sample_resource_table.job2[2]
+      max_ppn: !icalc doc.sample_resource_table.job2[1]
