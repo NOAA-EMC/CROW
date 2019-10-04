@@ -34,7 +34,6 @@ class ShellCommand(dict_eval): pass
 class JobResourceSpecMaker(list_eval):
     def _recurse_evaluate_immediates(self): return True
     def _result(self,globals,locals):
-        raise BaseException('should not get here')
         rank_specs=list()
         for i in range(len(self)):
             spec=from_config('JobResourceSpecMaker',self._raw(i),globals,locals,f'{self._path}[{i}]')

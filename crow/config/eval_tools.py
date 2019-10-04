@@ -541,8 +541,6 @@ def evaluate_one(obj,key,val,memo):
             hasattr(val,'_recurse_evaluate_immediates') or \
             not hasattr(val,'_result') ):
         evaluate_immediates_impl(val,memo)
-    else:
-        print(f'do not recurse into {type(obj).__name__} key {key} type {type(val).__name__}')
 
 def evaluate_immediates_impl(obj,memo=None):
     if memo is not None:
