@@ -1,0 +1,8 @@
+resources_sum:
+  run_job1: !JobRequest
+  - {OMP_NUM_THREADS: 4, max_ppn: 7, mpi_ranks: 7, walltime: !timedelta '01:15:00'}
+  run_job2: !JobRequest
+  - {batch_memory: !calc 'doc.sample_resource_table.job2[4]', max_ppn: !calc 'doc.sample_resource_table.job2[1]',
+    mpi_ranks: !calc 'doc.sample_resource_table.job2[0]', walltime: !calc 'doc.sample_resource_table.job2[2]'}
+  run_nothing: !JobRequest
+  - {memory: 300M, mpi_ranks: 1, walltime: !timedelta '00:02:00'}
