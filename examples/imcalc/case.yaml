@@ -1,0 +1,7 @@
+case:
+  resources:
+    run_job1: !JobRequest
+      - mpi_ranks: 7
+        max_ppn: 7
+        OMP_NUM_THREADS: 4
+        walltime: !timedelta '01:15:00'

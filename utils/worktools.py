@@ -673,10 +673,9 @@ def setup_case(command_line_arguments):
         logger.warning('Using manual mode \n ')
         YAML_FILES_TO_COPY={ '../_expdir_main_manual.yaml': '_main.yaml',
                              '../top.yaml':'top.yaml',
-                             '../resources_sum.yaml':'resources_sum.yaml',
                              '../schema/task.yaml':'schema.yaml',
                              '../schema/varnames.yaml':'varnames.yaml',
-                             '../defaults/resources.yaml':'resources.yaml',
+                             '../defaults/default_resources.yaml':'default_resources.yaml',
                              '../defaults/settings.yaml':'settings.yaml',
                              '../defaults/places.yaml':'places.yaml',
                              '../config/base.yaml':'base.yaml',
@@ -685,7 +684,6 @@ def setup_case(command_line_arguments):
 
     else:
         YAML_FILES_TO_COPY={ '../_expdir_main_auto.yaml': '_main.yaml',
-                     '../resources_sum.yaml':'resources_sum.yaml',
                      '../user.yaml': 'user.yaml' }
         YAML_DIRS_TO_COPY={ '../schema':'schema',
                     '../defaults':'defaults',
@@ -738,6 +736,9 @@ def setup_case(command_line_arguments):
     EXPDIR = make_yaml_files_in_expdir(
         os.path.abspath('../'),YAML_DIRS_TO_COPY,YAML_FILES_TO_COPY,case_name,experiment_name,platdoc,force,
         skip_comrot,force_platform_rewrite)
+
+    if '-f' not in options:
+        shutil.copy('../resources_sum.yaml',EXPDIR+'/resources_sum.yaml')
 
     doc=from_dir(EXPDIR,validation_stage='setup')
     suite=Suite(doc.suite)

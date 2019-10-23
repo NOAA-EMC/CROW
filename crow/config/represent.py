@@ -6,7 +6,7 @@ import re, abc, logging, sys, collections
 from datetime import timedelta
 from copy import deepcopy
 from crow.config.exceptions import *
-from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc, strref
+from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc, strref, stricalc
 from crow.tools import to_timedelta, Clock
 from copy import copy
 import crow.sysenv
@@ -18,7 +18,7 @@ __all__=[ 'Action','Platform', 'Conditional', 'ref','calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
           'GenericDict', 'GenericOrderedDict', 'ShellCommand',
           'Immediate', 'ClockMaker', 'JobResourceSpecMaker',
-          'MergeMapping', 'AppendSequence', 'Select' ]
+          'MergeMapping', 'AppendSequence', 'Select', 'icalc' ]
 
 ########################################################################
 
@@ -32,6 +32,7 @@ class Platform(dict_eval): pass
 class ShellCommand(dict_eval): pass
 
 class JobResourceSpecMaker(list_eval):
+    def _recurse_evaluate_immediates(self): return True
     def _result(self,globals,locals):
         rank_specs=list()
         for i in range(len(self)):
@@ -211,4 +212,5 @@ class FirstTrue(Conditional):
         return None
 
 class calc(strcalc): pass
+class icalc(stricalc): pass
 class ref(strref): pass

@@ -89,7 +89,10 @@ class JobRankSpec(Mapping):
         return JobRankSpec(**newspec)
 
     # Nicities
-    def __getattr__(self,key):    return self[key]
+    def __getattr__(self,key):
+        if key in self:
+            return self[key]
+        raise AttributeError(key)
 
     # Implement Mapping abstract methods:
     def __getitem__(self,key):    return self.__spec[key]

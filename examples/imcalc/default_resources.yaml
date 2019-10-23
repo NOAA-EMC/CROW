@@ -1,0 +1,25 @@
+# Sample default resource
+
+sample_resource_table:
+      #              ranks   ppn wallclock            threads MB
+  job1:       [ 200,   20, !timedelta "01:00:00", 12,  "3072" ]
+  job2:       [  12,   12, !timedelta "01:00:00", 1,   "3072"  ]
+
+default_resources: &default_resources
+
+  run_nothing: !JobRequest # Special placeholder for "do nothing"
+    - memory: "300M"
+      mpi_ranks: 1
+      walltime: !timedelta "00:02:00"
+
+  run_job1: !JobRequest
+    - batch_memory: !icalc doc.sample_resource_table.job1[4]
+      mpi_ranks: !icalc doc.sample_resource_table.job1[0]
+      walltime: !icalc doc.sample_resource_table.job1[2]
+      max_ppn: !icalc doc.sample_resource_table.job1[1]
+
+  run_job2: !JobRequest
+    - batch_memory: !icalc doc.sample_resource_table.job2[4]
+      mpi_ranks: !icalc doc.sample_resource_table.job2[0]
+      walltime: !icalc doc.sample_resource_table.job2[2]
+      max_ppn: !icalc doc.sample_resource_table.job2[1]
