@@ -40,6 +40,7 @@ class FirstMinYAML(list):         yaml_tag=u'!FirstMin'
 class FirstTrueYAML(list):        yaml_tag=u'!FirstTrue'
 class LastTrueYAML(list):         yaml_tag=u'!LastTrue'
 class ImmediateYAML(list):        yaml_tag=u'!Immediate'
+class UncachedYAML(list):         yaml_tag=u'!Uncached'
 class InheritYAML(list):          yaml_tag=u'!Inherit'
 class MergeMappingYAML(list):     yaml_tag=u'!MergeMapping'
 class AppendSequenceYAML(list):     yaml_tag=u'!AppendSequence'
@@ -124,9 +125,14 @@ def add_yaml_string(key,cls):
     yaml.add_constructor(key,constructor)
 
 add_yaml_string(u'!expand',expand)
+add_yaml_string(u'!iexpand',iexpand)
+add_yaml_string(u'!uexpand',uexpand)
 add_yaml_string(u'!calc',calc)
 add_yaml_string(u'!icalc',icalc)
+add_yaml_string(u'!ucalc',ucalc)
 add_yaml_string(u'!ref',ref)
+add_yaml_string(u'!iref',iref)
+add_yaml_string(u'!uref',uref)
 add_yaml_string(u'!error',user_error_message)
 add_yaml_string(u'!Depend',Depend)
 add_yaml_string(u'!Message',Message)
@@ -164,6 +170,7 @@ add_yaml_sequence(u'!FirstMin',FirstMinYAML)
 add_yaml_sequence(u'!LastTrue',LastTrueYAML)
 add_yaml_sequence(u'!FirstTrue',FirstTrueYAML)
 add_yaml_sequence(u'!Immediate',ImmediateYAML)
+add_yaml_sequence(u'!Uncached',UncachedYAML)
 add_yaml_sequence(u'!Inherit',InheritYAML)
 add_yaml_sequence(u'!AppendSequence',AppendSequenceYAML)
 add_yaml_sequence(u'!MergeMapping',MergeMappingYAML)
@@ -251,8 +258,11 @@ class ConvertFromYAML(object):
         self.immediates=dict()
         self.ENV=ENV
 
-    def convert(self,validation_stage,evaluate_immediates):
-        self.result=self.from_dict(self.tree,path='doc')
+    def convert(self,validation_stage,evaluate_immediates,multi_document):
+        if multi_document:
+            self.result=self.from_list(self.tree,path='doc',locals={})
+        else:
+            self.result=self.from_dict(self.tree,path='doc')
         globals={ 'tools':self.tools, 'doc':self.result, 'ENV': self.ENV }
         self.result._recursively_set_globals(globals)
         if evaluate_immediates:
@@ -287,6 +297,8 @@ class ConvertFromYAML(object):
             return self.from_dict(v,SUITE[cls],path)
         elif cls is ImmediateYAML:
             return self.from_list(v,locals,Immediate,path)
+        elif cls is UncachedYAML:
+            return self.from_list(v,locals,Uncached,path)
         elif cls is InheritYAML:
             return self.from_list(v,locals,Inherit,path)
         elif cls is MergeMappingYAML:

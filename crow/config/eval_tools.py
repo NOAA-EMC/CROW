@@ -38,7 +38,9 @@ from crow.exceptions import CROWException
 from crow._superdebug import superdebug
 
 __all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval', 'strref',
-          'list_eval', 'multidict', 'Eval', 'user_error_message' ]
+          'list_eval', 'multidict', 'Eval', 'user_error_message',
+          'stricalc', 'strucalc', 'iexpand', 'uexpand', 'striref',
+          'struref' ]
 _logger=logging.getLogger('crow.config')
 
 class user_error_message(str):
@@ -73,7 +75,11 @@ class expand(str):
             EXPAND_CACHE[cmd]=obj
         return eval(obj,c,locals)
 
-#f''''blah bla'h \''''
+class iexpand(expand):
+    def _is_immediate(self): return True
+
+class uexpand(expand):
+    def _do_not_cache(self): return True
 
 class strcalc(str):
     """Represents a string that should be run through eval()"""
@@ -93,6 +99,9 @@ class strcalc(str):
 class stricalc(strcalc):
     """Represents a string that should be run through eval()"""
     def _is_immediate(self): return True
+
+class strucalc(strcalc):
+    def _do_not_cache(self): return True
 
 class strref(str):
     """Represents a reference to a variable within some scope (ie. abc.def[32].ghi)"""
@@ -115,6 +124,12 @@ class strref(str):
             REF_CACHE[scope_expr]=obj
         scope=eval(obj,c,locals)
         return scope._raw(key) if hasattr(scope,'_raw') else scope[key]
+
+class striref(strref):
+    def _is_immediate(self): return True
+
+class struref(strref):
+    def _do_not_cache(self): return True
 
 def from_config(key,val,globals,locals,path):
     """!Converts a class with _result method to another data type by
@@ -333,9 +348,11 @@ class dict_eval(MutableMapping):
         val=self.__cache[key]
         if hasattr(val,'_result'):
             immediate=hasattr(val,'_is_immediate')
+            nocache=hasattr(val,'_do_not_cache')
             val=from_config(key=key,val=val,globals=self.__globals,locals=self,
                             path=f'{self._path}.{key}')
-            self.__cache[key]=val
+            if not nocache:
+                self.__cache[key]=val
             if immediate:
                 self.__child[key]=val
         return val
@@ -449,14 +466,16 @@ class list_eval(MutableSequence):
         val=self.__cache[index]
         if hasattr(val,'_result'):
             immediate=hasattr(val,'_is_immediate')
+            nocache=hasattr(val,'_do_not_cache')
             val=from_config(index,val,self.__globals,self.__locals,
                             f'{self._path}[{index}]')
-            self.__cache[index]=val
+            if not nocache:
+                self.__cache[index]=val
             if immediate:
                 self.__child[index]=val
         assert(val is not self)
         return val
-    def _recursively_set_globals(self,globals,memo):
+    def _recursively_set_globals(self,globals,memo=None):
         if memo is None: memo=set()
         if id(self) in memo: return
         memo.add(id(self))
