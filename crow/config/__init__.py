@@ -37,14 +37,19 @@ def expand_text(text,scope):
 
 evaluate_immediates=_evaluate_immediates
 
-def from_string(s,evaluate_immediates=True,validation_stage=None):
+def from_string(s,evaluate_immediates=True,validation_stage=None,multi_document=False):
     if not s: raise TypeError('Cannot parse null string')
-    c=ConvertFromYAML(yaml.load(s, Loader=yaml.Loader),CONFIG_TOOLS,ENV)
+    if multi_document:
+        loaded = [ y for y in yaml.load_all(s, Loader=yaml.Loader) ]
+    else:
+        loaded = yaml.load(s, Loader=yaml.Loader)
+    c=ConvertFromYAML(loaded,CONFIG_TOOLS,ENV)
     result=c.convert(validation_stage=validation_stage,
-                     evaluate_immediates=evaluate_immediates)
+                     evaluate_immediates=evaluate_immediates,
+                     multi_document=multi_document)
     return result
 
-def from_file(*args,evaluate_immediates=True,validation_stage=None):
+def from_file(*args,evaluate_immediates=True,validation_stage=None,multi_document=False):
     if not args: raise TypeError('Specify which files to read.')
     data=list()
     for file in args:
@@ -52,7 +57,8 @@ def from_file(*args,evaluate_immediates=True,validation_stage=None):
             data.append(fopen.read())
     return from_string(u'\n\n\n'.join(data),
                        evaluate_immediates=evaluate_immediates,
-                       validation_stage=validation_stage)
+                       validation_stage=validation_stage,
+                       multi_document=multi_document)
 
 def _recursive_validate(obj,stage,memo=None):
     if memo is None: memo=set()
