@@ -1,4 +1,4 @@
-import sys, io, re
+import sys, io, re, logging
 from datetime import timedelta, datetime
 from io import StringIO
 from copy import copy
@@ -17,6 +17,8 @@ from crow.config import SuiteView, Suite, Depend, LogicalDependency, \
           CycleExistsDependency, DataEvent, ShellEvent, EventDependency, \
           document_root, update_globals
 from crow.metascheduler.algebra import simplify
+
+_logger=logging.getLogger('crow')
 
 __all__=['to_rocoto','RocotoConfigError','ToRocoto',
          'SelfReferentialDependency' ]
@@ -171,11 +173,13 @@ def _to_rocoto_dep_impl(dep,fd,indent):
                 return
             fd.write(f'{"  "*indent}<datadep')
             if 'age' in event:
-                dt=crow.tools.str_timedelta(event.age).sub('d',':')
-                fd.write(f' age={dt}')
+                dt=crow.tools.str_timedelta(event.age).replace('d',':')
+                if dt.startswith('+'):
+                    dt=dt[1:]
+                fd.write(f' age="{dt}"')
             if 'minsize' in dep:
                 nbytes=crow.tools.memory_in_bytes(event.size)
-                fd.write(f' size={nbytes}')
+                fd.write(f' size="{nbytes}"')
             fd.write(f'><cyclestr')
             if dep.event.path[0]:
                 fd.write(f' offset="{_cycle_offset(dep.event.path[0])}"')
@@ -187,7 +191,7 @@ def _to_rocoto_dep_impl(dep,fd,indent):
 
 def _to_rocoto_time_dep(dt,fd,indent):
     string_dt=_cycle_offset(dt)
-    fd.write(f'{"  "*indent}<timedep>{string_dt}</timedep>\n')
+    fd.write(f'{"  "*indent}<timedep><cyclestr offset="{string_dt}">@Y@m@d@H@M</cyclestr></timedep>\n')
 
 def _to_rocoto_time(t):
     return t.strftime('%Y%m%d%H%M')
@@ -231,17 +235,23 @@ class ToRocoto(object):
 
         self.__alarms_used=set()
 
-    def defenvar(self,name,value):
-        return f'<envar><name>{name}</name><value>{value!s}</value></envar>'
+    def defenvar(self,name,value,literal=False):
+        if literal:
+            return f'<envar><name>{name}</name><value>{value}</value></envar>'
+        else:
+            return f'<envar><name>{name}</name><value>{value!s}</value></envar>'
 
     def datestring(self,format):
         def replacer(m):
             return( (m.group(1) or "")+"@"+m.group(2) )
         return re.sub(r'(\%\%)*\%([a-zA-Z])',replacer,format)
 
-    def defvar(self,name,value):
-        qvalue=quoteattr(str(value))
-        return(f'<!ENTITY {name} {qvalue}>')
+    def defvar(self,name,value,literal=False):
+        if literal:
+            value=f'"{value}"'
+        else:
+            value=quoteattr(str(value))
+        return(f'<!ENTITY {name} {value}>')
 
     def varref(self,name):
         return f'&{name};'
@@ -452,7 +462,11 @@ class ToRocoto(object):
 
         path=_xml_quote('.'.join(view.path[1:]))
         if not isinstance(view,Suite):
-            fd.write(f'''{space*indent}<metatask name="{path}">
+            fd.write(f'''{space*indent}<metatask name="{path}"''')
+            more_attr=view.get('Rocoto_attr','')
+            if more_attr:
+                fd.write(f' {more_attr}')
+            fd.write(f'''>
 {space*indent}  <var name="{dummy_var}">DUMMY_VALUE</var>
 ''')
         for key,child in view.items():
@@ -473,12 +487,16 @@ class ToRocoto(object):
 
     def _write_task_text(self,fd,attr,indent,view,dependency,time,alarm_name,
                          manual_dependency=None):
+        assert(view is not None)
         path='.'.join(view.path[1:])
         space=self.__spacing
         fd.write(f'{space*indent}<task name="{path}"{attr}')
         if alarm_name:
             self.__alarms_used.add(alarm_name)
             fd.write(f' cycledefs="{alarm_name}"')
+        more_attr=view.get('Rocoto_attr','')
+        if more_attr:
+            fd.write(f' {more_attr}')
         fd.write('>\n')
 
         dep=self._as_rocoto_dep(simplify(dependency),view.path)
@@ -488,6 +506,8 @@ class ToRocoto(object):
         if 'Rocoto' in view:
             for line in view.Rocoto.splitlines():
                 fd.write(f'{space*(indent+1)}{line}\n')
+        else:
+            _logger.warning(f'{view.task_path_var}: no Rocoto item; <task> will be invalid.')
 
         if manual_dependency is not None:
             for line in manual_dependency.splitlines():
@@ -661,10 +681,13 @@ class ToRocoto(object):
                       f'{elem}: In a Rocoto workflow, the "final" task '
                       'must have no dependencies.')
 
-        if self.__completes and final is None:
-            raise RocotoConfigError(
-                'If a workflow suite has any "complete" conditions, '
-                'then it must have a "final" task with no dependencies.')
+        if final is None:
+            if self.__completes:
+                raise RocotoConfigError(
+                    'If a workflow suite has any "complete" conditions, '
+                    'then it must have a "final" task with no dependencies.')
+            else:
+                return # No final task, and no need to generate one
 
         if len(self.__alarms_used)<2:
             # There are no alarms in use, so there is only one final task.
