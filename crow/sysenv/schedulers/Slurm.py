@@ -136,13 +136,11 @@ class Scheduler(BaseScheduler):
         if 'queue' in spec:
             sio.write(f'{indent*space}<queue>{"batch"}</queue>\n')
         if 'partition' in spec:
-            sio.write(f'{indent*space}<partition>{spec["partition"]!s}</partition>\n')
+            sio.write(f'{indent*space}<native>--partition={spec["partition"]!s}</native>\n')
         if 'account' in spec:
             sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
-        if 'project' in spec:
+        elif 'project' in spec:
             sio.write(f'{indent*space}<account>{spec["project"]!s}</account>\n')
-        if 'account' in spec:
-            sio.write(f'{indent*space}<account>{spec["account"]!s}</account>\n')
         if 'jobname' in spec:
             sio.write(f'{indent*space}<jobname>{spec["jobname"]!s}</jobname>\n')
         if 'reservation' in spec:
