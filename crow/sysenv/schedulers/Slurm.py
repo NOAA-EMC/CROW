@@ -134,7 +134,7 @@ class Scheduler(BaseScheduler):
         space=self.indent_text
         sio=StringIO()
         if 'queue' in spec:
-            sio.write(f'{indent*space}<queue>{"batch"}</queue>\n')
+            sio.write(f'{indent*space}<queue>{spec["queue"]}</queue>\n')
         if 'partition' in spec:
             sio.write(f'{indent*space}<native>--partition={spec["partition"]!s}</native>\n')
         if 'account' in spec:
