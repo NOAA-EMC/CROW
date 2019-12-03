@@ -147,6 +147,18 @@ class SuiteView(Mapping):
         self.parent=parent
         self.__cache={}
         assert(isinstance(self.viewed,Cycle) or 'this' in self.viewed)
+
+        if hasattr(self.viewed,'_inherit') and 'Validate' in self.viewed:
+            how=self.viewed.Validate
+            if how is False:
+                pass # do not validate
+            elif how=='validate':
+                self.viewed._validate('suite')
+            elif how=='inherit':
+                self.viewed._inherit('suite')
+            else:
+                raise ValueError(f'In !Inherit, "Validate" option value must be "inherit" or "validate" or False, not {how!r}')
+
         if isinstance(self.viewed,Slot):
             locals=multidict(self.parent,self.viewed)
             globals=self.viewed._get_globals()

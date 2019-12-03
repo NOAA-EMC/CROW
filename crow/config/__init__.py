@@ -24,7 +24,8 @@ __all__=["from_string","from_file", 'Action', 'Platform', 'Template',
          'Taskable', 'Task', 'Family', 'CycleAt', 'CycleTime', 'Cycle',
          'Trigger', 'Depend', 'Timespec', 'SuitePath', 'ShellEvent', 'Event',
          'DataEvent', 'CycleExistsDependency', 'validate', 'EventDependency',
-         'TaskExistsDependency', 'follow_main', 'from_dir', 'update_globals' ]
+         'TaskExistsDependency', 'follow_main', 'from_dir', 'update_globals',
+         'apply_inherit' ]
 
 _logger=logging.getLogger('crow.config')
 
@@ -69,6 +70,22 @@ def _recursive_validate(obj,stage,memo=None):
         obj._validate(stage)
         for k,v in obj.items():
             _recursive_validate(v,stage,memo)
+
+def _recursive_inherit(obj,stage,memo=None):
+    if memo is None: memo=set()
+    if id(obj) in memo: return
+    memo.add(id(obj))
+    if hasattr(obj,'_do_not_validate'): return
+    if hasattr(obj,'_inherit'):
+        obj._inherit(stage)
+        for k,v in obj.items():
+            _recursive_inherit(v,stage,memo)
+
+def apply_inherit(obj,stage='',recurse=False):
+    if recurse:
+        _recursive_inherit(obj,stage)
+    elif hasattr(obj,'_inherit'):
+        obj._validate(inherit,set())
 
 def validate(obj,stage='',recurse=False):
     if recurse:

@@ -27,14 +27,30 @@ IGNORE_WHILE_INHERITING = [ 'Inherit', 'Template' ]
 class Inherit(list_eval): 
     def _update(self,target,globals,locals,stage,memo):
         errors=list()
-        for scopename,regex in reversed(self):
+        for line in reversed(self):
+            if len(line)>2:
+                scopename,regex,options=line
+            else:
+                scopename,regex=line
+                options=False
             inherited=False
             try:
                 scopename=str(scopename)
                 _logger.debug(f'{target._path}: inherit from {scopename}')
                 scope=eval(scopename,globals,locals)
-                if hasattr(scope,'_validate'):
+                if not options:
+                    # Without options, default to original behavior
                     scope._validate(stage,memo)
+                else:
+                    recurse=options.get('recurse','validate')
+                    if recurse is False:
+                        pass # do not recurse
+                    elif recurse=='validate':
+                        scope._validate(stage,memo)
+                    elif recurse=='inherit':
+                        scope._inherit(stage,memo)
+                    else:
+                        raise ValueError(f'In !Inherit, "recurse" option value must be "inherit" or "validate" or False, not {recurse!r}')
                 for key in scope:
                     if key not in IGNORE_WHILE_INHERITING  and \
                        re.search(regex,key) and key not in target:
