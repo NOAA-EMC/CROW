@@ -1,5 +1,5 @@
 user_places: &user_places
-  PROJECT_DIR: !calc doc.default_places.HOMEcrow + '/tests/test_data/regtest/cache'
+  EXPROOT: !calc doc.default_places.HOMEcrow + '/tests/test_data/regtest/cache'
 
 accounting: &accounting
   # Project for CPU accounting.

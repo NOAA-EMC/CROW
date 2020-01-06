@@ -30,21 +30,21 @@ The “user file” is a text file containing user specific information like the
 Required settings in default user.yaml [user.yaml.default]: The “!error” contents are error messages that will pop up when the corresponding field is missing.
 
 user_places: &user_places
-    PROJECT_DIR: !error Please select a project directory.
+    EXPROOT: !error Please select a project directory.
 accounting: & accounting
     cpu_project: !error What accounting code do I use to submit jobs? # ie.: global
     hpss_project: !error Where do I put data on HPSS?   # ie.: emc-global
 User file example: [user.yaml]
 
 user_places: &user_places
-PROJECT_DIR: /mnt/lfs3/projects/hfv3gfs/
+EXPROOT: /mnt/lfs3/projects/hfv3gfs/
 accounting: & accounting
   		cpu_project: hfv3gfs 
   		hpss_project: emc-global
 
-All other settings allowed in the user file have defaults and may be left commented out. PROJECT_DIR, cpu_project, and hpss_project are the only required modifications because there are no default values for these variables. Replace or comment out the !error messages and insert the needed values.
+All other settings allowed in the user file have defaults and may be left commented out. EXPROOT, cpu_project, and hpss_project are the only required modifications because there are no default values for these variables. Replace or comment out the !error messages and insert the needed values.
 
- - PROJECT_DIR - location where experiment directory will be created, needs to be a place where user has write access.
+ - EXPROOT - location where experiment directory will be created, needs to be a place where user has write access.
  - cpu_project - the user’s account code to submit supercomputer job (e.g. global)
  - hpss_project - the user’s HPSS group for archival (e.g. emc-global)
 
@@ -143,7 +143,7 @@ Option flags:
  - -v -d -D, more and more screen output during workflow generation. -D will slow down the process quite significantly. Only recommended for developers.
  - -s sandbox mode. 
 
-Enables workflow generation without supercomputer access. This option is developed for pure debugging purpose for CROW and workflow developers. When activated, CROW will skip platform validation. Ptmp, stmp and expdir will all defined under PROJECT_DIR. User need to make sure writing access is granted for PROJECT_DIR. 
+Enables workflow generation without supercomputer access. This option is developed for pure debugging purpose for CROW and workflow developers. When activated, CROW will skip platform validation. Ptmp, stmp and expdir will all defined under EXPROOT. User need to make sure writing access is granted for EXPROOT. 
 
 	Example:	> setup_case.sh -fc -p WCOSS_DELL_P3 tutorial_case test
 

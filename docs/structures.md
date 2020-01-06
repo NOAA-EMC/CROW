@@ -279,7 +279,7 @@ Usage: python3.6 eclipse_main.py
 This script is a python-based version of the setup_case.sh. The purpose of this version is to provide the conveniency of launching IDE projects (ie: Eclipse) since most of them only support projects with only one language inside. It will do the following things: 
 Validate platform;
 Set up COMROT directory under ptmp location, which is typically specified in user.yaml; 
-Set up experiment directory under PROJECT_DIR location, which is typically specified inside user.yaml; 
+Set up experiment directory under EXPROOT location, which is typically specified inside user.yaml; 
 Create a configuration suite by reading all YAML files; A configuration suite is a python dictionary containing all configuration information. This suite is for validation and config file writing purpose and will only exist in memory.
 Write out all YAML files and config files into experiment directory.
 

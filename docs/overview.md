@@ -29,7 +29,7 @@ A summary of the benefits of this smart, automated, flexible workflow toolbox ar
 
 ~~~~~~~~~~~~~{.yaml}
 user_places: &user_places
-    PROJECT_DIR: !error Please select a project directory.
+    EXPROOT: !error Please select a project directory.
 accounting: & accounting
     cpu_project: !error What accounting code do I use to submit jobs? # ie.: global
     hpss_project: !error Where do I put data on HPSS?   # ie.: emc-global

@@ -24,7 +24,7 @@ Variable List
 
 User Definition [user.yaml]
 
-User_places [ PROJECT_DIR, HOMEgfs, HOMEcrow, NWPROD, DMPDIR, RTMFIX, EXPDIR, ROTDIR, ICSDIR, COMROOT, SHORT_TERM_TEMP, LONG_TERM_TEMP, HOMEDIR, NOSCRUB, FIXgsi, HOMEfv3gfs, HOMEpost, HOMEobsproc_prep, HOMEobsproc_network, BASE_VERIF, BASE_SVN, BASE_GIT, ics_from, parexp, HPSS_PAR_PATH]
+User_places [ EXPROOT, HOMEgfs, HOMEcrow, NWPROD, DMPDIR, RTMFIX, EXPDIR, ROTDIR, ICSDIR, COMROOT, SHORT_TERM_TEMP, LONG_TERM_TEMP, HOMEDIR, NOSCRUB, FIXgsi, HOMEfv3gfs, HOMEpost, HOMEobsproc_prep, HOMEobsproc_network, BASE_VERIF, BASE_SVN, BASE_GIT, ics_from, parexp, HPSS_PAR_PATH]
 
 accounting [ cpu_project, hpss_project, noscrub_project, ecflow_machine, ecflow_header, shared_partition, exclusive_partition, service_partition ]
 
@@ -160,7 +160,7 @@ WARNING:crow.model.fv3gfs:/gpfs/hps3/emc/global/noscrub/emc.glopara/ICS/20180604
 WARNING:crow.model.fv3gfs:/gpfs/hps3/emc/global/noscrub/emc.glopara/ICS/2018060400/gdas.t00z.radstat: link target does not exist
 Cause:    The script expects to find the ICs on disk to link to but they are missing.
 Fix:    a) Can ignore if you plan to move your own ICs into your COM directory or b) can rerun setup_case.sh with ‘-c’ flag to not create COM directory or attempt to make links or c) if ICs should be there resolve missing files and rerun script
-Missing PROJECT_DIR setting in user file
+Missing EXPROOT setting in user file
 
 Message:
 SURGE-slogin1 > ./setup_case.sh -f tutorial_case test
@@ -170,6 +170,6 @@ Traceback (most recent call last):
   File "/scratch4/NCEPDEV/global/save/Joe.Schmo/global-workflow/workflow/CROW/crow/config/eval_tools.py", line 49, in _result
     raise ConfigUserError(eval("f'''"+self+"'''",c,locals))
 crow.config.exceptions.ConfigUserError: Please select a project directory.
-Cause:    You forgot to set PROJECT_DIR in your user.yaml.
-Fix:    Set PROJECT_DIR in your user.yaml and try again.
+Cause:    You forgot to set EXPROOT in your user.yaml.
+Fix:    Set EXPROOT in your user.yaml and try again.
  

@@ -79,21 +79,21 @@ platform: !Platform
 
   # long_term_temp - area for storage of data that must be passed
   # between jobs or shared with programs external to this workflow.
-  long_term_temp: !expand "{doc.user_places.PROJECT_DIR}/{tools.env('USER')}/scrub"
+  long_term_temp: !expand "{doc.user_places.EXPROOT}/{tools.env('USER')}/scrub"
 
   # short_term_temp - area for data that is only needed within one job:
   short_term_temp: !calc long_term_temp
 
-  # EXP_PARENT_DIR - Parent directory  of the expdir (experiment directory)
-  EXP_PARENT_DIR: !expand "{doc.user_places.PROJECT_DIR}/{tools.env('USER')}/noscrub"
+  # EXPROOT - Parent directory  of the expdir (experiment directory)
+  EXPROOT: !expand "{doc.user_places.EXPROOT}/{tools.env('USER')}/noscrub"
 
   # NOSCRUB_DIR - directory for data that needs to be retained for an
   # indefinite amount of time after the simulation ends.
-  NOSCRUB_DIR: !expand "{doc.places.PROJECT_DIR}/{tools.env('USER')}/noscrub"
+  NOSCRUB_DIR: !expand "{doc.places.EXPROOT}/{tools.env('USER')}/noscrub"
 
   # SAVE_DIR - directory for small, important, files that should be
   # backed up to tape.
-  SAVE_DIR: !expand "{doc.places.PROJECT_DIR}/{tools.env('USER')}/save"
+  SAVE_DIR: !expand "{doc.places.EXPROOT}/{tools.env('USER')}/save"
 
   ######################################################################
 

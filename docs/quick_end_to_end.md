@@ -28,7 +28,7 @@ While at the top of global-workflow clone:
 Copy default user file to your user file
 	> cp user.yaml.default user.yaml
 Open and modify user.yaml, the following are required to be set:
-	PROJECT_DIR, cpu_project and hpss_project
+	EXPROOT, cpu_project and hpss_project
 
 Run experiment setup script
 
