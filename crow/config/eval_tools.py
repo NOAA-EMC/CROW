@@ -304,7 +304,7 @@ class dict_eval(MutableMapping):
     def __iter__(self):
         for k in self.__child.keys(): yield k
     def _inherit(self,stage,memo=None):
-
+        """!If requested, inherit contents of other scopes into this scope."""
         # Make sure we don't get infinite recursion:
         if memo is None: memo=set()
         if id(self) in memo:
@@ -322,8 +322,10 @@ class dict_eval(MutableMapping):
                 _logger.warning(f'{self._path}: Inherit is not an !Inherit.  Error?')
         elif superdebug:
             _logger.debug(f'{self._path}: no Inherit')
+
     def _validate(self,stage,memo=None):
         """!Validates this dict_eval using its embedded Template object, if present """
+        if memo is None: memo=set()
         if self.__is_validated: return
         self.__is_validated=True
 
