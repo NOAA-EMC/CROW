@@ -3,7 +3,7 @@ import sys, logging
 from yaml.nodes import MappingNode, ScalarNode, SequenceNode
 from copy import copy
 from collections import OrderedDict
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from crow.tools import Clock
 from crow.config.eval_tools import *
 from crow.config.represent import *
@@ -24,7 +24,10 @@ _logger=logging.getLogger('crow.config')
 def to_yaml(yml):
     if hasattr(yml,'_raw_cache'):
         yml=copy(yml._raw_child())
-    return yaml.dump(yml)
+    if isinstance(yml,Sequence):
+        return yaml.dump_all(yml)
+    else:
+        return yaml.dump(yml)
 
 ########################################################################
 
@@ -41,6 +44,7 @@ add_yaml_list_eval(u'!FirstMin',FirstMin)
 add_yaml_list_eval(u'!LastTrue',LastTrue)
 add_yaml_list_eval(u'!FirstTrue',FirstTrue)
 add_yaml_list_eval(u'!Immediate',Immediate)
+add_yaml_list_eval(u'!Uncached',Uncached)
 add_yaml_list_eval(u'!JobRequest',JobResourceSpecMaker)
 add_yaml_list_eval(u'!Inherit',Inherit)
 add_yaml_list_eval(u'!MergeMapping',MergeMapping)

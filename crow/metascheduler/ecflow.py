@@ -157,10 +157,10 @@ class ToEcflow(object):
             return( (m.group(1) or "")+"%"+m.group(2)+"%" )
         return re.sub(r'(\%\%)*\%([a-zA-Z])',replacer,format)
 
-    def defenvar(self,name,value):
+    def defenvar(self,name,value,literal=False):
         return f"edit {name} '{value!s}'"
 
-    def defvar(self,name,value):
+    def defvar(self,name,value,literal=False):
         return f"edit {name} '{value!s}'"
 
     def varref(self,name):

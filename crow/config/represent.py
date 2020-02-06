@@ -6,7 +6,7 @@ import re, abc, logging, sys, collections
 from datetime import timedelta
 from copy import deepcopy
 from crow.config.exceptions import *
-from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc, strref, stricalc
+from crow.config.eval_tools import list_eval, dict_eval, multidict, from_config, strcalc, strref, stricalc, stricalc, strucalc, striref, struref
 from crow.tools import to_timedelta, Clock
 from copy import copy
 import crow.sysenv
@@ -17,8 +17,9 @@ _logger=logging.getLogger('crow.config')
 __all__=[ 'Action','Platform', 'Conditional', 'ref','calc','FirstMin',
           'FirstMax', 'LastTrue', 'FirstTrue', 'GenericList',
           'GenericDict', 'GenericOrderedDict', 'ShellCommand',
-          'Immediate', 'ClockMaker', 'JobResourceSpecMaker',
-          'MergeMapping', 'AppendSequence', 'Select', 'icalc' ]
+          'Immediate', 'ClockMaker', 'JobResourceSpecMaker', 'Uncached',
+          'MergeMapping', 'AppendSequence', 'Select', 'icalc', 'ucalc',
+          'iref', 'uref' ]
 
 ########################################################################
 
@@ -108,6 +109,11 @@ class Immediate(list_eval):
     def _result(self,globals,locals):
         return self[0]
     def _is_immediate(self): pass
+
+class Uncached(list_eval): 
+    def _result(self,globals,locals):
+        return self[0]
+    def _do_not_cache(self): pass
 
 class Conditional(list_eval):
     MISSING=object()
@@ -213,4 +219,7 @@ class FirstTrue(Conditional):
 
 class calc(strcalc): pass
 class icalc(stricalc): pass
+class ucalc(strucalc): pass
 class ref(strref): pass
+class iref(striref): pass
+class uref(struref): pass

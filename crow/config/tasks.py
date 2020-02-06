@@ -147,6 +147,18 @@ class SuiteView(Mapping):
         self.parent=parent
         self.__cache={}
         assert(isinstance(self.viewed,Cycle) or 'this' in self.viewed)
+
+        if hasattr(self.viewed,'_inherit') and 'Validate' in self.viewed:
+            how=self.viewed.Validate
+            if how is False:
+                pass # do not validate
+            elif how=='validate':
+                self.viewed._validate('suite')
+            elif how=='inherit':
+                self.viewed._inherit('suite')
+            else:
+                raise ValueError(f'In !Inherit, "Validate" option value must be "inherit" or "validate" or False, not {how!r}')
+
         if isinstance(self.viewed,Slot):
             locals=multidict(self.parent,self.viewed)
             globals=self.viewed._get_globals()
@@ -348,6 +360,10 @@ class SuiteView(Mapping):
         dep=as_dependency(other)
         if dep is NotImplemented: return dep
         return OrDependency(as_dependency(self),dep)
+    def __rand__(self,other):
+        return self.__and__(other)
+    def __ror__(self,other):
+        return self.__or__(other)
     def __invert__(self):
         return NotDependency(StateDependency(self,COMPLETED))
     def is_running(self):
@@ -607,6 +623,8 @@ def as_dependency(obj,path=MISSING,state=COMPLETED):
 class LogicalDependency(object):
     def __invert__(self):          return NotDependency(self)
     def __contains__(self,dep):    return False
+    def __rand__(self,other):      return self.__and__(other)
+    def __ror__(self,other):       return self.__or__(other)
     def __and__(self,other):
         if other is FALSE_DEPENDENCY: return other
         if other is TRUE_DEPENDENCY: return self

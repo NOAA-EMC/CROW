@@ -24,7 +24,8 @@ __all__=["from_string","from_file", 'Action', 'Platform', 'Template',
          'Taskable', 'Task', 'Family', 'CycleAt', 'CycleTime', 'Cycle',
          'Trigger', 'Depend', 'Timespec', 'SuitePath', 'ShellEvent', 'Event',
          'DataEvent', 'CycleExistsDependency', 'validate', 'EventDependency',
-         'TaskExistsDependency', 'follow_main', 'from_dir', 'update_globals' ]
+         'TaskExistsDependency', 'follow_main', 'from_dir', 'update_globals',
+         'apply_inherit' ]
 
 _logger=logging.getLogger('crow.config')
 
@@ -37,14 +38,19 @@ def expand_text(text,scope):
 
 evaluate_immediates=_evaluate_immediates
 
-def from_string(s,evaluate_immediates=True,validation_stage=None):
+def from_string(s,evaluate_immediates=True,validation_stage=None,multi_document=False):
     if not s: raise TypeError('Cannot parse null string')
-    c=ConvertFromYAML(yaml.load(s, Loader=yaml.Loader),CONFIG_TOOLS,ENV)
+    if multi_document:
+        loaded = [ y for y in yaml.load_all(s, Loader=yaml.Loader) ]
+    else:
+        loaded = yaml.load(s, Loader=yaml.Loader)
+    c=ConvertFromYAML(loaded,CONFIG_TOOLS,ENV)
     result=c.convert(validation_stage=validation_stage,
-                     evaluate_immediates=evaluate_immediates)
+                     evaluate_immediates=evaluate_immediates,
+                     multi_document=multi_document)
     return result
 
-def from_file(*args,evaluate_immediates=True,validation_stage=None):
+def from_file(*args,evaluate_immediates=True,validation_stage=None,multi_document=False):
     if not args: raise TypeError('Specify which files to read.')
     data=list()
     for file in args:
@@ -52,7 +58,8 @@ def from_file(*args,evaluate_immediates=True,validation_stage=None):
             data.append(fopen.read())
     return from_string(u'\n\n\n'.join(data),
                        evaluate_immediates=evaluate_immediates,
-                       validation_stage=validation_stage)
+                       validation_stage=validation_stage,
+                       multi_document=multi_document)
 
 def _recursive_validate(obj,stage,memo=None):
     if memo is None: memo=set()
@@ -63,6 +70,22 @@ def _recursive_validate(obj,stage,memo=None):
         obj._validate(stage)
         for k,v in obj.items():
             _recursive_validate(v,stage,memo)
+
+def _recursive_inherit(obj,stage,memo=None):
+    if memo is None: memo=set()
+    if id(obj) in memo: return
+    memo.add(id(obj))
+    if hasattr(obj,'_do_not_validate'): return
+    if hasattr(obj,'_inherit'):
+        obj._inherit(stage)
+        for k,v in obj.items():
+            _recursive_inherit(v,stage,memo)
+
+def apply_inherit(obj,stage='',recurse=False):
+    if recurse:
+        _recursive_inherit(obj,stage)
+    elif hasattr(obj,'_inherit'):
+        obj._validate(inherit,set())
 
 def validate(obj,stage='',recurse=False):
     if recurse:

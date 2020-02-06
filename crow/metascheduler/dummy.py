@@ -9,9 +9,9 @@ class ToDummy(object):
         if apply_overrides:
             self.suite.apply_overrides()
 
-    def defenvar(self,name,value): return 'dummy'
+    def defenvar(self,name,value,literal=False): return 'dummy'
     def datestring(self,name,value): return 'dummy'
-    def defvar(self,name,value): return 'dummy'
+    def defvar(self,name,value,literal=False): return 'dummy'
     def varref(self,name): return 'dummy'
     def to_dummy(self): return 'dummy'
 

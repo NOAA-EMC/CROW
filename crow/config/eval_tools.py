@@ -38,7 +38,9 @@ from crow.exceptions import CROWException
 from crow._superdebug import superdebug
 
 __all__=[ 'expand', 'strcalc', 'from_config', 'dict_eval', 'strref',
-          'list_eval', 'multidict', 'Eval', 'user_error_message' ]
+          'list_eval', 'multidict', 'Eval', 'user_error_message',
+          'stricalc', 'strucalc', 'iexpand', 'uexpand', 'striref',
+          'struref' ]
 _logger=logging.getLogger('crow.config')
 
 class user_error_message(str):
@@ -73,7 +75,11 @@ class expand(str):
             EXPAND_CACHE[cmd]=obj
         return eval(obj,c,locals)
 
-#f''''blah bla'h \''''
+class iexpand(expand):
+    def _is_immediate(self): return True
+
+class uexpand(expand):
+    def _do_not_cache(self): return True
 
 class strcalc(str):
     """Represents a string that should be run through eval()"""
@@ -93,6 +99,9 @@ class strcalc(str):
 class stricalc(strcalc):
     """Represents a string that should be run through eval()"""
     def _is_immediate(self): return True
+
+class strucalc(strcalc):
+    def _do_not_cache(self): return True
 
 class strref(str):
     """Represents a reference to a variable within some scope (ie. abc.def[32].ghi)"""
@@ -115,6 +124,12 @@ class strref(str):
             REF_CACHE[scope_expr]=obj
         scope=eval(obj,c,locals)
         return scope._raw(key) if hasattr(scope,'_raw') else scope[key]
+
+class striref(strref):
+    def _is_immediate(self): return True
+
+class struref(strref):
+    def _do_not_cache(self): return True
 
 def from_config(key,val,globals,locals,path):
     """!Converts a class with _result method to another data type by
@@ -288,11 +303,8 @@ class dict_eval(MutableMapping):
     def __delitem__(self,k): del(self.__child[k], self.__cache[k])
     def __iter__(self):
         for k in self.__child.keys(): yield k
-    def _validate(self,stage,memo=None):
-        """!Validates this dict_eval using its embedded Template object, if present """
-        if self.__is_validated: return
-        self.__is_validated=True
-
+    def _inherit(self,stage,memo=None):
+        """!If requested, inherit contents of other scopes into this scope."""
         # Make sure we don't get infinite recursion:
         if memo is None: memo=set()
         if id(self) in memo:
@@ -310,6 +322,16 @@ class dict_eval(MutableMapping):
                 _logger.warning(f'{self._path}: Inherit is not an !Inherit.  Error?')
         elif superdebug:
             _logger.debug(f'{self._path}: no Inherit')
+
+    def _validate(self,stage,memo=None):
+        """!Validates this dict_eval using its embedded Template object, if present """
+        if memo is None: memo=set()
+        if self.__is_validated: return
+        self.__is_validated=True
+
+        # Process the "Inherit" tag, raising an exception if this
+        # scope was already touched:
+        self._inherit(stage,memo)
 
         # Validate this scope:
         if 'Template' in self:
@@ -333,9 +355,11 @@ class dict_eval(MutableMapping):
         val=self.__cache[key]
         if hasattr(val,'_result'):
             immediate=hasattr(val,'_is_immediate')
+            nocache=hasattr(val,'_do_not_cache')
             val=from_config(key=key,val=val,globals=self.__globals,locals=self,
                             path=f'{self._path}.{key}')
-            self.__cache[key]=val
+            if not nocache:
+                self.__cache[key]=val
             if immediate:
                 self.__child[key]=val
         return val
@@ -449,14 +473,16 @@ class list_eval(MutableSequence):
         val=self.__cache[index]
         if hasattr(val,'_result'):
             immediate=hasattr(val,'_is_immediate')
+            nocache=hasattr(val,'_do_not_cache')
             val=from_config(index,val,self.__globals,self.__locals,
                             f'{self._path}[{index}]')
-            self.__cache[index]=val
+            if not nocache:
+                self.__cache[index]=val
             if immediate:
                 self.__child[index]=val
         assert(val is not self)
         return val
-    def _recursively_set_globals(self,globals,memo):
+    def _recursively_set_globals(self,globals,memo=None):
         if memo is None: memo=set()
         if id(self) in memo: return
         memo.add(id(self))
@@ -505,6 +531,18 @@ def recursively_validate(obj,stage,validation_memo=None,inheritence_memo=None):
         if superdebug: _logger.debug(f'{obj._path}: validate recursively into children')
         for subobj in obj._iter_raw():
             recursively_validate(subobj,stage,validation_memo,inheritence_memo)
+
+def recursively_inherit(obj,stage,inheritance_memo=None):
+    if inheritance_memo is None: inheritance_memo=set()
+    if id(obj) in inheritance_memo: return
+    inheritance_memo.add(id(obj))
+
+    if hasattr(obj,'_inherit'):
+        obj._inherit(stage,inheritance_memo)
+    if hasattr(obj,'_iter_raw'):
+        if superdebug: _logger.debug(f'{obj._path}: inherit recursively in children')
+        for subobj in obj._iter_raw():
+            recursively_inherit(subobj,stage,inheritance_memo)
 
 def _invalidate_cache_one_obj(obj,key=None):
     if hasattr(obj,'_invalidate_cache'):
