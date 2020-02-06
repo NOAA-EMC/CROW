@@ -217,8 +217,8 @@ def make_config_files_in_expdir(doc,expdir):
     content = to_yaml(value)
     with open(filename,'wt') as fd:
         fd.write(content)
-    resource_sum = from_file(filename)
-    value = { 'resources_sum': resource_sum }
+    resources_sum = from_file(filename)
+    value = { 'resources_sum': resources_sum }
     logger.debug(f'{filename}: expand')
     content = to_yaml(value)
     with open(filename,'wt') as fd:
@@ -738,7 +738,9 @@ def setup_case(command_line_arguments):
         skip_comrot,force_platform_rewrite)
 
     if '-f' not in options:
-        shutil.copy('../resources_sum.yaml',EXPDIR+'/resources_sum.yaml')
+        f= open(EXPDIR+'/resources_sum.yaml','w+')
+        f.write('resources_sum:\n')
+        f.close()
 
     doc=from_dir(EXPDIR,validation_stage='setup')
     suite=Suite(doc.suite)

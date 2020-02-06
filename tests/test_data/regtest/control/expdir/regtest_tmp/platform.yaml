@@ -11,15 +11,15 @@ platform: !Platform
   BASE_GIT: /gpfs/hps3/emc/global/noscrub/emc.glopara/git
   BASE_SVN: /gpfs/hps3/emc/global/noscrub/emc.glopara/svn
   CHGRP_RSTPROD_COMMAND: chgrp rstprod
-  DMPDIR: !calc 'doc.user_places.PROJECT_DIR'
-  EXP_PARENT_DIR: !calc 'doc.user_places.PROJECT_DIR'
+  DMPDIR: !calc 'doc.user_places.EXPROOT'
+  EXPROOT: !calc 'doc.user_places.EXPROOT'
   Evaluate: true
   NWPROD: /gpfs/hps/nco/ops/nwprod
   RTMFIX: $CRTM_FIX
   config_base_extras: sandbox
   default_resources: &id003 {}
   detect: true
-  long_term_temp: !calc 'doc.user_places.PROJECT_DIR'
+  long_term_temp: !calc 'doc.user_places.EXPROOT'
   metasched_more: !expand '{metasched.defvar(doc.schedvar.exclusive_queue, doc.accounting.exclusive_partition.exclusive_queue)}
 
     {metasched.defvar(doc.schedvar.shared_queue, doc.accounting.shared_partition.shared_queue)}
@@ -63,9 +63,9 @@ platform: !Platform
       shared_queue: dev
       specification: null
   public_release_ics: /gpfs/hps3/emc/global/noscrub/emc.glopara/FV3GFS_V1_RELEASE/ICs
-  short_term_temp: !calc 'doc.user_places.PROJECT_DIR'
+  short_term_temp: !calc 'doc.user_places.EXPROOT'
   skip_if_others_present: true
 platform_common:
   Evaluate: false
   default_resources: *id003
-user_places: {PROJECT_DIR: !calc 'doc.default_places.HOMEcrow + ''/tests/test_data/regtest/cache'''}
+user_places: {EXPROOT: !calc 'doc.default_places.HOMEcrow + ''/tests/test_data/regtest/cache'''}
