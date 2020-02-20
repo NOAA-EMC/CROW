@@ -675,7 +675,6 @@ def setup_case(command_line_arguments):
                              '../top.yaml':'top.yaml',
                              '../schema/task.yaml':'schema.yaml',
                              '../schema/varnames.yaml':'varnames.yaml',
-                             '../defaults/default_resources.yaml':'default_resources.yaml',
                              '../defaults/settings.yaml':'settings.yaml',
                              '../defaults/places.yaml':'places.yaml',
                              '../config/base.yaml':'base.yaml',
