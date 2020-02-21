@@ -630,8 +630,9 @@ def create_crontab(conf,cronint=5):
     # On WCOSS, rocoto module needs to be loaded everytime cron runs
     if conf.platform.name in ['WCOSS']:
         rocotoloadstr = '. /usrx/local/Modules/default/init/sh; module use -a /usrx/local/emc_rocoto/modulefiles; module load rocoto/20170119-master)'
-        rocotorunstr = '(%s %s)' % (rocotoloadstr, rocotorunstr)
-
+        rocotorunstr = '%s %s' % (rocotoloadstr, rocotorunstr)
+    else:
+        rocotorunstr = '%s -d %s/workflow.db -w %s/workflow.xml' % ('/apps/rocoto/1.3.1/bin/rocotorun',conf.places.EXPDIR,conf.places.EXPDIR)
     
     if(conf.accounting.user_email == 'none'):
         REPLYTO = ""
