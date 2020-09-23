@@ -124,6 +124,7 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'panasas_gb':crow.tools.panasas_gb,
     'gpfs_gb':crow.tools.gpfs_gb,
     'basename':os.path.basename,
+    'machine_name':'.'.join(os.uname()[1].split('.')[1:]),
     'dirname':os.path.dirname,
     'abspath':os.path.abspath,
     'realpath':os.path.realpath,
