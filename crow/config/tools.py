@@ -15,6 +15,11 @@ class Environment(dict):
 
 ENV=Environment(os.environ)
 
+def dt_to_HMS(dt):
+    hours, remainder = divmod(int(dt.total_seconds()), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
 def strftime(d,fmt): return d.strftime(fmt)
 def strptime(d,fmt): return datetime.datetime.strptime(d,fmt)
 def to_YMDH(d): return d.strftime('%Y%m%d%H')
@@ -141,6 +146,7 @@ CONFIG_TOOLS=crow.tools.ImmutableMapping({
     'uniq':uniq,
     'to_timedelta':crow.tools.to_timedelta,
     'as_seconds':seconds,
+    'dt_to_HMS':dt_to_HMS,
     'to_YMDH':to_YMDH, 'from_YMDH':from_YMDH,
     'to_YMD':to_YMD, 'from_YMD':from_YMD,
     'grep':re.search,
